@@ -1,0 +1,2780 @@
+<title>Rifornimenti Profumo di Pane</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Josefin+Sans:wght@600;700&display=swap">
+<style>
+/* Stile Profumo di Pane: nero e oro del logo nella testata, fondo caldo, ogni negozio col suo colore fisso */
+:root{
+  --bg:#F2F2EF;
+  --surface:#FFFFFF;
+  --surface-2:#ECEAE4;
+  --ink:#2A2922;
+  --muted:#67635A;
+  --line:#D6D1C6;
+  --line-2:#E6E2D9;
+  --nero:#2A2922;
+  --oro:#B89B6E;
+  --oro-txt:#7D6440;
+  --accent:#2A2922;
+  --accent-ink:#FFFFFF;
+  --accent-soft:#ECEAE4;
+  --urgent:#B3261E;
+  --urgent-txt:#9E2219;
+  --urgent-bg:#FBE4E1;
+  --urgent-ink:#FFFFFF;
+  --done:#2F5D8A;
+  --done-ink:#FFFFFF;
+  --done-bg:#E3EAF2;
+  --prep:#5B3F8C; --prep-bg:#ECE6F5;
+  --pronto:#0B5563; --pronto-bg:#DDF1F4; --pronto-solid:#0B7285; --pronto-solid-ink:#FFFFFF;
+  --corso:#7A4A24; --corso-ink:#FFFFFF; --corso-bg:#F3E8DD; --corso-txt:#7A4A24;
+  --nenni:#1E5B36; --nenni-ink:#FFFFFF; --nenni-bg:#E1EFE5; --nenni-txt:#1E5B36;
+  --panif:#E5B20A; --panif-ink:#2A2922; --panif-bg:#FBF1CF; --panif-txt:#7F6000;
+  --font-display:"Josefin Sans","Gill Sans","Trebuchet MS",sans-serif;
+  --font-body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --r-lg:18px;
+  --r-md:12px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1A1814; --surface:#24211C; --surface-2:#302C25; --ink:#EEEAE2; --muted:#ABA496; --line:#463F35; --line-2:#37322A;
+    --nero:#100F0C; --oro:#C9AE7E; --oro-txt:#D3BB8E;
+    --accent:#CDB389; --accent-ink:#1A1814; --accent-soft:#3A3328;
+    --urgent:#F08074; --urgent-txt:#F5A097; --urgent-bg:#3B1E1B; --urgent-ink:#2A0D0A;
+    --done:#8FB4DE; --done-ink:#0E1A2A; --done-bg:#1C2736;
+    --prep:#C3AEEA; --prep-bg:#2A2140; --pronto:#7DD3DF; --pronto-bg:#12343A; --pronto-solid:#5CC4D2; --pronto-solid-ink:#062328;
+    --corso:#C9925F; --corso-ink:#1F1206; --corso-bg:#33241A; --corso-txt:#D9A574;
+    --nenni:#5DB884; --nenni-ink:#06200F; --nenni-bg:#15301F; --nenni-txt:#6FC995;
+    --panif:#F2C640; --panif-ink:#241B00; --panif-bg:#362C0D; --panif-txt:#F2C640;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1A1814; --surface:#24211C; --surface-2:#302C25; --ink:#EEEAE2; --muted:#ABA496; --line:#463F35; --line-2:#37322A;
+  --nero:#100F0C; --oro:#C9AE7E; --oro-txt:#D3BB8E;
+  --accent:#CDB389; --accent-ink:#1A1814; --accent-soft:#3A3328;
+  --urgent:#F08074; --urgent-txt:#F5A097; --urgent-bg:#3B1E1B; --urgent-ink:#2A0D0A;
+  --done:#8FB4DE; --done-ink:#0E1A2A; --done-bg:#1C2736;
+  --prep:#C3AEEA; --prep-bg:#2A2140; --pronto:#7DD3DF; --pronto-bg:#12343A; --pronto-solid:#5CC4D2; --pronto-solid-ink:#062328;
+  --corso:#C9925F; --corso-ink:#1F1206; --corso-bg:#33241A; --corso-txt:#D9A574;
+  --nenni:#5DB884; --nenni-ink:#06200F; --nenni-bg:#15301F; --nenni-txt:#6FC995;
+  --panif:#F2C640; --panif-ink:#241B00; --panif-bg:#362C0D; --panif-txt:#F2C640;
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.45;-webkit-text-size-adjust:100%}
+button,input,select,textarea{font:inherit;color:inherit}
+p,h1,h2,h3,ul{margin:0}
+ul{padding:0;list-style:none}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px;background:var(--surface-2);padding:2px 6px;border-radius:6px}
+
+.app{max-width:560px;margin:0 auto;padding-inline:16px;padding-block:16px 56px;display:flex;flex-direction:column;gap:18px}
+
+/* shop colours: one place, used by pills, stripes, headers */
+.dest-corso{--c:var(--corso);--c-ink:var(--corso-ink);--c-bg:var(--corso-bg);--c-txt:var(--corso-txt)}
+.dest-nenni{--c:var(--nenni);--c-ink:var(--nenni-ink);--c-bg:var(--nenni-bg);--c-txt:var(--nenni-txt)}
+.dest-panif{--c:var(--panif);--c-ink:var(--panif-ink);--c-bg:var(--panif-bg);--c-txt:var(--panif-txt)}
+.dest-altro{--c:var(--ink);--c-ink:var(--bg);--c-bg:var(--surface-2);--c-txt:var(--ink)}
+
+/* testata: nero e oro del logo, a tutta larghezza */
+.testata{background:var(--nero);border-bottom:2px solid var(--oro);color:#FFFFFF;padding-top:env(safe-area-inset-top,0px)}
+.testata-in{max-width:560px;margin:0 auto;display:flex;align-items:center;gap:10px;padding:10px 16px}
+.logo{flex:none;width:44px;height:44px;border-radius:10px;display:block;background:#3E362B url("data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAMCAgMCAgMDAwMEAwMEBQgFBQQEBQoHBwYIDAoMDAsKCwsNDhIQDQ4RDgsLEBYQERMUFRUVDA8XGBYUGBIUFRT/2wBDAQMEBAUEBQkFBQkUDQsNFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBT/wgARCAB4AHgDASIAAhEBAxEB/8QAGwABAAIDAQEAAAAAAAAAAAAAAAEFAwQGAgf/xAAYAQADAQEAAAAAAAAAAAAAAAAAAQIDBP/aAAwDAQACEAMQAAAB+OocuwAAABmu5rnnRJfOzPnSJQAAFonVs2ynoZLX1L2OdnzSZsKl13I2+LK60a5iAWtZa53UXOvjRtbnnFnphuuV27jovfNzF5s1bZXFCNs4Ab+o2c62tf3oKtmwwZk6TJbdEHDu7yxXC2nn1cUI2zEAjZsIrR3pxZ3tWGvpxWlpdHl0jlnZex8ra4M7VCNc2TFYzU1khRMLVpViaRrq9bneo59abfy0tLXGucZ8EDtPVbYY3k9+PU1794/aPfrzA9vNVVrVvzpvnIcoGJEQGAgGJAgBIR//xAAqEAABBAECBQMEAwAAAAAAAAADAAECBAURExASFBU0ICE1FjAyQCQzRf/aAAgBAQABBQL9cQZmn24IG28c6niOeEovF/swg5JnM2PG76uhGmCZGjl6vphCJ6wZxgS4Fgkqjhar4uOhJTecuOKNsXsiLYu+jH/mrntWxflVvwoUerXZBrsQ12ASnW6PJZv5HjGLzkSTVhVK7TVkz2TPy44FDxhGmF+42V3Kyu52kCciXM58jxpf3k13Ce2Po+Vcd+qoeM3utuS25ramqvlZz5HiObjnZmMirHjyc22S2UVgdDxcZbHVdsvWTZismzVVGsQs5TOfI+kdYpFHGTXavavRkEJaRg+ip5Wc+R4hBIz8waqBcmSxkX1sf5OKlpaNkigtNKpkV2GK+n4KVV6eSznyPAY92Zzcjces/h8cXkXd7V25UOCcz3s2+uS4U/s66LOe6wtfU1k3UWOAS7UyVtxNakNt2rJaUnXJRWmPZdRRGnyJDwp4rbRaRb579+Di9EZyg8b8tOorSWtJ1pRWuPZdXTGpZki7zZRrRbH6f//EACQRAAIBAwIGAwAAAAAAAAAAAAABEQIQIRIxEyBBQlGRMDJh/9oACAEDAQE/AeRJs0vpyJSRiTTsNzZ5U3p8myFjAnSllGqjwdrv0J2YvsU0prc0U+Ttd0iKYkwmjSuhw6jal2Sljc2mbS3Sdt5R6PRP6TTEIbn4v//EACgRAAIBBAECBAcAAAAAAAAAAAECABAREjEhE3EgIkJRAzAyQVJhkf/aAAgBAgEBPwHwFgJ1B9/ATaX5tC+4q40XynGr8+WHlu0PN2jK5PBmPxfeesXrpoBtYfojOwNgJ1H/ABm3FS1uBLve0ORB5mbAXYTrJNuCKMbCAY0AA1QqA/eevtQi4hU63Ne8/sx/Uxcm5ijH5X//xAA0EAABAgQBCQUJAQEAAAAAAAABAAIDESExEgQTIDIzQVFxkRAiQmFyIzBAUoGCkqGxwST/2gAIAQEABj8C+HwsEyv+iOGn5WqWdePNY8miiMOG9EESI3H3Qa25WYg7TxPUzU9mJjsLkYjRhymHcDfpGQk9n7QLhiagW6rqhOhylFFQVEiHwNRcbmuhD4O7pUVotOY0X8JdmTg3kvosul5/6nTdhDeC2rltXravUOHixd5pmn8hoAC5WbbV5uVnH0htVLWARAM4z/0sq9KmxxafJbZy2zltnKE5xLnF4qU/kND6J07zUOVt6Yok+Kyr0qlVqu6LUd0Wo7ooPrH9T+Q0A4bkHN1jcIwouod6mw2NCmxBSLYhZV6U/HSfiC1z+K13fitd34pkRgk3E36p/IaVGdVV7WrajoozcQdjFF3oZlxFdCD6x/U/kNCluKoM49MBMm8Ffcvt/wBV/CogaQ5gNipOGYjceK2zui2zuihwycXeaZp/Idoas3DoBfQzOGtp6AgRTejXJ0MxjSxldQnOJc4vFSonIdsQ75e5osncdYtqjlD6Q4VZ+aiRPmM+2e7escIzHBYYkOarCI5K7gtdyu89VSAXc0YUCAADSgms7lFhXAKoxo/sII43khk2TDDAFz82jNpku80OXegy5KzgrvVnnqu7k0+alDYyGFdo+1e0eXfB/wD/xAAoEAEAAgECBQIHAQAAAAAAAAABABEhMVEgQWHR8BCBMHGRobHB4fH/2gAIAQEAAT8hl/Ev4RJvTgA++CGvLdfaWQ/vqEbYyFJ8I9reiWwyL50RkU1X0IOLmQf4uk8VMYtSN4+DNMC+RKZ+tL5pAO62OvhGdtbS/V1jSe0/2oY6sJ0c8FzU8mcZ5RYhWxoO4hbRogG3pGGWDdkgvYIJ2iaIgToUnl9uAwrSiN2hrFeYvnAVWEgIbKR5nRi5aKY8AniEo/lEZhqWuSeP24Cat1RpeYuX5gf2lW/rXzqI5rD25TzujAugrYJ/rZ/sZ/oZhBeP24NQCGL5CP0a2Q6iST8cOZ5XRlcXDQX7QHdQfeT+iRHbFkpyMzx+3FlWrfAiy/vUG2x76JcZ0U+TAr9gH24PA7J4/bgoeI1WhNPU89oGJ3RMEWokZCQaWqL1lRNAGPrGcg0Gn6MF7GCdrAG0JuFnj9vVhPd2IO1ZHBXXYauKu+BqLzPI7RYzYcOTpLib/MzB6Aft64AaMJrKr34gUULDWoJWqTJBYlN/DuwMc6l0fqKzi+mxy9GVepYEE0mkWcBWSoeeXtP6nD/b7Q1MI1+9PdhK1tmV+JaNhHZ+dfiYmLQMp+k8AhHy/PoR9L0V0haF/ScyKDUfVw5v3IS0a6e5P3cMdGauNOOuIzfR1x9PUj68vhk//9oADAMBAAIAAwAAABC//wD/APfb/wD/AJ+o50O/j5fmbW7zD3uEu+1DHzC9L21DPzt9ltiDU3HPGDc/9j//APYff//EACARAQACAgICAwEAAAAAAAAAAAEAESExEEFRYSAwoXH/2gAIAQMBAT8Q+GUNT1H4IqJZgJfBl/11DDZHV3084N9EMt9zT3y/krljw8NGr5sa+Ii4jKm9yyNOHQAPZzaW4JV2wCg3FWnn3PTKQPk4IBiK3hW3AxnJHGfbwKNkNg0/kG+41CAqh/CJ0Ijt+r//xAAlEQEAAgEDAgcBAQAAAAAAAAABABEhEDFBcaEgUWGxwdHwkfH/2gAIAQIBAT8Q8GNd5TyOp4DIsSF8ygwyfiAPXmIJTMnjufWrpTdiDDqm2bYO8aNRP1/yAgLNfWtNtYSLTc3nrFZsqq946smlFQlYfjU1RbFL6O8TzsfLygBgen1PU7SzYCPxoipDFEqWvmmIOwVBThsK0Ch5lGxT+Mp4DvMsiXDerC9QfbpBFGnHgI6//8QAKBABAAEDAwIGAwEBAAAAAAAAAREAITFBUWEQcSCBkaHB8LHR4TDx/9oACAEBAAE/EJp/zYopP+KI1eMA3XActOCZLGj1FfSnuxiFc1GMAcSWnhik5RKEbI/5RPJPl+KECgQLFNOdtiNaWCErlXl16YP0vnhMJw0S27bRmm8gxskaniPJGIX1X3n2Si8A20kOsaxmjQLYMbg4uJ3oqTsuq2l2m47NWUzJaKZ9kedT9NV3b1yqTpZkO6Nk9JKj/cJgEB7+B2UUbiC0z/GkSpjNFwVJHMR/lDZPQ9o94qOKckbRSbIwAszvgt0pysXTh1hUVUKkSaNGOkVipq02AqLuZDQT9WDzqCls6DLx2NfSpVQjXMue6/FcYQob9i8bvRubvAWTk1oDAfXFA4+7tQKA/ripyojhrNKKHPVochvZ8TUjMrzvTBtHI3lX86BsW6lyRV9MGJ0AfhFLyqZyCMpfQof7HtUn0PavqnxRRIiEjpZ0jGOuVemHCalJPk0xBl5/Na/K3L/Lm471FtbKQoNlKn0kBjcGVxbR5jTpWBtBTICZUXi81lK0C9CAoQRDmYALNF+PDGvQUlf/AGmgwjaX9K0ZE3PdNBmc+YTBee9IhTn87L38CnwERrSQJH3F3iuKcuEXfB5XpSexGBsxK3zFDZBoGQb/AMoADjQ2hKkBSMd7NRNekRYkBfM60Qx/BE727CDzUtY+29fc/wB6BomZECkmj4J2hgb+oNbxwV11J/Lr1laWHGhuEZnTrNGFjJw1mueF1tUwgDAy/RyNOocRKo/BRKMzPeP76OKMQkkPV/IVKpWVutKAohcKRPhilQAlCQ77UGYqQyJc96Kwjuuq/nREDhVOD0S+m9FkoBeQ8gOmVPEoIGU45KUXEsoR1j9NFN8LyDuI1fWXKP2+KIs/Z4ayWDaaL5wh/BV0L4bHufikm3JpBDgB3afP0WMMbl9EzrTSBkKS9yYSyq74YrT4BkVM63uurdcdMKy6czHWe+9AOeyXye1CZcZQfCVd+EP7azew/wCazjzfL3KvpPHyCgcIdz6WPalIQdDPu1EDC5GPYW64eBHo/wAGwHXCv//Z") center/cover no-repeat}
+.testata-titolo{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:3px}
+.marchio{font-family:var(--font-display);font-weight:600;font-size:11px;line-height:1.2;letter-spacing:.24em;text-transform:uppercase;color:var(--oro)}
+.app-nome{font-family:var(--font-display);font-weight:700;font-size:19px;line-height:1.1;padding-top:2px;letter-spacing:.08em;text-transform:uppercase;color:#FFFFFF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.oggi{flex:none;font-size:13px;color:#CFC8B8}
+@media (max-width:460px){ .oggi{display:none} }
+.testata .menu-btn{border-color:rgba(255,255,255,.3);background:transparent;color:#FFFFFF}
+.indietro{appearance:none;flex:none;display:inline-flex;align-items:center;gap:4px;height:44px;padding:0 14px 0 8px;border:1.5px solid var(--oro);border-radius:12px;background:transparent;color:#FFFFFF;font-weight:700;font-size:16px;cursor:pointer}
+.testata :focus-visible{outline-color:var(--oro)}
+.menu-btn{appearance:none;flex:none;width:44px;height:44px;display:flex;align-items:center;justify-content:center;border:1.5px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);cursor:pointer}
+/* fascia col colore del negozio: dice subito dove sei */
+.fascia{background:var(--f-bg,#45423A);color:var(--f-ink,#FFFFFF)}
+.fascia-in{max-width:560px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:6px 12px;padding:14px 16px 16px}
+.fascia-in > div{display:flex;flex-direction:column;gap:6px;min-width:0}
+.fascia .eyebrow{color:var(--f-sub,#E3D6BD)}
+.fascia h1{font-family:var(--font-display);font-weight:700;font-size:clamp(26px,7.6vw,34px);line-height:1;padding-top:3px;letter-spacing:.06em;text-transform:uppercase;overflow-wrap:anywhere}
+.fascia-info{font-size:14px;color:var(--f-sub,#E3D6BD);white-space:nowrap}
+.fascia-info:empty{display:none}
+.fascia.dest-corso{--f-bg:#7A4A24;--f-ink:#FFFFFF;--f-sub:#EBD9C8}
+.fascia.dest-nenni{--f-bg:#1E5B36;--f-ink:#FFFFFF;--f-sub:#CFE6D6}
+.fascia.dest-panif{--f-bg:#E5B20A;--f-ink:#2A2922;--f-sub:#4A3A06}
+.fascia.giro{--f-bg:#45423A;--f-ink:#FFFFFF;--f-sub:#E3D6BD}
+/* menu laterale */
+.menu-velo{position:fixed;inset:0;z-index:40;background:rgba(10,14,18,.45)}
+.menu{position:fixed;top:0;left:0;bottom:0;z-index:41;width:min(84vw,320px);display:flex;flex-direction:column;gap:12px;padding:calc(env(safe-area-inset-top,0px) + 14px) 14px calc(env(safe-area-inset-bottom,0px) + 14px);background:var(--surface);box-shadow:4px 0 24px rgba(0,0,0,.25);overflow-y:auto}
+.menu-testa{display:flex;align-items:center;gap:10px;padding-bottom:12px;border-bottom:2px solid var(--oro)}
+.menu-testa .eyebrow{flex:1 1 auto}
+.menu-voci{display:flex;flex-direction:column;gap:4px}
+.menu-voce{appearance:none;width:100%;min-height:52px;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 14px;border:0;border-radius:12px;background:transparent;color:var(--ink);font-size:17px;font-weight:700;text-align:left;cursor:pointer}
+.menu-voce:hover{background:var(--surface-2)}
+.menu-voce[aria-current="page"]{background:var(--ink);color:var(--bg)}
+.menu-voce[aria-current="page"] .badge[data-zero]{background:var(--muted);color:var(--bg)}
+/* comanda biscotti */
+.comanda-titolo{font-family:var(--font-display);font-size:17px;font-weight:700;line-height:1.2;padding-top:2px;letter-spacing:.06em;text-transform:uppercase}
+.urgenze{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.b-urg{appearance:none;display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-height:84px;padding:12px;border:2px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink);text-align:left;cursor:pointer}
+.b-urg b{font-size:18px}
+.b-urg span{font-size:13px;color:var(--muted)}
+.b-urg em{margin-top:auto;font-style:normal;font-size:12.5px;font-weight:700;color:var(--done)}
+.b-urg[data-urg="finiti"]{border-color:var(--urgent)}
+.b-urg[data-urg="finiti"] b{color:var(--urgent)}
+.riga-fase{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:6px 12px}
+.bisc[aria-pressed="true"]{background:var(--c);border-color:var(--c);color:var(--c-ink)}
+.bisc[aria-pressed="true"]::before{content:"✓";font-weight:700}
+.bisc[data-blocco]{border-style:dashed;color:var(--muted);background:transparent;cursor:default}
+.bisc[data-blocco]:disabled{opacity:1}
+.inviata{font-size:17px;font-weight:700;color:var(--done)}
+.tag-urg{flex:none;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:999px;white-space:nowrap}
+.tag-urg.finiti{background:var(--urgent);color:var(--urgent-ink)}
+.tag-urg.pochi{background:var(--surface-2);color:var(--ink)}
+/* riepilogo: una sola schermata */
+.conferma-velo{position:fixed;inset:0;z-index:60;display:flex;justify-content:center;padding:calc(env(safe-area-inset-top,0px) + 16px) 16px calc(env(safe-area-inset-bottom,0px) + 16px);background:var(--bg)}
+.riep-box{width:100%;max-width:560px;height:100%;display:flex;flex-direction:column;gap:10px;min-height:0}
+.riep-lista{flex:1 1 auto;min-height:0;overflow-y:auto;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 8px;align-content:start}
+.riep-lista li{display:flex;align-items:center;justify-content:space-between;gap:6px;min-width:0;padding:6px 8px;border:1px solid var(--line);border-radius:10px;background:var(--surface);font-size:14px;font-weight:700;line-height:1.2}
+.riep-lista li span:first-child{min-width:0;overflow-wrap:anywhere}
+.riep-avviso{padding:10px 12px;border-radius:var(--r-md);background:var(--urgent-bg);color:var(--urgent);font-size:14px;font-weight:700}
+.riep-azioni{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:10px}
+.riep-azioni .mini{min-height:50px}
+/* controllo prima di inviare: ogni cosa con da dove si prende e se è urgente */
+.ctrl-domanda{padding:10px 12px;border-radius:var(--r-md);background:var(--surface);border:1.5px solid var(--line);font-weight:700;font-size:15px;line-height:1.35}
+.ctrl-domanda.diverso{background:var(--urgent-bg);border-color:var(--urgent);color:var(--urgent-txt)}
+.ctrl-lista{flex:1 1 auto;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:8px;align-content:start}
+.ctrl-voce{display:flex;flex-direction:column;gap:8px;padding:10px 12px;border:1px solid var(--line-2);border-radius:14px;background:var(--surface)}
+.ctrl-voce .articolo{font-size:16px;display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px}
+.ctrl-voce .qta{margin-right:0}
+.ctrl-voce.fuori{border:2px solid var(--c);background:var(--c-bg);box-shadow:inset 6px 0 0 var(--c);padding-left:16px}
+.ctrl-voce.comprare{--c:var(--ink);--c-ink:var(--bg);--c-bg:var(--surface-2)}
+.ctrl-scelte{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+select.prov{width:auto;min-width:0;flex:1 1 150px;min-height:42px;padding:0 8px 0 10px;font-weight:700;font-size:14px;border-radius:10px}
+.ctrl-voce.fuori select.prov{background:var(--c);border-color:var(--c);color:var(--c-ink)}
+.urg-mini{appearance:none;flex:none;display:inline-flex;align-items:center;gap:7px;min-height:42px;padding:0 12px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);color:var(--muted);font-weight:700;font-size:15px;cursor:pointer}
+.urg-mini::before{content:"";width:12px;height:12px;border-radius:50%;border:2px solid currentColor}
+.urg-mini[aria-pressed="true"]{background:var(--urgent-bg);border-color:var(--urgent);color:var(--urgent-txt)}
+.urg-mini[aria-pressed="true"]::before{background:currentColor}
+.urg-mini:disabled,select.prov:disabled{opacity:.6}
+/* da dove si prende, nelle liste: bordo del colore del negozio da cui si prende */
+.pill.origine{background:var(--c-bg);color:var(--c-txt);box-shadow:inset 0 0 0 1.5px var(--c)}
+.pill.origine.comprare{background:var(--surface-2);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ink)}
+.eyebrow{font-family:var(--font-display);font-size:11px;font-weight:600;line-height:1.2;letter-spacing:.2em;text-transform:uppercase;color:var(--oro-txt)}
+
+.anteprima-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:10px 14px;border-radius:var(--r-md);background:var(--ink);color:var(--bg);font-size:14px;font-weight:700}
+.anteprima-bar .mini{border-color:var(--bg);color:var(--bg)}
+
+/* view switch */
+.switch{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;background:var(--surface-2);border-radius:var(--r-md);box-shadow:0 0 0 6px var(--bg)}
+.switch button{appearance:none;border:0;background:transparent;border-radius:9px;min-height:44px;font-weight:700;font-size:16px;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+.switch button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(42,41,34,.18)}
+.switch.sotto{position:static;box-shadow:none}
+.switch.sotto button{font-size:15px;min-height:40px}
+.badge{min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:var(--accent);color:var(--accent-ink);font-size:13px;line-height:22px;font-variant-numeric:tabular-nums}
+.badge[data-zero]{background:var(--line);color:var(--muted)}
+
+.banner{background:var(--accent-soft);color:var(--ink);border-radius:var(--r-md);padding:10px 14px;font-size:14px}
+
+.view{display:flex;flex-direction:column;gap:18px}
+h2{font-family:var(--font-display);font-weight:700;font-size:19px;line-height:1.15;padding-top:2px;letter-spacing:.05em;text-transform:uppercase;text-wrap:balance}
+.label{display:block;font-family:var(--font-display);font-weight:700;font-size:17px;line-height:1.2;padding-top:2px;letter-spacing:.05em;text-transform:uppercase}
+.label-sm{font-family:var(--font-display);font-size:11px;font-weight:600;line-height:1.3;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.hint{font-size:13px;color:var(--muted)}
+
+/* shop picker (owner only) */
+.punti{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{position:relative}
+.chip input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.chip span{display:inline-flex;align-items:center;gap:8px;min-height:42px;padding:0 16px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface);font-weight:700}
+.chip span::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--c)}
+.chip input:checked + span{background:var(--c);border-color:var(--c);color:var(--c-ink)}
+.chip input:checked + span::before{background:var(--c-ink)}
+.chip input:focus-visible + span{outline:3px solid var(--accent);outline-offset:2px}
+
+/* forms */
+.card{background:var(--surface);border:1px solid var(--line-2);border-radius:var(--r-lg);padding:16px;display:flex;flex-direction:column;gap:12px}
+textarea{width:100%;min-height:100px;resize:vertical;padding:12px 14px;border:1.5px solid var(--line);border-radius:var(--r-md);background:var(--bg);font-size:17px;line-height:1.4}
+textarea:focus,select:focus{outline:3px solid var(--accent);outline-offset:1px;border-color:transparent}
+.chip-add{appearance:none;border:1.5px solid var(--line);background:var(--surface);border-radius:999px;min-height:36px;padding:0 12px;font-size:14px;font-weight:700;color:var(--ink);cursor:pointer}
+.chip-add:hover{border-color:var(--oro);color:var(--ink)}
+.anteprima{display:flex;flex-direction:column;border-top:2px dashed var(--line);padding-top:10px;gap:4px;font-size:15px}
+.anteprima li{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:baseline;min-width:0}
+.anteprima li::before{content:"";width:7px;height:7px;border-radius:2px;background:var(--accent);flex:none;transform:translateY(-2px)}
+.row{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
+.field{display:flex;flex-direction:column;gap:6px;flex:1 1 140px;min-width:0}
+select{width:100%;min-height:44px;padding:0 12px;border:1.5px solid var(--line);border-radius:var(--r-md);background:var(--surface);font-size:16px}
+.urgente-toggle{position:relative;flex:none}
+.urgente-toggle input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.urgente-toggle span{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px;border-radius:var(--r-md);border:1.5px solid var(--line);font-weight:700;color:var(--muted)}
+.urgente-toggle span::before{content:"";width:12px;height:12px;border-radius:50%;border:2px solid currentColor}
+.urgente-toggle input:checked + span{background:var(--urgent-bg);border-color:var(--urgent);color:var(--urgent)}
+.urgente-toggle input:checked + span::before{background:currentColor}
+.urgente-toggle input:focus-visible + span{outline:3px solid var(--accent);outline-offset:2px}
+.primary{appearance:none;border:0;border-radius:14px;min-height:54px;background:var(--accent);color:var(--accent-ink);font-weight:700;font-size:17px;letter-spacing:.02em;cursor:pointer}
+.primary:disabled{opacity:.45;cursor:default}
+.esito{font-size:14px;color:var(--done);font-weight:700}
+.chi-ordina{font-size:14px;color:var(--muted);margin-top:-6px}
+.chi-ordina:empty{display:none}
+.esito:empty{display:none}
+details.card > summary{color:var(--ink);font-size:16px;min-height:28px}
+details.card[open] > summary{margin-bottom:0}
+
+/* rows */
+.blocco{display:flex;flex-direction:column;gap:10px}
+.lista{background:var(--surface);border:1px solid var(--line-2);border-radius:var(--r-lg);overflow:hidden}
+.lista:empty{display:none}
+.riga{display:flex;gap:12px;align-items:center;padding:12px 14px;border-top:1px solid var(--line-2)}
+.riga:first-child{border-top:0}
+/* cerchio col colore e l'iniziale del negozio: si capisce a colpo d'occhio dove va */
+.sigla{flex:none;align-self:flex-start;width:32px;height:32px;padding-top:3px;border-radius:50%;background:var(--c);color:var(--c-ink);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:15px;line-height:1}
+.riga-main{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:6px}
+.articolo{font-weight:700;font-size:17px;line-height:1.25;overflow-wrap:anywhere}
+.qta{display:inline-block;margin-right:6px;padding:0 7px;border-radius:6px;background:var(--surface-2);color:var(--ink);font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap}
+.meta{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;font-size:13px;color:var(--muted)}
+.sep{opacity:.6}
+.ritiro{color:var(--ink)}
+.pill{display:inline-flex;align-items:center;padding:2px 9px;border-radius:999px;font-size:12.5px;font-weight:700;white-space:nowrap}
+.pill.dest{background:var(--c);color:var(--c-ink)}
+.p-attesa{background:var(--surface-2);color:var(--muted)}
+.p-caricato{background:var(--ink);color:var(--bg)}
+.p-consegnato{background:var(--done-bg);color:var(--done)}
+.p-urgente{background:var(--urgent-bg);color:var(--urgent-txt)}
+.p-prep{background:var(--prep-bg);color:var(--prep)}
+.p-pronto{background:var(--pronto-bg);color:var(--pronto)}
+.p-finito{background:var(--urgent);color:var(--urgent-ink)}
+/* panificio: tre pulsanti per ogni cosa da preparare */
+.riga.riga-panif{flex-wrap:wrap}
+.riga.riga-panif .riga-main{flex-basis:0}
+.stati-panif{flex:1 1 100%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.b-stato{appearance:none;min-height:44px;padding:6px 6px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font-weight:700;font-size:13.5px;line-height:1.15;cursor:pointer}
+.b-stato[aria-pressed="true"][data-prep="preparazione"]{background:var(--prep-bg);border-color:var(--prep);color:var(--prep)}
+.b-stato[aria-pressed="true"][data-prep="pronto"]{background:var(--pronto-solid);border-color:var(--pronto-solid);color:var(--pronto-solid-ink)}
+.b-stato[aria-pressed="true"][data-prep="finito"]{background:var(--urgent);border-color:var(--urgent);color:var(--urgent-ink)}
+.b-stato:disabled{opacity:.5;cursor:default}
+.field input{width:100%;min-height:44px;padding:0 12px;border:1.5px solid var(--line);border-radius:var(--r-md);background:var(--surface);font-size:16px}
+.field input:focus{outline:3px solid var(--accent);outline-offset:1px;border-color:transparent}
+#form-bisc{align-items:flex-end}
+/* biscotti: un tocco = pochi, due = finiti; colore del negozio */
+.bisc{appearance:none;display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 12px;border:1.5px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);font-weight:700;font-size:14.5px;cursor:pointer}
+.bisc small{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.bisc[data-liv="pochi"]{background:var(--c-bg);border-color:var(--c);color:var(--c-txt)}
+.bisc[data-liv="finiti"]{background:var(--c);border-color:var(--c);color:var(--c-ink)}
+.bisc[data-liv="mandati"]{background:var(--pronto-bg);border-color:var(--pronto-bg);color:var(--pronto);cursor:default}
+.bisc:disabled{opacity:.6;cursor:default}
+.bisc[data-liv="mandati"]:disabled{opacity:1}
+.pill.bisc-pochi{background:var(--c-bg);color:var(--c-txt);box-shadow:inset 0 0 0 1.5px var(--c)}
+.riga.bisc-riga{flex-wrap:wrap}
+.manda-bisc{flex:1 1 100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.manda-bisc.uno{grid-template-columns:minmax(0,1fr)}
+.b-manda{appearance:none;min-height:44px;padding:6px 8px;border:1.5px solid var(--c);border-radius:10px;background:var(--surface);color:var(--c-txt);font-weight:700;font-size:14px;line-height:1.15;cursor:pointer}
+.b-manda:disabled{opacity:.5;cursor:default}
+.riga.e-finito .articolo{text-decoration:line-through;text-decoration-thickness:2px;color:var(--muted)}
+.tag{font-size:11px;letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--line);border-radius:4px;padding:0 5px}
+.azioni{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex:none}
+.azione{appearance:none;border:0;border-radius:10px;min-height:44px;min-width:112px;padding:0 14px;font-weight:700;font-size:15px;cursor:pointer}
+.b-carica{background:var(--ink);color:var(--bg)}
+.b-consegna,.b-fatto{background:var(--done);color:var(--done-ink)}
+.b-fatto-bisc{min-width:96px;border:1.5px solid var(--ink);background:var(--surface);color:var(--ink)}
+.b-fatto-bisc::before{content:"✓ "}
+.b-fatto-bisc.armato{background:var(--done);border-color:var(--done);color:var(--done-ink);min-width:150px}
+.b-fatto-bisc.armato::before{content:""}
+.azione:disabled,.mini:disabled,.link:disabled{opacity:.5;cursor:default}
+.mini{appearance:none;border:1.5px solid var(--line);background:var(--surface);border-radius:10px;min-height:40px;padding:0 12px;font-weight:700;font-size:14px;cursor:pointer;flex:none}
+.mini.pericolo{border-color:var(--urgent);color:var(--urgent);background:var(--urgent-bg)}
+.link{appearance:none;border:0;background:none;padding:4px 2px;font-size:13px;color:var(--muted);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.link[aria-expanded="true"]{color:var(--ink);font-weight:700}
+.link.pericolo{color:var(--urgent);font-weight:700}
+select.sposta{appearance:none;-webkit-appearance:none;width:auto;max-width:100%;min-height:30px;padding:0 10px;border:1px dashed var(--line);border-radius:999px;background:transparent;font-size:12.5px;font-weight:700;color:var(--muted);cursor:pointer}
+.vuoto{color:var(--muted);font-size:15px;padding:18px 16px;border:1.5px dashed var(--line);background:color-mix(in srgb,var(--surface) 50%,transparent);border-radius:var(--r-lg);text-align:center}
+
+details{border-top:1px solid var(--line);padding-top:12px}
+summary{cursor:pointer;font-weight:700;color:var(--muted);min-height:32px;display:flex;align-items:center}
+details[open] summary{margin-bottom:10px}
+/* cronologia: le cose tolte, per recuperarle */
+details.crono{border-top:0;padding-top:4px}
+details.crono > summary{list-style:none;display:inline-flex;gap:8px;min-height:44px;padding:0 16px 0 12px;border:1.5px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);font-size:15px}
+details.crono > summary::-webkit-details-marker{display:none}
+details.crono > summary svg{flex:none;color:var(--muted)}
+details.crono[open] > summary{background:var(--surface-2);border-color:var(--surface-2)}
+.crono-n{font-variant-numeric:tabular-nums;color:var(--muted)}
+.crono-n:empty{display:none}
+.riga.tolta .articolo{color:var(--muted)}
+/* avviso in basso dopo aver tolto o recuperato */
+.avviso{pointer-events:none;position:fixed;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 16px);z-index:70;max-width:440px;margin:0 auto;padding:12px 16px;border-radius:var(--r-md);background:var(--ink);color:var(--bg);font-weight:700;font-size:15px;line-height:1.35;box-shadow:0 8px 28px rgba(0,0,0,.22)}
+.avviso:empty{display:none}
+
+/* delivery round */
+.riepilogo{display:flex;flex-wrap:wrap;gap:8px}
+.stat{flex:1 1 90px;display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-radius:14px;background:var(--surface);border:1px solid var(--line-2)}
+.stat b{font-family:var(--font-body);font-weight:700;font-size:28px;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat span{font-size:13px;color:var(--muted)}
+.stat.allerta{background:var(--urgent-bg);border-color:var(--urgent)}
+.stat.allerta b,.stat.allerta span{color:var(--urgent-txt)}
+.legenda{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.legenda .pill{font-size:14px;padding:4px 12px;font-variant-numeric:tabular-nums}
+.gruppo{background:var(--surface);border:1px solid var(--line-2);border-radius:var(--r-lg);overflow:hidden}
+.gruppo-head{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;padding:12px 14px;border-bottom:1.5px dashed var(--line)}
+.gruppo.dest .gruppo-head{background:var(--c-bg)}
+.gruppo.dest h3{color:var(--c-txt)}
+.gh-titolo{flex:1 1 auto;min-width:0}
+.gh-titolo{display:flex;flex-direction:column;gap:4px}
+.gh-per{font-family:var(--font-display);font-size:11px;font-weight:600;line-height:1.3;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.05;padding-top:3px;letter-spacing:.06em;text-transform:uppercase}
+.gruppo-reparto h3{font-size:21px}
+.conta{font-size:14px;font-variant-numeric:tabular-nums;color:var(--muted);font-weight:700}
+.gruppo .lista{border:0;border-radius:0}
+/* urgenti: rosso chiaro sfumato, non rosso pieno */
+.gruppo.urgenti{border:1.5px solid color-mix(in srgb,var(--urgent) 45%,var(--line-2))}
+.gruppo.urgenti .gruppo-head{background:linear-gradient(100deg,var(--urgent-bg) 0%,var(--surface) 90%);border-bottom-color:color-mix(in srgb,var(--urgent) 35%,var(--line))}
+.gruppo.urgenti h3{color:var(--urgent-txt)}
+.gruppo.urgenti .gh-per{color:var(--urgent-txt)}
+.riga.e-caricato{background:color-mix(in srgb,var(--surface-2) 55%,transparent)}
+.riga.urgente{background:linear-gradient(100deg,var(--urgent-bg) 0%,color-mix(in srgb,var(--urgent-bg) 25%,var(--surface)) 100%)}
+.passa{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:var(--r-md);background:var(--surface-2);color:var(--ink);font-weight:700}
+.esempi{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;font-size:14px;color:var(--muted)}
+
+/* owner: links for staff */
+.link-lista{display:flex;flex-direction:column;gap:10px}
+.link-lista li{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px}
+.link-lista .pill{font-size:14px;padding:3px 10px}
+.link-lista .mini{margin-left:auto}
+
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+/* sito: schermata di accesso con nome e PIN */
+.accesso{position:fixed;inset:0;z-index:80;overflow-y:auto;background:var(--bg);padding:calc(env(safe-area-inset-top,0px) + 20px) 16px calc(env(safe-area-inset-bottom,0px) + 24px)}
+.acc-box{max-width:420px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.acc-testa{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:var(--r-lg);background:var(--nero);border-bottom:2px solid var(--oro)}
+.acc-testa .logo{width:56px;height:56px;border-radius:12px}
+.acc-tab{position:static;box-shadow:none}
+#form-accesso .field{flex:none}
+#form-accesso .primary{margin-top:4px}
+.acc-attesa{text-align:center;color:var(--muted);font-weight:700}
+.chi-sei{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:4px 10px;padding-top:8px;border-top:1px solid var(--line);font-size:14px;color:var(--muted);text-align:center}
+.chi-sei b{color:var(--ink)}
+.codici-lista{display:flex;flex-direction:column;gap:8px}
+.codici-lista li{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 10px}
+.codici-lista code{font-size:16px;font-weight:700;letter-spacing:.04em}
+@media (prefers-reduced-motion: no-preference){
+  .switch button,.chip span,.azione,.mini{transition:background-color .15s,color .15s,border-color .15s}
+}
+</style>
+
+<header class="testata">
+  <div class="testata-in">
+    <button type="button" class="menu-btn" id="apri-menu" aria-label="Apri il menu" aria-controls="menu" aria-expanded="false"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"></path></svg></button>
+    <button type="button" class="indietro" id="torna" hidden><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg>Indietro</button>
+    <span class="logo" role="img" aria-label="Logo Profumo di Pane"></span>
+    <div class="testata-titolo">
+      <p class="marchio">Profumo di Pane</p>
+      <p class="app-nome" id="app-nome">Rifornimenti</p>
+    </div>
+    <p class="oggi" id="oggi"></p>
+  </div>
+</header>
+<section class="fascia giro" id="fascia" aria-labelledby="titolo">
+  <div class="fascia-in">
+    <div>
+      <p class="eyebrow" id="eyebrow">Profumo di Pane</p>
+      <h1 id="titolo">Rifornimenti</h1>
+    </div>
+    <p class="fascia-info" id="fascia-info"></p>
+  </div>
+</section>
+<main class="app">
+  <div class="anteprima-bar" id="bar-anteprima" hidden>
+    <p id="bar-testo"></p>
+    <button type="button" class="mini" id="esci-anteprima">Torna alla vista completa</button>
+  </div>
+
+
+  <div class="menu-velo" id="menu-velo" hidden></div>
+  <nav class="menu" id="menu" aria-label="Sezioni" hidden>
+    <div class="menu-testa">
+      <span class="logo" role="img" aria-label="Logo Profumo di Pane"></span>
+      <p class="eyebrow">Profumo di Pane</p>
+      <button type="button" class="menu-btn" id="chiudi-menu" aria-label="Chiudi il menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+    </div>
+    <ul class="menu-voci" id="menu-voci"></ul>
+  </nav>
+
+  <nav class="switch" id="switch-viste" role="tablist" aria-label="Vista">
+    <button type="button" role="tab" id="tab-negozio" aria-controls="view-negozio" aria-selected="true" data-view="negozio">Negozio</button>
+    <button type="button" role="tab" id="tab-consegne" aria-controls="view-consegne" aria-selected="false" data-view="consegne">Consegne <span class="badge" id="badge" data-zero>0</span></button>
+  </nav>
+
+  <p class="banner" id="banner" hidden></p>
+
+  <!-- Negozio: chi lavora al banco chiede cosa serve -->
+  <section class="view" id="view-negozio" role="tabpanel" aria-labelledby="tab-negozio">
+    <fieldset class="punti" id="punti">
+      <legend class="label-sm">Negozio</legend>
+      <div class="chips">
+        <label class="chip dest-corso"><input type="radio" name="punto" id="punto-corso" value="Corso" checked><span>Corso</span></label>
+        <label class="chip dest-nenni"><input type="radio" name="punto" id="punto-nenni" value="Piazza Nenni"><span>Piazza Nenni</span></label>
+        <label class="chip dest-panif"><input type="radio" name="punto" id="punto-panificio" value="Panificio"><span>Panificio</span></label>
+      </div>
+    </fieldset>
+
+    <div class="view" id="pannello-richieste">
+    <form class="card" id="form-richiesta" novalidate>
+      <label class="label" for="righe">Cosa serve?</label>
+      <p class="chi-ordina" id="chi-ordina"></p>
+      <textarea id="righe" rows="4" autocomplete="off" placeholder="Una cosa per riga, per esempio:&#10;2 kg pane casereccio&#10;Pitte piene&#10;Cartoni pizza grandi"></textarea>
+      <p class="hint">Scrivi come in chat: una cosa per riga o separate da virgole. Puoi anche dettare con il microfono della tastiera. Prima di inviare controlli da dove si prende ogni cosa e cosa è urgente.</p>
+      <div id="frequenti-wrap" class="blocco" hidden>
+        <p class="label-sm">Chiesti spesso</p>
+        <div class="chips" id="frequenti"></div>
+      </div>
+      <button type="submit" class="primary" id="invia" disabled>Controlla e invia</button>
+      <p class="esito" id="esito" role="status"></p>
+    </form>
+
+    <!-- Panificio: è il magazzino, vede cosa serve ai negozi -->
+    <div class="blocco" id="blocco-panificio" hidden>
+      <h2>Cosa serve ai negozi</h2>
+      <p class="hint">Tutto quello che i negozi hanno chiesto. Il colore dice per quale negozio è.</p>
+      <div class="legenda" id="legenda-panif" aria-label="Richieste aperte per negozio"></div>
+      <div class="blocco">
+        <p class="label-sm">Panificazione</p>
+        <p class="hint">Pane, pitte e prodotti da forno. Segna a che punto sei: chi fa il giro e il negozio lo vedono subito.</p>
+        <p class="hint" id="conteggi-panif" hidden></p>
+        <div class="blocco" id="gruppi-panif"></div>
+        <p class="vuoto" id="vuoto-panif">Carico le richieste…</p>
+      </div>
+      <div class="blocco" id="blocco-magazzino" hidden>
+        <p class="label-sm">Dal magazzino</p>
+        <p class="hint">Queste le prende chi fa il giro. Se una cosa non è ancora arrivata in magazzino, segnalalo: il negozio lo vede.</p>
+        <div class="blocco" id="gruppi-magazzino"></div>
+      </div>
+      <p class="hint" id="caricate-panif" hidden></p>
+    </div>
+
+    <div class="blocco" id="blocco-arrivo">
+      <h2 id="titolo-arrivo">In arrivo al Corso</h2>
+      <ul class="lista" id="lista-arrivo"></ul>
+      <p class="vuoto" id="vuoto-arrivo">Carico le richieste…</p>
+      <details id="det-cons-negozio" hidden>
+        <summary>Consegnato oggi (<span id="n-cons-negozio">0</span>)</summary>
+        <ul class="lista" id="lista-cons-negozio"></ul>
+      </details>
+      <details class="crono" id="crono-negozio" hidden>
+        <summary><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 4v4h4"></path><path d="M12 8v4l3 2"></path></svg>Cronologia: cose tolte <span class="crono-n" id="n-crono-negozio"></span></summary>
+        <div class="blocco">
+          <p class="hint">Quello che è stato tolto negli ultimi 7 giorni. Recupera lo rimette in lista; può farlo solo chi l'aveva chiesto.</p>
+          <ul class="lista" id="lista-crono-negozio"></ul>
+          <p class="vuoto" id="vuoto-crono-negozio">Niente tolto negli ultimi 7 giorni.</p>
+        </div>
+      </details>
+    </div>
+    </div>
+
+    <!-- Biscotti: sezione a parte, non va nel giro delle consegne -->
+    <div class="view" id="pannello-biscotti" hidden>
+      <div class="blocco" id="bisc-negozio">
+        <h2 id="bisc-titolo">Biscotti che mancano al Corso</h2>
+        <p class="chi-ordina" id="chi-bisc"></p>
+        <section class="card" id="comanda" aria-labelledby="comanda-titolo">
+          <h3 class="comanda-titolo" id="comanda-titolo">Nuova comanda</h3>
+          <div class="blocco" id="fase-scegli">
+            <p class="label">1. Quanto sono urgenti?</p>
+            <div class="urgenze">
+              <button type="button" class="b-urg" data-urg="finiti"><b>Finiti</b><span>urgenti, zero pacchi</span><em id="fatto-finiti" hidden></em></button>
+              <button type="button" class="b-urg" data-urg="pochi"><b>Pochi pacchi</b><span>meno urgenti</span><em id="fatto-pochi" hidden></em></button>
+            </div>
+          </div>
+          <div class="blocco" id="fase-seleziona" hidden>
+            <div class="riga-fase"><p class="label" id="sel-titolo">2. Scegli i biscotti finiti</p><button type="button" class="link" data-fase="scegli">Cambia urgenza</button></div>
+            <p class="hint">Tocca per scegliere, ritocca per togliere. Non parte niente finché non premi Invia.</p>
+            <div class="chips" id="bisc-griglia"></div>
+            <form class="row" id="form-bisc" novalidate>
+              <label class="field" for="bisc-nuovo"><span class="label-sm">Un biscotto che non è in elenco</span><input id="bisc-nuovo" type="text" autocomplete="off" maxlength="60" placeholder="Per esempio: Torroncini"></label>
+              <button type="submit" class="mini" id="bisc-aggiungi" disabled>Aggiungi</button>
+            </form>
+            <button type="button" class="primary" id="invia-comanda" disabled>Invia comanda</button>
+          </div>
+          <div class="blocco" id="fase-inviata" hidden>
+            <p class="inviata" id="inviata-testo"></p>
+            <button type="button" class="primary" id="altra-urgenza"></button>
+            <button type="button" class="mini" id="ho-finito">Ho finito</button>
+          </div>
+          <p class="esito" id="esito-bisc" role="status"></p>
+        </section>
+        <div class="blocco" id="bisc-chiesti-wrap" hidden>
+          <p class="label-sm">Già chiesti al panificio</p>
+          <p class="hint">Restano qui finché il panificio non li segna come fatti.</p>
+          <ul class="lista" id="bisc-chiesti"></ul>
+        </div>
+        <details class="crono" id="crono-bisc" hidden>
+          <summary><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 4v4h4"></path><path d="M12 8v4l3 2"></path></svg>Cronologia: biscotti tolti <span class="crono-n" id="n-crono-bisc"></span></summary>
+          <div class="blocco">
+            <p class="hint">Biscotti tolti negli ultimi 7 giorni. Recupera li rimette tra quelli chiesti al panificio; può farlo solo chi li aveva chiesti.</p>
+            <ul class="lista" id="lista-crono-bisc"></ul>
+            <p class="vuoto" id="vuoto-crono-bisc">Niente tolto negli ultimi 7 giorni.</p>
+          </div>
+        </details>
+      </div>
+      <div class="blocco" id="bisc-panificio" hidden>
+        <h2>Biscotti da produrre</h2>
+        <p class="hint">Prima i finiti, poi quelli che aspettano da più tempo. Quando un biscotto è fatto, tocca Fatto e poi Conferma: sparisce dalla lista dei negozi.</p>
+        <div class="legenda" id="bisc-legenda"></div>
+        <ul class="lista" id="bisc-da-fare"></ul>
+        <p class="vuoto" id="bisc-vuoto">Nessun biscotto da produrre.</p>
+        <details class="crono" id="crono-fatti" hidden>
+          <summary><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 4v4h4"></path><path d="M12 8v4l3 2"></path></svg> Cronologia: biscotti fatti <span class="crono-n" id="n-crono-fatti"></span></summary>
+          <div class="blocco">
+            <p class="hint">Biscotti segnati come fatti negli ultimi 7 giorni. Se è stato uno sbaglio, Rimetti da fare li riporta in lista come prima.</p>
+            <ul class="lista" id="lista-crono-fatti"></ul>
+            <p class="vuoto" id="vuoto-crono-fatti">Niente segnato come fatto negli ultimi 7 giorni.</p>
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- Consegne: chi fa il giro vede tutto -->
+  <section class="view" id="view-consegne" role="tabpanel" aria-labelledby="tab-consegne" hidden>
+    <div class="riepilogo">
+      <p class="stat"><b id="n-attesa">0</b><span id="l-attesa">da caricare</span></p>
+      <p class="stat"><b id="n-viaggio">0</b><span>caricate</span></p>
+      <p class="stat" id="st-urgenti"><b id="n-urgenti">0</b><span>urgenti</span></p>
+    </div>
+    <div class="legenda" id="legenda" aria-label="Cose aperte per negozio"></div>
+
+    <details class="card" id="giro-wrap">
+      <summary>+ Aggiungi tu una cosa da portare o da ricordare</summary>
+      <form class="blocco" id="form-giro" novalidate>
+        <label class="label" for="righe-giro">Cosa?</label>
+        <p class="chi-ordina" id="chi-giro"></p>
+        <textarea id="righe-giro" rows="3" autocomplete="off" placeholder="Una cosa per riga, per esempio:&#10;Vassoi neri&#10;Passare a prendere le casse"></textarea>
+        <div class="row">
+          <label class="field" for="per-giro"><span class="label-sm">Per</span>
+            <select id="per-giro">
+              <option value="Corso">Corso</option>
+              <option value="Piazza Nenni">Piazza Nenni</option>
+              <option value="Panificio">Panificio</option>
+              <option value="Promemoria">Solo promemoria per me</option>
+            </select>
+          </label>
+        </div>
+        <p class="hint">Da dove si prende e cosa è urgente lo scegli nel controllo, prima di aggiungere.</p>
+        <button type="submit" class="primary" id="invia-giro" disabled>Controlla e aggiungi</button>
+        <p class="esito" id="esito-giro" role="status"></p>
+      </form>
+    </details>
+
+    <div class="switch sotto" role="tablist" aria-label="Organizza le richieste">
+      <button type="button" role="tab" id="modo-carico" aria-selected="true" data-modo="carico">Carico per reparto</button>
+      <button type="button" role="tab" id="modo-consegna" aria-selected="false" data-modo="consegna">Giro per negozio</button>
+    </div>
+    <p class="hint" id="hint-modo"></p>
+    <div class="blocco" id="gruppi"></div>
+    <div class="passa" id="passa" hidden>
+      <p id="passa-testo"></p>
+      <button type="button" class="mini" data-modo="consegna">Vai al giro</button>
+    </div>
+    <p class="vuoto" id="vuoto-consegne">Carico le richieste…</p>
+    <details id="det-cons" hidden>
+      <summary>Consegnato oggi (<span id="n-cons">0</span>)</summary>
+      <ul class="lista" id="lista-cons"></ul>
+    </details>
+    <details class="crono" id="crono-giro" hidden>
+      <summary><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 4v4h4"></path><path d="M12 8v4l3 2"></path></svg>Cronologia: cose tolte <span class="crono-n" id="n-crono-giro"></span></summary>
+      <div class="blocco">
+        <p class="hint">Quello che hai tolto tu negli ultimi 7 giorni. Recupera lo rimette in lista.</p>
+        <ul class="lista" id="lista-crono-giro"></ul>
+        <p class="vuoto" id="vuoto-crono-giro">Niente tolto negli ultimi 7 giorni.</p>
+      </div>
+    </details>
+    <div class="esempi" id="esempi-box" hidden>
+      <p>Le righe segnate "esempio" vengono dai vostri gruppi WhatsApp.</p>
+      <button type="button" class="mini" id="rimuovi-esempi">Rimuovi esempi</button>
+    </div>
+  </section>
+
+  <!-- Sito: solo il titolare vede i codici per registrarsi -->
+  <details class="card" id="codici-box" hidden>
+    <summary>Codici per registrarsi</summary>
+    <div class="blocco">
+      <p class="hint">Dai a ogni dipendente il codice del suo posto di lavoro: lo scrive una sola volta, la prima volta che entra, e da lì vede solo la sua parte.</p>
+      <ul class="codici-lista" id="codici-lista"></ul>
+      <p class="hint">Non mandarli nei gruppi: chi ha un codice può registrarsi.</p>
+    </div>
+  </details>
+
+  <!-- Solo per il titolare: i link per ognuno -->
+  <details class="card" id="link-personale" hidden>
+    <summary>Link per il personale</summary>
+    <div class="blocco">
+      <p class="hint">Ognuno apre il link di questa pagina con un'aggiunta alla fine, così vede solo la sua parte. Tocca "Prova" per vedere com'è.</p>
+      <ul class="link-lista">
+        <li><span class="pill dest dest-corso">Corso</span><code>#corso</code><button type="button" class="mini" data-prova="corso">Prova</button></li>
+        <li><span class="pill dest dest-nenni">Piazza Nenni</span><code>#piazza-nenni</code><button type="button" class="mini" data-prova="piazza-nenni">Prova</button></li>
+        <li><span class="pill dest dest-panif">Panificio e magazzino</span><code>#panificio</code><button type="button" class="mini" data-prova="panificio">Prova</button></li>
+        <li><span class="pill dest dest-altro">Chi fa il giro</span><code>#consegne</code><button type="button" class="mini" data-prova="consegne">Prova</button></li>
+      </ul>
+      <p class="hint" id="link-nota">È una separazione comoda, non una protezione: chi ha il link senza aggiunta vede tutto.</p>
+    </div>
+  </details>
+
+  <p class="chi-sei" id="chi-sei" hidden><span id="chi-sei-testo"></span><button type="button" class="link" id="esci">Esci</button></p>
+</main>
+
+<!-- Sito: chi entra scrive nome e PIN; la prima volta anche il codice del negozio -->
+<div class="accesso" id="accesso" hidden>
+  <div class="acc-box">
+    <div class="acc-testa">
+      <span class="logo" role="img" aria-label="Logo Profumo di Pane"></span>
+      <div class="testata-titolo"><p class="marchio">Profumo di Pane</p><p class="app-nome">Ordini</p></div>
+    </div>
+    <p class="acc-attesa" id="acc-attesa">Un attimo…</p>
+    <nav class="switch acc-tab" id="acc-tab" role="tablist" aria-label="Accesso" hidden>
+      <button type="button" role="tab" data-acc="entra" aria-selected="true">Entra</button>
+      <button type="button" role="tab" data-acc="prima" aria-selected="false">Prima volta</button>
+    </nav>
+    <form class="card" id="form-accesso" novalidate hidden>
+      <p class="hint" id="acc-spiega"></p>
+      <label class="field" for="acc-nome"><span class="label-sm">Il tuo nome</span><input id="acc-nome" type="text" autocomplete="username" autocapitalize="words" maxlength="40" placeholder="Per esempio: Massimo"></label>
+      <label class="field" for="acc-pin"><span class="label-sm">PIN (da 4 a 6 numeri)</span><input id="acc-pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="current-password"></label>
+      <label class="field" for="acc-pin2" id="acc-riga-pin2" hidden><span class="label-sm">Ripeti il PIN</span><input id="acc-pin2" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="new-password"></label>
+      <label class="field" for="acc-codice" id="acc-riga-codice" hidden><span class="label-sm">Codice del negozio</span><input id="acc-codice" type="text" autocapitalize="characters" autocomplete="off" spellcheck="false" maxlength="30" placeholder="Te lo dà il titolare"></label>
+      <p class="riep-avviso" id="acc-errore" role="alert" hidden></p>
+      <button type="submit" class="primary" id="acc-invia">Entra</button>
+    </form>
+  </div>
+</div>
+
+<p class="avviso" id="avviso" role="status" aria-live="polite"></p>
+<div class="conferma-velo" id="controllo" role="dialog" aria-modal="true" aria-labelledby="ctrl-titolo" hidden>
+  <div class="riep-box">
+    <h2 id="ctrl-titolo">Controlla prima di inviare</h2>
+    <p class="hint" id="ctrl-sotto"></p>
+    <p class="ctrl-domanda" id="ctrl-domanda"></p>
+    <ul class="ctrl-lista" id="ctrl-lista"></ul>
+    <div class="riep-azioni"><button type="button" class="mini" id="ctrl-indietro">Torna a scrivere</button><button type="button" class="primary" id="ctrl-invia">Sì, invia</button></div>
+  </div>
+</div>
+<div class="conferma-velo" id="riepilogo" role="dialog" aria-modal="true" aria-labelledby="riep-titolo" hidden>
+  <div class="riep-box">
+    <h2 id="riep-titolo">Controlla e conferma</h2>
+    <p class="hint" id="riep-sotto"></p>
+    <ul class="riep-lista" id="riep-lista"></ul>
+    <p class="riep-avviso" id="riep-avviso" hidden></p>
+    <div class="riep-azioni">
+      <button type="button" class="mini" id="riep-indietro">Torna indietro</button>
+      <button type="button" class="primary" id="riep-conferma">Confermo</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* Punti vendita: nomi presi dai gruppi WhatsApp. Si cambiano qui. */
+const DESTINAZIONI = ["Corso","Piazza Nenni","Panificio"];
+const ORIGINI = ["Panificio","Corso","Piazza Nenni","Da comprare"];
+const PROMEMORIA = "Promemoria";
+const PREP = {"Corso":"al Corso","Piazza Nenni":"a Piazza Nenni","Panificio":"al Panificio"};
+const DA_PREP = {"Corso":"dal Corso","Piazza Nenni":"da Piazza Nenni","Panificio":"dal Panificio"};
+function daLuogo(p){ return DA_PREP[p] || "da " + p; }
+const CLASSE_DEST = {"Corso":"dest-corso","Piazza Nenni":"dest-nenni","Panificio":"dest-panif"};
+function classeDest(p){ return CLASSE_DEST[p] || "dest-altro"; }
+const SIGLA = {"Corso":"C","Piazza Nenni":"N","Panificio":"P"};
+function sigla(per){ return SIGLA[per] ? el("span", {class:"sigla " + classeDest(per), "aria-hidden":"true", text:SIGLA[per]}) : null; }
+
+/* Chi apre la pagina: l'aggiunta in fondo al link decide l'interfaccia */
+const RUOLI = {
+  "corso": {tipo:"negozio", punto:"Corso"},
+  "piazza-nenni": {tipo:"negozio", punto:"Piazza Nenni"},
+  "nenni": {tipo:"negozio", punto:"Piazza Nenni"},
+  "panificio": {tipo:"negozio", punto:"Panificio"},
+  "consegne": {tipo:"giro"},
+  "giro": {tipo:"giro"}
+};
+function leggiRuolo(){
+  /* sul sito il ruolo lo decide il codice con cui ci si è registrati, non il link */
+  if (S.ruoloFisso) return RUOLI[S.ruoloFisso] || {tipo:"titolare"};
+  let h = "";
+  try { h = (location.hash || "").replace(/^#/, "").toLowerCase(); } catch(e){}
+  return RUOLI[h] || {tipo:"titolare"};
+}
+
+/* Reparti del magazzino, nell'ordine in cui si mostrano. */
+const REPARTI = ["Pane e forno","Frigo","Congelati","Verdure e frutta","Bevande","Dispensa","Piatti, posate e vassoi","Cartoni e buste","Pulizia","Altro"];
+/* Parole che fanno capire il reparto, controllate in quest'ordine dal caso più specifico.
+   Una parola trova anche quelle che iniziano così ("pitt" trova "pitte"); uno spazio finale vuol dire parola intera. */
+const PAROLE = [
+  /* casi particolari, prima di tutto il resto */
+  ["Altro", ["apribottigli","cavatapp","accendin","rotolo cassa","rotoli cassa","scontrin","lampadin","neon","tavolo"]],
+  ["Dispensa", ["crema porcini","crema di porcini","polpa di pomodoro","polpa pomodoro","pomodoro pizza","pomodori pizza","succo limone","succo di limone","pesto","olio friggitrice","olio per friggitrice"]],
+  ["Pane e forno", ["panini hamburger","panino hamburger","pane per hamburger","pangoccio","pan goccio","pangrattato","pan grattato","pasta pizza","pasta per pizza","impast"]],
+  /* poi i reparti */
+  ["Piatti, posate e vassoi", ["piatt","posat","forchett","coltell","cucchia","bicchier","tovagliol","cannucc","vassoi","vassoio","palett","stuzzicadent","coppett","tazzin","coni ","cono ","pirottin","tappi","coperchi","tovagliett"]],
+  ["Pulizia", ["detersiv","detergent","sgrassat","sapon","candeggin","amuchin","spugn","lavastovigl","brillant","sacchi spazzatura","sacchetti spazzatura","sacchi neri","guanti","golmar","carta igienic","carta mani","rotolon","asciugatutto","scottex","fustin","lavapavimen","stracci","scop","acido","alcoldet","ovenz"]],
+  ["Cartoni e buste", ["carton","buste ","busta ","bustone","shopper","sacchett","carta forno","carta regalo","buste carta","pergamin","fogli","alluminio","pellicol","vaschett","contenitor","scatol","etichett"]],
+  ["Congelati", ["congelat","surgelat","gelat","semifredd","crocchett","crochett","crocche","arancin","aracin","piccantin","braciol","patatine","patate stik","patate stick","stecco","stecca","kebab","cotolett","misto scoglio","frittura","spadellat","porcini","ghiaccio","bastoncin","suppli","nuggets","alette"]],
+  ["Frigo", ["salmon","formagg","mozzarell","provol","ricott","parmigiano","grana ","pecorin","cheddar","scamorz","burrat","stracchin","gorgonzol","emmental","fontina","galbani","spalmabil","prosciutt","cotto ","crudo","capocoll","fesa","tacchino","fetta golosa","salam","mortadell","speck","speak","wurstel","wrustel","pancett","nduja","salsicc","bresaol","porchett","pulled","hamburger","campanell","polpa","girello","filone suino","suino","manzo","spezzatin","cosce","sopracosce","petti","pollo","carne","macinat","pesce","gamber","insalata di mare","insalata mare","latte","panna","burro","yogurt","uova","uovo","lievito","affettat"]],
+  ["Bevande", ["acqua","coca","cola ","fanta ","sprite","birr","tuborg","turborg","nastro","peroni","moretti","heineken","vino","vini ","prosecco","spumant","succh","succo ","aranciat","limonat","chinott","gassos","bibit","energy","red bull","estathe","estate pesca","the ","te freddo","lattin","tonic","amaro","liquor","aperol","sciroppo"]],
+  ["Verdure e frutta", ["zucca","zucche ","zucchin","insalat","lattug","iceberg","icerbeg","aisberg","rucol","pomodor","pachino","cipoll","aglio","patat","melanzan","peperon","funghi","carot","limon","aranc","basilic","prezzemol","spinac","friariell","broccol","cime di rapa","cavol","finocch","sedano","fagiolin","verdur","frutta","banan","mele ","pere ","fragol"]],
+  ["Pane e forno", ["pane","pani ","panin","pitt","pitoni","pitoncin","ciabatt","focacc","brioche","cornett","rosett","filon","baguett","pagnott","pizz","calzon","rustic","tort","crostat","crostin","biscott","mattutin","multi cereal","multicereal","fantasia","giambirliett","sfogliat","taral","grissin","frisell","dolc","pasticcin","muffin","zeppol","chiacchier","panciok","tartarugh","ciambell","saccottin","nzull","sussumell","torroncin","pastier","panetton","ciciarat","cuddur"]],
+  ["Dispensa", ["farin","semol","olio","sale ","zuccher","caffe","cialde","capsul","ketchup","maiones","manaies","senape","salsa","salse","bustine","passata","pelati","tonno","olive","capperi","acciugh","mais","noci","pasta","rigatoni","pennette","penne ","spaghett","paccheri","lasagn","riso","ceci","fagiol","lenticch","spezie","origano","pepe ","aceto","nutella","crema","glassa","gocce","granella","marmellat","miele","cacao","camomill"]]
+];
+
+/* Biscotti e biscotteria più chiesti nelle chat. Se ne aggiungono altri dall'app. */
+/* Biscotti dal listino "Confezioni". Le sfogliatine sono divise per gusto, come le chiedono i negozi. */
+const BISCOTTI_BASE = ["Anicini","Biscotti multicereali","Biscotti prima colazione","Cantuccini","Chicchi caffè","Crostini di grano","Cuor di nocciola","Delizie di cioccolato","Dolcetti alla nocciola","Fantasie alle mandorle","Friselle integrali","Frollini ricoperti al cioccolato","Giamberletti","Gocce di cioccolato","Grissini multicereali","Limoncelli","Mattutini","Nzulli","Nzullini","Pane duro di grano","Pastetti","Pastetti integrali","Riccioli di castagne","Sfogliatine albicocca","Sfogliatine frutti di bosco","Trancini","Trancini alle mandorle"];
+const NEGOZI_BISC = ["Corso","Piazza Nenni"];
+const CHIAVE_NEG = {"Corso":"corso","Piazza Nenni":"piazza-nenni"};
+
+const $ = id => document.getElementById(id);
+function leggi(k){ try { return localStorage.getItem("rifornimenti:" + k); } catch(e){ return null; } }
+function ricorda(k, v){ try { localStorage.setItem("rifornimenti:" + k, v); } catch(e){} }
+
+const S = {
+  richieste: [],
+  pronto: false,
+  ruolo: {tipo:"titolare"},
+  anteprima: false,
+  puntoTitolare: DESTINAZIONI.indexOf(leggi("punto")) >= 0 ? leggi("punto") : "Corso",
+  punto: "Corso",
+  vistaTitolare: leggi("vista") === "consegne" ? "consegne" : "negozio",
+  vista: "negozio",
+  modo: leggi("modo") === "consegna" ? "consegna" : "carico",
+  mappa: {},
+  frequenti: {},
+  sez: "richieste",
+  vistaPrima: null,
+  biscotti: [],
+  aggiunteBisc: [],
+  inviandoBisc: false,
+  bozza: { fase:"scegli", livello:null, sel:new Set(), inviati:[], inviando:false },
+  dopoConferma: null,
+  armatoBisc: null,
+  tuttiFrequenti: false,
+  sola: false,
+  /* chi sta usando la pagina: l'account Claude con cui l'ha aperta, non un nome scritto a mano */
+  mioId: null,
+  nomeMio: "",
+  owner: false,
+  utente: null,
+  nomi: {},
+  mostraChi: new Set(),
+  docsRichieste: [],
+  tolte: [],
+  stati: {},
+  prontoR: false,
+  prontoS: false,
+  inviando: false,
+  inviandoGiro: false,
+  pending: new Set(),
+  armato: null,
+  armatoManca: null,
+  esempiArmato: false
+};
+let store = null;
+let timerArmato = 0;
+const timerEsiti = {};
+
+function chiave(t){
+  return String(t || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, " ").trim().slice(0,100);
+}
+function indovinaReparto(articolo){
+  const t = " " + chiave(articolo) + " ";
+  for (const voce of PAROLE){
+    for (const p of voce[1]){ if (t.indexOf(" " + p) >= 0) return voce[0]; }
+  }
+  return "Altro";
+}
+function repartoDi(r){
+  if (REPARTI.indexOf(r.reparto) >= 0) return r.reparto;
+  const m = S.mappa[chiave(r.articolo)];
+  if (REPARTI.indexOf(m) >= 0) return m;
+  return indovinaReparto(r.articolo);
+}
+
+/* ---------- tempo ---------- */
+const fmtOra = new Intl.DateTimeFormat("it-IT", {hour:"2-digit", minute:"2-digit"});
+const fmtGiorno = new Intl.DateTimeFormat("it-IT", {weekday:"short"});
+const fmtOggi = new Intl.DateTimeFormat("it-IT", {weekday:"short", day:"numeric", month:"long"});
+function inizioOggi(){ const d = new Date(); d.setHours(0,0,0,0); return d.getTime(); }
+function quando(ms){
+  if (!ms) return "";
+  const oggi = inizioOggi();
+  if (ms >= oggi) return fmtOra.format(ms);
+  if (ms >= oggi - 86400000) return "ieri " + fmtOra.format(ms);
+  return fmtGiorno.format(ms) + " " + fmtOra.format(ms);
+}
+
+/* ---------- DOM ---------- */
+function el(tag, attrs){
+  const n = document.createElement(tag);
+  if (attrs) for (const k in attrs){
+    const v = attrs[k];
+    if (v == null || v === false) continue;
+    if (k === "class") n.className = v;
+    else if (k === "text") n.textContent = v;
+    else if (k === "disabled") n.disabled = true;
+    else n.setAttribute(k, v === true ? "" : String(v));
+  }
+  for (let i = 2; i < arguments.length; i++){
+    const c = arguments[i];
+    if (c == null || c === false) continue;
+    n.append(c.nodeType ? c : document.createTextNode(String(c)));
+  }
+  return n;
+}
+function riempi(nodo, figli){ nodo.replaceChildren.apply(nodo, figli); }
+function banner(msg){ const b = $("banner"); b.textContent = msg; b.hidden = !msg; }
+function esito(id, msg){
+  $(id).textContent = msg;
+  clearTimeout(timerEsiti[id]);
+  timerEsiti[id] = setTimeout(function(){ $(id).textContent = ""; }, 4000);
+}
+
+/* ---------- dati ----------
+   richieste/<account>  un documento per persona: solo quella persona (e il titolare) lo può cambiare
+   stati/<account~voce> carico, consegna e reparto: li cambia chi fa il giro o il panificio */
+const ESEMPI = "esempi";
+/* panificazione: in preparazione, pronto, finito. Magazzino: manca (non ancora arrivato) */
+const STATI_PREP = ["preparazione","pronto","finito","manca"];
+const NOMI_PREP = {preparazione:"In preparazione", pronto:"Pronto da caricare", finito:"Finito al panificio", manca:"Non ancora in magazzino"};
+const CLASSI_PREP = {preparazione:"p-prep", pronto:"p-pronto", finito:"p-finito", manca:"p-finito"};
+const REPARTO_FORNO = "Pane e forno";
+function nonDisponibile(r){ return r.prep === "finito" || r.prep === "manca"; }
+/* ordine: pronte prima (si caricano subito), finite e mancanti in fondo */
+function rangoPrep(r){ return r.prep === "pronto" ? 0 : (nonDisponibile(r) ? 2 : 1); }
+function norma(k, d, st, autore, rid){
+  const stati = ["attesa","caricato","consegnato"];
+  st = st || {};
+  return {
+    id: k,
+    rid: rid,
+    autore: autore,
+    mio: !!S.mioId && autore === S.mioId,
+    articolo: String(d.articolo || "").slice(0,120) || "Senza nome",
+    quantita: String(d.quantita || "").slice(0,24),
+    per: String(d.per || ""),
+    da: String(d.da || "Panificio"),
+    urgente: d.urgente === true,
+    stato: stati.indexOf(st.stato) >= 0 ? st.stato : "attesa",
+    creato: Number(d.creato) || 0,
+    consegnatoAlle: Number(st.consegnatoAlle) || 0,
+    esempio: d.esempio === true || autore === ESEMPI,
+    daGiro: d.daGiro === true,
+    reparto: REPARTI.indexOf(st.reparto) >= 0 ? st.reparto : (REPARTI.indexOf(d.reparto) >= 0 ? d.reparto : ""),
+    /* a che punto è il panificio: "", "preparazione", "pronto", "finito" */
+    prep: STATI_PREP.indexOf(st.prep) >= 0 ? st.prep : ""
+  };
+}
+function ricomponi(){
+  const out = [], tolte = [];
+  S.docsRichieste.forEach(function(doc){
+    const voci = doc.voci && typeof doc.voci === "object" ? doc.voci : {};
+    for (const rid in voci){
+      const v = voci[rid];
+      if (!v || typeof v !== "object") continue;
+      const k = doc.id + "~" + rid;
+      const r = norma(k, v, S.stati[k], doc.id, rid);
+      /* le cose tolte restano nell'archivio: finiscono nella cronologia */
+      if (v.annullato){ r.toltoAlle = Number(v.annullatoAlle) || r.creato; tolte.push(r); }
+      else out.push(r);
+    }
+  });
+  S.richieste = out;
+  S.tolte = tolte;
+}
+const SETTE_GIORNI = 7 * 86400000;
+let timerAvviso = 0;
+function avviso(msg){
+  $("avviso").textContent = msg;
+  clearTimeout(timerAvviso);
+  timerAvviso = setTimeout(function(){ $("avviso").textContent = ""; }, 5000);
+}
+function nuovoId(){ return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+function puoTogliere(r){ return !!store && !S.sola && (r.mio || S.owner); }
+function nomeDi(id){
+  if (S.mioId && id === S.mioId) return "te";
+  if (!(id in S.nomi)) return "…";
+  return S.nomi[id] || "una persona senza nome visibile";
+}
+/* i nomi si chiedono solo quando qualcuno tocca "Chi?" */
+function aggiornaNomi(){
+  if (!S.utente) return;
+  const ids = Array.from(new Set(S.richieste.concat(S.tolte).filter(function(r){ return S.mostraChi.has(r.id); }).map(function(r){ return r.autore; })
+    .concat(S.biscotti.filter(function(b){ return S.mostraChi.has(b.id); }).map(function(b){ return b.segnatoDa; }))
+    .filter(function(id){ return id && id !== ESEMPI && id !== S.mioId; })));
+  if (!ids.length) return;
+  S.utente.profiles(ids).then(function(ps){
+    let cambiato = false;
+    ids.forEach(function(id){
+      const n = ps && ps[id] ? (ps[id].name || "") : "";
+      if (S.nomi[id] !== n){ S.nomi[id] = n; cambiato = true; }
+    });
+    if (cambiato) renderTutto();
+  }).catch(function(){});
+}
+function ordina(a, b){
+  if (a.urgente !== b.urgente) return a.urgente ? -1 : 1;
+  return a.creato - b.creato;
+}
+function ordinaPerReparto(a, b){
+  if (a.urgente !== b.urgente) return a.urgente ? -1 : 1;
+  const d = REPARTI.indexOf(repartoDi(a)) - REPARTI.indexOf(repartoDi(b));
+  return d || a.creato - b.creato;
+}
+
+const UNITA = "(?:kg|g|gr|hg|l|lt|pz|pezzi|pezzo|cartoni|cartone|casse|cassa|teglie|teglia|vassoi|vassoio|pacchi|pacco|buste|busta|confezioni|conf|sacchi|sacco)";
+const RE_INIZIO = new RegExp("^(\\d+(?:[.,]\\d+)?\\s*" + UNITA + "?\\.?)\\s+(?:di\\s+)?(.+)$", "i");
+const RE_FINE = new RegExp("^(.+?)\\s+(?:x\\s*)?(\\d+(?:[.,]\\d+)?\\s*" + UNITA + "?)$", "i");
+/* Intestazioni che usate già nei messaggi ("BEVANDE", "CONGELATORE", "*Ordinare*", "Con calma:").
+   Non sono prodotti: valgono per le righe che seguono. */
+const INTESTAZIONI = {
+  "bevande":{reparto:"Bevande"}, "bibite":{reparto:"Bevande"},
+  "congelatore":{reparto:"Congelati"}, "congelati":{reparto:"Congelati"}, "surgelati":{reparto:"Congelati"}, "freezer":{reparto:"Congelati"},
+  "frigo":{reparto:"Frigo"}, "frigorifero":{reparto:"Frigo"},
+  "verdure":{reparto:"Verdure e frutta"}, "verdura":{reparto:"Verdure e frutta"}, "frutta":{reparto:"Verdure e frutta"}, "ortofrutta":{reparto:"Verdure e frutta"},
+  "dispensa":{reparto:"Dispensa"}, "pulizia":{reparto:"Pulizia"}, "pulizie":{reparto:"Pulizia"}, "detersivi":{reparto:"Pulizia"},
+  "monouso":{reparto:"Piatti, posate e vassoi"}, "imballaggi":{reparto:"Cartoni e buste"},
+  "ordinare":{ordinare:true}, "da ordinare":{ordinare:true}, "comprare":{ordinare:true}, "da comprare":{ordinare:true},
+  "urgente":{urgente:true}, "urgenti":{urgente:true},
+  "con calma":{urgente:false}, "senza urgenza":{urgente:false}, "non urgente":{urgente:false},
+  "da cucinare":{}, "da portare":{}, "da portare domani mattina":{}, "per pomeriggio":{}, "per stasera":{}, "lista":{}, "varie":{}, "altro":{}
+};
+const CORTESIA = /\b(x ?favore|per ?favore|per piacere|grazie( mille)?|gentilmente|please)\b/gi;
+const VERBI_INIZIO = /^(portare|portami|porta|mandare|mandatemi|mandami|serve|servono|ci serve|ci servono|mi serve|mi servono)\s+/i;
+const NON_URGENTE = /\(?\s*\b(non urgente|senza urgenza|con calma)\b\s*\)?/gi;
+const URGENTE = /\burgent[ei]\b/gi;
+const DA_ORDINARE = /\(?\s*\bda (ordinare|comprare)\b\s*\)?/gi;
+const EMOJI = /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}\u{203C}]/gu;
+function pulisci(t){
+  return String(t || "").replace(EMOJI, "").replace(/^[\s\-•*·]+/, "").replace(/[\s*:!.]+$/, "").trim();
+}
+function parseRiga(t, ctx){
+  t = pulisci(t);
+  if (!t) return null;
+  let urgente = null, ordinare = false;
+  if (NON_URGENTE.test(t)){ urgente = false; t = t.replace(NON_URGENTE, " "); }
+  NON_URGENTE.lastIndex = 0;
+  if (URGENTE.test(t)){ urgente = true; t = t.replace(URGENTE, " "); }
+  URGENTE.lastIndex = 0;
+  if (DA_ORDINARE.test(t)){ ordinare = true; t = t.replace(DA_ORDINARE, " "); }
+  DA_ORDINARE.lastIndex = 0;
+  if (/^(ordinare|comprare)\s+/i.test(t)){ ordinare = true; t = t.replace(/^(ordinare|comprare)\s+/i, ""); }
+  t = t.replace(CORTESIA, " ").replace(/\s+/g, " ").trim().replace(VERBI_INIZIO, "").replace(/^(il|lo|la|i|gli|le)\s+|^l'\s*/i, "")
+       .replace(/\(\s*\)/g, " ").replace(/\(\s*$/, "").replace(/\s+/g, " ").trim().replace(/[\s,.;:(]+$/, "");
+  if (!t || !/[a-zàèéìòù]{2,}/i.test(t)) return null;
+  let q = "", a = t, m;
+  if ((m = t.match(RE_INIZIO))) { q = m[1]; a = m[2]; }
+  else if ((m = t.match(RE_FINE))) { a = m[1]; q = m[2]; }
+  a = a.trim();
+  a = a.charAt(0).toUpperCase() + a.slice(1);
+  return {
+    articolo: a.slice(0,120),
+    quantita: q.replace(/\s+/g, " ").trim().slice(0,24),
+    urgente: urgente !== null ? urgente : (ctx ? ctx.urgente : null),
+    ordinare: ordinare || !!(ctx && ctx.ordinare),
+    /* l'intestazione decide il reparto solo se il nome da solo non basta ("1 bianco" sotto CONGELATORE) */
+    reparto: ctx && ctx.reparto && indovinaReparto(a) === "Altro" ? ctx.reparto : ""
+  };
+}
+function righeDi(id){
+  const righe = $(id).value.split("\n");
+  const out = [];
+  let ctx = { reparto:"", ordinare:false, urgente:null };
+  righe.forEach(function(riga, i){
+    const k = chiave(pulisci(riga));
+    const dopo = righe.slice(i + 1).some(function(x){ return x.trim(); });
+    if (INTESTAZIONI[k] && !dopo && INTESTAZIONI[k].urgente === true){
+      out.forEach(function(x){ x.urgente = true; });
+      return;
+    }
+    if (INTESTAZIONI[k] && dopo){
+      const h = INTESTAZIONI[k];
+      ctx = { reparto: h.reparto || "", ordinare: !!h.ordinare, urgente: ("urgente" in h) ? h.urgente : null };
+      return;
+    }
+    riga.split(/;|,\s+/).forEach(function(pezzo){
+      const x = parseRiga(pezzo, ctx);
+      if (x) out.push(x);
+    });
+  });
+  return out.slice(0,30);
+}
+const ETICHETTE_ORIGINE = {"Da comprare":"Da ordinare o comprare"};
+function nomeOrigine(o){ return ETICHETTE_ORIGINE[o] || o; }
+
+/* ---------- scritture ---------- */
+async function scrivi(fn, crea){
+  for (let tentativo = 0; tentativo < 2; tentativo++){
+    try { await fn(); return true; }
+    catch(e){
+      const c = e && e.code;
+      if (c === "unavailable" && tentativo === 0){
+        await new Promise(function(r){ setTimeout(r, 300 + Math.random() * 700); });
+        continue;
+      }
+      if (c === "senza_account"){ banner("Per ordinare apri questa pagina con il tuo account Claude: così il tuo nome è sicuro."); return false; }
+      if (c === "invalid_argument" && crea){ solaLettura(); return false; }
+      if (c === "invalid_argument"){ banner("Questa richiesta è appena stata cambiata da qualcun altro."); return false; }
+      if (c === "quota_exceeded"){ banner("L'archivio è pieno: rimuovi gli esempi o le richieste vecchie, poi riprova."); return false; }
+      if (c === "revoked" || c === "not_granted" || c === "capability_disabled" || c === "capability_removed"){ solaLettura(); return false; }
+      banner("Non sono riuscito a salvare. Controlla la connessione e riprova.");
+      return false;
+    }
+  }
+  return false;
+}
+function solaLettura(){
+  S.sola = true;
+  banner("Puoi vedere le richieste ma non modificarle da questo account.");
+  renderTutto();
+}
+
+/* ogni cosa ha la sua provenienza e la sua urgenza, scelte nel controllo prima di inviare */
+async function aggiungi(voci, comuni){
+  let ok = 0;
+  for (const x of voci){
+    const voce = Object.assign({ esempio: false, daGiro: false }, comuni, {
+      articolo: x.articolo, quantita: x.quantita, creato: Date.now(),
+      da: x.da || "Panificio", urgente: x.urgente === true
+    });
+    if (x.reparto) voce.reparto = x.reparto;
+    const fatto = await scrivi(function(){ return store.aggiungi(voce); }, true);
+    if (!fatto) break;
+    ok++;
+  }
+  return ok;
+}
+/* da dove si può prendere: si parte sempre dal Panificio */
+function originiPer(per){
+  if (per === PROMEMORIA) return [];
+  return ORIGINI.filter(function(o){ return o !== per || o === "Panificio"; });
+}
+function invia(ev){
+  ev.preventDefault();
+  const rr = righeDi("righe");
+  if (!rr.length || !store || S.sola || S.inviando || !S.mioId) return;
+  apriControllo("negozio", S.punto, rr);
+}
+function inviaGiro(ev){
+  ev.preventDefault();
+  const rr = righeDi("righe-giro");
+  if (!rr.length || !store || S.sola || S.inviandoGiro || !S.mioId) return;
+  apriControllo("giro", $("per-giro").value, rr);
+}
+function apriControllo(dove, per, rr){
+  const opz = originiPer(per);
+  S.ctrl = {
+    dove: dove, per: per, inviando: false,
+    voci: rr.map(function(x){
+      return {
+        articolo: x.articolo, quantita: x.quantita, reparto: x.reparto,
+        da: (x.ordinare && opz.indexOf("Da comprare") >= 0) ? "Da comprare" : "Panificio",
+        urgente: x.urgente === true
+      };
+    })
+  };
+  renderControllo();
+  avviso("");
+  $("controllo").hidden = false;
+  try { document.body.style.overflow = "hidden"; } catch(e){}
+  $("ctrl-invia").focus();
+}
+function chiudiControllo(){
+  $("controllo").hidden = true;
+  S.ctrl = null;
+  try { document.body.style.overflow = ""; } catch(e){}
+}
+function nomeProvenienza(o){ return o === "Da comprare" ? "Da ordinare o comprare" : o; }
+function renderControllo(){
+  const c = S.ctrl;
+  if (!c) return;
+  const promem = c.per === PROMEMORIA;
+  const opz = originiPer(c.per);
+  const gia = new Set(S.richieste.filter(function(r){ return r.per === c.per && r.stato !== "consegnato"; }).map(function(r){ return chiave(r.articolo); }));
+  const n = c.voci.length;
+  $("ctrl-sotto").textContent = promem
+    ? (n === 1 ? "1 promemoria per te." : n + " promemoria per te.")
+    : (n === 1 ? "1 cosa" : n + " cose") + " da portare " + (PREP[c.per] || "a " + c.per) + ".";
+  const altrove = c.voci.filter(function(v){ return v.da !== "Panificio"; }).length;
+  const dom = $("ctrl-domanda");
+  dom.hidden = promem;
+  dom.className = "ctrl-domanda" + (altrove ? " diverso" : "");
+  if (!altrove) dom.textContent = n === 1 ? "Si prende al Panificio. È giusto?" : "Tutto si prende al Panificio. È giusto?";
+  else dom.textContent = "Attenzione: " + (altrove === 1 ? "1 cosa non si prende" : altrove + " cose non si prendono") + " al Panificio. Controlla qui sotto.";
+  riempi($("ctrl-lista"), c.voci.map(function(v, i){
+    const fuori = v.da !== "Panificio";
+    const cls = fuori ? (v.da === "Da comprare" ? " fuori comprare" : " fuori " + classeDest(v.da)) : "";
+    const testa = el("p", {class:"articolo"}, v.quantita ? el("span", {class:"qta", text:v.quantita}) : null, v.articolo,
+      gia.has(chiave(v.articolo)) ? el("span", {class:"pill p-attesa ctrl-gia", text:"Già chiesto"}) : null);
+    const scelte = el("div", {class:"ctrl-scelte"});
+    if (!promem){
+      const sel = el("select", {class:"prov", "data-ctrl-da":String(i), "aria-label":"Da dove si prende " + v.articolo, disabled:c.inviando});
+      opz.forEach(function(o){ sel.append(el("option", {value:o, text: (o === "Da comprare" ? "Da ordinare o comprare" : (function(t){ return t.charAt(0).toUpperCase() + t.slice(1); })(daLuogo(o)))})); });
+      sel.value = v.da;
+      scelte.append(sel);
+    }
+    scelte.append(el("button", {type:"button", class:"urg-mini", "data-ctrl-urg":String(i), "aria-pressed":String(v.urgente), disabled:c.inviando,
+      "aria-label":"Urgente: " + v.articolo, text:"Urgente"}));
+    return el("li", {class:"ctrl-voce" + cls}, testa, scelte);
+  }));
+  const b = $("ctrl-invia");
+  b.disabled = c.inviando || !n;
+  b.textContent = c.inviando ? "Invio…" : (c.dove === "giro" ? (n === 1 ? "Sì, aggiungi" : "Sì, aggiungi " + n + " cose") : (n === 1 ? "Sì, invia" : "Sì, invia " + n + " cose"));
+  $("ctrl-indietro").disabled = c.inviando;
+}
+async function confermaControllo(){
+  const c = S.ctrl;
+  if (!c || c.inviando || !c.voci.length) return;
+  c.inviando = true;
+  const giro = c.dove === "giro";
+  if (giro) S.inviandoGiro = true; else S.inviando = true;
+  renderControllo();
+  const ok = await aggiungi(c.voci, { per: c.per, daGiro: giro });
+  if (giro) S.inviandoGiro = false; else S.inviando = false;
+  chiudiControllo();
+  if (ok){
+    $(giro ? "righe-giro" : "righe").value = "";
+    if (giro) esito("esito-giro", ok === 1 ? "Aggiunta." : ok + " cose aggiunte.");
+    else esito("esito", ok === 1 ? "Richiesta inviata." : ok + " richieste inviate.");
+  }
+  renderTutto();
+  const f = $(giro ? "righe-giro" : "righe");
+  if (f) f.focus();
+}
+
+async function cambiaStato(id, stato){
+  if (!store || S.sola || S.pending.has(id)) return;
+  const patch = { stato: stato, aggiornato: Date.now(), consegnatoAlle: stato === "consegnato" ? Date.now() : 0 };
+  S.pending.add(id); renderTutto();
+  await scrivi(function(){ return store.stato(id, patch); });
+  S.pending.delete(id); renderTutto();
+}
+async function consegnaTutto(dest){
+  const ids = S.richieste.filter(function(r){ return r.per === dest && r.stato === "caricato"; }).map(function(r){ return r.id; });
+  for (const id of ids) await cambiaStato(id, "consegnato");
+}
+/* togliere una richiesta: solo chi l'ha fatta (o il titolare) */
+async function annulla(id){
+  const r = S.richieste.find(function(x){ return x.id === id; });
+  if (!r || !puoTogliere(r)) return;
+  if (S.armato !== id){
+    S.armato = id; renderTutto();
+    clearTimeout(timerArmato);
+    timerArmato = setTimeout(function(){ S.armato = null; renderTutto(); }, 4000);
+    return;
+  }
+  clearTimeout(timerArmato);
+  S.armato = null; S.pending.add(id); renderTutto();
+  const ok = await scrivi(function(){ return store.annulla(r); });
+  S.pending.delete(id);
+  if (ok) avviso("Tolto: " + r.articolo + ". Se è stato uno sbaglio, lo ritrovi in Cronologia.");
+  renderTutto();
+}
+/* recuperare una cosa tolta per sbaglio: la stessa persona che poteva toglierla */
+function richiestoDiNuovo(r){
+  const k = chiave(r.articolo);
+  return S.richieste.some(function(x){ return x.per === r.per && x.stato !== "consegnato" && chiave(x.articolo) === k; });
+}
+async function ripristina(id){
+  const r = S.tolte.find(function(x){ return x.id === id; });
+  if (!r || !puoTogliere(r) || S.pending.has(id) || richiestoDiNuovo(r)) return;
+  S.pending.add(id); renderTutto();
+  const ok = await scrivi(function(){ return store.ripristina(r); });
+  S.pending.delete(id);
+  if (ok) avviso("Rimesso in lista: " + r.articolo + ".");
+  renderTutto();
+}
+async function rimuoviEsempi(){
+  if (!store || S.sola || !S.owner) return;
+  if (!S.esempiArmato){
+    S.esempiArmato = true; renderTutto();
+    setTimeout(function(){ S.esempiArmato = false; renderTutto(); }, 5000);
+    return;
+  }
+  S.esempiArmato = false;
+  await scrivi(function(){ return store.rimuoviEsempi(); });
+}
+function isPanificazione(r){ return repartoDi(r) === REPARTO_FORNO; }
+/* cose che si prendono in magazzino (non da forno, non da un altro negozio, non da comprare) */
+function dalMagazzino(r){ return r.da === "Panificio" && r.per !== PROMEMORIA && !isPanificazione(r); }
+/* "Non c'è in magazzino": due tocchi, così non si preme per sbaglio */
+let timerManca = 0;
+function armaManca(id){
+  if (S.armatoManca !== id){
+    S.armatoManca = id; renderTutto();
+    clearTimeout(timerManca);
+    timerManca = setTimeout(function(){ S.armatoManca = null; renderTutto(); }, 4000);
+    return;
+  }
+  clearTimeout(timerManca);
+  S.armatoManca = null;
+  impostaPrep(id, "manca");
+}
+/* ---------- biscotti ---------- */
+function idBisc(negozio, nome){ return (CHIAVE_NEG[negozio] || "altro") + "~" + (chiave(nome).replace(/ /g, "-").slice(0, 80) || "x"); }
+function normaBisc(id, d){
+  return {
+    id: id,
+    nome: String(d.nome || "").slice(0, 60) || "Senza nome",
+    negozio: String(d.negozio || ""),
+    livello: d.livello === "finiti" ? "finiti" : "pochi",
+    /* manca = da produrre, fatto = prodotto (il vecchio "mandati" vale come fatto), tolto = nella cronologia del negozio */
+    stato: d.stato === "tolto" ? "tolto" : (d.stato === "fatto" || d.stato === "mandati" ? "fatto" : "manca"),
+    segnatoDa: typeof d.segnatoDa === "string" ? d.segnatoDa : null,
+    segnatoAlle: Number(d.segnatoAlle) || 0,
+    mandatiAlle: Number(d.mandatiAlle) || 0,
+    toltoDa: typeof d.toltoDa === "string" ? d.toltoDa : null,
+    toltoAlle: Number(d.toltoAlle) || 0,
+    fattoDa: typeof d.fattoDa === "string" ? d.fattoDa : null,
+    fattoAlle: Number(d.fattoAlle) || (d.stato === "mandati" ? Number(d.mandatiAlle) || 0 : 0)
+  };
+}
+/* biscotti da produrre: uno per tipo, con i negozi che lo aspettano */
+function biscDaFare(){
+  const gruppi = new Map();
+  S.biscotti.forEach(function(b){
+    if (b.stato !== "manca") return;
+    const k = chiave(b.nome);
+    if (!gruppi.has(k)) gruppi.set(k, { k: k, nome: b.nome, voci: [] });
+    gruppi.get(k).voci.push(b);
+  });
+  return Array.from(gruppi.values()).map(function(g){
+    g.voci.sort(function(a, b){ return NEGOZI_BISC.indexOf(a.negozio) - NEGOZI_BISC.indexOf(b.negozio); });
+    g.finiti = g.voci.some(function(b){ return b.livello === "finiti"; });
+    g.dal = Math.min.apply(null, g.voci.map(function(b){ return b.segnatoAlle || Date.now(); }));
+    return g;
+  }).sort(function(a, b){ return (a.finiti === b.finiti ? 0 : (a.finiti ? -1 : 1)) || (a.dal - b.dal) || a.nome.localeCompare(b.nome, "it"); });
+}
+function daQuanto(ms){
+  if (!ms) return "";
+  const g = new Date(ms); g.setHours(0,0,0,0);
+  const n = Math.round((inizioOggi() - g.getTime()) / 86400000);
+  if (n <= 0) return "chiesti oggi";
+  if (n === 1) return "da ieri";
+  return "da " + n + " giorni";
+}
+function puoTogliereBisc(b){ return !!store && !S.sola && !!b && (b.segnatoDa === S.mioId || S.owner); }
+function puoRecuperareBisc(b){ return puoTogliereBisc(b) || (!!store && !S.sola && !!b && !!S.mioId && b.toltoDa === S.mioId); }
+function catalogoBisc(){
+  const visti = new Set(), out = [];
+  BISCOTTI_BASE.concat(S.aggiunteBisc, S.biscotti.map(function(b){ return b.nome; })).forEach(function(n){
+    const k = chiave(n);
+    if (!k || visti.has(k)) return;
+    visti.add(k); out.push(n);
+  });
+  return out.sort(function(a, b){ return a.localeCompare(b, "it"); });
+}
+function puoScrivereBisc(){ return !!store && !S.sola && !!S.mioId; }
+function bozzaNuova(){ return { fase:"scegli", livello:null, sel:new Set(), inviati:[], inviando:false }; }
+function biscDaConfermare(){ return S.bozza.inviati.length > 0 || S.bozza.sel.size > 0; }
+function scegliUrgenza(liv){
+  if (liv !== "finiti" && liv !== "pochi") return;
+  if (S.bozza.livello !== liv) S.bozza.sel = new Set();
+  S.bozza.livello = liv;
+  S.bozza.fase = "seleziona";
+  renderTutto();
+}
+function scegliBiscotto(nome){
+  if (S.bozza.fase !== "seleziona") return;
+  if (S.bozza.sel.has(nome)) S.bozza.sel.delete(nome); else S.bozza.sel.add(nome);
+  renderBiscotti();
+}
+/* biscotti che non si possono scegliere: già in arrivo, o già chiesti allo stesso livello o più urgenti */
+function bloccoBiscotto(b, liv){
+  if (!b || b.stato !== "manca") return "";
+  if (liv === "pochi") return "già chiesti";
+  if (b.livello === "finiti") return "già chiesti";
+  return "";
+}
+async function inviaComanda(){
+  const bz = S.bozza, neg = S.punto, liv = bz.livello;
+  if (!bz.sel.size || !puoScrivereBisc() || bz.inviando || NEGOZI_BISC.indexOf(neg) < 0) return;
+  bz.inviando = true; renderBiscotti();
+  const fatti = [];
+  for (const nome of Array.from(bz.sel)){
+    const id = idBisc(neg, nome);
+    const b = S.biscotti.find(function(x){ return x.id === id; });
+    if (bloccoBiscotto(b, liv)) continue;
+    /* un biscotto tolto o già fatto e poi richiesto vale come nuovo */
+    const fn = b && b.stato === "manca"
+      ? function(){ return store.bisc(id, { livello: liv, segnatoAlle: Date.now() }); }
+      : function(){ return store.bisc(id, { nome: nome, negozio: neg, livello: liv, stato: "manca", segnatoDa: S.mioId, segnatoAlle: Date.now(), mandatiAlle: 0, toltoAlle: 0, fattoAlle: 0 }); };
+    if (!(await scrivi(fn, !b))) break;
+    fatti.push({ nome: nome, livello: liv });
+  }
+  bz.inviando = false;
+  fatti.forEach(function(f){
+    bz.sel.delete(f.nome);
+    bz.inviati = bz.inviati.filter(function(x){ return x.nome !== f.nome; }).concat([f]);
+  });
+  if (fatti.length){
+    bz.fase = "inviata";
+    bz.ultimo = { livello: liv, n: fatti.length };
+  }
+  renderTutto();
+}
+function apriRiepilogo(){
+  const bz = S.bozza;
+  const lista = bz.inviati.slice().sort(function(a, b){
+    return (a.livello === b.livello ? 0 : (a.livello === "finiti" ? -1 : 1)) || a.nome.localeCompare(b.nome, "it");
+  });
+  $("riep-titolo").textContent = lista.length ? "Controlla e conferma" : "Biscotti non inviati";
+  $("riep-sotto").textContent = lista.length
+    ? lista.length + (lista.length === 1 ? " biscotto mandato" : " biscotti mandati") + " al panificio per " + (S.punto === "Corso" ? "il Corso" : S.punto) + "."
+    : "Non hai mandato nessuna comanda.";
+  riempi($("riep-lista"), lista.map(function(x){
+    return el("li", null, el("span", {text:x.nome}), el("span", {class:"tag-urg " + x.livello, text: x.livello === "finiti" ? "Finiti" : "Pochi"}));
+  }));
+  const n = bz.sel.size;
+  $("riep-avviso").hidden = n === 0;
+  $("riep-avviso").textContent = n === 1
+    ? "Hai scelto 1 biscotto ma non l'hai inviato. Torna indietro per inviarlo, oppure conferma per lasciarlo perdere."
+    : "Hai scelto " + n + " biscotti ma non li hai inviati. Torna indietro per inviarli, oppure conferma per lasciarli perdere.";
+  avviso("");
+  $("riepilogo").hidden = false;
+  try { document.body.style.overflow = "hidden"; } catch(e){}
+  $("riep-conferma").focus();
+}
+function chiudiRiepilogo(conferma){
+  $("riepilogo").hidden = true;
+  try { document.body.style.overflow = ""; } catch(e){}
+  if (conferma){
+    const n = S.bozza.inviati.length;
+    S.bozza = bozzaNuova();
+    const dopo = S.dopoConferma;
+    S.dopoConferma = null;
+    renderTutto();
+    if (n) esito("esito-bisc", "Fatto: il panificio ha la tua comanda.");
+    if (dopo) vaiSezione(dopo, true);
+    else { const b = document.querySelector('.b-urg'); if (b) b.focus(); }
+  } else {
+    S.dopoConferma = null;
+    renderTutto();
+  }
+}
+async function aggiungiBiscotto(ev){
+  ev.preventDefault();
+  let nome = $("bisc-nuovo").value.replace(/\s+/g, " ").trim().slice(0, 60);
+  if (!nome || !puoScrivereBisc() || S.inviandoBisc || S.bozza.fase !== "seleziona") return;
+  nome = nome.charAt(0).toUpperCase() + nome.slice(1);
+  const esistente = catalogoBisc().find(function(n){ return chiave(n) === chiave(nome); });
+  if (!esistente){
+    S.inviandoBisc = true; renderBiscotti();
+    await scrivi(function(){ return store.aggiunteBisc(S.aggiunteBisc.concat([nome]).slice(-60)); });
+    S.inviandoBisc = false;
+  }
+  const finale = esistente || nome;
+  const b = S.biscotti.find(function(x){ return x.id === idBisc(S.punto, finale); });
+  $("bisc-nuovo").value = "";
+  if (bloccoBiscotto(b, S.bozza.livello)) esito("esito-bisc", finale + ": già chiesto.");
+  else { S.bozza.sel.add(finale); esito("esito-bisc", finale + " aggiunto alla comanda."); }
+  renderTutto();
+}
+/* togliere un biscotto già chiesto: due tocchi, solo chi l'ha chiesto o il titolare */
+let timerBisc = 0;
+async function togliBiscotto(id){
+  const b = S.biscotti.find(function(x){ return x.id === id; });
+  if (!b || b.stato !== "manca" || !puoTogliereBisc(b)) return;
+  if (S.armatoBisc !== id){
+    S.armatoBisc = id; renderBiscotti();
+    clearTimeout(timerBisc);
+    timerBisc = setTimeout(function(){ S.armatoBisc = null; renderBiscotti(); }, 4000);
+    return;
+  }
+  clearTimeout(timerBisc); S.armatoBisc = null;
+  S.pending.add(id); renderBiscotti();
+  /* non si cancella: resta nella cronologia per poterlo recuperare */
+  const ok = await scrivi(function(){ return store.bisc(id, { stato: "tolto", toltoDa: S.mioId, toltoAlle: Date.now() }); });
+  S.pending.delete(id);
+  if (ok) avviso("Tolto: " + b.nome + ". Se è stato uno sbaglio, lo ritrovi in Cronologia.");
+  renderTutto();
+}
+async function ripristinaBisc(id){
+  const b = S.biscotti.find(function(x){ return x.id === id; });
+  if (!b || b.stato !== "tolto" || !puoRecuperareBisc(b) || S.pending.has(id)) return;
+  S.pending.add(id); renderTutto();
+  const ok = await scrivi(function(){ return store.bisc(id, { stato: "manca", toltoAlle: 0 }); });
+  S.pending.delete(id);
+  if (ok) avviso("Rimesso tra i biscotti chiesti: " + b.nome + ".");
+  renderTutto();
+}
+/* il panificio segna un tipo di biscotto come fatto: vale per tutti i negozi che lo aspettano. Due tocchi. */
+let timerFatto = 0;
+async function fattoBisc(k){
+  const voci = S.biscotti.filter(function(b){ return b.stato === "manca" && chiave(b.nome) === k; });
+  if (!voci.length || !store || S.sola || voci.some(function(b){ return S.pending.has(b.id); })) return;
+  if (S.armatoFatto !== k){
+    S.armatoFatto = k; renderBiscotti();
+    clearTimeout(timerFatto);
+    timerFatto = setTimeout(function(){ S.armatoFatto = null; renderBiscotti(); }, 4000);
+    return;
+  }
+  clearTimeout(timerFatto); S.armatoFatto = null;
+  const ora = Date.now();
+  voci.forEach(function(b){ S.pending.add(b.id); }); renderTutto();
+  let ok = true;
+  for (const b of voci){
+    if (!(await scrivi(function(){ return store.bisc(b.id, { stato: "fatto", fattoAlle: ora, fattoDa: S.mioId }); }))){ ok = false; break; }
+  }
+  voci.forEach(function(b){ S.pending.delete(b.id); });
+  if (ok) avviso(voci[0].nome + ": fatti. Se è stato uno sbaglio, li ritrovi in Cronologia.");
+  renderTutto();
+}
+async function rimettiBisc(chiaveLotto){
+  const i = chiaveLotto.lastIndexOf("|");
+  const k = chiaveLotto.slice(0, i), alle = Number(chiaveLotto.slice(i + 1));
+  const voci = S.biscotti.filter(function(b){ return b.stato === "fatto" && chiave(b.nome) === k && b.fattoAlle === alle; });
+  if (!voci.length || !store || S.sola || voci.some(function(b){ return S.pending.has(b.id); })) return;
+  voci.forEach(function(b){ S.pending.add(b.id); }); renderTutto();
+  let ok = true;
+  for (const b of voci){
+    if (!(await scrivi(function(){ return store.bisc(b.id, { stato: "manca", fattoAlle: 0 }); }))){ ok = false; break; }
+  }
+  voci.forEach(function(b){ S.pending.delete(b.id); });
+  if (ok) avviso("Rimesso da produrre: " + voci[0].nome + ".");
+  renderTutto();
+}
+/* il panificio segna a che punto è; toccare di nuovo lo stesso pulsante lo toglie */
+async function impostaPrep(id, valore){
+  const r = S.richieste.find(function(x){ return x.id === id; });
+  if (!r || !store || S.sola || S.pending.has(id) || STATI_PREP.indexOf(valore) < 0) return;
+  const nuovo = r.prep === valore ? "" : valore;
+  S.pending.add(id); renderTutto();
+  await scrivi(function(){ return store.stato(id, { prep: nuovo, prepAlle: Date.now() }); });
+  S.pending.delete(id); renderTutto();
+}
+/* Spostare una cosa di reparto: vale per questa richiesta e, da ora, per tutte quelle con lo stesso nome */
+async function spostaReparto(id, rep){
+  const r = S.richieste.find(function(x){ return x.id === id; });
+  if (!r || !store || S.sola || REPARTI.indexOf(rep) < 0 || S.pending.has(id)) return;
+  const k = chiave(r.articolo);
+  S.mappa = Object.assign({}, S.mappa, {[k]: rep});
+  S.pending.add(id); renderTutto();
+  const ok = await scrivi(function(){ return store.stato(id, { reparto: rep, aggiornato: Date.now() }); });
+  if (ok && k) await scrivi(function(){ return store.salvaMappa(k, rep); });
+  S.pending.delete(id); renderTutto();
+}
+
+/* ---------- render: pezzi comuni ---------- */
+function testoArticolo(r){
+  return el("p", {class:"articolo"}, r.quantita ? el("span", {class:"qta", text:r.quantita}) : null, r.articolo);
+}
+function pillOrigine(r){
+  if (r.per === PROMEMORIA || r.da === "Panificio" || r.da === r.per) return null;
+  if (r.da === "Da comprare") return el("span", {class:"pill origine comprare", text:"Da ordinare o comprare"});
+  return el("span", {class:"pill origine " + classeDest(r.da), text:"Da prendere " + (PREP[r.da] || "a " + r.da)});
+}
+function origineTesto(r){
+  if (r.per === PROMEMORIA || r.da === "Panificio" || r.da === r.per) return null;
+  if (r.da === "Da comprare") return nomeOrigine(r.da);
+  return "Da prendere " + (PREP[r.da] || "a " + r.da);
+}
+function meta(parti){
+  const m = el("p", {class:"meta"});
+  parti.filter(Boolean).forEach(function(p, i){
+    if (i) m.append(el("span", {class:"sep", "aria-hidden":"true", text:"·"}));
+    m.append(p.nodeType ? p : document.createTextNode(p));
+  });
+  return m;
+}
+function pillDest(per){
+  return el("span", {class:"pill dest " + classeDest(per), text: per === PROMEMORIA ? "Promemoria" : "per " + per});
+}
+function pillUrgente(r){ return r.urgente ? el("span", {class:"pill p-urgente", text:"Urgente"}) : null; }
+function pillPrep(r){
+  if (!r.prep || r.stato !== "attesa" || r.per === PROMEMORIA) return null;
+  return el("span", {class:"pill " + CLASSI_PREP[r.prep], text:NOMI_PREP[r.prep]});
+}
+function tag(r, perChi){
+  if (r.esempio) return el("span", {class:"tag", text:"esempio"});
+  if (r.daGiro) return el("span", {class:"tag", text: r.mio ? "aggiunta da te" : "aggiunta dal giro"});
+  return null;
+}
+/* chi ha ordinato: nascosto finché qualcuno non tocca "Chi?" */
+function bottoneChi(r){
+  const aperto = S.mostraChi.has(r.id);
+  let testo = "Chi?";
+  if (aperto) testo = r.esempio ? "Esempio dalle chat" : "Ordinato da " + nomeDi(r.autore);
+  return el("button", {type:"button", class:"link", "data-chi":r.id, "aria-expanded":String(aperto),
+    "aria-label": aperto ? "Nascondi chi ha ordinato " + r.articolo : "Mostra chi ha ordinato " + r.articolo, text:testo});
+}
+function bottoneTogli(r, comeLink){
+  const armato = S.armato === r.id;
+  return el("button", {
+    type:"button",
+    class: comeLink ? (armato ? "link pericolo" : "link") : (armato ? "mini pericolo" : "mini"),
+    "data-annulla": r.id,
+    disabled: S.pending.has(r.id),
+    "aria-label": armato ? "Conferma: togli " + r.articolo : "Togli " + r.articolo,
+    text: armato ? "Conferma" : "Togli"
+  });
+}
+
+/* ---------- render: negozio ---------- */
+function rigaNegozio(r){
+  let stato;
+  if (r.stato === "consegnato") stato = el("span", {class:"pill p-consegnato", text:"Consegnato " + quando(r.consegnatoAlle)});
+  else if (r.stato === "caricato") stato = el("span", {class:"pill p-caricato", text:"In viaggio"});
+  else stato = pillPrep(r) || el("span", {class:"pill p-attesa", text:"In attesa"});
+  const li = el("li", {class:"riga" + (nonDisponibile(r) && r.stato === "attesa" ? " e-finito" : "")},
+    el("div", {class:"riga-main"}, testoArticolo(r),
+      meta([pillUrgente(r), stato, pillOrigine(r), r.stato !== "consegnato" ? "chiesto " + quando(r.creato) : null, tag(r, "negozio"), bottoneChi(r)])));
+  if (r.stato === "attesa" && puoTogliere(r)) li.append(bottoneTogli(r, false));
+  return li;
+}
+/* cronologia: le cose tolte negli ultimi 7 giorni, con Recupera */
+function rigaTolta(r, conDest){
+  const li = el("li", {class:"riga tolta"},
+    el("div", {class:"riga-main"}, testoArticolo(r),
+      meta([conDest ? pillDest(r.per) : null, "tolto " + quando(r.toltoAlle), tag(r, "crono"), bottoneChi(r)])));
+  if (richiestoDiNuovo(r)) li.append(el("span", {class:"pill p-attesa", text:"Chiesto di nuovo"}));
+  else if (puoTogliere(r)) li.append(el("button", {type:"button", class:"mini", "data-recupera":r.id, disabled:S.pending.has(r.id), "aria-label":"Recupera " + r.articolo, text:"Recupera"}));
+  return li;
+}
+function renderCrono(dove, lista, conDest){
+  const da = Date.now() - SETTE_GIORNI;
+  const l = lista.filter(function(r){ return r.toltoAlle >= da; })
+    .sort(function(a, b){ return b.toltoAlle - a.toltoAlle; }).slice(0, 40);
+  $("crono-" + dove).hidden = !store;
+  $("n-crono-" + dove).textContent = l.length ? "(" + l.length + ")" : "";
+  riempi($("lista-crono-" + dove), l.map(function(r){ return rigaTolta(r, conDest); }));
+  $("vuoto-crono-" + dove).hidden = l.length > 0;
+}
+/* "Chiesti spesso": prima quello che il negozio chiede nell'app, poi la lista presa dai vostri gruppi */
+function renderFrequenti(mie){
+  const aperti = new Set(mie.filter(function(r){ return r.stato !== "consegnato"; }).map(function(r){ return chiave(r.articolo); }));
+  const scritti = new Set(righeDi("righe").map(function(x){ return chiave(x.articolo); }));
+  const conta = new Map();
+  for (const r of mie){
+    const k = chiave(r.articolo);
+    if (!k || aperti.has(k) || scritti.has(k)) continue;
+    const c = conta.get(k) || { n:0, nome:r.articolo };
+    c.n++; conta.set(k, c);
+  }
+  const tutti = Array.from(conta.values()).sort(function(a,b){ return b.n - a.n; }).map(function(c){ return c.nome; });
+  const visti = new Set(tutti.map(chiave));
+  (S.frequenti[S.punto] || []).forEach(function(nome){
+    const k = chiave(nome);
+    if (!k || visti.has(k) || aperti.has(k) || scritti.has(k)) return;
+    visti.add(k); tutti.push(nome);
+  });
+  const quanti = S.tuttiFrequenti ? 40 : 12;
+  const chips = tutti.slice(0, quanti).map(function(nome){
+    return el("button", {type:"button", class:"chip-add", "data-aggiungi":nome, text:"+ " + nome});
+  });
+  if (tutti.length > 12){
+    chips.push(el("button", {type:"button", class:"link", "data-altri":"1", text: S.tuttiFrequenti ? "Mostra meno" : "Altri " + (Math.min(tutti.length, 40) - 12) + "…"}));
+  }
+  riempi($("frequenti"), chips);
+  $("frequenti-wrap").hidden = tutti.length === 0;
+}
+function anteprimaRiga(x, gia){
+  return el("li", null,
+    x.quantita ? el("span", {class:"qta", text:x.quantita}) : null,
+    el("span", {text:x.articolo}),
+    gia && gia.has(chiave(x.articolo)) ? el("span", {class:"pill p-attesa", text:"Già chiesto"}) : null,
+    x.urgente === true ? el("span", {class:"pill p-urgente", text:"Urgente"}) : null,
+    x.ordinare ? el("span", {class:"tag", text:"da ordinare"}) : null,
+    x.reparto ? el("span", {class:"tag", text:x.reparto}) : null);
+}
+/* chi sta ordinando: il nome viene dall'account, non si può scrivere quello di un altro */
+function testoIdentita(){
+  if (!store) return "";
+  if (S.mioId === "locale") return "";
+  if (S.mioId) return S.nomeMio ? "Ordini come " + S.nomeMio + "." : "Ordini con il tuo account.";
+  return "Per ordinare apri questa pagina con il tuo account Claude.";
+}
+function aggiornaForm(){
+  const rr = righeDi("righe");
+  const gia = new Set(S.richieste.filter(function(r){ return r.per === S.punto && r.stato !== "consegnato"; }).map(function(r){ return chiave(r.articolo); }));
+  $("chi-ordina").textContent = testoIdentita();
+  const b = $("invia");
+  b.disabled = rr.length === 0 || S.inviando || !store || S.sola || !S.mioId;
+  b.textContent = S.inviando ? "Invio…" : (rr.length > 1 ? "Controlla e invia (" + rr.length + ")" : "Controlla e invia");
+}
+function aggiornaFormGiro(){
+  const rr = righeDi("righe-giro");
+  $("chi-giro").textContent = testoIdentita();
+  const b = $("invia-giro");
+  b.disabled = rr.length === 0 || S.inviandoGiro || !store || S.sola || !S.mioId;
+  b.textContent = S.inviandoGiro ? "Aggiungo…" : (rr.length > 1 ? "Controlla e aggiungi (" + rr.length + ")" : "Controlla e aggiungi");
+}
+function renderNegozio(){
+  document.querySelectorAll('input[name="punto"]').forEach(function(inp){ inp.checked = inp.value === S.punto; });
+  $("titolo-arrivo").textContent = "In arrivo " + (PREP[S.punto] || S.punto);
+  const panif = S.punto === "Panificio";
+  $("form-richiesta").hidden = S.sola || panif;
+  $("blocco-panificio").hidden = !panif;
+
+  const mie = S.richieste.filter(function(r){ return r.per === S.punto; });
+  const aperte = mie.filter(function(r){ return r.stato !== "consegnato"; }).sort(ordina);
+  const oggi = inizioOggi();
+  const cons = mie.filter(function(r){ return r.stato === "consegnato" && r.consegnatoAlle >= oggi; })
+    .sort(function(a,b){ return b.consegnatoAlle - a.consegnatoAlle; });
+  $("blocco-arrivo").hidden = panif && aperte.length === 0 && cons.length === 0;
+  if (panif) renderPanificio();
+
+  riempi($("lista-arrivo"), aperte.map(rigaNegozio));
+  const v = $("vuoto-arrivo");
+  v.hidden = aperte.length > 0;
+  v.textContent = S.pronto ? "Nessuna richiesta aperta. Scrivi sopra cosa serve: chi fa il giro la vede subito." : "Carico le richieste…";
+  $("n-cons-negozio").textContent = cons.length;
+  riempi($("lista-cons-negozio"), cons.map(rigaNegozio));
+  $("det-cons-negozio").hidden = cons.length === 0;
+  renderCrono("negozio", S.tolte.filter(function(r){ return r.per === S.punto; }), false);
+  renderFrequenti(mie);
+  aggiornaForm();
+  renderBiscotti();
+}
+
+/* ---------- render: biscotti ---------- */
+function chiBisc(b){ return bottoneChi({ id: b.id, autore: b.segnatoDa, articolo: b.nome, esempio: false }); }
+function renderBiscotti(){
+  const panif = S.punto === "Panificio";
+  $("bisc-negozio").hidden = panif;
+  $("bisc-panificio").hidden = !panif;
+  if (panif) renderBiscPanificio(); else renderBiscNegozio();
+}
+function renderBiscNegozio(){
+  const neg = S.punto, bz = S.bozza;
+  $("bisc-titolo").textContent = "Biscotti che mancano " + (PREP[neg] || neg);
+  $("chi-bisc").textContent = testoIdentita();
+  const scrive = puoScrivereBisc();
+  $("comanda").hidden = !scrive;
+  const miei = S.biscotti.filter(function(b){ return b.negozio === neg; });
+  const perId = {};
+  miei.forEach(function(b){ perId[b.id] = b; });
+
+  $("fase-scegli").hidden = bz.fase !== "scegli";
+  $("fase-seleziona").hidden = bz.fase !== "seleziona";
+  $("fase-inviata").hidden = bz.fase !== "inviata";
+  ["finiti","pochi"].forEach(function(l){
+    const n = bz.inviati.filter(function(x){ return x.livello === l; }).length;
+    $("fatto-" + l).hidden = n === 0;
+    $("fatto-" + l).textContent = n ? "Inviata: " + n + (n === 1 ? " biscotto" : " biscotti") : "";
+  });
+
+  if (bz.fase === "seleziona"){
+    const liv = bz.livello;
+    $("sel-titolo").textContent = liv === "finiti" ? "2. Scegli i biscotti finiti" : "2. Scegli i biscotti con pochi pacchi";
+    const griglia = $("bisc-griglia");
+    griglia.className = "chips " + classeDest(neg);
+    riempi(griglia, catalogoBisc().map(function(nome){
+      const blocco = bloccoBiscotto(perId[idBisc(neg, nome)], liv);
+      const sel = !blocco && bz.sel.has(nome);
+      return el("button", {type:"button", class:"bisc", "data-scegli":nome, "aria-pressed":String(sel),
+        "data-blocco": blocco ? "1" : null, disabled: !!blocco || bz.inviando,
+        "aria-label": nome + (blocco ? ": " + blocco : "")}, nome, blocco ? el("small", {text:blocco}) : null);
+    }));
+    const n = bz.sel.size;
+    const inv = $("invia-comanda");
+    inv.disabled = n === 0 || bz.inviando;
+    inv.textContent = bz.inviando ? "Invio…" : (n ? "Invia comanda (" + n + (liv === "finiti" ? " finiti)" : " con pochi pacchi)") : "Invia comanda");
+    $("bisc-aggiungi").disabled = !$("bisc-nuovo").value.trim() || S.inviandoBisc;
+  }
+  if (bz.fase === "inviata"){
+    const u = bz.ultimo || { livello: bz.livello, n: 0 };
+    $("inviata-testo").textContent = "Comanda inviata: " + u.n + (u.n === 1 ? " biscotto " : " biscotti ") + (u.livello === "finiti" ? "finiti." : "con pochi pacchi.");
+    const altro = u.livello === "finiti" ? "pochi" : "finiti";
+    const giaAltro = bz.inviati.some(function(x){ return x.livello === altro; });
+    const a = $("altra-urgenza");
+    a.hidden = giaAltro;
+    a.dataset.urg = altro;
+    a.textContent = altro === "pochi" ? "Ora i biscotti con pochi pacchi" : "Ora i biscotti finiti";
+    $("ho-finito").className = giaAltro ? "primary" : "mini";
+  }
+
+  /* già chiesti e in arrivo */
+  const chiesti = miei.filter(function(b){ return b.stato === "manca"; }).sort(function(a, b){
+    return (a.livello === b.livello ? 0 : (a.livello === "finiti" ? -1 : 1)) || a.nome.localeCompare(b.nome, "it");
+  });
+  riempi($("bisc-chiesti"), chiesti.map(function(b){
+    const li = el("li", {class:"riga"},
+      el("div", {class:"riga-main"}, el("p", {class:"articolo", text:b.nome}),
+        meta([el("span", {class:"tag-urg " + b.livello, text: b.livello === "finiti" ? "Finiti" : "Pochi"}), "chiesti " + quando(b.segnatoAlle), chiBisc(b)])));
+    if (puoTogliereBisc(b)){
+      const arm = S.armatoBisc === b.id;
+      li.append(el("button", {type:"button", class: arm ? "mini pericolo" : "mini", "data-bisc-togli":b.id, disabled:S.pending.has(b.id),
+        "aria-label": arm ? "Conferma: togli " + b.nome : "Togli " + b.nome, text: arm ? "Conferma" : "Togli"}));
+    }
+    return li;
+  }));
+  $("bisc-chiesti-wrap").hidden = chiesti.length === 0;
+
+  /* cronologia: biscotti tolti negli ultimi 7 giorni */
+  const da = Date.now() - SETTE_GIORNI;
+  const tolti = miei.filter(function(b){ return b.stato === "tolto" && b.toltoAlle >= da; })
+    .sort(function(a, b){ return b.toltoAlle - a.toltoAlle; });
+  $("crono-bisc").hidden = !store;
+  $("n-crono-bisc").textContent = tolti.length ? "(" + tolti.length + ")" : "";
+  riempi($("lista-crono-bisc"), tolti.map(function(b){
+    const li = el("li", {class:"riga tolta"},
+      el("div", {class:"riga-main"}, el("p", {class:"articolo", text:b.nome}),
+        meta([el("span", {class:"tag-urg " + b.livello, text: b.livello === "finiti" ? "Finiti" : "Pochi"}), "tolto " + quando(b.toltoAlle), chiBisc(b)])));
+    if (puoRecuperareBisc(b)) li.append(el("button", {type:"button", class:"mini", "data-bisc-recupera":b.id, disabled:S.pending.has(b.id), "aria-label":"Recupera " + b.nome, text:"Recupera"}));
+    return li;
+  }));
+  $("vuoto-crono-bisc").hidden = tolti.length > 0;
+}
+function renderBiscPanificio(){
+  const righe = biscDaFare();
+  const leg = [];
+  NEGOZI_BISC.forEach(function(n){
+    const c = righe.filter(function(g){ return g.voci.some(function(b){ return b.negozio === n; }); }).length;
+    if (c) leg.push(el("span", {class:"pill dest " + classeDest(n), text: n + " · " + c}));
+  });
+  riempi($("bisc-legenda"), leg);
+  $("bisc-legenda").hidden = leg.length === 0;
+  const scrive = !!store && !S.sola;
+  riempi($("bisc-da-fare"), righe.map(function(g){
+    const parti = [];
+    g.voci.forEach(function(b){
+      parti.push(el("span", {class:"pill " + classeDest(b.negozio) + (b.livello === "finiti" ? " dest" : " bisc-pochi"),
+        text: b.negozio + ": " + (b.livello === "finiti" ? "finiti" : "pochi")}));
+      parti.push(chiBisc(b));
+    });
+    parti.push(daQuanto(g.dal));
+    const li = el("li", {class:"riga"},
+      el("div", {class:"riga-main"}, el("p", {class:"articolo", text:g.nome}), meta(parti)));
+    if (scrive){
+      const arm = S.armatoFatto === g.k;
+      const off = g.voci.some(function(b){ return S.pending.has(b.id); });
+      li.append(el("button", {type:"button", class:"azione b-fatto-bisc" + (arm ? " armato" : ""), "data-bisc-fatto":g.k, disabled:off,
+        "aria-label": arm ? "Conferma: " + g.nome + " fatti" : g.nome + " fatti", text: arm ? "Conferma: fatto" : "Fatto"}));
+    }
+    return li;
+  }));
+  const v = $("bisc-vuoto");
+  v.hidden = righe.length > 0;
+  v.textContent = S.pronto ? "Nessun biscotto da produrre." : "Carico i biscotti…";
+
+  /* cronologia: biscotti fatti negli ultimi 7 giorni, raggruppati per lotto */
+  const da = Date.now() - SETTE_GIORNI;
+  const lotti = new Map();
+  S.biscotti.forEach(function(b){
+    if (b.stato !== "fatto" || b.fattoAlle < da) return;
+    const k = chiave(b.nome) + "|" + b.fattoAlle;
+    if (!lotti.has(k)) lotti.set(k, { k: k, nome: b.nome, alle: b.fattoAlle, voci: [] });
+    lotti.get(k).voci.push(b);
+  });
+  const fatti = Array.from(lotti.values()).sort(function(a, b){ return b.alle - a.alle; }).slice(0, 40);
+  $("crono-fatti").hidden = !store;
+  $("n-crono-fatti").textContent = fatti.length ? "(" + fatti.length + ")" : "";
+  riempi($("lista-crono-fatti"), fatti.map(function(l){
+    const parti = l.voci.map(function(b){ return el("span", {class:"pill dest " + classeDest(b.negozio), text: b.negozio}); });
+    parti.push("fatti " + quando(l.alle));
+    const li = el("li", {class:"riga tolta"}, el("div", {class:"riga-main"}, el("p", {class:"articolo", text:l.nome}), meta(parti)));
+    const ancora = S.biscotti.some(function(b){ return b.stato === "manca" && chiave(b.nome) === chiave(l.nome); });
+    if (ancora) li.append(el("span", {class:"pill p-attesa", text:"Chiesti di nuovo"}));
+    else if (scrive) li.append(el("button", {type:"button", class:"mini", "data-bisc-rimetti":l.k, disabled:l.voci.some(function(b){ return S.pending.has(b.id); }),
+      "aria-label":"Rimetti da produrre: " + l.nome, text:"Rimetti da fare"}));
+    return li;
+  }));
+  $("vuoto-crono-fatti").hidden = fatti.length > 0;
+}
+function mostraSez(sez){
+  S.sez = sez === "biscotti" ? "biscotti" : "richieste";
+  $("pannello-richieste").hidden = S.sez !== "richieste";
+  $("pannello-biscotti").hidden = S.sez !== "biscotti";
+}
+
+/* ---------- menu con le tre lineette ---------- */
+function vociMenu(){
+  if (S.ruolo.tipo === "giro") return [];
+  const panif = S.punto === "Panificio";
+  const nBisc = panif ? biscDaFare().length : S.biscotti.filter(function(b){ return b.stato === "manca" && b.negozio === S.punto; }).length;
+  return [{ id:"biscotti", nome:"Biscotti", n:nBisc }];
+}
+function inBiscotti(){ return S.vista === "negozio" && S.sez === "biscotti"; }
+function sezioneAttuale(){ return S.vista === "consegne" ? "giro" : S.sez; }
+function nomeSezione(id){
+  if (id === "giro") return "Giro consegne";
+  if (id === "biscotti") return "Biscotti";
+  return S.punto === "Panificio" ? "Ordini dei negozi" : "Richieste";
+}
+function renderMenu(){
+  const bisc = inBiscotti();
+  riempi($("menu-voci"), vociMenu().map(function(v){
+    const badge = v.n === null ? null : el("span", {class:"badge", "data-zero": v.n ? null : "", text:String(v.n)});
+    return el("li", null, el("button", {type:"button", class:"menu-voce", "data-vai":v.id, "aria-current": (v.id === "biscotti" && bisc) ? "page" : null}, el("span", {text:v.nome}), badge));
+  }));
+  const t = S.ruolo.tipo;
+  /* dentro Biscotti: freccia Indietro al posto del menu */
+  $("apri-menu").hidden = t === "giro" || bisc;
+  $("torna").hidden = !bisc;
+  $("switch-viste").hidden = t !== "titolare" || bisc;
+  $("link-personale").hidden = t !== "titolare" || bisc;
+  $("codici-box").hidden = !S.sito || !S.owner || t !== "titolare" || bisc;
+  renderTestata();
+}
+/* testata e fascia: la fascia prende il colore di dove sei (negozio, panificio, giro) */
+function contaTesto(n, uno, tanti){ return n ? n + " " + (n === 1 ? uno : tanti) : ""; }
+function renderTestata(){
+  if (!S.ruolo) return;
+  const t = S.ruolo.tipo, bisc = inBiscotti(), giro = S.vista === "consegne";
+  const panif = S.punto === "Panificio";
+  let sopra, titolo, info;
+  if (giro){
+    sopra = t === "titolare" ? "Tutte le consegne" : "Chi fa il giro";
+    titolo = "Giro consegne";
+    info = "";
+  } else if (bisc){
+    sopra = panif ? "Biscotti da fare" : "Biscotti del negozio";
+    titolo = S.punto;
+    const n = panif ? biscDaFare().length : S.biscotti.filter(function(b){ return b.stato === "manca" && b.negozio === S.punto; }).length;
+    info = panif ? contaTesto(n, "da produrre", "da produrre") : contaTesto(n, "chiesto", "chiesti");
+  } else {
+    sopra = panif ? "Magazzino e panificio" : "Richieste del negozio";
+    titolo = S.punto;
+    const n = panif
+      ? S.richieste.filter(function(r){ return perIlPanificio(r) && r.stato === "attesa"; }).length
+      : S.richieste.filter(function(r){ return r.per === S.punto && r.stato !== "consegnato"; }).length;
+    info = panif ? contaTesto(n, "richiesta aperta", "richieste aperte") : contaTesto(n, "in arrivo", "in arrivo");
+  }
+  $("fascia").className = "fascia " + (giro ? "giro" : classeDest(S.punto));
+  $("eyebrow").textContent = sopra;
+  $("titolo").textContent = titolo;
+  $("fascia-info").textContent = info;
+  $("app-nome").textContent = bisc ? "Biscotti" : "Rifornimenti";
+}
+function apriMenu(){
+  $("menu").hidden = false; $("menu-velo").hidden = false;
+  $("apri-menu").setAttribute("aria-expanded", "true");
+  renderMenu();
+  const prima = $("menu").querySelector('[aria-current="page"]') || $("menu").querySelector(".menu-voce");
+  if (prima) prima.focus();
+}
+function chiudiMenu(rimetti){
+  if ($("menu").hidden) return;
+  $("menu").hidden = true; $("menu-velo").hidden = true;
+  $("apri-menu").setAttribute("aria-expanded", "false");
+  if (rimetti) $("apri-menu").focus();
+}
+function vaiSezione(id, forza){
+  /* uscendo dai biscotti con una comanda in corso, prima si conferma */
+  if (!forza && inBiscotti() && id !== "biscotti" && biscDaConfermare()){
+    S.dopoConferma = id;
+    chiudiMenu();
+    apriRiepilogo();
+    return;
+  }
+  chiudiMenu();
+  if (id === "biscotti"){
+    if (!inBiscotti()) S.vistaPrima = S.vista;
+    mostraVista("negozio");
+    mostraSez("biscotti");
+  } else {
+    mostraSez("richieste");
+    mostraVista(S.ruolo.tipo === "titolare" ? (S.vistaPrima || S.vistaTitolare) : (S.ruolo.tipo === "giro" ? "consegne" : "negozio"));
+    S.vistaPrima = null;
+  }
+  renderTutto();
+  try { window.scrollTo(0, 0); } catch(e){}
+  const f = id === "biscotti" ? $("torna") : $("apri-menu");
+  if (f && !f.hidden) f.focus();
+}
+
+/* ---------- render: panificio (magazzino) ---------- */
+function perIlPanificio(r){
+  return r.da === "Panificio" && r.per !== "Panificio" && r.per !== PROMEMORIA;
+}
+function legendaNegozi(lista){
+  const out = [];
+  DESTINAZIONI.forEach(function(d){
+    const n = lista.filter(function(r){ return r.per === d; }).length;
+    if (n) out.push(el("span", {class:"pill dest " + classeDest(d), text: d + " · " + n}));
+  });
+  return out;
+}
+function renderPanificio(){
+  const aperte = S.richieste.filter(function(r){ return perIlPanificio(r) && r.stato === "attesa"; });
+  const forno = aperte.filter(isPanificazione);
+  const magazzino = aperte.filter(function(r){ return !isPanificazione(r); });
+  const caricate = S.richieste.filter(function(r){ return perIlPanificio(r) && r.stato === "caricato"; }).length;
+  const leg = legendaNegozi(aperte);
+  riempi($("legenda-panif"), leg);
+  $("legenda-panif").hidden = leg.length === 0;
+
+  /* panificazione: i tre pulsanti */
+  forno.sort(ordinaPanificio);
+  riempi($("gruppi-panif"), forno.length ? [
+    el("section", {class:"gruppo gruppo-reparto", "aria-label":REPARTO_FORNO}, testaGruppo("Reparto", REPARTO_FORNO, forno.length),
+      el("ul", {class:"lista"}, ...forno.map(rigaPanificio)))
+  ] : []);
+  const v = $("vuoto-panif");
+  v.hidden = forno.length > 0;
+  v.textContent = S.pronto ? "Per ora i negozi non hanno chiesto prodotti da forno." : "Carico le richieste…";
+  const conta = { "":0, preparazione:0, pronto:0, finito:0 };
+  forno.forEach(function(r){ if (r.prep in conta) conta[r.prep]++; else conta[""]++; });
+  const parti = [];
+  if (conta[""]) parti.push(conta[""] + " da fare");
+  if (conta.preparazione) parti.push(conta.preparazione + " in preparazione");
+  if (conta.pronto) parti.push(conta.pronto + (conta.pronto === 1 ? " pronta" : " pronte"));
+  if (conta.finito) parti.push(conta.finito + (conta.finito === 1 ? " finita" : " finite"));
+  $("conteggi-panif").textContent = parti.join(" · ");
+  $("conteggi-panif").hidden = parti.length === 0;
+
+  /* magazzino: per reparto, solo "Non c'è" */
+  const per = new Map();
+  magazzino.forEach(function(r){
+    const g = repartoDi(r);
+    if (!per.has(g)) per.set(g, []);
+    per.get(g).push(r);
+  });
+  const gruppi = [];
+  REPARTI.forEach(function(g){
+    const items = per.get(g);
+    if (!items) return;
+    items.sort(ordinaPanificio);
+    gruppi.push(el("section", {class:"gruppo gruppo-reparto", "aria-label":g}, testaGruppo("Reparto", g, items.length),
+      el("ul", {class:"lista"}, ...items.map(rigaMagazzino))));
+  });
+  riempi($("gruppi-magazzino"), gruppi);
+  $("blocco-magazzino").hidden = gruppi.length === 0;
+
+  const c = $("caricate-panif");
+  c.hidden = caricate === 0;
+  c.textContent = caricate === 1 ? "1 cosa è già stata caricata per il giro." : caricate + " cose sono già state caricate per il giro.";
+}
+
+/* ---------- render: consegne ---------- */
+function azioniGiro(r){
+  if (S.sola || !store) return null;
+  const off = S.pending.has(r.id);
+  const box = el("div", {class:"azioni"});
+  if (r.per === PROMEMORIA){
+    box.append(el("button", {type:"button", class:"azione b-fatto", "data-id":r.id, "data-stato":"consegnato", disabled:off, "aria-label":"Fatto: " + r.articolo, text:"Fatto"}));
+    if (r.mio) box.append(bottoneTogli(r, true));
+  } else if (r.stato === "attesa"){
+    box.append(el("button", {type:"button", class:"azione b-carica", "data-id":r.id, "data-stato":"caricato", disabled:off, "aria-label":"Caricato: " + r.articolo, text:"Caricato"}));
+    if (dalMagazzino(r)) box.append(bottoneManca(r));
+    if (r.mio) box.append(bottoneTogli(r, true));
+  } else {
+    box.append(
+      el("button", {type:"button", class:"azione b-consegna", "data-id":r.id, "data-stato":"consegnato", disabled:off, "aria-label":"Consegnato: " + r.articolo, text:"Consegnato"}),
+      el("button", {type:"button", class:"link", "data-id":r.id, "data-stato":"attesa", disabled:off, "aria-label":"Annulla carico di " + r.articolo, text:"Annulla"})
+    );
+  }
+  return box;
+}
+/* riga nel carico: striscia del colore del negozio, per sapere subito dove va */
+function rigaCarico(r, conSposta, conAzioni, conDove){
+  const promem = r.per === PROMEMORIA;
+  let dove = null;
+  if (conDove) dove = promem ? "Promemoria" : (pillOrigine(r) || el("strong", {class:"ritiro", text:"Reparto " + repartoDi(r)}));
+  const parti = [pillUrgente(r), pillPrep(r), pillDest(r.per), dove, "chiesto " + quando(r.creato), tag(r, "giro"), bottoneChi(r)];
+  if (conSposta && !promem && !S.sola && store){
+    const attuale = repartoDi(r);
+    const sel = el("select", {class:"sposta", "data-sposta":r.id, disabled:S.pending.has(r.id), "aria-label":"Sposta " + r.articolo + " in un altro reparto"});
+    sel.append(el("option", {value:"", text:"Sposta…", disabled:true, selected:true}));
+    REPARTI.forEach(function(n){ if (n !== attuale) sel.append(el("option", {value:n, text:n})); });
+    parti.push(sel);
+  }
+  const li = el("li", {class:"riga " + classeDest(r.per) + (r.urgente ? " urgente" : "") + (nonDisponibile(r) ? " e-finito" : "")}, sigla(r.per), el("div", {class:"riga-main"}, testoArticolo(r), meta(parti)));
+  const az = conAzioni === false ? null : azioniGiro(r);
+  if (az) li.append(az);
+  return li;
+}
+/* riga del panificio: le tre scelte sotto il nome */
+function rigaPanificio(r){
+  const parti = [pillUrgente(r), pillDest(r.per), "chiesto " + quando(r.creato), tag(r, "panificio"), bottoneChi(r)];
+  if (!S.sola && store){
+    const attuale = repartoDi(r);
+    const sel = el("select", {class:"sposta", "data-sposta":r.id, disabled:S.pending.has(r.id), "aria-label":"Sposta " + r.articolo + " in un altro reparto"});
+    sel.append(el("option", {value:"", text:"Sposta…", disabled:true, selected:true}));
+    REPARTI.forEach(function(n){ if (n !== attuale) sel.append(el("option", {value:n, text:n})); });
+    parti.push(sel);
+  }
+  const li = el("li", {class:"riga riga-panif " + classeDest(r.per) + (nonDisponibile(r) ? " e-finito" : "")},
+    sigla(r.per), el("div", {class:"riga-main"}, testoArticolo(r), meta(parti)));
+  if (!S.sola && store){
+    const off = S.pending.has(r.id);
+    const box = el("div", {class:"stati-panif", role:"group", "aria-label":"A che punto è: " + r.articolo});
+    [["preparazione","In preparazione"],["pronto","Pronto da caricare"],["finito","Finito scorte"]].forEach(function(x){
+      box.append(el("button", {type:"button", class:"b-stato", "data-id":r.id, "data-prep":x[0], "aria-pressed":String(r.prep === x[0]), disabled:off, text:x[1]}));
+    });
+    li.append(box);
+  } else if (r.prep){
+    li.querySelector(".meta").prepend(pillPrep(r));
+  }
+  return li;
+}
+/* al panificio: prima quello da fare, poi le pronte, in fondo le finite */
+function rangoPanificio(r){ return r.prep === "pronto" ? 1 : (nonDisponibile(r) ? 2 : 0); }
+function bottoneManca(r){
+  const off = S.pending.has(r.id);
+  if (r.prep === "manca"){
+    return el("button", {type:"button", class:"link", "data-id":r.id, "data-prep":"manca", disabled:off, "aria-label":r.articolo + " è arrivato in magazzino", text:"È arrivato"});
+  }
+  const armato = S.armatoManca === r.id;
+  return el("button", {type:"button", class: armato ? "link pericolo" : "link", "data-manca":r.id, disabled:off,
+    "aria-label": armato ? "Conferma: " + r.articolo + " non c'è in magazzino" : r.articolo + " non c'è in magazzino",
+    text: armato ? "Conferma: non c'è" : "Non c'è in magazzino"});
+}
+/* riga del magazzino al panificio: niente tre pulsanti, solo "Non c'è" */
+function rigaMagazzino(r){
+  const parti = [pillUrgente(r), pillPrep(r), pillDest(r.per), "chiesto " + quando(r.creato), tag(r, "panificio"), bottoneChi(r)];
+  if (!S.sola && store){
+    const attuale = repartoDi(r);
+    const sel = el("select", {class:"sposta", "data-sposta":r.id, disabled:S.pending.has(r.id), "aria-label":"Sposta " + r.articolo + " in un altro reparto"});
+    sel.append(el("option", {value:"", text:"Sposta…", disabled:true, selected:true}));
+    REPARTI.forEach(function(n){ if (n !== attuale) sel.append(el("option", {value:n, text:n})); });
+    parti.push(sel);
+  }
+  const li = el("li", {class:"riga " + classeDest(r.per) + (nonDisponibile(r) ? " e-finito" : "")},
+    sigla(r.per), el("div", {class:"riga-main"}, testoArticolo(r), meta(parti)));
+  if (!S.sola && store) li.append(el("div", {class:"azioni"}, bottoneManca(r)));
+  return li;
+}
+function ordinaPanificio(a, b){ return (rangoPanificio(a) - rangoPanificio(b)) || ordina(a, b); }
+/* nel carico: prima le pronte */
+function ordinaCarico(a, b){ return (rangoPrep(a) - rangoPrep(b)) || ordina(a, b); }
+function rigaGiro(r){
+  const promem = r.per === PROMEMORIA;
+  const statoPill = promem ? null : (r.stato === "caricato"
+    ? el("span", {class:"pill p-caricato", text:"Caricata"})
+    : (pillPrep(r) || el("span", {class:"pill p-attesa", text:"Da caricare"})));
+  const ritiro = pillOrigine(r);
+  const li = el("li", {class: "riga" + (r.urgente ? " urgente" : "") + (r.stato === "caricato" ? " e-caricato" : "") + (nonDisponibile(r) && r.stato === "attesa" ? " e-finito" : "")},
+    el("div", {class:"riga-main"}, testoArticolo(r),
+      meta([pillUrgente(r), statoPill, ritiro || (promem ? null : repartoDi(r)), "chiesto " + quando(r.creato), tag(r, "giro"), bottoneChi(r)])));
+  const az = azioniGiro(r);
+  if (az) li.append(az);
+  return li;
+}
+function rigaConsegnata(r){
+  const li = el("li", {class:"riga"},
+    el("div", {class:"riga-main"}, testoArticolo(r),
+      meta([el("span", {class:"pill p-consegnato", text:(r.per === PROMEMORIA ? "Fatto " : "Consegnato ") + quando(r.consegnatoAlle)}), pillDest(r.per), tag(r, "giro"), bottoneChi(r)])));
+  if (!S.sola && store){
+    li.append(el("button", {type:"button", class:"link", "data-id":r.id, "data-stato": r.per === PROMEMORIA ? "attesa" : "caricato", disabled:S.pending.has(r.id), "aria-label":"Riapri " + r.articolo, text:"Riapri"}));
+  }
+  return li;
+}
+function testaGruppo(occhiello, titolo, n, extra){
+  const h = el("header", {class:"gruppo-head"},
+    el("div", {class:"gh-titolo"}, el("p", {class:"gh-per", text:occhiello}), el("h3", {text:titolo})),
+    el("span", {class:"conta", text: n === 1 ? "1 cosa" : n + " cose"}));
+  if (extra) h.append(extra);
+  return h;
+}
+function gruppoCarico(r){
+  if (r.per === PROMEMORIA) return PROMEMORIA;
+  if (r.da === "Da comprare") return "Da comprare";
+  if (r.da !== "Panificio" && r.da !== r.per) return "Ritiro " + daLuogo(r.da);
+  return repartoDi(r);
+}
+function gruppiCarico(aperte){
+  const per = new Map();
+  const urgenti = [];
+  aperte.filter(function(r){ return r.stato === "attesa"; }).forEach(function(r){
+    if (r.urgente){ urgenti.push(r); return; }
+    const g = gruppoCarico(r);
+    if (!per.has(g)) per.set(g, []);
+    per.get(g).push(r);
+  });
+  const ritiri = Array.from(per.keys()).filter(function(k){ return k.indexOf("Ritiro ") === 0; }).sort();
+  const out = [];
+  /* le cose urgenti stanno in cima, fuori dai reparti: ogni riga dice dove si trova */
+  if (urgenti.length){
+    urgenti.sort(ordinaCarico);
+    out.push(el("section", {class:"gruppo urgenti", "aria-label":"Urgenti"}, testaGruppo("Prima di tutto", "Urgenti", urgenti.length),
+      el("ul", {class:"lista"}, ...urgenti.map(function(r){ return rigaCarico(r, false, true, true); }))));
+  }
+  [PROMEMORIA].concat(REPARTI, ritiri, ["Da comprare"]).forEach(function(g){
+    const items = per.get(g);
+    if (!items) return;
+    items.sort(ordinaCarico);
+    const reparto = REPARTI.indexOf(g) >= 0;
+    const occhiello = g === PROMEMORIA ? "Da ricordare" : (reparto ? "Reparto" : "Fuori magazzino");
+    const daNegozio = g.indexOf("Ritiro ") === 0 ? " dest " + classeDest(items[0].da) : "";
+    out.push(el("section", {class:"gruppo gruppo-reparto" + daNegozio, "aria-label":nomeOrigine(g)}, testaGruppo(occhiello, nomeOrigine(g), items.length),
+      el("ul", {class:"lista"}, ...items.map(function(r){ return rigaCarico(r, reparto); }))));
+  });
+  return out;
+}
+function gruppiNegozio(aperte){
+  const extra = Array.from(new Set(aperte.map(function(r){ return r.per; })
+    .filter(function(p){ return DESTINAZIONI.indexOf(p) < 0 && p !== PROMEMORIA; })));
+  const gruppi = [];
+  [PROMEMORIA].concat(DESTINAZIONI, extra).forEach(function(dest){
+    const items = aperte.filter(function(r){ return r.per === dest; }).sort(ordinaPerReparto);
+    if (!items.length) return;
+    if (dest === PROMEMORIA){
+      gruppi.push(el("section", {class:"gruppo", "aria-label":"Promemoria"}, testaGruppo("Da ricordare", "Promemoria", items.length),
+        el("ul", {class:"lista"}, ...items.map(rigaGiro))));
+      return;
+    }
+    const caricati = items.filter(function(r){ return r.stato === "caricato"; }).length;
+    const btn = (caricati && !S.sola && store) ? el("button", {type:"button", class:"mini", "data-tutto":dest, text:"Tutto consegnato (" + caricati + ")"}) : null;
+    gruppi.push(el("section", {class:"gruppo dest " + classeDest(dest), "aria-label":"Consegna a " + dest}, testaGruppo("Consegna a", dest, items.length, btn),
+      el("ul", {class:"lista"}, ...items.map(rigaGiro))));
+  });
+  return gruppi;
+}
+function renderConsegne(){
+  const aperte = S.richieste.filter(function(r){ return r.stato !== "consegnato"; });
+  const nAttesa = aperte.filter(function(r){ return r.stato === "attesa" && r.per !== PROMEMORIA; }).length;
+  const nViaggio = aperte.filter(function(r){ return r.stato === "caricato"; }).length;
+  const nUrg = aperte.filter(function(r){ return r.urgente; }).length;
+  $("n-attesa").textContent = nAttesa;
+  const nPronte = aperte.filter(function(r){ return r.stato === "attesa" && r.prep === "pronto"; }).length;
+  $("l-attesa").textContent = nPronte ? "da caricare, " + nPronte + (nPronte === 1 ? " pronta" : " pronte") : "da caricare";
+  $("n-viaggio").textContent = nViaggio;
+  $("n-urgenti").textContent = nUrg;
+  $("st-urgenti").classList.toggle("allerta", nUrg > 0);
+
+  const leg = legendaNegozi(aperte);
+  riempi($("legenda"), leg);
+  $("legenda").hidden = leg.length === 0;
+
+  document.querySelectorAll('[data-modo][role="tab"]').forEach(function(b){
+    b.setAttribute("aria-selected", String(b.dataset.modo === S.modo));
+  });
+  $("hint-modo").textContent = S.modo === "carico"
+    ? "In magazzino: prendi tutto reparto per reparto. Il colore dice a quale negozio va."
+    : "Per strada: scarica negozio per negozio quello che hai caricato.";
+
+  const gruppi = S.modo === "carico" ? gruppiCarico(aperte) : gruppiNegozio(aperte);
+  riempi($("gruppi"), gruppi);
+  const v = $("vuoto-consegne");
+  v.hidden = gruppi.length > 0;
+  if (!S.pronto) v.textContent = "Carico le richieste…";
+  else if (S.modo === "carico" && nViaggio) v.textContent = "Tutto caricato.";
+  else if (S.modo === "carico") v.textContent = "Niente da caricare. Quando un negozio chiede qualcosa, compare qui.";
+  else v.textContent = "Giro completato. Quando un negozio chiede qualcosa, compare qui.";
+  $("passa").hidden = !(S.modo === "carico" && nViaggio);
+  $("passa-testo").textContent = nViaggio === 1 ? "1 cosa caricata da consegnare" : nViaggio + " cose caricate da consegnare";
+
+  const oggi = inizioOggi();
+  const cons = S.richieste.filter(function(r){ return r.stato === "consegnato" && r.consegnatoAlle >= oggi; })
+    .sort(function(a,b){ return b.consegnatoAlle - a.consegnatoAlle; });
+  $("n-cons").textContent = cons.length;
+  riempi($("lista-cons"), cons.map(rigaConsegnata));
+  $("det-cons").hidden = cons.length === 0;
+  renderCrono("giro", S.tolte.filter(function(r){ return r.mio; }), true);
+
+  $("giro-wrap").hidden = S.sola || !store;
+  aggiornaFormGiro();
+
+  const nEs = S.richieste.filter(function(r){ return r.esempio; }).length;
+  $("esempi-box").hidden = nEs === 0 || S.sola || !store || S.ruolo.tipo !== "titolare" || !S.owner;
+  $("rimuovi-esempi").textContent = S.esempiArmato ? "Conferma: rimuovi " + nEs + " esempi" : "Rimuovi esempi";
+  $("rimuovi-esempi").classList.toggle("pericolo", S.esempiArmato);
+
+  const badge = $("badge");
+  badge.textContent = aperte.length;
+  if (aperte.length) badge.removeAttribute("data-zero"); else badge.setAttribute("data-zero", "");
+}
+
+function renderTutto(){
+  const g = fmtOggi.format(new Date());
+  $("oggi").textContent = g.charAt(0).toUpperCase() + g.slice(1);
+  renderNegozio();
+  renderConsegne();
+  renderMenu();
+}
+
+/* ---------- interfacce ---------- */
+function mostraVista(v){
+  S.vista = v;
+  $("view-negozio").hidden = v !== "negozio";
+  $("view-consegne").hidden = v !== "consegne";
+  $("tab-negozio").setAttribute("aria-selected", String(v === "negozio"));
+  $("tab-consegne").setAttribute("aria-selected", String(v === "consegne"));
+  renderTestata();
+}
+function applicaRuolo(){
+  S.ruolo = leggiRuolo();
+  mostraSez("richieste");
+  S.vistaPrima = null;
+  const t = S.ruolo.tipo;
+  document.querySelector(".app").className = "app" + (t === "negozio" ? " dest " + classeDest(S.ruolo.punto) : "");
+  $("switch-viste").hidden = t !== "titolare";
+  $("punti").hidden = t !== "titolare";
+  $("link-personale").hidden = t !== "titolare";
+  if (t === "negozio"){
+    S.punto = S.ruolo.punto;
+    mostraVista("negozio");
+  } else if (t === "giro"){
+    mostraVista("consegne");
+  } else {
+    S.punto = S.puntoTitolare;
+    mostraVista(S.vistaTitolare);
+  }
+  $("bar-anteprima").hidden = !(S.anteprima && t !== "titolare");
+  $("bar-testo").textContent = t === "negozio"
+    ? "Anteprima: così vede la pagina chi lavora " + (PREP[S.punto] || S.punto) + "."
+    : "Anteprima: così vede la pagina chi fa il giro.";
+  if (t === "titolare") S.anteprima = false;
+  renderTutto();
+}
+function vaiA(h){
+  try { location.hash = h; } catch(e){}
+  applicaRuolo();
+  try { window.scrollTo(0, 0); } catch(e){}
+}
+
+/* ---------- eventi ---------- */
+function collega(){
+  document.addEventListener("click", function(ev){
+    const b = ev.target.closest("button");
+    if (!b || b.disabled) return;
+    if (b.dataset.view){
+      S.vistaTitolare = b.dataset.view; ricorda("vista", b.dataset.view);
+      return mostraVista(b.dataset.view);
+    }
+    if (b.dataset.modo){ S.modo = b.dataset.modo; ricorda("modo", S.modo); return renderConsegne(); }
+    if (b.dataset.prova){ S.anteprima = true; return vaiA(b.dataset.prova); }
+    if (b.id === "esci-anteprima"){ S.anteprima = false; return vaiA(""); }
+    if (b.id === "apri-menu") return apriMenu();
+    if (b.id === "torna") return vaiSezione("richieste");
+    if (b.id === "chiudi-menu") return chiudiMenu(true);
+    if (b.dataset.vai) return vaiSezione(b.dataset.vai);
+    if (b.dataset.urg) return scegliUrgenza(b.dataset.urg);
+    if (b.dataset.fase === "scegli"){ S.bozza.fase = "scegli"; return renderBiscotti(); }
+    if (b.dataset.scegli) return scegliBiscotto(b.dataset.scegli);
+    if (b.id === "invia-comanda") return inviaComanda();
+    if (b.id === "ho-finito") return apriRiepilogo();
+    if (b.id === "riep-conferma") return chiudiRiepilogo(true);
+    if (b.id === "riep-indietro") return chiudiRiepilogo(false);
+    if (b.id === "ctrl-indietro"){ chiudiControllo(); const t = S.vista === "consegne" ? $("righe-giro") : $("righe"); if (t) t.focus(); return; }
+    if (b.id === "ctrl-invia") return confermaControllo();
+    if (b.dataset.ctrlUrg && S.ctrl){
+      const v = S.ctrl.voci[Number(b.dataset.ctrlUrg)];
+      if (v){ v.urgente = !v.urgente; renderControllo(); const nb = document.querySelector('[data-ctrl-urg="' + b.dataset.ctrlUrg + '"]'); if (nb) nb.focus(); }
+      return;
+    }
+    if (b.dataset.biscTogli) return togliBiscotto(b.dataset.biscTogli);
+    if (b.dataset.biscRecupera) return ripristinaBisc(b.dataset.biscRecupera);
+    if (b.dataset.recupera) return ripristina(b.dataset.recupera);
+    if (b.dataset.biscFatto) return fattoBisc(b.dataset.biscFatto);
+    if (b.dataset.biscRimetti) return rimettiBisc(b.dataset.biscRimetti);
+    if (b.dataset.manca) return armaManca(b.dataset.manca);
+    if (b.dataset.prep) return impostaPrep(b.dataset.id, b.dataset.prep);
+    if (b.dataset.stato) return cambiaStato(b.dataset.id, b.dataset.stato);
+    if (b.dataset.tutto) return consegnaTutto(b.dataset.tutto);
+    if (b.dataset.annulla) return annulla(b.dataset.annulla);
+    if (b.dataset.altri){ S.tuttiFrequenti = !S.tuttiFrequenti; return renderNegozio(); }
+    if (b.dataset.chi){
+      if (S.mostraChi.has(b.dataset.chi)) S.mostraChi.delete(b.dataset.chi); else S.mostraChi.add(b.dataset.chi);
+      renderTutto(); aggiornaNomi();
+      return;
+    }
+    if (b.dataset.aggiungi){
+      const t = $("righe");
+      t.value = t.value.replace(/\s+$/, "") + (t.value.trim() ? "\n" : "") + b.dataset.aggiungi;
+      renderNegozio();
+      return;
+    }
+    if (b.id === "rimuovi-esempi") return rimuoviEsempi();
+    if (b.dataset.acc) return mostraAccesso(b.dataset.acc);
+    if (b.id === "esci") return esciSB();
+  });
+  $("form-accesso").addEventListener("submit", inviaAccesso);
+  $("codici-box").addEventListener("toggle", function(){ if ($("codici-box").open) mostraCodici(); });
+  document.addEventListener("change", function(ev){
+    const s = ev.target.closest && ev.target.closest("select[data-sposta]");
+    if (s && s.value) spostaReparto(s.dataset.sposta, s.value);
+    const p = ev.target.closest && ev.target.closest("select[data-ctrl-da]");
+    if (p && S.ctrl){
+      const v = S.ctrl.voci[Number(p.dataset.ctrlDa)];
+      if (v){ v.da = p.value; renderControllo(); const np = document.querySelector('[data-ctrl-da="' + p.dataset.ctrlDa + '"]'); if (np) np.focus(); }
+    }
+  });
+  document.querySelectorAll('input[name="punto"]').forEach(function(inp){
+    inp.addEventListener("change", function(){
+      S.punto = S.puntoTitolare = inp.value; ricorda("punto", inp.value); S.bozza = bozzaNuova(); renderTutto();
+    });
+  });
+  $("righe").addEventListener("input", aggiornaForm);
+  $("righe-giro").addEventListener("input", aggiornaFormGiro);
+  $("per-giro").addEventListener("change", aggiornaFormGiro);
+  $("form-richiesta").addEventListener("submit", invia);
+  $("form-giro").addEventListener("submit", inviaGiro);
+  $("form-bisc").addEventListener("submit", aggiungiBiscotto);
+  $("menu-velo").addEventListener("click", function(){ chiudiMenu(true); });
+  $("menu").addEventListener("keydown", function(ev){ if (ev.key === "Escape") chiudiMenu(true); });
+  $("riepilogo").addEventListener("keydown", function(ev){ if (ev.key === "Escape") chiudiRiepilogo(false); });
+  $("controllo").addEventListener("keydown", function(ev){ if (ev.key === "Escape") chiudiControllo(); });
+  $("bisc-nuovo").addEventListener("input", function(){ $("bisc-aggiungi").disabled = !$("bisc-nuovo").value.trim() || S.inviandoBisc; });
+  window.addEventListener("hashchange", applicaRuolo);
+}
+
+/* Senza archivio condiviso (pagina aperta fuori da Claude): prova su questo schermo */
+function usaLocale(){
+  const docs = new Map(); const stati = {}; const bisc = new Map();
+  S.mioId = "locale"; S.owner = true;
+  const emetti = function(){
+    S.docsRichieste = Array.from(docs.entries()).map(function(e){ return { id:e[0], voci:e[1] }; });
+    S.stati = Object.assign({}, stati);
+    S.biscotti = Array.from(bisc.entries()).map(function(e){ return normaBisc(e[0], e[1]); });
+    ricomponi(); S.pronto = true; renderTutto();
+  };
+  store = {
+    aggiungi: async function(voce){ if (!docs.has("locale")) docs.set("locale", {}); docs.get("locale")[nuovoId()] = Object.assign({}, voce); emetti(); },
+    stato: async function(k, p){ stati[k] = Object.assign({}, stati[k], p); emetti(); },
+    annulla: async function(r){ const d = docs.get(r.autore); if (d && d[r.rid]) Object.assign(d[r.rid], { annullato: true, annullatoAlle: Date.now() }); emetti(); },
+    ripristina: async function(r){ const d = docs.get(r.autore); if (d && d[r.rid]) Object.assign(d[r.rid], { annullato: false, ripristinatoAlle: Date.now() }); emetti(); },
+    rimuoviEsempi: async function(){ docs.delete(ESEMPI); emetti(); },
+    salvaMappa: async function(k, rep){ S.mappa = Object.assign({}, S.mappa, {[k]: rep}); emetti(); },
+    bisc: async function(id, dati){
+      if (dati === null) bisc.delete(id); else bisc.set(id, Object.assign({}, bisc.get(id), dati));
+      emetti();
+    },
+    aggiunteBisc: async function(arr){ S.aggiunteBisc = arr.slice(); emetti(); }
+  };
+  banner("Modalità prova: le richieste restano solo su questo schermo e spariscono chiudendo la pagina.");
+  emetti();
+}
+
+/* aggiorna un documento, o lo crea se non c'è ancora */
+async function aggiornaOCrea(ref, dati){
+  try { await ref.update(dati); }
+  catch(e){
+    if (e && e.code === "invalid_argument"){
+      const snap = await ref.get();
+      if (!snap.exists){ await ref.set(dati); return; }
+    }
+    throw e;
+  }
+}
+
+/* ---------- sito: accesso con nome e PIN, dati su Supabase ----------
+   Le regole su chi può fare cosa stanno nel database (supabase/setup.sql):
+   qui si mostra solo quello che il database permette. */
+const SB_URL = "";
+const SB_KEY = "";
+const SB_LIBRERIA = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+const DOMINIO_STAFF = "profumodipane.it";
+const GIORNI_CARICATI = 45;
+const NOMI_RUOLI = {"corso":"Corso", "piazza-nenni":"Piazza Nenni", "panificio":"Panificio e magazzino", "consegne":"Giro consegne", "titolare":"Titolare"};
+let sb = null;
+const RAW = { voci: {}, autori: {}, bisc: {}, imp: {} };
+
+function slugNome(n){ return chiave(n).replace(/ /g, ".").slice(0, 40); }
+function emailDi(nome){ return "ordini." + slugNome(nome) + "@" + DOMINIO_STAFF; }
+function passwordDi(pin){ return "pdp-" + pin + "-pane"; }
+function errSB(e){
+  const msg = String((e && (e.message || e.error_description)) || e || "");
+  const code = e && e.code;
+  if (/failed to fetch|network|load failed|timeout|fetch/i.test(msg)) return { code: "unavailable", message: msg };
+  if (code === "42501" || /row-level security|permission denied/i.test(msg)) return { code: "invalid_argument", message: msg };
+  return { code: "errore", message: msg };
+}
+async function sbFai(q){
+  let r;
+  try { r = await q; } catch(e){ throw errSB(e); }
+  if (r.error) throw errSB(r.error);
+  return r.data;
+}
+async function tuttePagine(fare){
+  const out = [], passo = 1000;
+  for (let da = 0; ; da += passo){
+    const righe = (await sbFai(fare().range(da, da + passo - 1))) || [];
+    out.push.apply(out, righe);
+    if (righe.length < passo) return out;
+  }
+}
+function caricaScript(src){
+  return new Promise(function(ok, no){
+    const sc = document.createElement("script");
+    sc.src = src; sc.onload = ok; sc.onerror = no;
+    document.head.appendChild(sc);
+  });
+}
+
+/* ---------- dati ricevuti ---------- */
+function testi(l, max, quanti){
+  return Array.isArray(l) ? l.filter(function(x){ return typeof x === "string" && x.trim(); }).map(function(x){ return x.trim().slice(0, max); }).slice(quanti) : [];
+}
+function applicaImpostazioni(){
+  const pulita = {}, freq = {};
+  const rep = RAW.imp.reparti, bis = RAW.imp.biscotti, fr = RAW.imp.frequenti;
+  if (rep && rep.mappa && typeof rep.mappa === "object"){
+    for (const k in rep.mappa){ if (REPARTI.indexOf(rep.mappa[k]) >= 0) pulita[k] = rep.mappa[k]; }
+  }
+  if (fr && fr.negozi && typeof fr.negozi === "object"){
+    DESTINAZIONI.forEach(function(n){ if (Array.isArray(fr.negozi[n])) freq[n] = testi(fr.negozi[n], 60, 0).slice(0, 40); });
+  }
+  S.mappa = pulita; S.frequenti = freq;
+  S.aggiunteBisc = bis ? testi(bis.aggiunte, 60, -60) : [];
+}
+function applicaRiga(tab, riga, via){
+  if (!riga) return;
+  if (tab === "richieste" && riga.id){
+    if (via){ delete RAW.voci[riga.id]; delete RAW.autori[riga.id]; }
+    else { RAW.voci[riga.id] = riga.dati || {}; if (riga.autore) RAW.autori[riga.id] = riga.autore; }
+  } else if (tab === "stati" && riga.id){
+    if (via) delete S.stati[riga.id]; else S.stati[riga.id] = riga.dati || {};
+  } else if (tab === "biscotti" && riga.id){
+    if (via) delete RAW.bisc[riga.id]; else RAW.bisc[riga.id] = riga.dati || {};
+  } else if (tab === "impostazioni" && riga.chiave){
+    if (via) delete RAW.imp[riga.chiave]; else RAW.imp[riga.chiave] = riga.dati || {};
+  } else if (tab === "profili" && riga.id){
+    if (via) delete S.nomi[riga.id]; else S.nomi[riga.id] = riga.nome || "";
+  }
+}
+let timerEmetti = 0;
+function emettiSB(subito){
+  clearTimeout(timerEmetti);
+  const fai = function(){
+    const perAutore = {};
+    for (const rid in RAW.voci){
+      const a = RAW.autori[rid];
+      if (!a) continue;
+      (perAutore[a] = perAutore[a] || {})[rid] = RAW.voci[rid];
+    }
+    S.docsRichieste = Object.keys(perAutore).map(function(a){ return { id: a, voci: perAutore[a] }; });
+    S.biscotti = Object.keys(RAW.bisc).map(function(id){ return normaBisc(id, RAW.bisc[id]); });
+    applicaImpostazioni();
+    ricomponi();
+    renderTutto();
+  };
+  if (subito) fai(); else timerEmetti = setTimeout(fai, 60);
+}
+let caricando = null;
+function caricaTuttoSB(){
+  if (caricando) return caricando;
+  const da = new Date(Date.now() - GIORNI_CARICATI * 86400000).toISOString();
+  caricando = Promise.all([
+    tuttePagine(function(){ return sb.from("profili").select("id,nome").order("id"); }),
+    tuttePagine(function(){ return sb.from("richieste").select("id,autore,dati").gte("creato", da).order("id"); }),
+    tuttePagine(function(){ return sb.from("stati").select("id,dati").gte("aggiornato", da).order("id"); }),
+    tuttePagine(function(){ return sb.from("biscotti").select("id,dati").order("id"); }),
+    tuttePagine(function(){ return sb.from("impostazioni").select("chiave,dati").order("chiave"); })
+  ]).then(function(r){
+    RAW.voci = {}; RAW.autori = {}; RAW.bisc = {}; RAW.imp = {};
+    S.stati = {}; S.nomi = {};
+    r[0].forEach(function(x){ applicaRiga("profili", x); });
+    r[1].forEach(function(x){ applicaRiga("richieste", x); });
+    r[2].forEach(function(x){ applicaRiga("stati", x); });
+    r[3].forEach(function(x){ applicaRiga("biscotti", x); });
+    r[4].forEach(function(x){ applicaRiga("impostazioni", x); });
+    S.prontoR = S.prontoS = S.pronto = true;
+    if (S.bannerRete) { banner(""); S.bannerRete = false; }
+    emettiSB(true);
+  }).catch(function(){
+    S.pronto = true; S.bannerRete = true;
+    banner("Non riesco a caricare le richieste. Controlla la connessione: riprovo da solo.");
+    renderTutto();
+    setTimeout(caricaTuttoSB, 15000);
+  }).finally(function(){ caricando = null; });
+  return caricando;
+}
+/* aggiornamenti in tempo reale: quello che fa un collega compare da solo */
+function ascoltaSB(){
+  if (S.canale) sb.removeChannel(S.canale);
+  let primaVolta = true;
+  const canale = sb.channel("pdp-ordini");
+  ["richieste","stati","biscotti","impostazioni","profili"].forEach(function(t){
+    canale.on("postgres_changes", { event: "*", schema: "public", table: t }, function(p){
+      if (p.eventType === "DELETE") applicaRiga(t, p.old, true);
+      else applicaRiga(t, p.new, false);
+      emettiSB();
+    });
+  });
+  canale.subscribe(function(stato){
+    /* dopo un'interruzione (telefono in tasca, rete persa) ricarica tutto */
+    if (stato === "SUBSCRIBED"){ if (!primaVolta) caricaTuttoSB(); primaVolta = false; }
+  });
+  S.canale = canale;
+}
+
+/* ---------- scritture ---------- */
+async function cambiaVoce(r, patch){
+  const dati = Object.assign({}, RAW.voci[r.rid], patch);
+  const righe = await sbFai(sb.from("richieste").update({ dati: dati }).eq("id", r.rid).select("id"));
+  if (!righe || !righe.length) throw { code: "invalid_argument" };
+  RAW.voci[r.rid] = dati; emettiSB(true);
+}
+async function salvaImp(chiaveImp, cambia){
+  const dati = Object.assign({}, RAW.imp[chiaveImp], cambia(RAW.imp[chiaveImp] || {}));
+  await sbFai(sb.from("impostazioni").upsert({ chiave: chiaveImp, dati: dati }));
+  RAW.imp[chiaveImp] = dati; emettiSB(true);
+}
+function storeSB(){
+  return {
+    aggiungi: async function(voce){
+      const id = nuovoId();
+      await sbFai(sb.from("richieste").insert({ id: id, autore: S.mioId, dati: voce }));
+      applicaRiga("richieste", { id: id, autore: S.mioId, dati: voce }); emettiSB(true);
+    },
+    stato: async function(k, p){
+      const dati = Object.assign({}, S.stati[k], p);
+      await sbFai(sb.from("stati").upsert({ id: k, dati: dati }));
+      S.stati[k] = dati; emettiSB(true);
+    },
+    annulla: function(r){ return cambiaVoce(r, { annullato: true, annullatoAlle: Date.now() }); },
+    ripristina: function(r){ return cambiaVoce(r, { annullato: false, ripristinatoAlle: Date.now() }); },
+    rimuoviEsempi: async function(){},
+    salvaMappa: function(k, rep){ return salvaImp("reparti", function(d){ const m = Object.assign({}, d.mappa); m[k] = rep; return { mappa: m }; }); },
+    bisc: async function(id, dati){
+      if (dati === null){
+        await sbFai(sb.from("biscotti").delete().eq("id", id));
+        delete RAW.bisc[id];
+      } else {
+        const d = Object.assign({}, RAW.bisc[id], dati);
+        await sbFai(sb.from("biscotti").upsert({ id: id, dati: d }));
+        RAW.bisc[id] = d;
+      }
+      emettiSB(true);
+    },
+    aggiunteBisc: function(arr){ return salvaImp("biscotti", function(){ return { aggiunte: arr.slice() }; }); }
+  };
+}
+
+/* ---------- accesso ---------- */
+S.modoAccesso = "entra";
+function erroreAccesso(msg){ $("acc-errore").textContent = msg || ""; $("acc-errore").hidden = !msg; }
+function mostraAccesso(modo, msg){
+  S.modoAccesso = modo === "prima" ? "prima" : "entra";
+  const prima = S.modoAccesso === "prima";
+  $("accesso").hidden = false;
+  $("acc-attesa").hidden = true;
+  $("acc-tab").hidden = false;
+  $("form-accesso").hidden = false;
+  document.querySelectorAll("[data-acc]").forEach(function(b){ b.setAttribute("aria-selected", String(b.dataset.acc === S.modoAccesso)); });
+  $("acc-spiega").textContent = prima
+    ? "Scegli il nome con cui ti vedranno i colleghi e un PIN che ricorderai. Il codice del negozio te lo dà il titolare."
+    : "Scrivi il nome e il PIN che hai scelto la prima volta.";
+  $("acc-riga-pin2").hidden = !prima;
+  $("acc-riga-codice").hidden = !prima;
+  $("acc-pin").setAttribute("autocomplete", prima ? "new-password" : "current-password");
+  $("acc-invia").textContent = prima ? "Registrati ed entra" : "Entra";
+  $("acc-invia").disabled = false;
+  erroreAccesso(msg || "");
+}
+function attesaAccesso(testo){
+  $("accesso").hidden = false;
+  $("acc-attesa").textContent = testo;
+  $("acc-attesa").hidden = false;
+  $("acc-tab").hidden = true;
+  $("form-accesso").hidden = true;
+}
+async function entraConSessione(sess){
+  if (!sess || !sess.user) return false;
+  const prof = await sbFai(sb.from("profili").select("id,nome,ruolo").eq("id", sess.user.id));
+  if (!prof || !prof.length) return false;
+  S.mioId = sess.user.id;
+  S.nomeMio = prof[0].nome;
+  S.owner = prof[0].ruolo === "titolare";
+  S.ruoloFisso = S.owner ? null : prof[0].ruolo;
+  S.nomi[S.mioId] = S.nomeMio;
+  store = storeSB();
+  $("accesso").hidden = true;
+  $("chi-sei-testo").replaceChildren("Sei entrato come ", el("b", { text: S.nomeMio }), " · " + (NOMI_RUOLI[prof[0].ruolo] || ""));
+  $("chi-sei").hidden = false;
+  if (S.owner) $("link-nota").textContent = "Sul sito ognuno vede già solo la sua parte: la decide il codice con cui si è registrato. Qui puoi vedere com'è.";
+  applicaRuolo();
+  ascoltaSB();
+  await caricaTuttoSB();
+  return true;
+}
+async function inviaAccesso(ev){
+  ev.preventDefault();
+  if (S.accedendo) return;
+  const prima = S.modoAccesso === "prima";
+  const nome = $("acc-nome").value.replace(/\s+/g, " ").trim();
+  const pin = $("acc-pin").value.trim();
+  const codice = $("acc-codice").value.trim();
+  if (nome.length < 2 || !slugNome(nome)) return erroreAccesso("Scrivi il tuo nome.");
+  if (!/^\d{4,6}$/.test(pin)) return erroreAccesso("Il PIN deve avere da 4 a 6 numeri.");
+  if (prima && $("acc-pin2").value.trim() !== pin) return erroreAccesso("I due PIN non sono uguali.");
+  if (prima && !codice) return erroreAccesso("Scrivi il codice del negozio.");
+  S.accedendo = true;
+  $("acc-invia").disabled = true;
+  $("acc-invia").textContent = prima ? "Registro…" : "Entro…";
+  erroreAccesso("");
+  const credenziali = { email: emailDi(nome), password: passwordDi(pin) };
+  try {
+    if (!prima){
+      const r = await sb.auth.signInWithPassword(credenziali);
+      if (r.error){
+        if (errSB(r.error).code === "unavailable") throw r.error;
+        return mostraAccesso("entra", "Nome o PIN sbagliati. Se è la prima volta che entri, tocca \"Prima volta\".");
+      }
+      if (!(await entraConSessione(r.data.session))){
+        mostraAccesso("prima", "Manca l'ultimo passo: ripeti il PIN e scrivi il codice del negozio.");
+        $("acc-nome").value = nome; $("acc-pin").value = pin;
+      }
+      return;
+    }
+    let sess = null;
+    const r = await sb.auth.signUp(credenziali);
+    if (r.error){
+      if (errSB(r.error).code === "unavailable") throw r.error;
+      if (!/already|registered|exists/i.test(r.error.message || "") && r.error.code !== "user_already_exists"){
+        return mostraAccesso("prima", "Registrazione non riuscita: " + (r.error.message || "riprova tra poco."));
+      }
+      /* il nome c'è già: se il PIN è giusto è la stessa persona che non aveva finito */
+      const l = await sb.auth.signInWithPassword(credenziali);
+      if (l.error) return mostraAccesso("prima", "Questo nome è già usato. Se sei tu, tocca \"Entra\"; se no aggiungi l'iniziale del cognome (per esempio: Anna R).");
+      sess = l.data.session;
+    } else {
+      sess = r.data.session;
+    }
+    if (!sess) return mostraAccesso("prima", "Registrazione da completare: nelle impostazioni di Supabase va spenta la conferma via email (Confirm email).");
+    const rr = await sb.rpc("registrati", { codice_negozio: codice, nome_persona: nome });
+    if (rr.error){
+      const m = rr.error.message || "";
+      if (errSB(rr.error).code === "unavailable") throw rr.error;
+      return mostraAccesso("prima", /codice/i.test(m) ? "Codice del negozio sbagliato. Controlla con il titolare." : (/già usato/i.test(m) ? "Questo nome è già usato: aggiungi l'iniziale del cognome." : "Registrazione non riuscita: " + m));
+    }
+    if (!(await entraConSessione(sess))) mostraAccesso("prima", "Registrazione non riuscita, riprova.");
+  } catch(e){
+    mostraAccesso(S.modoAccesso, "Non riesco a collegarmi. Controlla la connessione e riprova.");
+  } finally {
+    S.accedendo = false;
+    if (!$("form-accesso").hidden){ $("acc-invia").disabled = false; $("acc-invia").textContent = prima ? "Registrati ed entra" : "Entra"; }
+  }
+}
+async function esciSB(){
+  try { await sb.auth.signOut(); } catch(e){}
+  try { location.hash = ""; } catch(e){}
+  location.reload();
+}
+async function mostraCodici(){
+  const lista = $("codici-lista");
+  riempi(lista, [el("li", { class: "hint", text: "Carico…" })]);
+  try {
+    const righe = await sbFai(sb.rpc("codici_negozio"));
+    const ordine = ["corso","piazza-nenni","panificio","consegne","titolare"];
+    righe.sort(function(a, b){ return ordine.indexOf(a.ruolo) - ordine.indexOf(b.ruolo); });
+    riempi(lista, righe.map(function(x){
+      const cl = x.ruolo === "corso" ? "dest-corso" : x.ruolo === "piazza-nenni" ? "dest-nenni" : x.ruolo === "panificio" ? "dest-panif" : "dest-altro";
+      return el("li", null, el("span", { class: "pill dest " + cl, text: NOMI_RUOLI[x.ruolo] || x.ruolo }), el("code", { text: x.codice }));
+    }));
+  } catch(e){
+    riempi(lista, [el("li", { class: "hint", text: "Non riesco a caricare i codici. Riprova." })]);
+  }
+}
+async function avviaSupabase(){
+  S.sito = true;
+  attesaAccesso("Un attimo…");
+  try {
+    if (!window.supabase || !window.supabase.createClient) await caricaScript(SB_LIBRERIA);
+  } catch(e){
+    attesaAccesso("Non riesco a caricare la pagina. Controlla la connessione e ricarica.");
+    return;
+  }
+  sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, autoRefreshToken: true, storageKey: "pdp-ordini-accesso" } });
+  document.addEventListener("visibilitychange", function(){
+    if (document.visibilityState === "visible" && store) caricaTuttoSB();
+  });
+  try {
+    const r = await sb.auth.getSession();
+    const sess = r && r.data && r.data.session;
+    if (sess && (await entraConSessione(sess))) return;
+  } catch(e){}
+  mostraAccesso("entra");
+}
+
+async function avvia(){
+  collega();
+  mostraSez(S.sez);
+  applicaRuolo();
+  const c = window.claude;
+  if ((!c || typeof c.use !== "function") && SB_URL && SB_KEY){ avviaSupabase(); return; }
+  if (!c || typeof c.use !== "function"){ usaLocale(); return; }
+  let db = null, user = null;
+  try { const r = await Promise.all([c.use("db"), c.use("user")]); db = r[0]; user = r[1]; } catch(e){}
+  if (!db){ usaLocale(); return; }
+  const colR = db.collection("richieste");
+  const colS = db.collection("stati");
+  store = {
+    /* ognuno scrive solo nel proprio documento: le regole dell'archivio non permettono altro */
+    aggiungi: async function(voce){
+      if (!S.mioId) throw { code:"senza_account" };
+      const v = {}; v[nuovoId()] = voce;
+      await aggiornaOCrea(colR.doc(S.mioId), { voci: v });
+    },
+    stato: function(k, p){ return aggiornaOCrea(colS.doc(k), p); },
+    annulla: function(r){
+      const v = {}; v[r.rid] = { annullato: true, annullatoAlle: Date.now() };
+      return colR.doc(r.autore).update({ voci: v });
+    },
+    ripristina: function(r){
+      const v = {}; v[r.rid] = { annullato: false, ripristinatoAlle: Date.now() };
+      return colR.doc(r.autore).update({ voci: v });
+    },
+    rimuoviEsempi: function(){ return colR.doc(ESEMPI).delete(); },
+    salvaMappa: function(k, rep){ const voce = {}; voce[k] = rep; return aggiornaOCrea(db.doc("impostazioni/reparti"), { mappa: voce }); },
+    bisc: function(id, dati){
+      const ref = db.collection("biscotti").doc(id);
+      return dati === null ? ref.delete() : aggiornaOCrea(ref, dati);
+    },
+    aggiunteBisc: function(arr){ return aggiornaOCrea(db.doc("impostazioni/biscotti"), { aggiunte: arr }); }
+  };
+  if (user){
+    S.utente = user;
+    try {
+      const me = await user.me();
+      S.mioId = me.id || null;
+      S.nomeMio = me.name || "";
+      S.owner = me.isOwner === true;
+    } catch(e){}
+    try {
+      const w = await user.can("data.write");
+      if (w === false) S.sola = true;
+    } catch(e){}
+  }
+  if (S.sola) banner("Puoi vedere le richieste ma non modificarle da questo account.");
+  ricomponi();
+  renderTutto();
+  /* impostazioni condivise: reparti corretti a mano e prodotti chiesti spesso per negozio */
+  db.collection("impostazioni").onSnapshot(function(snap){
+    const pulita = {}, freq = {};
+    let aggiunte = [];
+    snap.docs.forEach(function(d){
+      const dati = d.exists ? (d.data() || {}) : {};
+      if (d.id === "reparti" && dati.mappa && typeof dati.mappa === "object"){
+        for (const k in dati.mappa){ if (REPARTI.indexOf(dati.mappa[k]) >= 0) pulita[k] = dati.mappa[k]; }
+      }
+      if (d.id === "biscotti" && Array.isArray(dati.aggiunte)){
+        aggiunte = dati.aggiunte.filter(function(x){ return typeof x === "string" && x.trim(); }).map(function(x){ return x.trim().slice(0, 60); }).slice(-60);
+      }
+      if (d.id === "frequenti" && dati.negozi && typeof dati.negozi === "object"){
+        DESTINAZIONI.forEach(function(n){
+          const l = dati.negozi[n];
+          if (Array.isArray(l)) freq[n] = l.filter(function(x){ return typeof x === "string" && x.trim(); }).map(function(x){ return x.trim().slice(0,60); }).slice(0,40);
+        });
+      }
+    });
+    S.mappa = pulita; S.frequenti = freq; S.aggiunteBisc = aggiunte;
+    renderTutto();
+  }, function(){});
+  const errore = function(err){
+    S.pronto = true;
+    banner(err && err.code === "revoked" ? "Le richieste non sono più disponibili in questa vista." : "Le richieste non si aggiornano più: ricarica la pagina.");
+    renderTutto();
+  };
+  colR.onSnapshot(function(snap){
+    S.docsRichieste = snap.docs.filter(function(d){ return d.exists; }).map(function(d){
+      const dati = d.data() || {};
+      return { id: d.id, voci: dati.voci };
+    });
+    S.prontoR = true; S.pronto = S.prontoR && S.prontoS;
+    ricomponi(); renderTutto();
+  }, errore);
+  db.collection("biscotti").onSnapshot(function(snap){
+    S.biscotti = snap.docs.filter(function(d){ return d.exists; }).map(function(d){ return normaBisc(d.id, d.data() || {}); });
+    renderTutto();
+  }, function(){});
+  colS.onSnapshot(function(snap){
+    const m = {};
+    snap.docs.forEach(function(d){ if (d.exists) m[d.id] = d.data() || {}; });
+    S.stati = m;
+    S.prontoS = true; S.pronto = S.prontoR && S.prontoS;
+    ricomponi(); renderTutto();
+  }, errore);
+}
+
+avvia();
+})();
+</script>
+
