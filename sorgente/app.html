@@ -1570,14 +1570,16 @@ function pillDest(per){
   return el("span", {class:"pill dest " + classeDest(per), text: per === PROMEMORIA ? "Promemoria" : "per " + per});
 }
 /* Richieste ferme: in attesa da più di ORE_FERMA ore, oppure rimaste indietro
-   (cose chieste dopo, per lo stesso negozio e dallo stesso posto, sono già arrivate). */
-const ORE_FERMA = 3;
+   (almeno SCAVALCATE_MIN cose chieste dopo, per lo stesso negozio e dallo stesso posto, sono già arrivate). */
+const ORE_FERMA = 2;
+/* "rimasta indietro" solo se almeno tante cose chieste dopo sono già arrivate */
+const SCAVALCATE_MIN = 3;
 function testoOre(ore){ return ore < 24 ? (ore === 1 ? "1 ora" : ore + " ore") : (ore < 48 ? "1 giorno" : Math.floor(ore / 24) + " giorni"); }
 function infoFerma(r){
   if (r.per === PROMEMORIA || r.stato !== "attesa" || nonDisponibile(r) || r.esempio || r.inCoda || !r.creato) return null;
   const ora = Date.now();
   const ore = Math.floor((ora - r.creato) / 3600000);
-  const indietro = S.richieste.some(function(x){ return x.per === r.per && x.da === r.da && x.stato === "consegnato" && x.creato > r.creato; });
+  const indietro = S.richieste.filter(function(x){ return x.per === r.per && x.da === r.da && x.stato === "consegnato" && x.creato > r.creato; }).length >= SCAVALCATE_MIN;
   if (indietro) return ore >= 1 ? "Rimasta indietro da " + testoOre(ore) : "Rimasta indietro";
   /* da ritirare a un'ora precisa: non è ferma prima di quell'ora */
   if (r.da === FUORI && r.ritiroOra){
