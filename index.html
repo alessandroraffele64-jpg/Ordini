@@ -167,6 +167,9 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px;back
 .ctrl-voce.fuori{border:2px solid var(--c);background:var(--c-bg);box-shadow:inset 6px 0 0 var(--c);padding-left:16px}
 .ctrl-voce.comprare{--c:var(--ink);--c-ink:var(--bg);--c-bg:var(--surface-2)}
 .ctrl-scelte{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.ctrl-quando{display:flex;flex-direction:column;gap:8px;padding:10px 12px;border-radius:var(--r-md);background:var(--surface);border:1.5px solid var(--line)}
+.ctrl-quando .field{flex:none}
+.ctrl-quando input{min-height:44px}
 .ctrl-fuori{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px 10px;align-items:end}
 .ctrl-fuori label{display:flex;flex-direction:column;gap:4px;min-width:0}
 .ctrl-fuori label.largo{grid-column:1 / -1}
@@ -521,6 +524,11 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
         <summary>Consegnato oggi (<span id="n-cons-negozio">0</span>)</summary>
         <ul class="lista" id="lista-cons-negozio"></ul>
       </details>
+      <div class="blocco" id="blocco-programmate" hidden>
+        <p class="label-sm">Prossimi giorni <span class="tag">prova, solo titolari</span></p>
+        <p class="hint">Richieste per un giorno preciso. Gli altri le vedono dal giorno prima.</p>
+        <ul class="lista" id="lista-programmate"></ul>
+      </div>
       <details class="crono" id="crono-negozio" hidden>
         <summary><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 4v4h4"></path><path d="M12 8v4l3 2"></path></svg>Cronologia: cose tolte <span class="crono-n" id="n-crono-negozio"></span></summary>
         <div class="blocco">
@@ -741,6 +749,11 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
     <h2 id="ctrl-titolo">Controlla prima di inviare</h2>
     <p class="hint" id="ctrl-sotto"></p>
     <p class="ctrl-domanda" id="ctrl-domanda"></p>
+    <div class="ctrl-quando" id="ctrl-quando" hidden>
+      <p class="label-sm">Per quando? <span class="tag">prova, solo titolari</span></p>
+      <div class="chips" id="ctrl-quando-scelte"></div>
+      <label class="field" id="ctrl-quando-data-riga" hidden><span class="label-sm">Giorno</span><input type="date" id="ctrl-quando-data"></label>
+    </div>
     <ul class="ctrl-lista" id="ctrl-lista"></ul>
     <datalist id="posti-fuori"></datalist>
     <div class="riep-azioni"><button type="button" class="mini" id="ctrl-indietro">Torna a scrivere</button><button type="button" class="primary" id="ctrl-invia">Sì, invia</button></div>
@@ -952,6 +965,7 @@ function norma(k, d, st, autore, rid){
     per: String(d.per || ""),
     da: String(d.da || "Panificio"),
     inCoda: !!S.inCoda && S.inCoda.has(rid),
+    perIl: /^\d{4}-\d{2}-\d{2}$/.test(d.perIl || "") ? d.perIl : "",
     ritiroDove: String(d.ritiroDove || "").slice(0,60),
     ritiroOra: /^\d{2}:\d{2}$/.test(d.ritiroOra || "") ? d.ritiroOra : "",
     urgente: d.urgente === true,
@@ -965,8 +979,20 @@ function norma(k, d, st, autore, rid){
     prep: STATI_PREP.indexOf(st.prep) >= 0 ? st.prep : ""
   };
 }
+/* richieste per un giorno preciso: compaiono a tutti dal giorno prima */
+function dataLocale(ms){ const d = new Date(ms); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+function oggiStr(){ return dataLocale(Date.now()); }
+function domaniStr(){ const d = new Date(); d.setDate(d.getDate() + 1); return dataLocale(d.getTime()); }
+function msDelGiorno(s){ const t = s.split("-"); return new Date(Number(t[0]), Number(t[1]) - 1, Number(t[2])).getTime(); }
+const fmtGiornoLungo = new Intl.DateTimeFormat("it-IT", {weekday:"long", day:"numeric", month:"long"});
+function testoGiorno(s){
+  if (s === oggiStr()) return "oggi";
+  if (s === domaniStr()) return "domani";
+  return fmtGiornoLungo.format(msDelGiorno(s));
+}
 function ricomponi(){
-  const out = [], tolte = [];
+  const out = [], tolte = [], programmate = [];
+  const domani = domaniStr();
   S.docsRichieste.forEach(function(doc){
     const voci = doc.voci && typeof doc.voci === "object" ? doc.voci : {};
     for (const rid in voci){
@@ -976,11 +1002,13 @@ function ricomponi(){
       const r = norma(k, v, S.stati[k], doc.id, rid);
       /* le cose tolte restano nell'archivio: finiscono nella cronologia */
       if (v.annullato){ r.toltoAlle = Number(v.annullatoAlle) || r.creato; tolte.push(r); }
+      else if (r.perIl && r.perIl > domani) programmate.push(r);
       else out.push(r);
     }
   });
   S.richieste = out;
   S.tolte = tolte;
+  S.programmate = programmate.sort(function(a, b){ return a.perIl.localeCompare(b.perIl) || a.creato - b.creato; });
 }
 const SETTE_GIORNI = 7 * 86400000;
 let timerAvviso = 0;
@@ -1138,6 +1166,7 @@ async function aggiungi(voci, comuni){
       da: x.da || "Panificio", urgente: x.urgente === true
     });
     if (x.reparto) voce.reparto = x.reparto;
+    if (comuni.perIl && comuni.perIl !== oggiStr()) voce.perIl = comuni.perIl; else delete voce.perIl;
     if (voce.da === FUORI){
       voce.ritiroDove = String(x.ritiroDove || "").trim().slice(0,60);
       if (x.ritiroOra) voce.ritiroOra = x.ritiroOra;
@@ -1240,6 +1269,21 @@ function renderControllo(){
       "aria-label":"Urgente: " + v.articolo, text:"Urgente"}));
     return el("li", {class:"ctrl-voce" + cls}, testa, scelte, extra);
   }));
+  /* per quando: oggi, domani o un altro giorno (prova, solo titolari) */
+  const puoQuando = S.owner && S.ruolo.tipo === "titolare" && !promem;
+  $("ctrl-quando").hidden = !puoQuando;
+  if (puoQuando){
+    const scelta = !c.perIl ? "oggi" : (c.perIl === domaniStr() ? "domani" : "altro");
+    if (c.sceltaQuando === "altro") void 0;
+    const sq = c.sceltaQuando || scelta;
+    riempi($("ctrl-quando-scelte"), [["oggi","Oggi"],["domani","Domani"],["altro","Altro giorno"]].map(function(o){
+      return el("button", {type:"button", class:"chip-add stat-per", "data-quando":o[0], "aria-pressed":String(sq === o[0]), disabled:c.inviando, text:o[1]});
+    }));
+    $("ctrl-quando-data-riga").hidden = sq !== "altro";
+    const inp = $("ctrl-quando-data");
+    inp.min = oggiStr();
+    if (sq === "altro" && c.perIl && inp.value !== c.perIl) inp.value = c.perIl;
+  }
   const b = $("ctrl-invia");
   b.disabled = c.inviando || !n;
   b.textContent = c.inviando ? "Invio…" : (c.dove === "giro" ? (n === 1 ? "Sì, aggiungi" : "Sì, aggiungi " + n + " cose") : (n === 1 ? "Sì, invia" : "Sì, invia " + n + " cose"));
@@ -1248,6 +1292,12 @@ function renderControllo(){
 async function confermaControllo(){
   const c = S.ctrl;
   if (!c || c.inviando || !c.voci.length) return;
+  if (c.sceltaQuando === "altro" && (!c.perIl || c.perIl < oggiStr())){
+    const dom = $("ctrl-domanda"); dom.hidden = false; dom.className = "ctrl-domanda diverso";
+    dom.textContent = "Scegli il giorno (oggi o dopo).";
+    $("ctrl-quando-data").focus();
+    return;
+  }
   const senzaPosto = c.voci.findIndex(function(v){ return v.da === FUORI && !String(v.ritiroDove || "").trim(); });
   if (senzaPosto >= 0){
     c.mancaDove = true; renderControllo();
@@ -1261,7 +1311,7 @@ async function confermaControllo(){
   if (giro) S.inviandoGiro = true; else S.inviando = true;
   renderControllo();
   const primaInCoda = S.coda ? S.coda.length : 0;
-  const ok = await aggiungi(c.voci, { per: c.per, daGiro: giro });
+  const ok = await aggiungi(c.voci, { per: c.per, daGiro: giro, perIl: c.perIl || "" });
   const salvateSenzaRete = S.coda && S.coda.length > primaInCoda;
   if (giro) S.inviandoGiro = false; else S.inviando = false;
   chiudiControllo();
@@ -1289,7 +1339,7 @@ async function consegnaTutto(dest){
 }
 /* togliere una richiesta: solo chi l'ha fatta (o il titolare) */
 async function annulla(id){
-  const r = S.richieste.find(function(x){ return x.id === id; });
+  const r = S.richieste.concat(S.programmate || []).find(function(x){ return x.id === id; });
   if (!r || !puoTogliere(r)) return;
   if (S.armato !== id){
     S.armato = id; renderTutto();
@@ -1634,7 +1684,10 @@ function testoOre(ore){ return ore < 24 ? (ore === 1 ? "1 ora" : ore + " ore") :
 function infoFerma(r){
   if (r.per === PROMEMORIA || r.stato !== "attesa" || nonDisponibile(r) || r.esempio || r.inCoda || !r.creato) return null;
   const ora = Date.now();
-  const ore = Math.floor((ora - r.creato) / 3600000);
+  /* per le richieste di un giorno preciso l'attesa parte da quel giorno */
+  const inizio = r.perIl ? Math.max(r.creato, msDelGiorno(r.perIl)) : r.creato;
+  if (inizio > ora) return null;
+  const ore = Math.floor((ora - inizio) / 3600000);
   const indietro = S.richieste.filter(function(x){ return x.per === r.per && x.da === r.da && x.stato === "consegnato" && x.creato > r.creato; }).length >= SCAVALCATE_MIN;
   if (indietro) return ore >= 1 ? "Rimasta indietro da " + testoOre(ore) : "Rimasta indietro";
   /* da ritirare a un'ora precisa: non è ferma prima di quell'ora */
@@ -1650,6 +1703,7 @@ function pillUrgente(r){
     /* salvata sul telefono senza rete: partirà appena torna il campo */
     r.inCoda ? el("span", {class:"pill p-coda", text:"Non ancora inviata"}) : null,
     r.urgente ? el("span", {class:"pill p-urgente", text:"Urgente"}) : null,
+    r.perIl && r.perIl !== oggiStr() ? el("span", {class:"pill p-ora", text:"Per " + testoGiorno(r.perIl)}) : (r.perIl ? el("span", {class:"pill p-ora", text:"Per oggi"}) : null),
     infoFerma(r) ? el("span", {class:"pill p-ferma", text:infoFerma(r)}) : null
   ].filter(Boolean);
   if (pills.length < 2) return pills[0] || null;
@@ -1798,6 +1852,14 @@ function renderNegozio(){
   riempi($("lista-cons-negozio"), cons.map(rigaNegozio));
   $("det-cons-negozio").hidden = cons.length === 0;
   renderCrono("negozio", S.tolte.filter(function(r){ return r.per === S.punto; }), false);
+  const prog = S.ruolo.tipo === "titolare" ? (S.programmate || []) : [];
+  $("blocco-programmate").hidden = !prog.length;
+  riempi($("lista-programmate"), prog.map(function(r){
+    const li = el("li", {class:"riga"}, sigla(r.per), el("div", {class:"riga-main"}, testoArticolo(r),
+      meta([pillUrgente(r), pillDest(r.per), pillOrigine(r), "chiesto " + quando(r.creato), bottoneChi(r)])));
+    if (puoTogliere(r)) li.append(bottoneTogli(r, false));
+    return li;
+  }));
   renderFrequenti(mie);
   aggiornaForm();
   renderBiscotti();
@@ -2682,6 +2744,13 @@ function collega(){
     if (b.dataset.acc) return mostraAccesso(b.dataset.acc);
     if (b.id === "esci") return esciSB();
     if (b.dataset.azzera) return azzeraPersona(b.dataset.azzera);
+    if (b.dataset.quando && S.ctrl){
+      S.ctrl.sceltaQuando = b.dataset.quando;
+      S.ctrl.perIl = b.dataset.quando === "domani" ? domaniStr() : (b.dataset.quando === "oggi" ? "" : ($("ctrl-quando-data").value || ""));
+      renderControllo();
+      if (b.dataset.quando === "altro") $("ctrl-quando-data").focus();
+      return;
+    }
     if (b.dataset.statGiorni) return caricaStatistiche(Number(b.dataset.statGiorni));
     if (b.id === "stat-scarica-richieste") return scaricaRichieste();
     if (b.id === "stat-scarica-biscotti") return scaricaBiscotti();
@@ -2710,6 +2779,7 @@ function collega(){
     if (t.dataset.ctrlOra){ const v = S.ctrl.voci[Number(t.dataset.ctrlOra)]; if (v) v.ritiroOra = t.value; }
     if (t.dataset.ctrlPorta){ const v = S.ctrl.voci[Number(t.dataset.ctrlPorta)]; if (v) v.portaA = t.value; }
   });
+  $("ctrl-quando-data").addEventListener("input", function(){ if (S.ctrl){ S.ctrl.perIl = this.value || ""; } });
   $("righe").addEventListener("input", aggiornaForm);
   $("righe-giro").addEventListener("input", aggiornaFormGiro);
   $("per-giro").addEventListener("change", aggiornaFormGiro);
@@ -2722,7 +2792,7 @@ function collega(){
   $("controllo").addEventListener("keydown", function(ev){ if (ev.key === "Escape") chiudiControllo(); });
   $("bisc-nuovo").addEventListener("input", function(){ $("bisc-aggiungi").disabled = !$("bisc-nuovo").value.trim() || S.inviandoBisc; });
   window.addEventListener("hashchange", applicaRuolo);
-  setInterval(function(){ if (S.pronto && $("controllo").hidden && $("riepilogo").hidden) renderTutto(); }, 5 * 60000);
+  setInterval(function(){ if (S.pronto && $("controllo").hidden && $("riepilogo").hidden){ ricomponi(); renderTutto(); } }, 5 * 60000);
 }
 
 /* Senza archivio condiviso (pagina aperta fuori da Claude): prova su questo schermo */
