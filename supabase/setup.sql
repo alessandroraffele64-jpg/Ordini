@@ -223,3 +223,5 @@ begin
 end $$;
 
 -- Fatto. Deve comparire "Success. No rows returned".
+
+-- Dopo questo script lanciare anche, in ordine, gli aggiornamenti: aggiornamento-1-persone.sql

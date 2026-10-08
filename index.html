@@ -618,6 +618,15 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
     </div>
   </details>
 
+  <!-- Sito: solo il titolare vede chi si è registrato e può azzerarlo -->
+  <details class="card" id="persone-box" hidden>
+    <summary>Persone registrate</summary>
+    <div class="blocco">
+      <p class="hint">Se qualcuno dimentica il PIN o non lavora più da voi, tocca Azzera: non può più entrare, le sue richieste restano. Se serve, si registra di nuovo con lo stesso nome e il codice del negozio.</p>
+      <ul class="codici-lista" id="persone-lista"></ul>
+    </div>
+  </details>
+
   <!-- Solo per il titolare: i link per ognuno -->
   <details class="card" id="link-personale" hidden>
     <summary>Link per il personale</summary>
@@ -1824,6 +1833,7 @@ function renderMenu(){
   $("switch-viste").hidden = t !== "titolare" || bisc;
   $("link-personale").hidden = t !== "titolare" || bisc;
   $("codici-box").hidden = !S.sito || !S.owner || t !== "titolare" || bisc;
+  $("persone-box").hidden = !S.sito || !S.owner || t !== "titolare" || bisc;
   renderTestata();
 }
 /* testata e fascia: la fascia prende il colore di dove sei (negozio, panificio, giro) */
@@ -2289,9 +2299,11 @@ function collega(){
     if (b.id === "rimuovi-esempi") return rimuoviEsempi();
     if (b.dataset.acc) return mostraAccesso(b.dataset.acc);
     if (b.id === "esci") return esciSB();
+    if (b.dataset.azzera) return azzeraPersona(b.dataset.azzera);
   });
   $("form-accesso").addEventListener("submit", inviaAccesso);
   $("codici-box").addEventListener("toggle", function(){ if ($("codici-box").open) mostraCodici(); });
+  $("persone-box").addEventListener("toggle", function(){ if ($("persone-box").open){ S.armatoPersona = null; mostraPersone(); } });
   document.addEventListener("change", function(ev){
     const s = ev.target.closest && ev.target.closest("select[data-sposta]");
     if (s && s.value) spostaReparto(s.dataset.sposta, s.value);
@@ -2573,8 +2585,14 @@ function attesaAccesso(testo){
 }
 async function entraConSessione(sess){
   if (!sess || !sess.user) return false;
-  const prof = await sbFai(sb.from("profili").select("id,nome,ruolo").eq("id", sess.user.id));
+  const prof = await sbFai(sb.from("profili").select("*").eq("id", sess.user.id));
   if (!prof || !prof.length) return false;
+  if (prof[0].attivo === false){
+    /* il titolare ha azzerato questa persona: deve registrarsi di nuovo */
+    try { await sb.auth.signOut(); } catch(e){}
+    S.azzerato = true;
+    return false;
+  }
   S.mioId = sess.user.id;
   S.nomeMio = prof[0].nome;
   S.owner = prof[0].ruolo === "titolare";
@@ -2668,6 +2686,49 @@ async function mostraCodici(){
     riempi(lista, [el("li", { class: "hint", text: "Non riesco a caricare i codici. Riprova." })]);
   }
 }
+/* titolare: elenco di chi si è registrato, con Azzera (due tocchi) */
+let timerPersona = 0;
+async function mostraPersone(){
+  const lista = $("persone-lista");
+  if (!S.persone) riempi(lista, [el("li", { class: "hint", text: "Carico…" })]);
+  try {
+    S.persone = await sbFai(sb.from("profili").select("id,nome,ruolo").eq("attivo", true).order("nome"));
+  } catch(e){
+    riempi(lista, [el("li", { class: "hint", text: "Non riesco a caricare l'elenco. Se non l'hai ancora fatto, va lanciato in Supabase lo script aggiornamento-1-persone.sql." })]);
+    return;
+  }
+  const ordine = ["titolare","corso","piazza-nenni","panificio","consegne"];
+  S.persone.sort(function(a, b){ return (ordine.indexOf(a.ruolo) - ordine.indexOf(b.ruolo)) || a.nome.localeCompare(b.nome, "it"); });
+  riempi(lista, S.persone.map(function(x){
+    const cl = x.ruolo === "corso" ? "dest-corso" : x.ruolo === "piazza-nenni" ? "dest-nenni" : x.ruolo === "panificio" ? "dest-panif" : "dest-altro";
+    const io = x.id === S.mioId;
+    const armato = S.armatoPersona === x.id;
+    return el("li", null,
+      el("span", null, el("b", { text: x.nome + (io ? " (tu)" : "") }), " ", el("span", { class: "pill dest " + cl, text: NOMI_RUOLI[x.ruolo] || x.ruolo })),
+      io ? null : el("button", { type: "button", class: armato ? "mini pericolo" : "mini", "data-azzera": x.id, disabled: S.azzerando, text: armato ? "Conferma: azzera" : "Azzera", "aria-label": (armato ? "Conferma: azzera " : "Azzera ") + x.nome }));
+  }));
+  if (!S.persone.length) riempi(lista, [el("li", { class: "hint", text: "Nessuno registrato." })]);
+}
+async function azzeraPersona(id){
+  if (S.azzerando) return;
+  if (S.armatoPersona !== id){
+    S.armatoPersona = id; mostraPersone();
+    clearTimeout(timerPersona);
+    timerPersona = setTimeout(function(){ S.armatoPersona = null; mostraPersone(); }, 4000);
+    return;
+  }
+  clearTimeout(timerPersona);
+  const p = (S.persone || []).find(function(x){ return x.id === id; });
+  S.azzerando = true; S.armatoPersona = null;
+  try {
+    await sbFai(sb.rpc("azzera_persona", { persona: id }));
+    avviso("Fatto: " + (p ? p.nome : "questa persona") + " non può più entrare. Se serve, si registra di nuovo con il codice del negozio.");
+  } catch(e){
+    avviso(e && e.code === "unavailable" ? "Non riesco a collegarmi. Riprova." : "Non riuscito: " + ((e && e.message) || "riprova."));
+  }
+  S.azzerando = false;
+  mostraPersone();
+}
 async function avviaSupabase(){
   S.sito = true;
   attesaAccesso("Un attimo…");
@@ -2686,7 +2747,7 @@ async function avviaSupabase(){
     const sess = r && r.data && r.data.session;
     if (sess && (await entraConSessione(sess))) return;
   } catch(e){}
-  mostraAccesso("entra");
+  mostraAccesso(S.azzerato ? "prima" : "entra", S.azzerato ? "Il tuo accesso è stato azzerato dal titolare: registrati di nuovo con il codice del negozio." : "");
 }
 
 async function avvia(){
