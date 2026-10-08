@@ -150,6 +150,14 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px;back
 .ctrl-voce.fuori{border:2px solid var(--c);background:var(--c-bg);box-shadow:inset 6px 0 0 var(--c);padding-left:16px}
 .ctrl-voce.comprare{--c:var(--ink);--c-ink:var(--bg);--c-bg:var(--surface-2)}
 .ctrl-scelte{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.ctrl-fuori{display:flex;flex-wrap:wrap;gap:8px}
+.ctrl-fuori label{display:flex;flex-direction:column;gap:4px;flex:1 1 140px;min-width:0}
+.ctrl-fuori label.ora{flex:0 1 130px}
+.ctrl-fuori input{width:100%;min-height:42px;padding:0 10px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);font-size:16px}
+.ctrl-fuori input:focus{outline:3px solid var(--accent);outline-offset:1px;border-color:transparent}
+.ctrl-fuori input[aria-invalid="true"]{border-color:var(--urgent);background:var(--urgent-bg)}
+.pill.origine.ritiro-fuori{background:var(--surface-2);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ink)}
+.pill.p-ora{background:var(--ink);color:var(--bg)}
 select.prov{width:auto;min-width:0;flex:1 1 150px;min-height:42px;padding:0 8px 0 10px;font-weight:700;font-size:14px;border-radius:10px}
 .ctrl-voce.fuori select.prov{background:var(--c);border-color:var(--c);color:var(--c-ink)}
 .urg-mini{appearance:none;flex:none;display:inline-flex;align-items:center;gap:7px;min-height:42px;padding:0 12px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);color:var(--muted);font-weight:700;font-size:15px;cursor:pointer}
@@ -661,6 +669,7 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
     <p class="hint" id="ctrl-sotto"></p>
     <p class="ctrl-domanda" id="ctrl-domanda"></p>
     <ul class="ctrl-lista" id="ctrl-lista"></ul>
+    <datalist id="posti-fuori"></datalist>
     <div class="riep-azioni"><button type="button" class="mini" id="ctrl-indietro">Torna a scrivere</button><button type="button" class="primary" id="ctrl-invia">Sì, invia</button></div>
   </div>
 </div>
@@ -683,7 +692,9 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
 
 /* Punti vendita: nomi presi dai gruppi WhatsApp. Si cambiano qui. */
 const DESTINAZIONI = ["Corso","Piazza Nenni","Panificio"];
-const ORIGINI = ["Panificio","Corso","Piazza Nenni","Da comprare"];
+/* "Da ritirare fuori": merce già ordinata da ritirare da un fornitore (macelleria…), con il posto e l'ora */
+const FUORI = "Da ritirare fuori";
+const ORIGINI = ["Panificio","Corso","Piazza Nenni",FUORI,"Da comprare"];
 const PROMEMORIA = "Promemoria";
 const PREP = {"Corso":"al Corso","Piazza Nenni":"a Piazza Nenni","Panificio":"al Panificio"};
 const DA_PREP = {"Corso":"dal Corso","Piazza Nenni":"da Piazza Nenni","Panificio":"dal Panificio"};
@@ -867,6 +878,8 @@ function norma(k, d, st, autore, rid){
     quantita: String(d.quantita || "").slice(0,24),
     per: String(d.per || ""),
     da: String(d.da || "Panificio"),
+    ritiroDove: String(d.ritiroDove || "").slice(0,60),
+    ritiroOra: /^\d{2}:\d{2}$/.test(d.ritiroOra || "") ? d.ritiroOra : "",
     urgente: d.urgente === true,
     stato: stati.indexOf(st.stato) >= 0 ? st.stato : "attesa",
     creato: Number(d.creato) || 0,
@@ -1051,6 +1064,7 @@ async function aggiungi(voci, comuni){
       da: x.da || "Panificio", urgente: x.urgente === true
     });
     if (x.reparto) voce.reparto = x.reparto;
+    if (voce.da === FUORI){ voce.ritiroDove = String(x.ritiroDove || "").trim().slice(0,60); if (x.ritiroOra) voce.ritiroOra = x.ritiroOra; }
     const fatto = await scrivi(function(){ return store.aggiungi(voce); }, true);
     if (!fatto) break;
     ok++;
@@ -1086,6 +1100,11 @@ function apriControllo(dove, per, rr){
       };
     })
   };
+  const posti = [];
+  S.richieste.concat(S.tolte).filter(function(r){ return r.da === FUORI && r.ritiroDove; })
+    .sort(function(a, b){ return b.creato - a.creato; })
+    .forEach(function(r){ if (!posti.some(function(p){ return chiave(p) === chiave(r.ritiroDove); })) posti.push(r.ritiroDove); });
+  riempi($("posti-fuori"), posti.slice(0, 30).map(function(p){ return el("option", {value:p}); }));
   renderControllo();
   avviso("");
   $("controllo").hidden = false;
@@ -1116,19 +1135,27 @@ function renderControllo(){
   else dom.textContent = "Attenzione: " + (altrove === 1 ? "1 cosa non si prende" : altrove + " cose non si prendono") + " al Panificio. Controlla qui sotto.";
   riempi($("ctrl-lista"), c.voci.map(function(v, i){
     const fuori = v.da !== "Panificio";
-    const cls = fuori ? (v.da === "Da comprare" ? " fuori comprare" : " fuori " + classeDest(v.da)) : "";
+    const cls = fuori ? ((v.da === "Da comprare" || v.da === FUORI) ? " fuori comprare" : " fuori " + classeDest(v.da)) : "";
     const testa = el("p", {class:"articolo"}, v.quantita ? el("span", {class:"qta", text:v.quantita}) : null, v.articolo,
       gia.has(chiave(v.articolo)) ? el("span", {class:"pill p-attesa ctrl-gia", text:"Già chiesto"}) : null);
     const scelte = el("div", {class:"ctrl-scelte"});
     if (!promem){
       const sel = el("select", {class:"prov", "data-ctrl-da":String(i), "aria-label":"Da dove si prende " + v.articolo, disabled:c.inviando});
-      opz.forEach(function(o){ sel.append(el("option", {value:o, text: (o === "Da comprare" ? "Da ordinare o comprare" : (function(t){ return t.charAt(0).toUpperCase() + t.slice(1); })(daLuogo(o)))})); });
+      opz.forEach(function(o){ sel.append(el("option", {value:o, text: (o === "Da comprare" ? "Da ordinare o comprare" : o === FUORI ? FUORI : (function(t){ return t.charAt(0).toUpperCase() + t.slice(1); })(daLuogo(o)))})); });
       sel.value = v.da;
       scelte.append(sel);
     }
+    let extra = null;
+    if (v.da === FUORI){
+      extra = el("div", {class:"ctrl-fuori"},
+        el("label", null, el("span", {class:"label-sm", text:"Dove si ritira"}),
+          el("input", {type:"text", "data-ctrl-dove":String(i), list:"posti-fuori", maxlength:"60", autocomplete:"off", placeholder:"Es. Macelleria", value:v.ritiroDove || "", disabled:c.inviando, "aria-invalid": c.mancaDove && !String(v.ritiroDove || "").trim() ? "true" : null})),
+        el("label", {class:"ora"}, el("span", {class:"label-sm", text:"Entro le (se serve)"}),
+          el("input", {type:"time", "data-ctrl-ora":String(i), value:v.ritiroOra || "", disabled:c.inviando})));
+    }
     scelte.append(el("button", {type:"button", class:"urg-mini", "data-ctrl-urg":String(i), "aria-pressed":String(v.urgente), disabled:c.inviando,
       "aria-label":"Urgente: " + v.articolo, text:"Urgente"}));
-    return el("li", {class:"ctrl-voce" + cls}, testa, scelte);
+    return el("li", {class:"ctrl-voce" + cls}, testa, scelte, extra);
   }));
   const b = $("ctrl-invia");
   b.disabled = c.inviando || !n;
@@ -1138,6 +1165,14 @@ function renderControllo(){
 async function confermaControllo(){
   const c = S.ctrl;
   if (!c || c.inviando || !c.voci.length) return;
+  const senzaPosto = c.voci.findIndex(function(v){ return v.da === FUORI && !String(v.ritiroDove || "").trim(); });
+  if (senzaPosto >= 0){
+    c.mancaDove = true; renderControllo();
+    const dom = $("ctrl-domanda"); dom.hidden = false; dom.className = "ctrl-domanda diverso";
+    dom.textContent = "Scrivi dove si ritira: " + c.voci[senzaPosto].articolo + ".";
+    const inp = document.querySelector('[data-ctrl-dove="' + senzaPosto + '"]'); if (inp) inp.focus();
+    return;
+  }
   c.inviando = true;
   const giro = c.dove === "giro";
   if (giro) S.inviandoGiro = true; else S.inviando = true;
@@ -1475,11 +1510,14 @@ function testoArticolo(r){
 function pillOrigine(r){
   if (r.per === PROMEMORIA || r.da === "Panificio" || r.da === r.per) return null;
   if (r.da === "Da comprare") return el("span", {class:"pill origine comprare", text:"Da ordinare o comprare"});
+  if (r.da === FUORI) return el("span", {class:"pill origine ritiro-fuori", text:testoFuori(r)});
   return el("span", {class:"pill origine " + classeDest(r.da), text:"Da prendere " + (PREP[r.da] || "a " + r.da)});
 }
+function testoFuori(r){ return "Da ritirare: " + (r.ritiroDove || "fuori") + (r.ritiroOra ? " entro le " + r.ritiroOra : ""); }
 function origineTesto(r){
   if (r.per === PROMEMORIA || r.da === "Panificio" || r.da === r.per) return null;
   if (r.da === "Da comprare") return nomeOrigine(r.da);
+  if (r.da === FUORI) return testoFuori(r);
   return "Da prendere " + (PREP[r.da] || "a " + r.da);
 }
 function meta(parti){
@@ -1972,11 +2010,12 @@ function azioniGiro(r){
   return box;
 }
 /* riga nel carico: striscia del colore del negozio, per sapere subito dove va */
-function rigaCarico(r, conSposta, conAzioni, conDove){
+function rigaCarico(r, conSposta, conAzioni, conDove, conOra){
   const promem = r.per === PROMEMORIA;
   let dove = null;
   if (conDove) dove = promem ? "Promemoria" : (pillOrigine(r) || el("strong", {class:"ritiro", text:"Reparto " + repartoDi(r)}));
-  const parti = [pillUrgente(r), pillPrep(r), pillDest(r.per), dove, "chiesto " + quando(r.creato), tag(r, "giro"), bottoneChi(r)];
+  const ora = conOra && r.ritiroOra ? el("span", {class:"pill p-ora", text:"Entro le " + r.ritiroOra}) : null;
+  const parti = [pillUrgente(r), ora, pillPrep(r), pillDest(r.per), dove, "chiesto " + quando(r.creato), tag(r, "giro"), bottoneChi(r)];
   if (conSposta && !promem && !S.sola && store){
     const attuale = repartoDi(r);
     const sel = el("select", {class:"sposta", "data-sposta":r.id, disabled:S.pending.has(r.id), "aria-label":"Sposta " + r.articolo + " in un altro reparto"});
@@ -2075,6 +2114,7 @@ function testaGruppo(occhiello, titolo, n, extra){
 function gruppoCarico(r){
   if (r.per === PROMEMORIA) return PROMEMORIA;
   if (r.da === "Da comprare") return "Da comprare";
+  if (r.da === FUORI) return "Fuori " + (r.ritiroDove || "?");
   if (r.da !== "Panificio" && r.da !== r.per) return "Ritiro " + daLuogo(r.da);
   return repartoDi(r);
 }
@@ -2088,6 +2128,9 @@ function gruppiCarico(aperte){
     per.get(g).push(r);
   });
   const ritiri = Array.from(per.keys()).filter(function(k){ return k.indexOf("Ritiro ") === 0; }).sort();
+  const oraMin = function(k){ return per.get(k).reduce(function(m, r){ return r.ritiroOra && r.ritiroOra < m ? r.ritiroOra : m; }, "99:99"); };
+  const fuori = Array.from(per.keys()).filter(function(k){ return k.indexOf("Fuori ") === 0; })
+    .sort(function(a, b){ return oraMin(a).localeCompare(oraMin(b)) || a.localeCompare(b, "it"); });
   const out = [];
   /* le cose urgenti stanno in cima, fuori dai reparti: ogni riga dice dove si trova */
   if (urgenti.length){
@@ -2095,15 +2138,18 @@ function gruppiCarico(aperte){
     out.push(el("section", {class:"gruppo urgenti", "aria-label":"Urgenti"}, testaGruppo("Prima di tutto", "Urgenti", urgenti.length),
       el("ul", {class:"lista"}, ...urgenti.map(function(r){ return rigaCarico(r, false, true, true); }))));
   }
-  [PROMEMORIA].concat(REPARTI, ritiri, ["Da comprare"]).forEach(function(g){
+  [PROMEMORIA].concat(fuori, REPARTI, ritiri, ["Da comprare"]).forEach(function(g){
     const items = per.get(g);
     if (!items) return;
-    items.sort(ordinaCarico);
+    const eFuori = g.indexOf("Fuori ") === 0;
+    if (eFuori) items.sort(function(a, b){ return (a.ritiroOra || "99:99").localeCompare(b.ritiroOra || "99:99") || ordinaCarico(a, b); });
+    else items.sort(ordinaCarico);
     const reparto = REPARTI.indexOf(g) >= 0;
-    const occhiello = g === PROMEMORIA ? "Da ricordare" : (reparto ? "Reparto" : "Fuori magazzino");
+    const occhiello = g === PROMEMORIA ? "Da ricordare" : (reparto ? "Reparto" : (eFuori ? "Passare a ritirare" : "Fuori magazzino"));
     const daNegozio = g.indexOf("Ritiro ") === 0 ? " dest " + classeDest(items[0].da) : "";
-    out.push(el("section", {class:"gruppo gruppo-reparto" + daNegozio, "aria-label":nomeOrigine(g)}, testaGruppo(occhiello, nomeOrigine(g), items.length),
-      el("ul", {class:"lista"}, ...items.map(function(r){ return rigaCarico(r, reparto); }))));
+    const titolo = eFuori ? (items[0].ritiroDove || "Fuori") : nomeOrigine(g);
+    out.push(el("section", {class:"gruppo gruppo-reparto" + daNegozio, "aria-label":titolo}, testaGruppo(occhiello, titolo, items.length),
+      el("ul", {class:"lista"}, ...items.map(function(r){ return eFuori ? rigaCarico(r, false, true, false, true) : rigaCarico(r, reparto); }))));
   });
   return out;
 }
@@ -2302,6 +2348,11 @@ function collega(){
     inp.addEventListener("change", function(){
       S.punto = S.puntoTitolare = inp.value; ricorda("punto", inp.value); S.bozza = bozzaNuova(); renderTutto();
     });
+  });
+  $("ctrl-lista").addEventListener("input", function(ev){
+    const t = ev.target; if (!S.ctrl) return;
+    if (t.dataset.ctrlDove){ const v = S.ctrl.voci[Number(t.dataset.ctrlDove)]; if (v){ v.ritiroDove = t.value; if (t.value.trim()) t.removeAttribute("aria-invalid"); } }
+    if (t.dataset.ctrlOra){ const v = S.ctrl.voci[Number(t.dataset.ctrlOra)]; if (v) v.ritiroOra = t.value; }
   });
   $("righe").addEventListener("input", aggiornaForm);
   $("righe-giro").addEventListener("input", aggiornaFormGiro);
