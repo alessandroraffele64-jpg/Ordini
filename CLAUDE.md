@@ -9,3 +9,4 @@
 - Testi e commenti in italiano: l'app la usano i dipendenti di una panetteria, la lingua deve restare semplice.
 - Il proprietario non è un programmatore: spiegare le cose in parole semplici, senza gergo tecnico.
 - Statistiche: sono pronte ma spente (`STATISTICHE_ATTIVE = false` in `sorgente/app.html`) finché si fanno le prove. Quando il proprietario dice che l'app è partita davvero, accenderle e mettere `STAT_DAL` al giorno di partenza, così le richieste di prova non contano.
+- Notifiche: la funzione Supabase è in `supabase/funzioni/notifiche/index.ts` (va incollata nell'editor delle Edge Functions di Supabase con nome `notifiche`); la tabella è in `supabase/aggiornamento-2-notifiche.sql`. La chiave pubblica delle notifiche sta in `config.json` (`vapid`); quella privata è solo nei segreti di Supabase (`VAPID_PRIVATA`), mai nel repository.

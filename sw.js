@@ -1,7 +1,7 @@
 /* Copia dell'app sul telefono: si apre anche senza campo.
    La pagina si prende sempre dalla rete se c'è (così gli aggiornamenti arrivano subito);
    senza rete si usa la copia. I dati di Supabase non passano mai di qui. */
-const VERSIONE = "15ee25acf3";
+const VERSIONE = "36f87f608c";
 const CACHE = "ordini-" + VERSIONE;
 const BASE = ["./", "manifest.webmanifest", "icone/icona-180.png", "icone/icona-192.png"];
 
@@ -33,5 +33,21 @@ self.addEventListener("fetch", function(e){
       if (res.ok || res.type === "opaque"){ const copia = res.clone(); caches.open(CACHE).then(function(cc){ cc.put(r, copia); }); }
       return res;
     });
+  }));
+});
+
+/* notifiche: arrivano anche con l'app chiusa */
+self.addEventListener("push", function(e){
+  let d = {};
+  try { d = e.data ? e.data.json() : {}; } catch(x){ d = { titolo: "Ordini", testo: e.data ? e.data.text() : "" }; }
+  e.waitUntil(self.registration.showNotification(d.titolo || "Ordini · Profumo di Pane", {
+    body: d.testo || "", tag: d.tag || undefined, icon: "icone/icona-192.png", badge: "icone/icona-192.png", data: { url: "./" }
+  }));
+});
+self.addEventListener("notificationclick", function(e){
+  e.notification.close();
+  e.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(function(finestre){
+    for (const f of finestre){ if ("focus" in f) return f.focus(); }
+    return self.clients.openWindow("./");
   }));
 });

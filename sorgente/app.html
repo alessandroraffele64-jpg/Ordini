@@ -197,6 +197,11 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px;back
 .legenda-stat .punto + .punto,.legenda-stat .punto:not(:first-child){margin-left:6px}
 .stat.allerta-ferma{background:var(--ferma-bg);border-color:var(--ferma-bordo)}
 .stat.allerta-ferma b,.stat.allerta-ferma span{color:var(--ferma)}
+.notif-scelte{display:flex;flex-direction:column;gap:6px}
+.notif-scelta{display:flex;align-items:flex-start;gap:12px;padding:10px 4px;cursor:pointer}
+.notif-scelta input{flex:none;width:22px;height:22px;margin:1px 0 0;accent-color:var(--accent)}
+.notif-scelta span{display:flex;flex-direction:column;gap:2px}
+.notif-scelta small{font-size:13px;color:var(--muted)}
 .pill.p-coda{background:var(--urgent-bg);color:var(--urgent-txt);box-shadow:inset 0 0 0 1.5px var(--urgent)}
 .coda-avviso{padding:10px 14px;border-radius:var(--r-md);background:var(--urgent-bg);color:var(--urgent-txt);border:1.5px solid var(--urgent);font-size:15px;font-weight:700;line-height:1.35}
 select.prov{width:auto;min-width:0;flex:1 1 150px;min-height:42px;padding:0 8px 0 10px;font-weight:700;font-size:14px;border-radius:10px}
@@ -694,6 +699,17 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
         <li><span class="pill dest dest-altro">Chi fa il giro</span><code>#consegne</code><button type="button" class="mini" data-prova="consegne">Prova</button></li>
       </ul>
       <p class="hint" id="link-nota">È una separazione comoda, non una protezione: chi ha il link senza aggiunta vede tutto.</p>
+    </div>
+  </details>
+
+  <!-- Sito: notifiche su questo telefono -->
+  <details class="card" id="notifiche-box" hidden>
+    <summary>Notifiche su questo telefono</summary>
+    <div class="blocco">
+      <p class="hint" id="notif-stato"></p>
+      <button type="button" class="primary" id="notif-attiva" hidden>Attiva le notifiche</button>
+      <ul class="notif-scelte" id="notif-scelte"></ul>
+      <button type="button" class="link" id="notif-spegni" hidden>Spegni le notifiche su questo telefono</button>
     </div>
   </details>
 
@@ -2729,6 +2745,8 @@ function collega(){
     if (b.dataset.acc) return mostraAccesso(b.dataset.acc);
     if (b.id === "esci") return esciSB();
     if (b.dataset.azzera) return azzeraPersona(b.dataset.azzera);
+    if (b.id === "notif-attiva") return attivaNotifiche();
+    if (b.id === "notif-spegni") return spegniNotifiche(false);
     if (b.dataset.quando && S.ctrl){
       S.ctrl.sceltaQuando = b.dataset.quando;
       S.ctrl.perIl = b.dataset.quando === "domani" ? domaniStr() : (b.dataset.quando === "oggi" ? "" : ($("ctrl-quando-data").value || ""));
@@ -2745,6 +2763,8 @@ function collega(){
   $("codici-box").addEventListener("toggle", function(){ if ($("codici-box").open) mostraCodici(); });
   $("persone-box").addEventListener("toggle", function(){ if ($("persone-box").open){ S.armatoPersona = null; mostraPersone(); } });
   document.addEventListener("change", function(ev){
+    const nt = ev.target.closest && ev.target.closest("input[data-notif]");
+    if (nt) cambiaSceltaNotifica(nt.dataset.notif, nt.checked);
     const s = ev.target.closest && ev.target.closest("select[data-sposta]");
     if (s && s.value) spostaReparto(s.dataset.sposta, s.value);
     const p = ev.target.closest && ev.target.closest("select[data-ctrl-da]");
@@ -2967,6 +2987,171 @@ function ascoltaSB(){
   S.canale = canale;
 }
 
+/* ---------- notifiche sul telefono ----------
+   Dopo un salvataggio l'app avvisa la funzione "notifiche" su Supabase, che decide chi
+   deve saperlo. Gli avvisi si raggruppano: 8 cose inviate insieme = 1 notifica. */
+const VAPID_PUBLICA = "";
+S.eventi = [];
+function notificheDisponibili(){ return !!(S.sito && VAPID_PUBLICA); }
+function aggiungiEvento(ev){
+  if (!ev || !notificheDisponibili()) return;
+  S.eventi.push(ev);
+  clearTimeout(S.timerEventi);
+  /* le nuove richieste partono insieme dopo un attimo; i cambi di stato si raccolgono un po' di più */
+  S.timerEventi = setTimeout(mandaEventi, ev.tipo === "nuove" || ev.tipo === "biscotti" ? 2500 : 12000);
+}
+function pacchettoEventi(){
+  const per = {};
+  S.eventi.forEach(function(e){ (per[e.tipo] = per[e.tipo] || new Set()).add(e.id); });
+  S.eventi = [];
+  return Object.keys(per).map(function(t){ return { tipo: t, ids: Array.from(per[t]) }; });
+}
+async function mandaEventi(chiudendo){
+  clearTimeout(S.timerEventi);
+  if (!S.eventi.length || !sb) return;
+  const eventi = pacchettoEventi();
+  let token = S.token;
+  if (!chiudendo){
+    try { const r = await sb.auth.getSession(); token = (r.data.session && r.data.session.access_token) || token; S.token = token; } catch(e){}
+  }
+  if (!token) return;
+  try {
+    await fetch(SB_URL + "/functions/v1/notifiche", {
+      method: "POST", keepalive: true,
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token, "apikey": SB_KEY },
+      body: JSON.stringify({ eventi: eventi })
+    });
+  } catch(e){
+    /* senza rete: si riprova più tardi */
+    eventi.forEach(function(g){ g.ids.forEach(function(id){ S.eventi.push({ tipo: g.tipo, id: id }); }); });
+    clearTimeout(S.timerEventi); S.timerEventi = setTimeout(mandaEventi, 30000);
+  }
+}
+function eventoStato(k, p){
+  if (p.prep === "pronto") return { tipo: "pronto", id: k };
+  if (p.prep === "manca") return { tipo: "manca", id: k };
+  if (p.stato === "caricato") return { tipo: "partite", id: k };
+  return null;
+}
+
+/* scelte per ruolo: cosa si può ricevere su questo telefono */
+const SCELTE_NOTIFICHE = {
+  "consegne": [["nuove", "Ogni nuova richiesta", "Le urgenti arrivano sempre."], ["pronto", "Pronto da caricare dal panificio", ""]],
+  "panificio": [["nuove", "Nuove richieste per il panificio", ""], ["biscotti", "Comande di biscotti", ""]],
+  "corso": [["manca", "Una nostra richiesta non c'è in magazzino", ""], ["partite", "Le nostre cose sono partite", ""]],
+  "piazza-nenni": [["manca", "Una nostra richiesta non c'è in magazzino", ""], ["partite", "Le nostre cose sono partite", ""]],
+  "titolare": [["tutto", "Ricevi tutto", "Nuove richieste, cose che mancano, pronti da caricare, biscotti."]]
+};
+function sceltaNormale(k){ return k !== "tutto"; }
+function chiaveB64(s){
+  const p = "=".repeat((4 - s.length % 4) % 4);
+  const b = atob((s + p).replace(/-/g, "+").replace(/_/g, "/"));
+  return Uint8Array.from(b, function(c){ return c.charCodeAt(0); });
+}
+function suIphoneSenzaHome(){
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const home = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
+  return ios && !home;
+}
+async function iscrizioneAttuale(){
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    return await reg.pushManager.getSubscription();
+  } catch(e){ return null; }
+}
+async function renderNotifiche(){
+  const box = $("notifiche-box");
+  if (!box) return;
+  box.hidden = !notificheDisponibili() || !store;
+  if (box.hidden) return;
+  const stato = $("notif-stato"), btn = $("notif-attiva"), scelte = $("notif-scelte"), spegni = $("notif-spegni");
+  btn.hidden = true; spegni.hidden = true; riempi(scelte, []);
+  /* la prima volta il riquadro si apre da solo, così si nota */
+  const sub0 = suIphoneSenzaHome() ? null : await iscrizioneAttuale();
+  if (!sub0 && !S.notifAperta){ box.open = true; S.notifAperta = true; }
+  if (suIphoneSenzaHome()){
+    stato.textContent = "Sull'iPhone le notifiche funzionano solo dall'icona sulla schermata Home: in Safari tocca Condividi → Aggiungi alla schermata Home, apri l'app da lì e torna qui.";
+    return;
+  }
+  if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)){
+    stato.textContent = "Questo telefono o questo browser non riceve notifiche.";
+    return;
+  }
+  if (Notification.permission === "denied"){
+    stato.textContent = "Le notifiche sono bloccate per questa app nelle impostazioni del telefono. Riattivale da lì e poi torna qui.";
+    return;
+  }
+  const sub = await iscrizioneAttuale();
+  if (!sub){
+    stato.textContent = "Ricevi un avviso sul telefono anche con l'app chiusa.";
+    btn.hidden = false; btn.disabled = !!S.attivandoNotifiche;
+    btn.textContent = S.attivandoNotifiche ? "Attivo…" : "Attiva le notifiche";
+    return;
+  }
+  stato.textContent = "Notifiche attive su questo telefono. Scegli cosa ricevere:";
+  const ruolo = S.ruoloSito || "titolare";
+  const pref = S.preferenzeNotifiche || {};
+  riempi(scelte, (SCELTE_NOTIFICHE[ruolo] || []).map(function(o){
+    const acceso = pref[o[0]] === undefined ? sceltaNormale(o[0]) : pref[o[0]] === true;
+    return el("li", null, el("label", {class:"notif-scelta"},
+      el("input", {type:"checkbox", "data-notif":o[0], checked: acceso ? true : null}),
+      el("span", null, el("b", {text:o[1]}), o[2] ? el("small", {text:o[2]}) : null)));
+  }));
+  scelte.querySelectorAll("input[data-notif]").forEach(function(inp){ inp.checked = inp.hasAttribute("checked"); });
+  spegni.hidden = false;
+}
+async function salvaIscrizione(sub){
+  const j = sub.toJSON();
+  await sbFai(sb.rpc("salva_iscrizione", { endpoint_tel: j.endpoint, chiave_p256dh: j.keys.p256dh, chiave_auth: j.keys.auth, scelte: S.preferenzeNotifiche || {} }));
+}
+async function attivaNotifiche(){
+  if (S.attivandoNotifiche) return;
+  S.attivandoNotifiche = true; renderNotifiche();
+  try {
+    const perm = await Notification.requestPermission();
+    if (perm !== "granted") throw { utente: true };
+    const reg = await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: chiaveB64(VAPID_PUBLICA) });
+    S.preferenzeNotifiche = S.preferenzeNotifiche || {};
+    await salvaIscrizione(sub);
+    notifica("Notifiche attive", "Da ora ricevi gli avvisi anche con l'app chiusa.", "ok");
+  } catch(e){
+    if (e && e.utente) avviso("Senza il permesso del telefono le notifiche non possono arrivare.");
+    else avviso("Non sono riuscito ad attivare le notifiche. Riprova tra poco.");
+  }
+  S.attivandoNotifiche = false;
+  renderNotifiche();
+}
+async function cambiaSceltaNotifica(k, acceso){
+  S.preferenzeNotifiche = Object.assign({}, S.preferenzeNotifiche, { [k]: acceso });
+  try { localStorage.setItem("pdp-notifiche", JSON.stringify(S.preferenzeNotifiche)); } catch(e){}
+  const sub = await iscrizioneAttuale();
+  if (!sub) return;
+  try { await salvaIscrizione(sub); avviso("Salvato."); }
+  catch(e){ avviso("Non sono riuscito a salvare la scelta. Riprova."); }
+}
+async function spegniNotifiche(scollega){
+  const sub = await iscrizioneAttuale();
+  if (!sub) return;
+  try { await sb.rpc("togli_iscrizione", { endpoint_tel: sub.endpoint }); } catch(e){}
+  try { await sub.unsubscribe(); } catch(e){}
+  if (!scollega){ avviso("Notifiche spente su questo telefono."); renderNotifiche(); }
+}
+async function caricaPreferenzeNotifiche(){
+  try { S.preferenzeNotifiche = JSON.parse(localStorage.getItem("pdp-notifiche") || "null") || {}; } catch(e){ S.preferenzeNotifiche = {}; }
+  const sub = await iscrizioneAttuale();
+  if (sub && sb){
+    try {
+      const r = await sbFai(sb.from("iscrizioni").select("preferenze").eq("endpoint", sub.endpoint));
+      if (r && r.length) S.preferenzeNotifiche = r[0].preferenze || {};
+      /* l'iscrizione c'è sul telefono ma non nel database (per esempio dopo un azzeramento): la rifà */
+      else await salvaIscrizione(sub);
+    } catch(e){}
+  }
+  renderNotifiche();
+}
+
 /* notifica in alto, come quelle del telefono: si vede subito senza scorrere */
 let timerNotifica = 0;
 function notifica(titolo, testo, tipo){
@@ -3029,12 +3214,13 @@ async function eseguiOp(op){
   if (op.tipo === "update" && op.controlla && (!r.data || !r.data.length)) throw { code: "invalid_argument" };
 }
 /* prova online; se manca la rete mette in coda e va avanti come se fosse partita */
-async function scriviOp(op){
+async function scriviOp(op, evento){
   try { await eseguiOp(op); }
   catch(e){
-    if (e && e.code === "unavailable"){ delete op.controlla; accoda(op); return; }
+    if (e && e.code === "unavailable"){ delete op.controlla; if (evento) op.evento = evento; accoda(op); return; }
     throw e;
   }
+  aggiungiEvento(evento);
 }
 async function svuotaCoda(){
   if (S.svuotando || !sb || !store || !S.coda.length) return;
@@ -3042,7 +3228,7 @@ async function svuotaCoda(){
   let scartate = 0;
   try {
     while (S.coda.length){
-      try { await eseguiOp(S.coda[0]); }
+      try { await eseguiOp(S.coda[0]); aggiungiEvento(S.coda[0].evento); }
       catch(e){
         if (e && e.code === "unavailable") break;
         scartate++; /* rifiutata dal database (per esempio non è più permessa): si toglie */
@@ -3115,12 +3301,12 @@ function storeSB(){
   return {
     aggiungi: async function(voce){
       const id = nuovoId();
-      await scriviOp({ tab: "richieste", tipo: "insert", id: id, riga: { id: id, autore: S.mioId, dati: voce } });
+      await scriviOp({ tab: "richieste", tipo: "insert", id: id, riga: { id: id, autore: S.mioId, dati: voce } }, { tipo: "nuove", id: id });
       applicaRiga("richieste", { id: id, autore: S.mioId, dati: voce }); emettiSB(true);
     },
     stato: async function(k, p){
       const dati = Object.assign({}, S.stati[k], p);
-      await scriviOp({ tab: "stati", tipo: "upsert", id: k, riga: { id: k, dati: dati } });
+      await scriviOp({ tab: "stati", tipo: "upsert", id: k, riga: { id: k, dati: dati } }, eventoStato(k, p));
       S.stati[k] = dati; emettiSB(true);
     },
     annulla: function(r){ return cambiaVoce(r, { annullato: true, annullatoAlle: Date.now() }); },
@@ -3133,7 +3319,9 @@ function storeSB(){
         delete RAW.bisc[id];
       } else {
         const d = Object.assign({}, RAW.bisc[id], dati);
-        await scriviOp({ tab: "biscotti", tipo: "upsert", id: id, riga: { id: id, dati: d } });
+        /* una comanda nuova (o più urgente) avvisa il panificio */
+        const comanda = d.stato === "manca" && !!dati.segnatoAlle;
+        await scriviOp({ tab: "biscotti", tipo: "upsert", id: id, riga: { id: id, dati: d } }, comanda ? { tipo: "biscotti", id: id } : null);
         RAW.bisc[id] = d;
       }
       emettiSB(true);
@@ -3189,6 +3377,8 @@ async function entraConSessione(sess){
     return false;
   }
   S.mioId = sess.user.id;
+  S.ruoloSito = prof[0].ruolo;
+  S.token = sess.access_token || S.token;
   S.nomeMio = prof[0].nome;
   S.owner = prof[0].ruolo === "titolare";
   S.ruoloFisso = S.owner ? null : prof[0].ruolo;
@@ -3202,6 +3392,7 @@ async function entraConSessione(sess){
   if (S.owner) $("link-nota").textContent = "Sul sito ognuno vede già solo la sua parte: la decide il codice con cui si è registrato. Qui puoi vedere com'è.";
   applicaRuolo();
   ascoltaSB();
+  caricaPreferenzeNotifiche();
   await caricaTuttoSB();
   return true;
 }
@@ -3266,7 +3457,8 @@ async function inviaAccesso(ev){
 function profiloRicordato(){ try { return JSON.parse(localStorage.getItem("pdp-profilo") || "null"); } catch(e){ return null; } }
 async function esciSB(){
   if (S.coda.length && !confirmUscita()) return;
-  try { localStorage.removeItem("pdp-profilo"); localStorage.removeItem("pdp-ultima-lista"); } catch(e){}
+  try { await spegniNotifiche(true); } catch(e){}
+  try { localStorage.removeItem("pdp-profilo"); localStorage.removeItem("pdp-ultima-lista"); localStorage.removeItem("pdp-notifiche"); } catch(e){}
   try { await sb.auth.signOut(); } catch(e){}
   try { location.hash = ""; } catch(e){}
   location.reload();
@@ -3343,6 +3535,8 @@ async function avviaSupabase(){
     if (S.senzaSessione){ location.reload(); return; }
     svuotaCoda(); caricaTuttoSB();
   });
+  document.addEventListener("visibilitychange", function(){ if (document.visibilityState === "hidden" && S.eventi.length) mandaEventi(true); });
+  window.addEventListener("pagehide", function(){ if (S.eventi.length) mandaEventi(true); });
   window.addEventListener("offline", function(){
     if (!store) return;
     bannerSenzaRete();
@@ -3356,6 +3550,7 @@ async function avviaSupabase(){
     return;
   }
   sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, autoRefreshToken: true, storageKey: "pdp-ordini-accesso" } });
+  try { sb.auth.onAuthStateChange(function(_e, sess){ if (sess && sess.access_token) S.token = sess.access_token; }); } catch(e){}
   document.addEventListener("visibilitychange", function(){
     if (document.visibilityState === "visible" && store) caricaTuttoSB();
   });

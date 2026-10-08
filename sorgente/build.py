@@ -26,7 +26,7 @@ def leggi_config():
     key = cfg.get("key", "").strip()
     if key.startswith("sb_secret_") or "service_role" in key:
         raise SystemExit("Nel config.json va la chiave pubblica (publishable), non quella segreta.")
-    return url, key
+    return url, key, cfg.get("vapid", "").strip()
 
 
 def sostituisci(src, nome, valore):
@@ -82,10 +82,11 @@ def fai_sw(pagina):
 
 
 def main():
-    url, key = leggi_config()
+    url, key, vapid = leggi_config()
     src = (QUI / "app.html").read_text(encoding="utf-8")
     src = sostituisci(src, "SB_URL", url)
     src = sostituisci(src, "SB_KEY", key)
+    src = sostituisci(src, "VAPID_PUBLICA", vapid)
 
     # quello che sta prima della testata (titolo, caratteri, stile) va nella <head>
     taglio = src.index('<header class="testata">')

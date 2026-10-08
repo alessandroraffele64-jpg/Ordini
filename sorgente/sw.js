@@ -35,3 +35,19 @@ self.addEventListener("fetch", function(e){
     });
   }));
 });
+
+/* notifiche: arrivano anche con l'app chiusa */
+self.addEventListener("push", function(e){
+  let d = {};
+  try { d = e.data ? e.data.json() : {}; } catch(x){ d = { titolo: "Ordini", testo: e.data ? e.data.text() : "" }; }
+  e.waitUntil(self.registration.showNotification(d.titolo || "Ordini · Profumo di Pane", {
+    body: d.testo || "", tag: d.tag || undefined, icon: "icone/icona-192.png", badge: "icone/icona-192.png", data: { url: "./" }
+  }));
+});
+self.addEventListener("notificationclick", function(e){
+  e.notification.close();
+  e.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(function(finestre){
+    for (const f of finestre){ if ("focus" in f) return f.focus(); }
+    return self.clients.openWindow("./");
+  }));
+});
