@@ -4,6 +4,7 @@
 Uso:  python3 sorgente/build.py
 Legge l'indirizzo e la chiave pubblica di Supabase da sorgente/config.json.
 """
+import hashlib
 import json
 import re
 from pathlib import Path
@@ -72,6 +73,14 @@ def fai_manifest():
     (RADICE / "manifest.webmanifest").write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
+def fai_sw(pagina):
+    """sw.js: la copia dell'app sul telefono, per aprirla anche senza campo.
+    La versione cambia a ogni build, così i telefoni prendono subito quella nuova."""
+    versione = hashlib.sha1(pagina.encode("utf-8")).hexdigest()[:10]
+    sw = (QUI / "sw.js").read_text(encoding="utf-8").replace("__VERSIONE__", versione)
+    (RADICE / "sw.js").write_text(sw, encoding="utf-8")
+
+
 def main():
     url, key = leggi_config()
     src = (QUI / "app.html").read_text(encoding="utf-8")
@@ -109,6 +118,7 @@ def main():
     (RADICE / "index.html").write_text(pagina, encoding="utf-8")
     fai_icone()
     fai_manifest()
+    fai_sw(pagina)
     stato = "collegato a Supabase" if url and key else "SENZA Supabase (modalità prova)"
     print(f"Fatto: index.html ({len(pagina) // 1024} KB), {stato}.")
 

@@ -158,6 +158,8 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px;back
 .ctrl-fuori input[aria-invalid="true"]{border-color:var(--urgent);background:var(--urgent-bg)}
 .pill.origine.ritiro-fuori{background:var(--surface-2);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ink)}
 .pill.p-ora{background:var(--ink);color:var(--bg)}
+.pill.p-coda{background:var(--urgent-bg);color:var(--urgent-txt);box-shadow:inset 0 0 0 1.5px var(--urgent)}
+.coda-avviso{padding:10px 14px;border-radius:var(--r-md);background:var(--urgent-bg);color:var(--urgent-txt);border:1.5px solid var(--urgent);font-size:15px;font-weight:700;line-height:1.35}
 select.prov{width:auto;min-width:0;flex:1 1 150px;min-height:42px;padding:0 8px 0 10px;font-weight:700;font-size:14px;border-radius:10px}
 .ctrl-voce.fuori select.prov{background:var(--c);border-color:var(--c);color:var(--c-ink)}
 .urg-mini{appearance:none;flex:none;display:inline-flex;align-items:center;gap:7px;min-height:42px;padding:0 12px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);color:var(--muted);font-weight:700;font-size:15px;cursor:pointer}
@@ -413,6 +415,7 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
   </nav>
 
   <p class="banner" id="banner" hidden></p>
+  <p class="coda-avviso" id="coda-avviso" role="status" hidden></p>
 
   <!-- Negozio: chi lavora al banco chiede cosa serve -->
   <section class="view" id="view-negozio" role="tabpanel" aria-labelledby="tab-negozio">
@@ -878,6 +881,7 @@ function norma(k, d, st, autore, rid){
     quantita: String(d.quantita || "").slice(0,24),
     per: String(d.per || ""),
     da: String(d.da || "Panificio"),
+    inCoda: !!S.inCoda && S.inCoda.has(rid),
     ritiroDove: String(d.ritiroDove || "").slice(0,60),
     ritiroOra: /^\d{2}:\d{2}$/.test(d.ritiroOra || "") ? d.ritiroOra : "",
     urgente: d.urgente === true,
@@ -1177,12 +1181,15 @@ async function confermaControllo(){
   const giro = c.dove === "giro";
   if (giro) S.inviandoGiro = true; else S.inviando = true;
   renderControllo();
+  const primaInCoda = S.coda ? S.coda.length : 0;
   const ok = await aggiungi(c.voci, { per: c.per, daGiro: giro });
+  const salvateSenzaRete = S.coda && S.coda.length > primaInCoda;
   if (giro) S.inviandoGiro = false; else S.inviando = false;
   chiudiControllo();
   if (ok){
     $(giro ? "righe-giro" : "righe").value = "";
-    if (giro) esito("esito-giro", ok === 1 ? "Aggiunta." : ok + " cose aggiunte.");
+    if (salvateSenzaRete) esito(giro ? "esito-giro" : "esito", "Senza rete: salvata sul telefono, parte da sola appena torna il campo.");
+    else if (giro) esito("esito-giro", ok === 1 ? "Aggiunta." : ok + " cose aggiunte.");
     else esito("esito", ok === 1 ? "Richiesta inviata." : ok + " richieste inviate.");
   }
   renderTutto();
@@ -1531,7 +1538,15 @@ function meta(parti){
 function pillDest(per){
   return el("span", {class:"pill dest " + classeDest(per), text: per === PROMEMORIA ? "Promemoria" : "per " + per});
 }
-function pillUrgente(r){ return r.urgente ? el("span", {class:"pill p-urgente", text:"Urgente"}) : null; }
+function pillUrgente(r){
+  const u = r.urgente ? el("span", {class:"pill p-urgente", text:"Urgente"}) : null;
+  if (!r.inCoda) return u;
+  /* salvata sul telefono senza rete: partirà appena torna il campo */
+  const f = document.createDocumentFragment();
+  f.append(el("span", {class:"pill p-coda", text:"Non ancora inviata"}));
+  if (u) f.append(el("span", {class:"sep", "aria-hidden":"true", text:"·"}), u);
+  return f;
+}
 function pillPrep(r){
   if (!r.prep || r.stato !== "attesa" || r.per === PROMEMORIA) return null;
   return el("span", {class:"pill " + CLASSI_PREP[r.prep], text:NOMI_PREP[r.prep]});
@@ -2425,7 +2440,7 @@ function passwordDi(pin){ return "pdp-" + pin + "-pane"; }
 function errSB(e){
   const msg = String((e && (e.message || e.error_description)) || e || "");
   const code = e && e.code;
-  if (/failed to fetch|network|load failed|timeout|fetch/i.test(msg)) return { code: "unavailable", message: msg };
+  if (/failed to fetch|network|load failed|timeout|fetch/i.test(msg) || (typeof navigator !== "undefined" && navigator.onLine === false)) return { code: "unavailable", message: msg };
   if (code === "42501" || /row-level security|permission denied/i.test(msg)) return { code: "invalid_argument", message: msg };
   return { code: "errore", message: msg };
 }
@@ -2497,6 +2512,7 @@ function emettiSB(subito){
     applicaImpostazioni();
     ricomponi();
     renderTutto();
+    salvaFoto();
   };
   if (subito) fai(); else timerEmetti = setTimeout(fai, 60);
 }
@@ -2518,14 +2534,20 @@ function caricaTuttoSB(){
     r[2].forEach(function(x){ applicaRiga("stati", x); });
     r[3].forEach(function(x){ applicaRiga("biscotti", x); });
     r[4].forEach(function(x){ applicaRiga("impostazioni", x); });
+    riapplicaCoda();
+    S.ultimoCarico = Date.now(); S.fotoQuando = 0;
     S.prontoR = S.prontoS = S.pronto = true;
     if (S.bannerRete) { banner(""); S.bannerRete = false; }
     emettiSB(true);
+    if (S.coda.length) svuotaCoda();
   }).catch(function(){
-    S.pronto = true; S.bannerRete = true;
-    banner("Non riesco a caricare le richieste. Controlla la connessione: riprovo da solo.");
+    S.pronto = true;
+    if (!S.ultimoCarico && !S.fotoQuando){ S.fotoQuando = caricaFoto() || 0; riapplicaCoda(); emettiSB(true); }
+    if (S.ultimoCarico || S.fotoQuando) bannerSenzaRete();
+    else { S.bannerRete = true; banner("Non riesco a caricare le richieste. Controlla la connessione: riprovo da solo."); }
     renderTutto();
-    setTimeout(caricaTuttoSB, 15000);
+    clearTimeout(S.timerRiprova);
+    S.timerRiprova = setTimeout(caricaTuttoSB, 15000);
   }).finally(function(){ caricando = null; });
   return caricando;
 }
@@ -2548,28 +2570,146 @@ function ascoltaSB(){
   S.canale = canale;
 }
 
+/* ---------- senza campo: coda delle scritture ----------
+   Se manca la rete, quello che si invia resta salvato sul telefono (localStorage)
+   e parte da solo appena torna il campo, o la prossima volta che si apre l'app. */
+S.coda = [];
+S.inCoda = new Set();
+function chiaveCoda(){ return "pdp-coda-" + (S.mioId || "x"); }
+function leggiCoda(){
+  try { const c = JSON.parse(localStorage.getItem(chiaveCoda()) || "[]"); S.coda = Array.isArray(c) ? c : []; } catch(e){ S.coda = []; }
+  aggiornaCoda();
+}
+function salvaCoda(){
+  try { localStorage.setItem(chiaveCoda(), JSON.stringify(S.coda)); } catch(e){}
+  aggiornaCoda();
+}
+function aggiornaCoda(){
+  S.inCoda = new Set(S.coda.filter(function(o){ return o.tab === "richieste"; }).map(function(o){ return o.id; }));
+  const n = S.coda.length, box = $("coda-avviso");
+  if (!box) return;
+  box.hidden = !n;
+  box.textContent = n ? (n === 1 ? "Senza rete: 1 cosa è salvata sul telefono" : "Senza rete: " + n + " cose sono salvate sul telefono") +
+    " e parte da sola appena torna il campo. Se chiudi l'app, riaprila quando hai campo." : "";
+}
+function accoda(op){
+  const i = S.coda.findIndex(function(o){ return o.tab === op.tab && o.id === op.id; });
+  if (i >= 0){
+    /* una cosa già in coda: vale l'ultima versione (se era nuova, resta nuova) */
+    if (S.coda[i].tipo === "insert") S.coda[i].riga = Object.assign({}, S.coda[i].riga, op.riga);
+    else S.coda[i] = op;
+  } else S.coda.push(op);
+  salvaCoda();
+  clearTimeout(S.timerCoda);
+  S.timerCoda = setTimeout(svuotaCoda, 20000);
+}
+async function eseguiOp(op){
+  const t = sb.from(op.tab);
+  let r;
+  try {
+    if (op.tipo === "insert") r = await t.insert(op.riga);
+    else if (op.tipo === "upsert") r = await t.upsert(op.riga);
+    else r = await t.update({ dati: op.riga.dati }).eq("id", op.id).select("id");
+  } catch(e){ throw errSB(e); }
+  if (r.error){
+    if (op.tipo === "insert" && r.error.code === "23505") return; /* era già arrivata */
+    throw errSB(r.error);
+  }
+  if (op.tipo === "update" && op.controlla && (!r.data || !r.data.length)) throw { code: "invalid_argument" };
+}
+/* prova online; se manca la rete mette in coda e va avanti come se fosse partita */
+async function scriviOp(op){
+  try { await eseguiOp(op); }
+  catch(e){
+    if (e && e.code === "unavailable"){ delete op.controlla; accoda(op); return; }
+    throw e;
+  }
+}
+async function svuotaCoda(){
+  if (S.svuotando || !sb || !store || !S.coda.length) return;
+  S.svuotando = true;
+  let scartate = 0;
+  try {
+    while (S.coda.length){
+      try { await eseguiOp(S.coda[0]); }
+      catch(e){
+        if (e && e.code === "unavailable") break;
+        scartate++; /* rifiutata dal database (per esempio non è più permessa): si toglie */
+      }
+      S.coda.shift(); salvaCoda();
+    }
+  } finally {
+    S.svuotando = false;
+    if (S.coda.length){ clearTimeout(S.timerCoda); S.timerCoda = setTimeout(svuotaCoda, 20000); }
+    else if (scartate) avviso(scartate === 1 ? "1 cosa salvata senza rete non è stata accettata." : scartate + " cose salvate senza rete non sono state accettate.");
+    else avviso("Tornato il campo: tutto inviato.");
+    emettiSB(true);
+  }
+}
+function riapplicaCoda(){
+  S.coda.forEach(function(o){
+    if (o.tab === "stati"){ S.stati[o.id] = Object.assign({}, o.riga.dati); return; }
+    const riga = Object.assign({}, o.riga);
+    if (o.tab === "impostazioni") riga.chiave = o.id; else riga.id = o.id;
+    applicaRiga(o.tab, riga, false);
+  });
+}
+
+/* ---------- senza campo: ultima lista vista ---------- */
+let timerFoto = 0;
+function salvaFoto(){
+  clearTimeout(timerFoto);
+  timerFoto = setTimeout(function(){
+    if (!S.ultimoCarico || !S.mioId) return;
+    const limite = Date.now() - 3 * 86400000;
+    const voci = {}, autori = {}, stati = {};
+    for (const rid in RAW.voci){
+      const v = RAW.voci[rid], a = RAW.autori[rid], k = a + "~" + rid, st = S.stati[k] || {};
+      /* solo quello che serve: cose aperte e quelle degli ultimi giorni */
+      if (st.stato === "consegnato" && (Number(v.creato) || 0) < limite) continue;
+      if (v.annullato && (Number(v.annullatoAlle) || 0) < limite) continue;
+      voci[rid] = v; autori[rid] = a; if (S.stati[k]) stati[k] = S.stati[k];
+    }
+    const foto = { uid: S.mioId, quando: S.ultimoCarico, voci: voci, autori: autori, stati: stati, bisc: RAW.bisc, imp: RAW.imp, nomi: S.nomi };
+    try { localStorage.setItem("pdp-ultima-lista", JSON.stringify(foto)); } catch(e){}
+  }, 1500);
+}
+function caricaFoto(){
+  try {
+    const f = JSON.parse(localStorage.getItem("pdp-ultima-lista") || "null");
+    if (!f || f.uid !== S.mioId) return 0;
+    RAW.voci = f.voci || {}; RAW.autori = f.autori || {}; RAW.bisc = f.bisc || {}; RAW.imp = f.imp || {};
+    S.stati = f.stati || {}; S.nomi = Object.assign({}, f.nomi || {}, S.nomi);
+    return f.quando || 0;
+  } catch(e){ return 0; }
+}
+function bannerSenzaRete(){
+  const q = S.fotoQuando || S.ultimoCarico;
+  banner("Sei senza rete: vedi la lista com'era " + (q ? "alle " + quando(q) : "l'ultima volta") + ". Si aggiorna da sola appena torna il campo.");
+  S.bannerRete = true;
+}
+
 /* ---------- scritture ---------- */
 async function cambiaVoce(r, patch){
   const dati = Object.assign({}, RAW.voci[r.rid], patch);
-  const righe = await sbFai(sb.from("richieste").update({ dati: dati }).eq("id", r.rid).select("id"));
-  if (!righe || !righe.length) throw { code: "invalid_argument" };
+  await scriviOp({ tab: "richieste", tipo: "update", id: r.rid, riga: { dati: dati }, controlla: true });
   RAW.voci[r.rid] = dati; emettiSB(true);
 }
 async function salvaImp(chiaveImp, cambia){
   const dati = Object.assign({}, RAW.imp[chiaveImp], cambia(RAW.imp[chiaveImp] || {}));
-  await sbFai(sb.from("impostazioni").upsert({ chiave: chiaveImp, dati: dati }));
+  await scriviOp({ tab: "impostazioni", tipo: "upsert", id: chiaveImp, riga: { chiave: chiaveImp, dati: dati } });
   RAW.imp[chiaveImp] = dati; emettiSB(true);
 }
 function storeSB(){
   return {
     aggiungi: async function(voce){
       const id = nuovoId();
-      await sbFai(sb.from("richieste").insert({ id: id, autore: S.mioId, dati: voce }));
+      await scriviOp({ tab: "richieste", tipo: "insert", id: id, riga: { id: id, autore: S.mioId, dati: voce } });
       applicaRiga("richieste", { id: id, autore: S.mioId, dati: voce }); emettiSB(true);
     },
     stato: async function(k, p){
       const dati = Object.assign({}, S.stati[k], p);
-      await sbFai(sb.from("stati").upsert({ id: k, dati: dati }));
+      await scriviOp({ tab: "stati", tipo: "upsert", id: k, riga: { id: k, dati: dati } });
       S.stati[k] = dati; emettiSB(true);
     },
     annulla: function(r){ return cambiaVoce(r, { annullato: true, annullatoAlle: Date.now() }); },
@@ -2582,7 +2722,7 @@ function storeSB(){
         delete RAW.bisc[id];
       } else {
         const d = Object.assign({}, RAW.bisc[id], dati);
-        await sbFai(sb.from("biscotti").upsert({ id: id, dati: d }));
+        await scriviOp({ tab: "biscotti", tipo: "upsert", id: id, riga: { id: id, dati: d } });
         RAW.bisc[id] = d;
       }
       emettiSB(true);
@@ -2621,8 +2761,16 @@ function attesaAccesso(testo){
 }
 async function entraConSessione(sess){
   if (!sess || !sess.user) return false;
-  const prof = await sbFai(sb.from("profili").select("*").eq("id", sess.user.id));
+  let prof;
+  try { prof = await sbFai(sb.from("profili").select("*").eq("id", sess.user.id)); }
+  catch(e){
+    /* senza rete: si entra con il profilo ricordato sul telefono */
+    const ric = profiloRicordato();
+    if (e && e.code === "unavailable" && ric && ric.id === sess.user.id) prof = [ric];
+    else throw e;
+  }
   if (!prof || !prof.length) return false;
+  try { localStorage.setItem("pdp-profilo", JSON.stringify({ id: prof[0].id, nome: prof[0].nome, ruolo: prof[0].ruolo })); } catch(e){}
   if (prof[0].attivo === false){
     /* il titolare ha azzerato questa persona: deve registrarsi di nuovo */
     try { await sb.auth.signOut(); } catch(e){}
@@ -2635,6 +2783,7 @@ async function entraConSessione(sess){
   S.ruoloFisso = S.owner ? null : prof[0].ruolo;
   S.nomi[S.mioId] = S.nomeMio;
   store = storeSB();
+  leggiCoda();
   $("accesso").hidden = true;
   $("chi-sei-testo").replaceChildren("Sei entrato come ", el("b", { text: S.nomeMio }), " · " + (NOMI_RUOLI[prof[0].ruolo] || ""));
   $("chi-sei").hidden = false;
@@ -2702,7 +2851,10 @@ async function inviaAccesso(ev){
     if (!$("form-accesso").hidden){ $("acc-invia").disabled = false; $("acc-invia").textContent = prima ? "Registrati ed entra" : "Entra"; }
   }
 }
+function profiloRicordato(){ try { return JSON.parse(localStorage.getItem("pdp-profilo") || "null"); } catch(e){ return null; } }
 async function esciSB(){
+  if (S.coda.length && !confirmUscita()) return;
+  try { localStorage.removeItem("pdp-profilo"); localStorage.removeItem("pdp-ultima-lista"); } catch(e){}
   try { await sb.auth.signOut(); } catch(e){}
   try { location.hash = ""; } catch(e){}
   location.reload();
@@ -2765,8 +2917,21 @@ async function azzeraPersona(id){
   S.azzerando = false;
   mostraPersone();
 }
+/* non si esce se ci sono cose non ancora inviate: andrebbero perse */
+function confirmUscita(){
+  avviso("Prima di uscire aspetta che torni il campo: ci sono cose non ancora inviate.");
+  return false;
+}
 async function avviaSupabase(){
   S.sito = true;
+  /* il telefono si tiene una copia dell'app: si apre anche senza campo */
+  try { if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(function(){}); } catch(e){}
+  window.addEventListener("online", function(){
+    if (!store) return;
+    if (S.senzaSessione){ location.reload(); return; }
+    svuotaCoda(); caricaTuttoSB();
+  });
+  window.addEventListener("offline", function(){ if (store) bannerSenzaRete(); });
   attesaAccesso("Un attimo…");
   try {
     if (!window.supabase || !window.supabase.createClient) await caricaScript(SB_LIBRERIA);
@@ -2782,7 +2947,15 @@ async function avviaSupabase(){
     const r = await sb.auth.getSession();
     const sess = r && r.data && r.data.session;
     if (sess && (await entraConSessione(sess))) return;
-  } catch(e){}
+    /* senza rete l'accesso può non rinnovarsi: si entra con l'ultimo profilo, si sistema quando torna il campo */
+    const ric = profiloRicordato();
+    if (!sess && ric && navigator.onLine === false && (await entraConSessione({ user: { id: ric.id } }))){ S.senzaSessione = true; return; }
+  } catch(e){
+    const ric = profiloRicordato();
+    if (ric && errSB(e).code === "unavailable"){
+      try { if (await entraConSessione({ user: { id: ric.id } })){ S.senzaSessione = true; return; } } catch(e2){}
+    }
+  }
   mostraAccesso(S.azzerato ? "prima" : "entra", S.azzerato ? "Il tuo accesso è stato azzerato dal titolare: registrati di nuovo con il codice del negozio." : "");
 }
 
