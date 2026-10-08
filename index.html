@@ -40,6 +40,7 @@
   --done-ink:#FFFFFF;
   --done-bg:#E3EAF2;
   --prep:#5B3F8C; --prep-bg:#ECE6F5;
+  --ferma:#8A4B00; --ferma-bg:#FDEBCC; --ferma-bordo:#C77700;
   --pronto:#0B5563; --pronto-bg:#DDF1F4; --pronto-solid:#0B7285; --pronto-solid-ink:#FFFFFF;
   --corso:#7A4A24; --corso-ink:#FFFFFF; --corso-bg:#F3E8DD; --corso-txt:#7A4A24;
   --nenni:#1E5B36; --nenni-ink:#FFFFFF; --nenni-bg:#E1EFE5; --nenni-txt:#1E5B36;
@@ -56,7 +57,8 @@
     --accent:#CDB389; --accent-ink:#1A1814; --accent-soft:#3A3328;
     --urgent:#F08074; --urgent-txt:#F5A097; --urgent-bg:#3B1E1B; --urgent-ink:#2A0D0A;
     --done:#8FB4DE; --done-ink:#0E1A2A; --done-bg:#1C2736;
-    --prep:#C3AEEA; --prep-bg:#2A2140; --pronto:#7DD3DF; --pronto-bg:#12343A; --pronto-solid:#5CC4D2; --pronto-solid-ink:#062328;
+    --prep:#C3AEEA; --prep-bg:#2A2140;
+    --ferma:#F5BC6A; --ferma-bg:#3A2A12; --ferma-bordo:#D99A3D; --pronto:#7DD3DF; --pronto-bg:#12343A; --pronto-solid:#5CC4D2; --pronto-solid-ink:#062328;
     --corso:#C9925F; --corso-ink:#1F1206; --corso-bg:#33241A; --corso-txt:#D9A574;
     --nenni:#5DB884; --nenni-ink:#06200F; --nenni-bg:#15301F; --nenni-txt:#6FC995;
     --panif:#F2C640; --panif-ink:#241B00; --panif-bg:#362C0D; --panif-txt:#F2C640;
@@ -69,7 +71,8 @@
   --accent:#CDB389; --accent-ink:#1A1814; --accent-soft:#3A3328;
   --urgent:#F08074; --urgent-txt:#F5A097; --urgent-bg:#3B1E1B; --urgent-ink:#2A0D0A;
   --done:#8FB4DE; --done-ink:#0E1A2A; --done-bg:#1C2736;
-  --prep:#C3AEEA; --prep-bg:#2A2140; --pronto:#7DD3DF; --pronto-bg:#12343A; --pronto-solid:#5CC4D2; --pronto-solid-ink:#062328;
+  --prep:#C3AEEA; --prep-bg:#2A2140;
+  --ferma:#F5BC6A; --ferma-bg:#3A2A12; --ferma-bordo:#D99A3D; --pronto:#7DD3DF; --pronto-bg:#12343A; --pronto-solid:#5CC4D2; --pronto-solid-ink:#062328;
   --corso:#C9925F; --corso-ink:#1F1206; --corso-bg:#33241A; --corso-txt:#D9A574;
   --nenni:#5DB884; --nenni-ink:#06200F; --nenni-bg:#15301F; --nenni-txt:#6FC995;
   --panif:#F2C640; --panif-ink:#241B00; --panif-bg:#362C0D; --panif-txt:#F2C640;
@@ -183,6 +186,10 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px;back
 .notifica-titolo{font-weight:700;font-size:16px;line-height:1.25}
 .notifica-testo{font-size:14px;line-height:1.35;color:var(--muted);margin-top:2px}
 @media (prefers-reduced-motion: reduce){ .notifica,.notifica.vista{transition:none} }
+.pill.p-ferma{background:var(--ferma-bg);color:var(--ferma);box-shadow:inset 0 0 0 1.5px var(--ferma-bordo)}
+.gruppo.ferme{border:1.5px solid var(--ferma-bordo)}
+.gruppo.ferme .gruppo-head{background:linear-gradient(100deg,var(--ferma-bg) 0%,var(--surface) 90%)}
+.gruppo.ferme h3,.gruppo.ferme .gh-per{color:var(--ferma)}
 .pill.p-coda{background:var(--urgent-bg);color:var(--urgent-txt);box-shadow:inset 0 0 0 1.5px var(--urgent)}
 .coda-avviso{padding:10px 14px;border-radius:var(--r-md);background:var(--urgent-bg);color:var(--urgent-txt);border:1.5px solid var(--urgent);font-size:15px;font-weight:700;line-height:1.35}
 select.prov{width:auto;min-width:0;flex:1 1 150px;min-height:42px;padding:0 8px 0 10px;font-weight:700;font-size:14px;border-radius:10px}
@@ -1577,13 +1584,34 @@ function meta(parti){
 function pillDest(per){
   return el("span", {class:"pill dest " + classeDest(per), text: per === PROMEMORIA ? "Promemoria" : "per " + per});
 }
+/* Richieste ferme: in attesa da più di ORE_FERMA ore, oppure rimaste indietro
+   (cose chieste dopo, per lo stesso negozio e dallo stesso posto, sono già arrivate). */
+const ORE_FERMA = 3;
+function testoOre(ore){ return ore < 24 ? (ore === 1 ? "1 ora" : ore + " ore") : (ore < 48 ? "1 giorno" : Math.floor(ore / 24) + " giorni"); }
+function infoFerma(r){
+  if (r.per === PROMEMORIA || r.stato !== "attesa" || nonDisponibile(r) || r.esempio || r.inCoda || !r.creato) return null;
+  const ora = Date.now();
+  const ore = Math.floor((ora - r.creato) / 3600000);
+  const indietro = S.richieste.some(function(x){ return x.per === r.per && x.da === r.da && x.stato === "consegnato" && x.creato > r.creato; });
+  if (indietro) return ore >= 1 ? "Rimasta indietro da " + testoOre(ore) : "Rimasta indietro";
+  /* da ritirare a un'ora precisa: non è ferma prima di quell'ora */
+  if (r.da === FUORI && r.ritiroOra){
+    const d = new Date(); const t = r.ritiroOra.split(":");
+    d.setHours(Number(t[0]), Number(t[1]), 0, 0);
+    if (ora < d.getTime()) return null;
+  }
+  return ore >= ORE_FERMA ? "Ferma da " + testoOre(ore) : null;
+}
 function pillUrgente(r){
-  const u = r.urgente ? el("span", {class:"pill p-urgente", text:"Urgente"}) : null;
-  if (!r.inCoda) return u;
-  /* salvata sul telefono senza rete: partirà appena torna il campo */
+  const pills = [
+    /* salvata sul telefono senza rete: partirà appena torna il campo */
+    r.inCoda ? el("span", {class:"pill p-coda", text:"Non ancora inviata"}) : null,
+    r.urgente ? el("span", {class:"pill p-urgente", text:"Urgente"}) : null,
+    infoFerma(r) ? el("span", {class:"pill p-ferma", text:infoFerma(r)}) : null
+  ].filter(Boolean);
+  if (pills.length < 2) return pills[0] || null;
   const f = document.createDocumentFragment();
-  f.append(el("span", {class:"pill p-coda", text:"Non ancora inviata"}));
-  if (u) f.append(el("span", {class:"sep", "aria-hidden":"true", text:"·"}), u);
+  pills.forEach(function(p, i){ if (i) f.append(el("span", {class:"sep", "aria-hidden":"true", text:"·"})); f.append(p); });
   return f;
 }
 function pillPrep(r){
@@ -2174,9 +2202,10 @@ function gruppoCarico(r){
 }
 function gruppiCarico(aperte){
   const per = new Map();
-  const urgenti = [];
+  const urgenti = [], ferme = [];
   aperte.filter(function(r){ return r.stato === "attesa"; }).forEach(function(r){
     if (r.urgente){ urgenti.push(r); return; }
+    if (infoFerma(r)){ ferme.push(r); return; }
     const g = gruppoCarico(r);
     if (!per.has(g)) per.set(g, []);
     per.get(g).push(r);
@@ -2191,6 +2220,12 @@ function gruppiCarico(aperte){
     urgenti.sort(ordinaCarico);
     out.push(el("section", {class:"gruppo urgenti", "aria-label":"Urgenti"}, testaGruppo("Prima di tutto", "Urgenti", urgenti.length),
       el("ul", {class:"lista"}, ...urgenti.map(function(r){ return rigaCarico(r, false, true, true); }))));
+  }
+  /* poi quelle ferme da troppo: per non dimenticarle */
+  if (ferme.length){
+    ferme.sort(function(a, b){ return a.creato - b.creato; });
+    out.push(el("section", {class:"gruppo ferme", "aria-label":"Ferme da troppo"}, testaGruppo("Da non dimenticare", "Ferme da troppo", ferme.length),
+      el("ul", {class:"lista"}, ...ferme.map(function(r){ return rigaCarico(r, false, true, true); }))));
   }
   [PROMEMORIA].concat(fuori, REPARTI, ritiri, ["Da comprare"]).forEach(function(g){
     const items = per.get(g);
@@ -2422,6 +2457,7 @@ function collega(){
   $("controllo").addEventListener("keydown", function(ev){ if (ev.key === "Escape") chiudiControllo(); });
   $("bisc-nuovo").addEventListener("input", function(){ $("bisc-aggiungi").disabled = !$("bisc-nuovo").value.trim() || S.inviandoBisc; });
   window.addEventListener("hashchange", applicaRuolo);
+  setInterval(function(){ if (S.pronto && $("controllo").hidden && $("riepilogo").hidden) renderTutto(); }, 5 * 60000);
 }
 
 /* Senza archivio condiviso (pagina aperta fuori da Claude): prova su questo schermo */
