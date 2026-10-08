@@ -48,7 +48,7 @@ export function componi(eventi, iscrizioni, mittente) {
       if (ev.tipo === "nuove") {
         const scelte = ev.voci.filter((v) => {
           const d = v.dati;
-          if (d.per === "Promemoria") return false;
+          if (d.per === "Promemoria" || d.tipo === "prenotazione") return false;
           if (r === "consegne") return d.urgente === true || vuole(isc, "nuove", true); // gli urgenti arrivano sempre
           if (r === "panificio") return d.da === "Panificio" && vuole(isc, "nuove", true);
           return tutto;
@@ -61,6 +61,17 @@ export function componi(eventi, iscrizioni, mittente) {
             ? "⚠ URGENTE – " + neg + ", " + contaCose(n, "richiesta", "richieste") + (n > 1 ? " (" + contaCose(urg, "urgente", "urgenti") + ")" : "")
             : neg + " – " + contaCose(n, "nuova richiesta", "nuove richieste");
           out.push({ isc, titolo, testo: elenco(ordinate.map((v) => nomeCosa(v.dati))), tag: "nuove-" + neg + "-" + ev.quando, urgente: urg > 0 });
+        }
+      } else if (ev.tipo === "prenotazioni") {
+        for (const v of ev.voci) {
+          const d = v.dati;
+          const ok = (r === "panificio" && vuole(isc, "prenotazioni", true)) ||
+            (NEGOZIO_DI_RUOLO[r] === d.ritiro && r !== "panificio" && vuole(isc, "prenotazioni", true)) || tutto;
+          if (!ok) continue;
+          const cose = (Array.isArray(d.voci) ? d.voci : []).map((x) => nomeCosa(x));
+          const quandoTesto = d.perIl ? new Intl.DateTimeFormat("it-IT", { weekday: "long", day: "numeric", month: "long", timeZone: "Europe/Rome" }).format(new Date(d.perIl + "T12:00:00Z")) : "";
+          out.push({ isc, titolo: "Nuova prenotazione – " + (quandoTesto || "") + (d.ora ? " ore " + d.ora : ""),
+            testo: elenco(cose) + " · ritiro " + (PREP[d.ritiro] || d.ritiro || "") + (d.cliente ? " · " + d.cliente : ""), tag: "pren-" + v.id });
         }
       } else if (ev.tipo === "pronto") {
         if (!((r === "consegne" && vuole(isc, "pronto", true)) || tutto)) continue;
@@ -104,10 +115,15 @@ export async function leggiEventi(db, richiesti, mittente, ora) {
   for (const e of richiesti.slice(0, 10)) {
     const ids = Array.from(new Set((e.ids || []).filter((x) => typeof x === "string"))).slice(0, 100);
     if (!ids.length) continue;
-    if (e.tipo === "nuove") {
+    if (e.tipo === "prenotazioni") {
+      const { data } = await db.from("richieste").select("id,autore,dati,creato").in("id", ids).eq("autore", mittente);
+      const voci = (data || []).filter((x) => recente(x.creato) && x.dati && x.dati.tipo === "prenotazione" && !x.dati.annullato)
+        .map((x) => ({ id: x.id, autore: x.autore, dati: x.dati }));
+      if (voci.length) eventi.push({ tipo: "prenotazioni", voci, quando: ora });
+    } else if (e.tipo === "nuove") {
       const { data } = await db.from("richieste").select("id,autore,dati,creato").in("id", ids).eq("autore", mittente);
       const domani = domaniRoma(ora);
-      const voci = (data || []).filter((x) => recente(x.creato) && !(x.dati && x.dati.annullato) && !(x.dati && x.dati.perIl && x.dati.perIl > domani))
+      const voci = (data || []).filter((x) => recente(x.creato) && !(x.dati && x.dati.annullato) && !(x.dati && x.dati.tipo === "prenotazione") && !(x.dati && x.dati.perIl && x.dati.perIl > domani))
         .map((x) => ({ id: x.id, autore: x.autore, dati: x.dati || {} }));
       if (voci.length) eventi.push({ tipo: "nuove", voci, quando: ora });
     } else if (e.tipo === "pronto" || e.tipo === "manca" || e.tipo === "partite") {

@@ -202,6 +202,12 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px;back
 .gruppo.ferme h3,.gruppo.ferme .gh-per{color:var(--ferma)}
 /* statistiche: barre orizzontali, una tinta; per negozio i colori del negozio */
 .stat-carta{gap:14px}
+#pren-form .field{flex:none}
+#pren-form .row .field{flex:1 1 160px}
+#pren-form .row .pren-ora{flex:0 1 130px}
+.pren-totali{display:flex;flex-direction:column;gap:6px;padding:12px 14px;border-bottom:1.5px dashed var(--line);background:var(--surface-2)}
+.pren-tot{display:flex;flex-wrap:wrap;gap:6px 14px;font-weight:700;font-size:16px}
+.riga.pren .articolo span{color:var(--muted)}
 .stat-per[aria-pressed="true"],.stat-per[aria-pressed="true"]:hover{background:var(--ink);border-color:var(--ink);color:var(--bg)}
 .barre{display:flex;flex-direction:column;gap:12px}
 .barra{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;align-items:baseline}
@@ -553,6 +559,29 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
     </div>
 
     <!-- Biscotti: sezione a parte, non va nel giro delle consegne -->
+    <!-- Prenotazioni dei clienti: separate dalle consegne -->
+    <div class="view" id="pannello-prenotazioni" hidden>
+      <button type="button" class="primary" id="pren-nuova">+ Nuova prenotazione</button>
+      <form class="card" id="pren-form" novalidate hidden>
+        <h3 class="comanda-titolo">Nuova prenotazione</h3>
+        <p class="chi-ordina" id="pren-chi"></p>
+        <div class="blocco"><p class="label-sm">Per quando?</p><div class="chips" id="pren-quando"></div>
+          <label class="field" id="pren-data-riga" hidden><span class="label-sm">Giorno</span><input type="date" id="pren-data"></label></div>
+        <div class="blocco"><p class="label-sm">Dove la ritira il cliente</p><div class="chips" id="pren-ritiro"></div></div>
+        <div class="row">
+          <label class="field" for="pren-cliente"><span class="label-sm">Nome del cliente (se serve)</span><input id="pren-cliente" type="text" maxlength="60" autocomplete="off" placeholder="Es. Sig. Rossi"></label>
+          <label class="field pren-ora" for="pren-ora"><span class="label-sm">Ora di ritiro</span><input id="pren-ora" type="time"></label>
+        </div>
+        <label class="label" for="pren-righe">Cosa?</label>
+        <textarea id="pren-righe" rows="3" autocomplete="off" placeholder="Una cosa per riga, per esempio:&#10;40 filoncini&#10;3 pitte piene"></textarea>
+        <label class="field" for="pren-nota"><span class="label-sm">Nota (se serve)</span><input id="pren-nota" type="text" maxlength="140" autocomplete="off" placeholder="Es. ben cotti"></label>
+        <div class="riep-azioni"><button type="button" class="mini" id="pren-annulla">Annulla</button><button type="submit" class="primary" id="pren-salva" disabled>Salva prenotazione</button></div>
+        <p class="esito" id="pren-esito" role="status"></p>
+      </form>
+      <div class="blocco" id="pren-giorni"></div>
+      <p class="vuoto" id="pren-vuoto">Nessuna prenotazione. Quando un cliente prenota, scrivila qui: il panificio vede subito quanto preparare per ogni giorno.</p>
+    </div>
+
     <!-- Statistiche: solo titolari -->
     <div class="view" id="pannello-statistiche" hidden>
       <div class="blocco">
@@ -564,7 +593,7 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
       <section class="card">
         <h3 class="comanda-titolo">Scarica i dati</h3>
         <p class="hint">Un file che si apre con Excel o Numbers. Puoi anche darlo a Claude per analisi più approfondite.</p>
-        <div class="row"><button type="button" class="mini" id="stat-scarica-richieste">Richieste del periodo (.csv)</button><button type="button" class="mini" id="stat-scarica-biscotti">Biscotti (.csv)</button></div>
+        <div class="row"><button type="button" class="mini" id="stat-scarica-richieste">Richieste del periodo (.csv)</button><button type="button" class="mini" id="stat-scarica-biscotti">Biscotti (.csv)</button><button type="button" class="mini" id="stat-scarica-pren">Prenotazioni (.csv)</button></div>
       </section>
     </div>
 
@@ -1015,7 +1044,7 @@ function testoGiorno(s){
   return fmtGiornoLungo.format(msDelGiorno(s));
 }
 function ricomponi(){
-  const out = [], tolte = [], programmate = [];
+  const out = [], tolte = [], programmate = [], pren = [];
   const domani = domaniStr();
   S.docsRichieste.forEach(function(doc){
     const voci = doc.voci && typeof doc.voci === "object" ? doc.voci : {};
@@ -1023,6 +1052,7 @@ function ricomponi(){
       const v = voci[rid];
       if (!v || typeof v !== "object") continue;
       const k = doc.id + "~" + rid;
+      if (v.tipo === "prenotazione"){ if (!v.annullato) pren.push(normaPren(k, v, S.stati[k], doc.id, rid)); continue; }
       const r = norma(k, v, S.stati[k], doc.id, rid);
       /* le cose tolte restano nell'archivio: finiscono nella cronologia */
       if (v.annullato){ r.toltoAlle = Number(v.annullatoAlle) || r.creato; tolte.push(r); }
@@ -1032,6 +1062,7 @@ function ricomponi(){
   });
   S.richieste = out;
   S.tolte = tolte;
+  S.prenotazioni = pren;
   S.programmate = programmate.sort(function(a, b){ return a.perIl.localeCompare(b.perIl) || a.creato - b.creato; });
 }
 const SETTE_GIORNI = 7 * 86400000;
@@ -1298,7 +1329,7 @@ function renderControllo(){
     return el("li", {class:"ctrl-voce" + cls}, testa, scelte, extra, nota);
   }));
   /* per quando: oggi, domani o un altro giorno (prova, solo titolari) */
-  const puoQuando = S.owner && S.ruolo.tipo === "titolare" && !promem;
+  const puoQuando = false; /* sostituito dalla sezione Prenotazioni */
   $("ctrl-quando").hidden = !puoQuando;
   if (puoQuando){
     const scelta = !c.perIl ? "oggi" : (c.perIl === domaniStr() ? "domani" : "altro");
@@ -1884,7 +1915,7 @@ function renderNegozio(){
   riempi($("lista-cons-negozio"), cons.map(rigaNegozio));
   $("det-cons-negozio").hidden = cons.length === 0;
   renderCrono("negozio", S.tolte.filter(function(r){ return r.per === S.punto; }), false);
-  const prog = S.ruolo.tipo === "titolare" ? (S.programmate || []) : [];
+  const prog = [];
   $("blocco-programmate").hidden = !prog.length;
   riempi($("lista-programmate"), prog.map(function(r){
     const li = el("li", {class:"riga"}, sigla(r.per), el("div", {class:"riga-main"}, testoArticolo(r),
@@ -2043,7 +2074,8 @@ function renderBiscPanificio(){
   $("vuoto-crono-fatti").hidden = fatti.length > 0;
 }
 function mostraSez(sez){
-  S.sez = sez === "biscotti" || sez === "statistiche" ? sez : "richieste";
+  S.sez = sez === "biscotti" || sez === "statistiche" || sez === "prenotazioni" ? sez : "richieste";
+  $("pannello-prenotazioni").hidden = S.sez !== "prenotazioni";
   $("pannello-richieste").hidden = S.sez !== "richieste";
   $("pannello-biscotti").hidden = S.sez !== "biscotti";
   $("pannello-statistiche").hidden = S.sez !== "statistiche";
@@ -2051,10 +2083,11 @@ function mostraSez(sez){
 
 /* ---------- menu con le tre lineette ---------- */
 function vociMenu(){
-  if (S.ruolo.tipo === "giro") return [];
+  const nPren = S.prenotazioni.filter(function(p){ return p.stato !== "ritirata" && p.perIl <= domaniStr(); }).length;
+  if (S.ruolo.tipo === "giro") return [{ id:"prenotazioni", nome:"Prenotazioni", n:nPren }];
   const panif = S.punto === "Panificio";
   const nBisc = panif ? biscDaFare().length : S.biscotti.filter(function(b){ return b.stato === "manca" && b.negozio === S.punto; }).length;
-  const voci = [{ id:"biscotti", nome:"Biscotti", n:nBisc }];
+  const voci = [{ id:"prenotazioni", nome:"Prenotazioni", n:nPren }, { id:"biscotti", nome:"Biscotti", n:nBisc }];
   if (puoStat()) voci.push({ id:"statistiche", nome:"Statistiche", n:null });
   return voci;
 }
@@ -2066,17 +2099,17 @@ function nomeSezione(id){
   return S.punto === "Panificio" ? "Ordini dei negozi" : "Richieste";
 }
 function renderMenu(){
-  const bisc = inBiscotti() || inStat();
+  const bisc = inBiscotti() || inStat() || inPren();
   riempi($("menu-voci"), vociMenu().map(function(v){
     const badge = v.n === null ? null : el("span", {class:"badge", "data-zero": v.n ? null : "", text:String(v.n)});
     return el("li", null, el("button", {type:"button", class:"menu-voce", "data-vai":v.id, "aria-current": (v.id === S.sez && bisc) ? "page" : null}, el("span", {text:v.nome}), badge));
   }));
   const t = S.ruolo.tipo;
   /* dentro Biscotti: freccia Indietro al posto del menu */
-  $("apri-menu").hidden = t === "giro" || bisc;
+  $("apri-menu").hidden = bisc;
   $("torna").hidden = !bisc;
   $("switch-viste").hidden = t !== "titolare" || bisc;
-  $("punti").hidden = t !== "titolare" || inStat();
+  $("punti").hidden = t !== "titolare" || inStat() || inPren();
   $("link-personale").hidden = t !== "titolare" || bisc;
   $("codici-box").hidden = !S.sito || !S.owner || t !== "titolare" || bisc;
   $("persone-box").hidden = !S.sito || !S.owner || t !== "titolare" || bisc;
@@ -2086,10 +2119,13 @@ function renderMenu(){
 function contaTesto(n, uno, tanti){ return n ? n + " " + (n === 1 ? uno : tanti) : ""; }
 function renderTestata(){
   if (!S.ruolo) return;
-  const t = S.ruolo.tipo, bisc = inBiscotti(), giro = S.vista === "consegne", stat = inStat();
+  const t = S.ruolo.tipo, bisc = inBiscotti(), giro = S.vista === "consegne", stat = inStat(), pren = inPren();
   const panif = S.punto === "Panificio";
   let sopra, titolo, info;
-  if (stat){
+  if (pren){
+    sopra = "Prenotazioni dei clienti"; titolo = "Prenotazioni";
+    info = contaTesto(S.prenotazioni.filter(function(p){ return p.stato === "attesa" && p.perIl >= oggiStr(); }).length, "da preparare", "da preparare");
+  } else if (stat){
     sopra = "Solo per i titolari"; titolo = "Statistiche"; info = "";
   } else if (giro){
     sopra = t === "titolare" ? "Tutte le consegne" : "Chi fa il giro";
@@ -2108,11 +2144,11 @@ function renderTestata(){
       : S.richieste.filter(function(r){ return r.per === S.punto && r.stato !== "consegnato"; }).length;
     info = panif ? contaTesto(n, "richiesta aperta", "richieste aperte") : contaTesto(n, "in arrivo", "in arrivo");
   }
-  $("fascia").className = "fascia " + (giro || stat ? "giro" : classeDest(S.punto));
+  $("fascia").className = "fascia " + (giro || stat || (pren && t === "giro") ? "giro" : classeDest(S.punto));
   $("eyebrow").textContent = sopra;
   $("titolo").textContent = titolo;
   $("fascia-info").textContent = info;
-  $("app-nome").textContent = bisc ? "Biscotti" : (stat ? "Statistiche" : "Rifornimenti");
+  $("app-nome").textContent = bisc ? "Biscotti" : (stat ? "Statistiche" : (pren ? "Prenotazioni" : "Rifornimenti"));
 }
 function apriMenu(){
   $("menu").hidden = false; $("menu-velo").hidden = false;
@@ -2136,8 +2172,8 @@ function vaiSezione(id, forza){
     return;
   }
   chiudiMenu();
-  if (id === "biscotti" || (id === "statistiche" && puoStat())){
-    if (!inBiscotti() && !inStat()) S.vistaPrima = S.vista;
+  if (id === "biscotti" || id === "prenotazioni" || (id === "statistiche" && puoStat())){
+    if (!inBiscotti() && !inStat() && !inPren()) S.vistaPrima = S.vista;
     mostraVista("negozio");
     mostraSez(id);
     if (id === "statistiche") caricaStatistiche();
@@ -2148,7 +2184,7 @@ function vaiSezione(id, forza){
   }
   renderTutto();
   try { window.scrollTo(0, 0); } catch(e){}
-  const f = id === "biscotti" || id === "statistiche" ? $("torna") : $("apri-menu");
+  const f = id === "biscotti" || id === "statistiche" || id === "prenotazioni" ? $("torna") : $("apri-menu");
   if (f && !f.hidden) f.focus();
 }
 
@@ -2333,7 +2369,7 @@ function rigaConsegnata(r){
 function testaGruppo(occhiello, titolo, n, extra){
   const h = el("header", {class:"gruppo-head"},
     el("div", {class:"gh-titolo"}, el("p", {class:"gh-per", text:occhiello}), el("h3", {text:titolo})),
-    el("span", {class:"conta", text: n === 1 ? "1 cosa" : n + " cose"}));
+    el("span", {class:"conta", text: typeof n === "string" ? n : (n === 1 ? "1 cosa" : n + " cose")}));
   if (extra) h.append(extra);
   return h;
 }
@@ -2460,6 +2496,170 @@ function renderConsegne(){
   if (aperte.length) badge.removeAttribute("data-zero"); else badge.setAttribute("data-zero", "");
 }
 
+/* ---------- prenotazioni dei clienti ----------
+   Separate dalle consegne. Ogni prenotazione: giorno, ora, dove la ritira il cliente,
+   nome del cliente, cosa, nota e chi l'ha presa. Il panificio vede per ogni giorno
+   quanto produrre in totale. Si salvano come richieste con tipo "prenotazione". */
+const STATI_PREN = ["attesa", "pronta", "ritirata"];
+S.prenotazioni = [];
+S.formPren = { aperto: false, quando: "domani", data: "", ritiro: "", inviando: false };
+function normaPren(k, d, st, autore, rid){
+  st = st || {};
+  return {
+    id: k, rid: rid, autore: autore, mio: !!S.mioId && autore === S.mioId,
+    perIl: /^\d{4}-\d{2}-\d{2}$/.test(d.perIl || "") ? d.perIl : dataLocale(Number(d.creato) || Date.now()),
+    ora: /^\d{2}:\d{2}$/.test(d.ora || "") ? d.ora : "",
+    ritiro: DESTINAZIONI.indexOf(d.ritiro) >= 0 ? d.ritiro : "Panificio",
+    cliente: String(d.cliente || "").slice(0, 60),
+    voci: (Array.isArray(d.voci) ? d.voci : []).slice(0, 30).map(function(v){ return { articolo: String(v.articolo || "").slice(0, 120) || "?", quantita: String(v.quantita || "").slice(0, 24) }; }),
+    nota: String(d.nota || "").slice(0, 140),
+    creato: Number(d.creato) || 0,
+    inCoda: !!S.inCoda && S.inCoda.has(rid),
+    stato: STATI_PREN.indexOf(st.stato) >= 0 ? st.stato : "attesa",
+    statoAlle: Number(st.statoAlle) || 0
+  };
+}
+function inPren(){ return S.vista === "negozio" && S.sez === "prenotazioni"; }
+function puoPrenotare(){ return !!store && !S.sola && !!S.mioId; }
+/* "40 filoncini" + "20 filoncini" = "60 filoncini": si sommano i numeri con la stessa unità */
+function totaliDaProdurre(lista){
+  const m = new Map();
+  lista.forEach(function(p){
+    p.voci.forEach(function(v){
+      const q = String(v.quantita || "").replace(",", ".").match(/^(\d+(?:\.\d+)?)\s*(.*)$/);
+      const n = q ? Number(q[1]) : 1, unita = q ? q[2].trim().toLowerCase() : "";
+      const k = chiave(v.articolo) + "|" + unita;
+      if (!m.has(k)) m.set(k, { articolo: v.articolo, unita: unita, n: 0, senzaNumero: !q });
+      const g = m.get(k); g.n += n; if (q) g.senzaNumero = false;
+    });
+  });
+  return Array.from(m.values()).sort(function(a, b){ return a.articolo.localeCompare(b.articolo, "it"); });
+}
+function testoTotale(t){ return (t.n % 1 ? t.n.toFixed(1).replace(".", ",") : String(t.n)) + (t.unita ? " " + t.unita : "") + " " + t.articolo; }
+function nomeGiornoTitolo(s){
+  const g = testoGiorno(s);
+  return g.charAt(0).toUpperCase() + g.slice(1);
+}
+function rigaPren(p){
+  const voci = p.voci.map(function(v){ return (v.quantita ? v.quantita + " " : "") + v.articolo; }).join(", ");
+  const statoPill = p.stato === "ritirata" ? el("span", {class:"pill p-consegnato", text:"Ritirata"})
+    : (p.stato === "pronta" ? el("span", {class:"pill p-pronto", text:"Pronta"}) : el("span", {class:"pill p-attesa", text:"Da preparare"}));
+  const chi = p.mio ? "te" : (S.nomi[p.autore] || "…");
+  const off = S.pending.has(p.id);
+  const azioni = el("div", {class:"azioni"});
+  if (puoPrenotare()){
+    if (p.stato === "attesa") azioni.append(el("button", {type:"button", class:"azione b-carica", "data-pren-stato":"pronta", "data-id":p.id, disabled:off, text:"Pronta"}));
+    if (p.stato !== "ritirata") azioni.append(el("button", {type:"button", class:"azione b-consegna", "data-pren-stato":"ritirata", "data-id":p.id, disabled:off, text:"Ritirata"}));
+    else azioni.append(el("button", {type:"button", class:"link", "data-pren-stato":"attesa", "data-id":p.id, disabled:off, text:"Annulla"}));
+    if (p.stato !== "ritirata" && (p.mio || S.owner)){
+      const armato = S.armatoPren === p.id;
+      azioni.append(el("button", {type:"button", class: armato ? "link pericolo" : "link", "data-pren-togli":p.id, disabled:off, text: armato ? "Conferma: togli" : "Togli"}));
+    }
+  }
+  return el("li", {class:"riga pren " + classeDest(p.ritiro) + (p.stato === "ritirata" ? " e-caricato" : "")},
+    sigla(p.ritiro),
+    el("div", {class:"riga-main"},
+      el("p", {class:"articolo"}, p.cliente ? el("span", {text:p.cliente + ": "}) : null, voci),
+      p.nota ? el("p", {class:"nota", text:"“" + p.nota + "”"}) : null,
+      meta([p.inCoda ? el("span", {class:"pill p-coda", text:"Non ancora inviata"}) : null, statoPill,
+        el("span", {class:"pill dest " + classeDest(p.ritiro), text:"Ritiro " + (PREP[p.ritiro] || p.ritiro).replace(/^a /, "a ")}),
+        p.ora ? el("span", {class:"pill p-ora", text:"ore " + p.ora}) : null,
+        "presa da " + chi + ", " + quando(p.creato)])),
+    azioni.childNodes.length ? azioni : null);
+}
+function renderPrenotazioni(){
+  if (!inPren()) return;
+  const f = S.formPren;
+  const box = $("pren-form");
+  $("pren-nuova").hidden = f.aperto || !puoPrenotare();
+  box.hidden = !f.aperto;
+  if (f.aperto){
+    riempi($("pren-quando"), [["oggi","Oggi"],["domani","Domani"],["altro","Altro giorno"]].map(function(o){
+      return el("button", {type:"button", class:"chip-add stat-per", "data-pren-quando":o[0], "aria-pressed":String(f.quando === o[0]), disabled:f.inviando, text:o[1]});
+    }));
+    $("pren-data-riga").hidden = f.quando !== "altro";
+    $("pren-data").min = oggiStr();
+    const rit = f.ritiro || (DESTINAZIONI.indexOf(S.punto) >= 0 ? S.punto : "Panificio");
+    riempi($("pren-ritiro"), DESTINAZIONI.map(function(d){
+      return el("label", {class:"chip " + classeDest(d)}, el("input", {type:"radio", name:"pren-ritiro", value:d, checked: d === rit ? true : null, disabled:f.inviando}), el("span", {text:d}));
+    }));
+    $("pren-ritiro").querySelectorAll("input").forEach(function(i){ i.checked = i.value === rit; });
+    const n = righeDi("pren-righe").length;
+    $("pren-salva").disabled = f.inviando || !n;
+    $("pren-salva").textContent = f.inviando ? "Salvo…" : "Salva prenotazione";
+    $("pren-chi").textContent = S.nomeMio ? "La prendi tu, " + S.nomeMio + "." : "";
+  }
+  const oggi = oggiStr();
+  const tutte = S.prenotazioni.slice().sort(function(a, b){ return a.perIl.localeCompare(b.perIl) || (a.ora || "99").localeCompare(b.ora || "99") || a.creato - b.creato; });
+  const vecchie = tutte.filter(function(p){ return p.perIl < oggi && p.stato !== "ritirata"; });
+  const prossime = tutte.filter(function(p){ return p.perIl >= oggi; });
+  const giorni = Array.from(new Set(prossime.map(function(p){ return p.perIl; })));
+  const gruppi = [];
+  if (vecchie.length){
+    gruppi.push(el("section", {class:"gruppo urgenti"}, testaGruppo("Giorni passati", "Non ancora ritirate", vecchie.length === 1 ? "1 prenotazione" : vecchie.length + " prenotazioni"),
+      el("ul", {class:"lista"}, ...vecchie.map(rigaPren))));
+  }
+  giorni.forEach(function(g){
+    const lista = prossime.filter(function(p){ return p.perIl === g; });
+    const aperte = lista.filter(function(p){ return p.stato === "attesa"; });
+    const tot = totaliDaProdurre(aperte);
+    const totali = tot.length ? el("div", {class:"pren-totali"}, el("p", {class:"label-sm", text:"Ancora da preparare, in totale"}),
+      el("ul", {class:"pren-tot"}, ...tot.map(function(t){ return el("li", {text:testoTotale(t)}); }))) : null;
+    gruppi.push(el("section", {class:"gruppo"}, testaGruppo(g === oggi || g === domaniStr() ? fmtGiornoLungo.format(msDelGiorno(g)) : "Prenotazioni", nomeGiornoTitolo(g), lista.length === 1 ? "1 prenotazione" : lista.length + " prenotazioni"),
+      totali, el("ul", {class:"lista"}, ...lista.map(rigaPren))));
+  });
+  riempi($("pren-giorni"), gruppi);
+  $("pren-vuoto").hidden = gruppi.length > 0;
+}
+async function salvaPrenotazione(ev){
+  if (ev) ev.preventDefault();
+  const f = S.formPren;
+  const voci = righeDi("pren-righe");
+  if (!voci.length || f.inviando || !puoPrenotare()) return;
+  const giorno = f.quando === "oggi" ? oggiStr() : (f.quando === "domani" ? domaniStr() : $("pren-data").value);
+  if (!giorno || giorno < oggiStr()){ esito("pren-esito", "Scegli il giorno (oggi o dopo)."); $("pren-data").focus(); return; }
+  const ritiroSel = document.querySelector('input[name="pren-ritiro"]:checked');
+  const voce = {
+    tipo: "prenotazione", perIl: giorno, ora: $("pren-ora").value || "",
+    ritiro: ritiroSel ? ritiroSel.value : "Panificio",
+    cliente: $("pren-cliente").value.trim().slice(0, 60),
+    voci: voci.map(function(x){ return { articolo: x.articolo, quantita: x.quantita }; }),
+    nota: $("pren-nota").value.trim().slice(0, 140),
+    creato: Date.now()
+  };
+  f.inviando = true; renderPrenotazioni();
+  const ok = await scrivi(function(){ return store.aggiungi(voce); }, true);
+  f.inviando = false;
+  if (ok){
+    ["pren-righe","pren-cliente","pren-nota","pren-ora"].forEach(function(id){ $(id).value = ""; });
+    f.aperto = false;
+    avviso("Prenotazione salvata per " + testoGiorno(giorno) + ".");
+  }
+  renderTutto();
+}
+async function statoPren(id, stato){
+  const p = S.prenotazioni.find(function(x){ return x.id === id; });
+  if (!p || !store || S.pending.has(id) || STATI_PREN.indexOf(stato) < 0) return;
+  S.pending.add(id); renderTutto();
+  await scrivi(function(){ return store.stato(id, { stato: stato, statoAlle: Date.now() }); });
+  S.pending.delete(id); renderTutto();
+}
+let timerPren = 0;
+async function togliPren(id){
+  const p = S.prenotazioni.find(function(x){ return x.id === id; });
+  if (!p || !(p.mio || S.owner)) return;
+  if (S.armatoPren !== id){
+    S.armatoPren = id; renderTutto();
+    clearTimeout(timerPren); timerPren = setTimeout(function(){ S.armatoPren = null; renderTutto(); }, 4000);
+    return;
+  }
+  clearTimeout(timerPren); S.armatoPren = null;
+  S.pending.add(id); renderTutto();
+  const ok = await scrivi(function(){ return store.annulla(p); });
+  S.pending.delete(id);
+  if (ok) avviso("Prenotazione tolta.");
+  renderTutto();
+}
 /* ---------- statistiche (solo titolari) ---------- */
 /* Statistiche spente finché si fanno le prove: i dati intanto si salvano lo stesso.
    Quando l'app parte davvero: mettere true e, se serve, STAT_DAL al giorno di partenza
@@ -2511,7 +2711,7 @@ async function caricaStatistiche(giorni){
 function righeStat(){
   if (!S.stat) return [];
   const lim = Math.max(Date.now() - S.stat.giorni * 86400000, STAT_DAL ? new Date(STAT_DAL + "T00:00:00").getTime() : 0);
-  return S.stat.righe.map(function(x){
+  return S.stat.righe.filter(function(x){ return x.v.tipo !== "prenotazione"; }).map(function(x){
     const r = norma(x.autore + "~" + x.rid, x.v, x.st, x.autore, x.rid);
     r.tolta = !!x.v.annullato;
     r.mancato = !!(x.st.mancato || x.st.prep === "manca");
@@ -2632,6 +2832,19 @@ function renderStatistiche(){
   carte.push(cartaStat("Biscotti più chiesti", "Conta dal giorno in cui sono partite le statistiche, non dipende dal periodo scelto.",
     bl.length ? barre(bl.map(function(b){ return { nome: b.nome, n: b.n, sotto: b.finiti ? (b.finiti === 1 ? "1 volta finiti del tutto" : b.finiti + " volte finiti del tutto") : "" }; }))
       : el("p", {class:"vuoto", text:"Ancora nessun dato sui biscotti."})));
+  /* prenotazioni del periodo */
+  const limP = Date.now() - S.stat.giorni * 86400000;
+  const prenS = S.stat.righe.filter(function(x){ return x.v.tipo === "prenotazione" && !x.v.annullato; })
+    .map(function(x){ return normaPren(x.autore + "~" + x.rid, x.v, x.st, x.autore, x.rid); })
+    .filter(function(p){ return p.creato >= limP; });
+  if (prenS.length){
+    const perRitiro = {};
+    prenS.forEach(function(p){ perRitiro[p.ritiro] = (perRitiro[p.ritiro] || 0) + 1; });
+    const tot = totaliDaProdurre(prenS).sort(function(a, b){ return b.n - a.n; }).slice(0, 10);
+    carte.push(cartaStat("Prenotazioni dei clienti", (prenS.length === 1 ? "1 prenotazione" : prenS.length + " prenotazioni") + " in questo periodo.",
+      el("p", {class:"label-sm", text:"Dove le ritirano"}), barre(DESTINAZIONI.filter(function(d){ return perRitiro[d]; }).map(function(d){ return { nome: d, n: perRitiro[d] }; })),
+      el("p", {class:"label-sm", text:"Cosa si prenota di più"}), barre(tot.map(function(t){ return { nome: t.articolo, n: t.n, testo: testoTotale(t).replace(" " + t.articolo, "") }; }))));
+  }
   const tolte = tutte.length - rr.length;
   if (tolte) carte.push(el("p", {class:"hint", text:(tolte === 1 ? "1 richiesta tolta" : tolte + " richieste tolte") + " in questo periodo non sono contate."}));
   riempi(corpo, carte);
@@ -2662,6 +2875,18 @@ function scaricaRichieste(){
   });
   scaricaCsv("ordini-richieste-ultimi-" + S.stat.giorni + "-giorni-" + oggiFile() + ".csv", righe);
 }
+function scaricaPren(){
+  if (!S.stat) return;
+  const ST = {attesa:"Da preparare", pronta:"Pronta", ritirata:"Ritirata"};
+  const righe = [["Per il giorno","Ora","Ritiro","Cliente","Cosa","Quantità","Nota","Stato","Presa da","Presa il"]];
+  S.stat.righe.filter(function(x){ return x.v.tipo === "prenotazione" && !x.v.annullato; })
+    .map(function(x){ return normaPren(x.autore + "~" + x.rid, x.v, x.st, x.autore, x.rid); })
+    .sort(function(a, b){ return a.perIl.localeCompare(b.perIl); })
+    .forEach(function(p){ p.voci.forEach(function(v){
+      righe.push([fmtData.format(msDelGiorno(p.perIl)), p.ora, p.ritiro, p.cliente, v.articolo, v.quantita, p.nota, ST[p.stato], S.nomi[p.autore] || "", fmtData.format(p.creato) + " " + fmtOra.format(p.creato)]);
+    }); });
+  scaricaCsv("ordini-prenotazioni-" + oggiFile() + ".csv", righe);
+}
 function scaricaBiscotti(){
   const ST = {manca:"Da fare", fatto:"Fatto", tolto:"Tolto"};
   const righe = [["Negozio","Biscotto","Stato ora","Urgenza ultima richiesta","Volte chiesto","Volte finiti del tutto","Ultima richiesta","Ultimo fatto"]];
@@ -2678,6 +2903,7 @@ function renderTutto(){
   renderConsegne();
   renderMenu();
   renderStatistiche();
+  renderPrenotazioni();
 }
 
 /* ---------- interfacce ---------- */
@@ -2777,6 +3003,11 @@ function collega(){
     if (b.id === "esci") return esciSB();
     if (b.dataset.azzera) return azzeraPersona(b.dataset.azzera);
     if (b.id === "notif-attiva") return attivaNotifiche();
+    if (b.id === "pren-nuova"){ S.formPren.aperto = true; renderPrenotazioni(); $("pren-righe").focus(); return; }
+    if (b.id === "pren-annulla"){ S.formPren.aperto = false; renderPrenotazioni(); return; }
+    if (b.dataset.prenQuando){ S.formPren.quando = b.dataset.prenQuando; renderPrenotazioni(); if (b.dataset.prenQuando === "altro") $("pren-data").focus(); return; }
+    if (b.dataset.prenStato) return statoPren(b.dataset.id, b.dataset.prenStato);
+    if (b.dataset.prenTogli) return togliPren(b.dataset.prenTogli);
     if (b.id === "notif-spegni") return spegniNotifiche(false);
     if (b.dataset.ctrlNotaApri && S.ctrl){
       const v = S.ctrl.voci[Number(b.dataset.ctrlNotaApri)];
@@ -2793,8 +3024,12 @@ function collega(){
     if (b.dataset.statGiorni) return caricaStatistiche(Number(b.dataset.statGiorni));
     if (b.id === "stat-scarica-richieste") return scaricaRichieste();
     if (b.id === "stat-scarica-biscotti") return scaricaBiscotti();
+    if (b.id === "stat-scarica-pren") return scaricaPren();
   });
   $("form-accesso").addEventListener("submit", inviaAccesso);
+  $("pren-form").addEventListener("submit", salvaPrenotazione);
+  $("pren-righe").addEventListener("input", function(){ $("pren-salva").disabled = S.formPren.inviando || !righeDi("pren-righe").length; });
+  $("pren-ritiro").addEventListener("change", function(ev){ if (ev.target.name === "pren-ritiro") S.formPren.ritiro = ev.target.value; });
   $("notifica").addEventListener("click", function(){ $("notifica").classList.remove("vista"); });
   $("codici-box").addEventListener("toggle", function(){ if ($("codici-box").open) mostraCodici(); });
   $("persone-box").addEventListener("toggle", function(){ if ($("persone-box").open){ S.armatoPersona = null; mostraPersone(); } });
@@ -3035,7 +3270,7 @@ function aggiungiEvento(ev){
   S.eventi.push(ev);
   clearTimeout(S.timerEventi);
   /* le nuove richieste partono insieme dopo un attimo; i cambi di stato si raccolgono un po' di più */
-  S.timerEventi = setTimeout(mandaEventi, ev.tipo === "nuove" || ev.tipo === "biscotti" ? 2500 : 12000);
+  S.timerEventi = setTimeout(mandaEventi, ev.tipo === "nuove" || ev.tipo === "biscotti" || ev.tipo === "prenotazioni" ? 2500 : 12000);
 }
 function pacchettoEventi(){
   const per = {};
@@ -3074,10 +3309,10 @@ function eventoStato(k, p){
 /* scelte per ruolo: cosa si può ricevere su questo telefono */
 const SCELTE_NOTIFICHE = {
   "consegne": [["nuove", "Ogni nuova richiesta", "Le urgenti arrivano sempre."], ["pronto", "Pronto da caricare dal panificio", ""]],
-  "panificio": [["nuove", "Nuove richieste per il panificio", ""], ["biscotti", "Comande di biscotti", ""]],
-  "corso": [["manca", "Una nostra richiesta non c'è in magazzino", ""], ["partite", "Le nostre cose sono partite", ""]],
-  "piazza-nenni": [["manca", "Una nostra richiesta non c'è in magazzino", ""], ["partite", "Le nostre cose sono partite", ""]],
-  "titolare": [["tutto", "Ricevi tutto", "Nuove richieste, cose che mancano, pronti da caricare, biscotti."]]
+  "panificio": [["nuove", "Nuove richieste per il panificio", ""], ["prenotazioni", "Nuove prenotazioni dei clienti", ""], ["biscotti", "Comande di biscotti", ""]],
+  "corso": [["manca", "Una nostra richiesta non c'è in magazzino", ""], ["partite", "Le nostre cose sono partite", ""], ["prenotazioni", "Prenotazioni che i clienti ritirano da noi", ""]],
+  "piazza-nenni": [["manca", "Una nostra richiesta non c'è in magazzino", ""], ["partite", "Le nostre cose sono partite", ""], ["prenotazioni", "Prenotazioni che i clienti ritirano da noi", ""]],
+  "titolare": [["tutto", "Ricevi tutto", "Nuove richieste, prenotazioni, cose che mancano, pronti da caricare, biscotti."]]
 };
 function sceltaNormale(k){ return k !== "tutto"; }
 function chiaveB64(s){
@@ -3338,7 +3573,7 @@ function storeSB(){
   return {
     aggiungi: async function(voce){
       const id = nuovoId();
-      await scriviOp({ tab: "richieste", tipo: "insert", id: id, riga: { id: id, autore: S.mioId, dati: voce } }, { tipo: "nuove", id: id });
+      await scriviOp({ tab: "richieste", tipo: "insert", id: id, riga: { id: id, autore: S.mioId, dati: voce } }, { tipo: voce.tipo === "prenotazione" ? "prenotazioni" : "nuove", id: id });
       applicaRiga("richieste", { id: id, autore: S.mioId, dati: voce }); emettiSB(true);
     },
     stato: async function(k, p){
