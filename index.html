@@ -2367,11 +2367,16 @@ function renderConsegne(){
 }
 
 /* ---------- statistiche (solo titolari) ---------- */
+/* Statistiche spente finché si fanno le prove: i dati intanto si salvano lo stesso.
+   Quando l'app parte davvero: mettere true e, se serve, STAT_DAL al giorno di partenza
+   (così le richieste di prova non vengono contate). */
+const STATISTICHE_ATTIVE = false;
+const STAT_DAL = "";
 const PERIODI_STAT = [[7, "7 giorni"], [30, "30 giorni"], [90, "3 mesi"], [180, "6 mesi"], [365, "12 mesi"]];
 const GIORNI_SETT = ["Lunedì","Martedì","Mercoledì","Giovedì","Venerdì","Sabato","Domenica"];
 S.statGiorni = 30;
 function inStat(){ return S.vista === "negozio" && S.sez === "statistiche"; }
-function puoStat(){ return S.owner && S.ruolo.tipo === "titolare"; }
+function puoStat(){ return STATISTICHE_ATTIVE && S.owner && S.ruolo.tipo === "titolare"; }
 function durata(ms){
   const min = Math.round(ms / 60000);
   if (min < 60) return min + " min";
@@ -2411,7 +2416,7 @@ async function caricaStatistiche(giorni){
 }
 function righeStat(){
   if (!S.stat) return [];
-  const lim = Date.now() - S.stat.giorni * 86400000;
+  const lim = Math.max(Date.now() - S.stat.giorni * 86400000, STAT_DAL ? new Date(STAT_DAL + "T00:00:00").getTime() : 0);
   return S.stat.righe.map(function(x){
     const r = norma(x.autore + "~" + x.rid, x.v, x.st, x.autore, x.rid);
     r.tolta = !!x.v.annullato;

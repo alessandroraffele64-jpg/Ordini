@@ -8,3 +8,4 @@
 - Non mettere mai nel repository i codici per registrarsi, la password del database o la chiave `service_role`/secret di Supabase. La chiave in `config.json` è quella pubblica (publishable/anon) ed è protetta dalle regole RLS in `supabase/setup.sql`.
 - Testi e commenti in italiano: l'app la usano i dipendenti di una panetteria, la lingua deve restare semplice.
 - Il proprietario non è un programmatore: spiegare le cose in parole semplici, senza gergo tecnico.
+- Statistiche: sono pronte ma spente (`STATISTICHE_ATTIVE = false` in `sorgente/app.html`) finché si fanno le prove. Quando il proprietario dice che l'app è partita davvero, accenderle e mettere `STAT_DAL` al giorno di partenza, così le richieste di prova non contano.
