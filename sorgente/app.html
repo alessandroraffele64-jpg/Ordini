@@ -165,7 +165,14 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px;back
 .ctrl-fuori select{padding-right:30px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%2367635A' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;cursor:pointer}
 .ctrl-fuori input:focus,.ctrl-fuori select:focus{outline:3px solid var(--accent);outline-offset:1px;border-color:transparent}
 .ctrl-fuori input[aria-invalid="true"]{border-color:var(--urgent);background:var(--urgent-bg)}
-.pill.origine.ritiro-fuori{background:var(--surface-2);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ink)}
+.pill.origine.ritiro-fuori{background:var(--surface-2);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ink);white-space:normal;max-width:100%;border-radius:10px;line-height:1.3;padding-top:3px;padding-bottom:3px}
+.meta{min-width:0;max-width:100%}
+.pill{max-width:100%}
+/* nota scritta da chi chiede */
+.nota{font-size:14px;line-height:1.35;color:var(--ink);font-style:italic;overflow-wrap:anywhere;padding-left:10px;border-left:3px solid var(--oro)}
+.ctrl-nota{display:flex;flex-direction:column;gap:4px}
+.ctrl-nota input{width:100%;min-height:42px;padding:0 10px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);font-size:16px}
+.ctrl-nota input:focus{outline:3px solid var(--accent);outline-offset:1px;border-color:transparent}
 .pill.p-ora{background:var(--ink);color:var(--bg)}
 /* notifica in alto, come quelle del telefono */
 .notifica{position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 10px);z-index:95;max-width:440px;margin:0 auto;display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:16px;border:1px solid var(--line);background:var(--surface);color:var(--ink);box-shadow:0 12px 32px rgba(0,0,0,.28);cursor:pointer;transform:translateY(calc(-100% - 40px));visibility:hidden;transition:transform .3s ease,visibility 0s linear .3s}
@@ -966,6 +973,7 @@ function norma(k, d, st, autore, rid){
     per: String(d.per || ""),
     da: String(d.da || "Panificio"),
     inCoda: !!S.inCoda && S.inCoda.has(rid),
+    nota: String(d.nota || "").slice(0, 140),
     perIl: /^\d{4}-\d{2}-\d{2}$/.test(d.perIl || "") ? d.perIl : "",
     ritiroDove: String(d.ritiroDove || "").slice(0,60),
     ritiroOra: /^\d{2}:\d{2}$/.test(d.ritiroOra || "") ? d.ritiroOra : "",
@@ -1167,6 +1175,7 @@ async function aggiungi(voci, comuni){
       da: x.da || "Panificio", urgente: x.urgente === true
     });
     if (x.reparto) voce.reparto = x.reparto;
+    if (String(x.nota || "").trim()) voce.nota = String(x.nota).trim().slice(0, 140);
     if (comuni.perIl && comuni.perIl !== oggiStr()) voce.perIl = comuni.perIl; else delete voce.perIl;
     if (voce.da === FUORI){
       voce.ritiroDove = String(x.ritiroDove || "").trim().slice(0,60);
@@ -1268,7 +1277,10 @@ function renderControllo(){
     }
     scelte.append(el("button", {type:"button", class:"urg-mini", "data-ctrl-urg":String(i), "aria-pressed":String(v.urgente), disabled:c.inviando,
       "aria-label":"Urgente: " + v.articolo, text:"Urgente"}));
-    return el("li", {class:"ctrl-voce" + cls}, testa, scelte, extra);
+    if (!v.conNota) scelte.append(el("button", {type:"button", class:"link", "data-ctrl-nota-apri":String(i), disabled:c.inviando, "aria-label":"Aggiungi una nota a " + v.articolo, text:"+ Nota"}));
+    const nota = v.conNota ? el("label", {class:"ctrl-nota"}, el("span", {class:"label-sm", text:"Nota per chi prepara"}),
+      el("input", {type:"text", "data-ctrl-nota":String(i), maxlength:"140", autocomplete:"off", placeholder:"Es. quelle del frigo grande", value:v.nota || "", disabled:c.inviando})) : null;
+    return el("li", {class:"ctrl-voce" + cls}, testa, scelte, extra, nota);
   }));
   /* per quando: oggi, domani o un altro giorno (prova, solo titolari) */
   const puoQuando = S.owner && S.ruolo.tipo === "titolare" && !promem;
@@ -1650,7 +1662,11 @@ async function spostaReparto(id, rep){
 
 /* ---------- render: pezzi comuni ---------- */
 function testoArticolo(r){
-  return el("p", {class:"articolo"}, r.quantita ? el("span", {class:"qta", text:r.quantita}) : null, r.articolo);
+  const t = el("p", {class:"articolo"}, r.quantita ? el("span", {class:"qta", text:r.quantita}) : null, r.articolo);
+  if (!r.nota) return t;
+  const f = document.createDocumentFragment();
+  f.append(t, el("p", {class:"nota", text:"“" + r.nota + "”"}));
+  return f;
 }
 function pillOrigine(r){
   if (r.per === PROMEMORIA || r.da === "Panificio" || r.da === r.per) return null;
@@ -2621,13 +2637,13 @@ function oggiFile(){ const d = new Date(); return d.getFullYear() + "-" + String
 function scaricaRichieste(){
   if (!S.stat) return;
   const STATI = {attesa:"In attesa", caricato:"In viaggio", consegnato:"Consegnato"};
-  const righe = [["Data","Ora","Per","Articolo","Quantità","Reparto","Da dove","Ritiro fuori: dove","Ritiro fuori: entro le","Urgente","Stato","Consegnato il","Consegnato alle","Minuti per arrivare","Non c'era in magazzino","Finito al panificio","Chiesto da"]];
+  const righe = [["Data","Ora","Per","Articolo","Quantità","Reparto","Da dove","Ritiro fuori: dove","Ritiro fuori: entro le","Urgente","Stato","Consegnato il","Consegnato alle","Minuti per arrivare","Non c'era in magazzino","Finito al panificio","Chiesto da","Nota"]];
   righeStat().sort(function(a, b){ return a.creato - b.creato; }).forEach(function(r){
     const cons = r.stato === "consegnato" && r.consegnatoAlle;
     righe.push([fmtData.format(r.creato), fmtOra.format(r.creato), r.per, r.articolo, r.quantita, repartoDi(r), nomeOrigine(r.da), r.ritiroDove, r.ritiroOra,
       r.urgente ? "sì" : "no", r.tolta ? "Tolta" : (STATI[r.stato] || r.stato), cons ? fmtData.format(r.consegnatoAlle) : "", cons ? fmtOra.format(r.consegnatoAlle) : "",
       cons && r.consegnatoAlle > r.creato ? Math.round((r.consegnatoAlle - r.creato) / 60000) : "", r.mancato ? "sì" : "", r.finitoPanif ? "sì" : "",
-      S.nomi[r.autore] || ""]);
+      S.nomi[r.autore] || "", r.nota]);
   });
   scaricaCsv("ordini-richieste-ultimi-" + S.stat.giorni + "-giorni-" + oggiFile() + ".csv", righe);
 }
@@ -2747,6 +2763,11 @@ function collega(){
     if (b.dataset.azzera) return azzeraPersona(b.dataset.azzera);
     if (b.id === "notif-attiva") return attivaNotifiche();
     if (b.id === "notif-spegni") return spegniNotifiche(false);
+    if (b.dataset.ctrlNotaApri && S.ctrl){
+      const v = S.ctrl.voci[Number(b.dataset.ctrlNotaApri)];
+      if (v){ v.conNota = true; renderControllo(); const inp = document.querySelector('[data-ctrl-nota="' + b.dataset.ctrlNotaApri + '"]'); if (inp) inp.focus(); }
+      return;
+    }
     if (b.dataset.quando && S.ctrl){
       S.ctrl.sceltaQuando = b.dataset.quando;
       S.ctrl.perIl = b.dataset.quando === "domani" ? domaniStr() : (b.dataset.quando === "oggi" ? "" : ($("ctrl-quando-data").value || ""));
@@ -2782,6 +2803,7 @@ function collega(){
     const t = ev.target; if (!S.ctrl) return;
     if (t.dataset.ctrlDove){ const v = S.ctrl.voci[Number(t.dataset.ctrlDove)]; if (v){ v.ritiroDove = t.value; if (t.value.trim()) t.removeAttribute("aria-invalid"); } }
     if (t.dataset.ctrlOra){ const v = S.ctrl.voci[Number(t.dataset.ctrlOra)]; if (v) v.ritiroOra = t.value; }
+    if (t.dataset.ctrlNota){ const v = S.ctrl.voci[Number(t.dataset.ctrlNota)]; if (v) v.nota = t.value; }
     if (t.dataset.ctrlPorta){ const v = S.ctrl.voci[Number(t.dataset.ctrlPorta)]; if (v) v.portaA = t.value; }
   });
   $("ctrl-quando-data").addEventListener("input", function(){ if (S.ctrl){ S.ctrl.perIl = this.value || ""; } });
