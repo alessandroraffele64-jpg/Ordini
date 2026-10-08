@@ -176,6 +176,24 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px;back
 .gruppo.ferme{border:1.5px solid var(--ferma-bordo)}
 .gruppo.ferme .gruppo-head{background:linear-gradient(100deg,var(--ferma-bg) 0%,var(--surface) 90%)}
 .gruppo.ferme h3,.gruppo.ferme .gh-per{color:var(--ferma)}
+/* statistiche: barre orizzontali, una tinta; per negozio i colori del negozio */
+.stat-carta{gap:14px}
+.stat-per[aria-pressed="true"],.stat-per[aria-pressed="true"]:hover{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.barre{display:flex;flex-direction:column;gap:12px}
+.barra{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;align-items:baseline}
+.barra-nome{font-weight:700;font-size:15px;min-width:0;overflow-wrap:anywhere}
+.barra-val{font-weight:700;font-size:15px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.barra-traccia{grid-column:1 / -1;display:flex;gap:2px;height:10px;border-radius:4px;background:var(--surface-2);overflow:hidden}
+.barra-pezzo{display:block;height:100%;border-radius:4px;background:var(--oro-txt)}
+.barra-pezzo.dest-corso,.barra-pezzo.dest-nenni,.barra-pezzo.dest-altro{background:var(--c)}
+.barra-pezzo.dest-altro{--c:var(--muted)}
+.barra-sotto{grid-column:1 / -1;font-size:13px;color:var(--muted)}
+.legenda-stat{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;font-size:13px;color:var(--muted)}
+.legenda-stat .punto{width:10px;height:10px;border-radius:3px;background:var(--c)}
+.legenda-stat .punto.dest-altro{--c:var(--muted)}
+.legenda-stat .punto + .punto,.legenda-stat .punto:not(:first-child){margin-left:6px}
+.stat.allerta-ferma{background:var(--ferma-bg);border-color:var(--ferma-bordo)}
+.stat.allerta-ferma b,.stat.allerta-ferma span{color:var(--ferma)}
 .pill.p-coda{background:var(--urgent-bg);color:var(--urgent-txt);box-shadow:inset 0 0 0 1.5px var(--urgent)}
 .coda-avviso{padding:10px 14px;border-radius:var(--r-md);background:var(--urgent-bg);color:var(--urgent-txt);border:1.5px solid var(--urgent);font-size:15px;font-weight:700;line-height:1.35}
 select.prov{width:auto;min-width:0;flex:1 1 150px;min-height:42px;padding:0 8px 0 10px;font-weight:700;font-size:14px;border-radius:10px}
@@ -500,6 +518,21 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
     </div>
 
     <!-- Biscotti: sezione a parte, non va nel giro delle consegne -->
+    <!-- Statistiche: solo titolari -->
+    <div class="view" id="pannello-statistiche" hidden>
+      <div class="blocco">
+        <p class="label-sm">Periodo</p>
+        <div class="chips" id="stat-periodo" role="group" aria-label="Periodo"></div>
+        <p class="hint" id="stat-stato" role="status"></p>
+      </div>
+      <div class="blocco" id="stat-corpo"></div>
+      <section class="card">
+        <h3 class="comanda-titolo">Scarica i dati</h3>
+        <p class="hint">Un file che si apre con Excel o Numbers. Puoi anche darlo a Claude per analisi più approfondite.</p>
+        <div class="row"><button type="button" class="mini" id="stat-scarica-richieste">Richieste del periodo (.csv)</button><button type="button" class="mini" id="stat-scarica-biscotti">Biscotti (.csv)</button></div>
+      </section>
+    </div>
+
     <div class="view" id="pannello-biscotti" hidden>
       <div class="blocco" id="bisc-negozio">
         <h2 id="bisc-titolo">Biscotti che mancano al Corso</h2>
@@ -1312,7 +1345,10 @@ function normaBisc(id, d){
     toltoDa: typeof d.toltoDa === "string" ? d.toltoDa : null,
     toltoAlle: Number(d.toltoAlle) || 0,
     fattoDa: typeof d.fattoDa === "string" ? d.fattoDa : null,
-    fattoAlle: Number(d.fattoAlle) || (d.stato === "mandati" ? Number(d.mandatiAlle) || 0 : 0)
+    fattoAlle: Number(d.fattoAlle) || (d.stato === "mandati" ? Number(d.mandatiAlle) || 0 : 0),
+    /* per le statistiche: quante volte è stato chiesto e quante volte era finito del tutto */
+    volte: Number(d.volte) || 0,
+    volteFiniti: Number(d.volteFiniti) || 0
   };
 }
 /* biscotti da produrre: uno per tipo, con i negozi che lo aspettano */
@@ -1382,9 +1418,10 @@ async function inviaComanda(){
     const b = S.biscotti.find(function(x){ return x.id === id; });
     if (bloccoBiscotto(b, liv)) continue;
     /* un biscotto tolto o già fatto e poi richiesto vale come nuovo */
+    const finiti = liv === "finiti" ? 1 : 0;
     const fn = b && b.stato === "manca"
-      ? function(){ return store.bisc(id, { livello: liv, segnatoAlle: Date.now() }); }
-      : function(){ return store.bisc(id, { nome: nome, negozio: neg, livello: liv, stato: "manca", segnatoDa: S.mioId, segnatoAlle: Date.now(), mandatiAlle: 0, toltoAlle: 0, fattoAlle: 0 }); };
+      ? function(){ return store.bisc(id, { livello: liv, segnatoAlle: Date.now(), volteFiniti: b.volteFiniti + (finiti && b.livello !== "finiti" ? 1 : 0) }); }
+      : function(){ return store.bisc(id, { nome: nome, negozio: neg, livello: liv, stato: "manca", segnatoDa: S.mioId, segnatoAlle: Date.now(), mandatiAlle: 0, toltoAlle: 0, fattoAlle: 0, volte: (b ? b.volte : 0) + 1, volteFiniti: (b ? b.volteFiniti : 0) + finiti }); };
     if (!(await scrivi(fn, !b))) break;
     fatti.push({ nome: nome, livello: liv });
   }
@@ -1526,7 +1563,11 @@ async function impostaPrep(id, valore){
   if (!r || !store || S.sola || S.pending.has(id) || STATI_PREP.indexOf(valore) < 0) return;
   const nuovo = r.prep === valore ? "" : valore;
   S.pending.add(id); renderTutto();
-  await scrivi(function(){ return store.stato(id, { prep: nuovo, prepAlle: Date.now() }); });
+  const patch = { prep: nuovo, prepAlle: Date.now() };
+  /* per le statistiche: resta segnato che è mancato, anche quando poi arriva */
+  if (nuovo === "manca") patch.mancato = true;
+  if (nuovo === "finito") patch.finito = true;
+  await scrivi(function(){ return store.stato(id, patch); });
   S.pending.delete(id); renderTutto();
 }
 /* Spostare una cosa di reparto: vale per questa richiesta e, da ora, per tutte quelle con lo stesso nome */
@@ -1893,9 +1934,10 @@ function renderBiscPanificio(){
   $("vuoto-crono-fatti").hidden = fatti.length > 0;
 }
 function mostraSez(sez){
-  S.sez = sez === "biscotti" ? "biscotti" : "richieste";
+  S.sez = sez === "biscotti" || sez === "statistiche" ? sez : "richieste";
   $("pannello-richieste").hidden = S.sez !== "richieste";
   $("pannello-biscotti").hidden = S.sez !== "biscotti";
+  $("pannello-statistiche").hidden = S.sez !== "statistiche";
 }
 
 /* ---------- menu con le tre lineette ---------- */
@@ -1903,7 +1945,9 @@ function vociMenu(){
   if (S.ruolo.tipo === "giro") return [];
   const panif = S.punto === "Panificio";
   const nBisc = panif ? biscDaFare().length : S.biscotti.filter(function(b){ return b.stato === "manca" && b.negozio === S.punto; }).length;
-  return [{ id:"biscotti", nome:"Biscotti", n:nBisc }];
+  const voci = [{ id:"biscotti", nome:"Biscotti", n:nBisc }];
+  if (puoStat()) voci.push({ id:"statistiche", nome:"Statistiche", n:null });
+  return voci;
 }
 function inBiscotti(){ return S.vista === "negozio" && S.sez === "biscotti"; }
 function sezioneAttuale(){ return S.vista === "consegne" ? "giro" : S.sez; }
@@ -1913,16 +1957,17 @@ function nomeSezione(id){
   return S.punto === "Panificio" ? "Ordini dei negozi" : "Richieste";
 }
 function renderMenu(){
-  const bisc = inBiscotti();
+  const bisc = inBiscotti() || inStat();
   riempi($("menu-voci"), vociMenu().map(function(v){
     const badge = v.n === null ? null : el("span", {class:"badge", "data-zero": v.n ? null : "", text:String(v.n)});
-    return el("li", null, el("button", {type:"button", class:"menu-voce", "data-vai":v.id, "aria-current": (v.id === "biscotti" && bisc) ? "page" : null}, el("span", {text:v.nome}), badge));
+    return el("li", null, el("button", {type:"button", class:"menu-voce", "data-vai":v.id, "aria-current": (v.id === S.sez && bisc) ? "page" : null}, el("span", {text:v.nome}), badge));
   }));
   const t = S.ruolo.tipo;
   /* dentro Biscotti: freccia Indietro al posto del menu */
   $("apri-menu").hidden = t === "giro" || bisc;
   $("torna").hidden = !bisc;
   $("switch-viste").hidden = t !== "titolare" || bisc;
+  $("punti").hidden = t !== "titolare" || inStat();
   $("link-personale").hidden = t !== "titolare" || bisc;
   $("codici-box").hidden = !S.sito || !S.owner || t !== "titolare" || bisc;
   $("persone-box").hidden = !S.sito || !S.owner || t !== "titolare" || bisc;
@@ -1932,10 +1977,12 @@ function renderMenu(){
 function contaTesto(n, uno, tanti){ return n ? n + " " + (n === 1 ? uno : tanti) : ""; }
 function renderTestata(){
   if (!S.ruolo) return;
-  const t = S.ruolo.tipo, bisc = inBiscotti(), giro = S.vista === "consegne";
+  const t = S.ruolo.tipo, bisc = inBiscotti(), giro = S.vista === "consegne", stat = inStat();
   const panif = S.punto === "Panificio";
   let sopra, titolo, info;
-  if (giro){
+  if (stat){
+    sopra = "Solo per i titolari"; titolo = "Statistiche"; info = "";
+  } else if (giro){
     sopra = t === "titolare" ? "Tutte le consegne" : "Chi fa il giro";
     titolo = "Giro consegne";
     info = "";
@@ -1952,11 +1999,11 @@ function renderTestata(){
       : S.richieste.filter(function(r){ return r.per === S.punto && r.stato !== "consegnato"; }).length;
     info = panif ? contaTesto(n, "richiesta aperta", "richieste aperte") : contaTesto(n, "in arrivo", "in arrivo");
   }
-  $("fascia").className = "fascia " + (giro ? "giro" : classeDest(S.punto));
+  $("fascia").className = "fascia " + (giro || stat ? "giro" : classeDest(S.punto));
   $("eyebrow").textContent = sopra;
   $("titolo").textContent = titolo;
   $("fascia-info").textContent = info;
-  $("app-nome").textContent = bisc ? "Biscotti" : "Rifornimenti";
+  $("app-nome").textContent = bisc ? "Biscotti" : (stat ? "Statistiche" : "Rifornimenti");
 }
 function apriMenu(){
   $("menu").hidden = false; $("menu-velo").hidden = false;
@@ -1980,10 +2027,11 @@ function vaiSezione(id, forza){
     return;
   }
   chiudiMenu();
-  if (id === "biscotti"){
-    if (!inBiscotti()) S.vistaPrima = S.vista;
+  if (id === "biscotti" || (id === "statistiche" && puoStat())){
+    if (!inBiscotti() && !inStat()) S.vistaPrima = S.vista;
     mostraVista("negozio");
-    mostraSez("biscotti");
+    mostraSez(id);
+    if (id === "statistiche") caricaStatistiche();
   } else {
     mostraSez("richieste");
     mostraVista(S.ruolo.tipo === "titolare" ? (S.vistaPrima || S.vistaTitolare) : (S.ruolo.tipo === "giro" ? "consegne" : "negozio"));
@@ -1991,7 +2039,7 @@ function vaiSezione(id, forza){
   }
   renderTutto();
   try { window.scrollTo(0, 0); } catch(e){}
-  const f = id === "biscotti" ? $("torna") : $("apri-menu");
+  const f = id === "biscotti" || id === "statistiche" ? $("torna") : $("apri-menu");
   if (f && !f.hidden) f.focus();
 }
 
@@ -2303,12 +2351,219 @@ function renderConsegne(){
   if (aperte.length) badge.removeAttribute("data-zero"); else badge.setAttribute("data-zero", "");
 }
 
+/* ---------- statistiche (solo titolari) ---------- */
+const PERIODI_STAT = [[7, "7 giorni"], [30, "30 giorni"], [90, "3 mesi"], [180, "6 mesi"], [365, "12 mesi"]];
+const GIORNI_SETT = ["Lunedì","Martedì","Mercoledì","Giovedì","Venerdì","Sabato","Domenica"];
+S.statGiorni = 30;
+function inStat(){ return S.vista === "negozio" && S.sez === "statistiche"; }
+function puoStat(){ return S.owner && S.ruolo.tipo === "titolare"; }
+function durata(ms){
+  const min = Math.round(ms / 60000);
+  if (min < 60) return min + " min";
+  const h = Math.floor(min / 60), m = min % 60;
+  if (h < 24) return h + " h" + (m ? " " + m + " min" : "");
+  const g = Math.floor(h / 24), hh = h % 24;
+  return (g === 1 ? "1 giorno" : g + " giorni") + (hh ? " " + hh + " h" : "");
+}
+function mediana(a){ if (!a.length) return 0; const s = a.slice().sort(function(x, y){ return x - y; }); const k = Math.floor(s.length / 2); return s.length % 2 ? s[k] : (s[k - 1] + s[k]) / 2; }
+async function caricaStatistiche(giorni){
+  S.statGiorni = giorni || S.statGiorni;
+  S.statCarico = true; S.statErrore = ""; renderStatistiche();
+  const daMs = Date.now() - S.statGiorni * 86400000;
+  try {
+    let righe = [];
+    if (S.sito && sb){
+      const da = new Date(daMs).toISOString();
+      const r = await Promise.all([
+        tuttePagine(function(){ return sb.from("richieste").select("id,autore,dati").gte("creato", da).order("id"); }),
+        tuttePagine(function(){ return sb.from("stati").select("id,dati").gte("aggiornato", da).order("id"); })
+      ]);
+      const st = {};
+      r[1].forEach(function(x){ st[x.id] = x.dati || {}; });
+      righe = r[0].map(function(x){ const k = x.autore + "~" + x.id; return { rid: x.id, autore: x.autore, v: x.dati || {}, st: S.stati[k] || st[k] || {} }; });
+    } else {
+      S.docsRichieste.forEach(function(doc){
+        const voci = doc.voci || {};
+        for (const rid in voci) righe.push({ rid: rid, autore: doc.id, v: voci[rid] || {}, st: S.stati[doc.id + "~" + rid] || {} });
+      });
+    }
+    S.stat = { giorni: S.statGiorni, righe: righe, quando: Date.now() };
+  } catch(e){
+    S.statErrore = "Non riesco a caricare i dati. Controlla la connessione e riprova.";
+  }
+  S.statCarico = false;
+  renderStatistiche();
+}
+function righeStat(){
+  if (!S.stat) return [];
+  const lim = Date.now() - S.stat.giorni * 86400000;
+  return S.stat.righe.map(function(x){
+    const r = norma(x.autore + "~" + x.rid, x.v, x.st, x.autore, x.rid);
+    r.tolta = !!x.v.annullato;
+    r.mancato = !!(x.st.mancato || x.st.prep === "manca");
+    r.finitoPanif = !!(x.st.finito || x.st.prep === "finito");
+    return r;
+  }).filter(function(r){ return !r.esempio && r.creato >= lim && r.per !== PROMEMORIA; });
+}
+/* raggruppa per nome (maiuscole, accenti e spazi non contano); il nome mostrato è quello scritto più spesso */
+function perProdotto(lista){
+  const m = new Map();
+  lista.forEach(function(r){
+    const k = chiave(r.articolo); if (!k) return;
+    if (!m.has(k)) m.set(k, { n: 0, nomi: {}, per: {}, mancato: 0, finito: 0 });
+    const g = m.get(k);
+    g.n++; g.nomi[r.articolo] = (g.nomi[r.articolo] || 0) + 1; g.per[r.per] = (g.per[r.per] || 0) + 1;
+    if (r.mancato) g.mancato++; if (r.finitoPanif) g.finito++;
+  });
+  return Array.from(m.values()).map(function(g){
+    const nome = Object.keys(g.nomi).sort(function(a, b){ return g.nomi[b] - g.nomi[a]; })[0];
+    g.nome = nome.charAt(0).toUpperCase() + nome.slice(1);
+    return g;
+  });
+}
+function barre(voci, opz){
+  opz = opz || {};
+  const max = Math.max(1, ...voci.map(function(v){ return v.n; }));
+  return el("ul", {class:"barre"}, ...voci.map(function(v){
+    let traccia;
+    if (v.parti){
+      traccia = el("span", {class:"barra-traccia multipla", "aria-hidden":"true"}, ...v.parti.filter(function(p){ return p.n; }).map(function(p){
+        return el("span", {class:"barra-pezzo " + p.cls, style:"width:" + (p.n / max * 100).toFixed(2) + "%"});
+      }));
+    } else {
+      traccia = el("span", {class:"barra-traccia", "aria-hidden":"true"}, el("span", {class:"barra-pezzo", style:"width:" + (v.n / max * 100).toFixed(2) + "%"}));
+    }
+    return el("li", {class:"barra"}, el("span", {class:"barra-nome", text:v.nome}), el("span", {class:"barra-val", text: v.testo || String(v.n)}), traccia,
+      v.sotto ? el("span", {class:"barra-sotto", text:v.sotto}) : null);
+  }));
+}
+function cartaStat(titolo, spiega, ...figli){
+  return el("section", {class:"card stat-carta"}, el("h3", {class:"comanda-titolo", text:titolo}), spiega ? el("p", {class:"hint", text:spiega}) : null, ...figli);
+}
+function renderStatistiche(){
+  if (!inStat()) return;
+  riempi($("stat-periodo"), PERIODI_STAT.map(function(p){
+    return el("button", {type:"button", class:"chip-add stat-per", "data-stat-giorni":String(p[0]), "aria-pressed":String(S.statGiorni === p[0]), disabled:S.statCarico, text:p[1]});
+  }));
+  const corpo = $("stat-corpo");
+  $("stat-stato").textContent = S.statCarico ? "Calcolo…" : (S.statErrore || (S.stat ? "Aggiornate alle " + fmtOra.format(S.stat.quando) + "." : ""));
+  if (!S.stat){ riempi(corpo, []); return; }
+  const tutte = righeStat();
+  const rr = tutte.filter(function(r){ return !r.tolta; });
+  if (!rr.length){
+    riempi(corpo, [el("p", {class:"vuoto", text:"Nessuna richiesta in questo periodo. Le statistiche si riempiono man mano che si usa l'app."})]);
+    return;
+  }
+  const arrivate = rr.filter(function(r){ return r.stato === "consegnato" && r.consegnatoAlle > r.creato; });
+  const tempi = arrivate.map(function(r){ return r.consegnatoAlle - r.creato; });
+  const limite = ORE_FERMA * 3600000;
+  const lente = arrivate.filter(function(r){ return r.consegnatoAlle - r.creato > limite; }).length +
+    rr.filter(function(r){ return r.stato !== "consegnato" && Date.now() - r.creato > limite; }).length;
+  const urg = rr.filter(function(r){ return r.urgente; }).length;
+  const tiles = el("div", {class:"riepilogo"},
+    el("p", {class:"stat"}, el("b", {text:String(rr.length)}), el("span", {text:"richieste"})),
+    el("p", {class:"stat"}, el("b", {text:String(urg)}), el("span", {text:"urgenti (" + Math.round(urg / rr.length * 100) + "%)"})),
+    el("p", {class:"stat"}, el("b", {text: tempi.length ? durata(mediana(tempi)) : "–"}), el("span", {text:"di solito per arrivare"})),
+    el("p", {class:"stat" + (lente ? " allerta-ferma" : "")}, el("b", {text:String(lente)}), el("span", {text:"oltre " + ORE_FERMA + " ore"})));
+  const carte = [tiles];
+
+  const prod = perProdotto(rr);
+  const manc = prod.filter(function(g){ return g.mancato || g.finito; }).sort(function(a, b){ return (b.mancato + b.finito) - (a.mancato + a.finito); }).slice(0, 10);
+  carte.push(cartaStat("Cosa manca più spesso", "Quante volte una cosa chiesta non c'era in magazzino o era finita al panificio. Aiuta a riordinare prima.",
+    manc.length ? barre(manc.map(function(g){
+      const sotto = [g.mancato ? (g.mancato === 1 ? "1 volta" : g.mancato + " volte") + " non c'era in magazzino" : "", g.finito ? (g.finito === 1 ? "1 volta" : g.finito + " volte") + " finito al panificio" : ""].filter(Boolean).join(" · ");
+      return { nome: g.nome, n: g.mancato + g.finito, sotto: sotto };
+    })) : el("p", {class:"vuoto", text:"Niente è mancato in questo periodo."})));
+
+  const top = prod.slice().sort(function(a, b){ return b.n - a.n; }).slice(0, 10);
+  carte.push(cartaStat("Cosa si chiede di più", null,
+    el("p", {class:"legenda-stat"}, el("span", {class:"punto dest-corso"}), "Corso", el("span", {class:"punto dest-nenni"}), "Piazza Nenni", el("span", {class:"punto dest-altro"}), "Altro"),
+    barre(top.map(function(g){
+      const c = g.per["Corso"] || 0, n = g.per["Piazza Nenni"] || 0, a = g.n - c - n;
+      return { nome: g.nome, n: g.n, sotto: "Corso " + c + " · Piazza Nenni " + n + (a ? " · altro " + a : ""),
+        parti: [{ n: c, cls: "dest-corso" }, { n: n, cls: "dest-nenni" }, { n: a, cls: "dest-altro" }] };
+    }))));
+
+  const rep = {};
+  rr.forEach(function(r){ const k = repartoDi(r); rep[k] = (rep[k] || 0) + 1; });
+  carte.push(cartaStat("Per reparto", null, barre(REPARTI.filter(function(k){ return rep[k]; }).sort(function(a, b){ return rep[b] - rep[a]; }).map(function(k){ return { nome: k, n: rep[k] }; }))));
+
+  const gg = [0,0,0,0,0,0,0], fasce = {};
+  rr.forEach(function(r){
+    const d = new Date(r.creato);
+    gg[(d.getDay() + 6) % 7]++;
+    const f = Math.floor(d.getHours() / 2) * 2; fasce[f] = (fasce[f] || 0) + 1;
+  });
+  const ore = Object.keys(fasce).map(Number).sort(function(a, b){ return a - b; });
+  const fasceVoci = [];
+  if (ore.length) for (let h = ore[0]; h <= ore[ore.length - 1]; h += 2) fasceVoci.push({ nome: "dalle " + h + " alle " + (h + 2), n: fasce[h] || 0 });
+  carte.push(cartaStat("Quando si chiede", "Utile per organizzare il giro.",
+    el("p", {class:"label-sm", text:"Giorni della settimana"}), barre(GIORNI_SETT.map(function(n, i){ return { nome: n, n: gg[i] }; })),
+    el("p", {class:"label-sm", text:"Ore del giorno"}), barre(fasceVoci)));
+
+  const perNeg = DESTINAZIONI.map(function(d){
+    const t = arrivate.filter(function(r){ return r.per === d; }).map(function(r){ return r.consegnatoAlle - r.creato; });
+    return { nome: d, n: t.length ? mediana(t) : 0, testo: t.length ? durata(mediana(t)) : "–", sotto: t.length ? (t.length === 1 ? "1 cosa arrivata" : t.length + " cose arrivate") : "nessuna consegna" };
+  }).filter(function(v){ return v.sotto !== "nessuna consegna" || v.nome !== "Panificio"; });
+  carte.push(cartaStat("Quanto si aspetta, per negozio", "Il tempo tipico tra la richiesta e la consegna.", barre(perNeg)));
+
+  const bisc = {};
+  S.biscotti.forEach(function(b){
+    if (!b.volte) return;
+    const k = chiave(b.nome);
+    if (!bisc[k]) bisc[k] = { nome: b.nome, n: 0, finiti: 0 };
+    bisc[k].n += b.volte; bisc[k].finiti += b.volteFiniti;
+  });
+  const bl = Object.values(bisc).sort(function(a, b){ return b.n - a.n; }).slice(0, 10);
+  carte.push(cartaStat("Biscotti più chiesti", "Conta dal giorno in cui sono partite le statistiche, non dipende dal periodo scelto.",
+    bl.length ? barre(bl.map(function(b){ return { nome: b.nome, n: b.n, sotto: b.finiti ? (b.finiti === 1 ? "1 volta finiti del tutto" : b.finiti + " volte finiti del tutto") : "" }; }))
+      : el("p", {class:"vuoto", text:"Ancora nessun dato sui biscotti."})));
+  const tolte = tutte.length - rr.length;
+  if (tolte) carte.push(el("p", {class:"hint", text:(tolte === 1 ? "1 richiesta tolta" : tolte + " richieste tolte") + " in questo periodo non sono contate."}));
+  riempi(corpo, carte);
+}
+
+/* ---------- scaricare i dati: file che si apre con Excel e si può dare a Claude ---------- */
+const fmtData = new Intl.DateTimeFormat("it-IT", {day:"2-digit", month:"2-digit", year:"numeric"});
+function cella(c){ const s = c == null ? "" : String(c); return /[;"\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
+function scaricaCsv(nome, righe){
+  const testo = "﻿" + righe.map(function(r){ return r.map(cella).join(";"); }).join("\r\n");
+  const blob = new Blob([testo], {type:"text/csv;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = nome;
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+}
+function oggiFile(){ const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+function scaricaRichieste(){
+  if (!S.stat) return;
+  const STATI = {attesa:"In attesa", caricato:"In viaggio", consegnato:"Consegnato"};
+  const righe = [["Data","Ora","Per","Articolo","Quantità","Reparto","Da dove","Ritiro fuori: dove","Ritiro fuori: entro le","Urgente","Stato","Consegnato il","Consegnato alle","Minuti per arrivare","Non c'era in magazzino","Finito al panificio","Chiesto da"]];
+  righeStat().sort(function(a, b){ return a.creato - b.creato; }).forEach(function(r){
+    const cons = r.stato === "consegnato" && r.consegnatoAlle;
+    righe.push([fmtData.format(r.creato), fmtOra.format(r.creato), r.per, r.articolo, r.quantita, repartoDi(r), nomeOrigine(r.da), r.ritiroDove, r.ritiroOra,
+      r.urgente ? "sì" : "no", r.tolta ? "Tolta" : (STATI[r.stato] || r.stato), cons ? fmtData.format(r.consegnatoAlle) : "", cons ? fmtOra.format(r.consegnatoAlle) : "",
+      cons && r.consegnatoAlle > r.creato ? Math.round((r.consegnatoAlle - r.creato) / 60000) : "", r.mancato ? "sì" : "", r.finitoPanif ? "sì" : "",
+      S.nomi[r.autore] || ""]);
+  });
+  scaricaCsv("ordini-richieste-ultimi-" + S.stat.giorni + "-giorni-" + oggiFile() + ".csv", righe);
+}
+function scaricaBiscotti(){
+  const ST = {manca:"Da fare", fatto:"Fatto", tolto:"Tolto"};
+  const righe = [["Negozio","Biscotto","Stato ora","Urgenza ultima richiesta","Volte chiesto","Volte finiti del tutto","Ultima richiesta","Ultimo fatto"]];
+  S.biscotti.slice().sort(function(a, b){ return a.negozio.localeCompare(b.negozio) || a.nome.localeCompare(b.nome, "it"); }).forEach(function(b){
+    righe.push([b.negozio, b.nome, ST[b.stato] || b.stato, b.livello === "finiti" ? "Finiti" : "Pochi pacchi", b.volte, b.volteFiniti,
+      b.segnatoAlle ? fmtData.format(b.segnatoAlle) + " " + fmtOra.format(b.segnatoAlle) : "", b.fattoAlle ? fmtData.format(b.fattoAlle) + " " + fmtOra.format(b.fattoAlle) : ""]);
+  });
+  scaricaCsv("ordini-biscotti-" + oggiFile() + ".csv", righe);
+}
 function renderTutto(){
   const g = fmtOggi.format(new Date());
   $("oggi").textContent = g.charAt(0).toUpperCase() + g.slice(1);
   renderNegozio();
   renderConsegne();
   renderMenu();
+  renderStatistiche();
 }
 
 /* ---------- interfacce ---------- */
@@ -2407,6 +2662,9 @@ function collega(){
     if (b.dataset.acc) return mostraAccesso(b.dataset.acc);
     if (b.id === "esci") return esciSB();
     if (b.dataset.azzera) return azzeraPersona(b.dataset.azzera);
+    if (b.dataset.statGiorni) return caricaStatistiche(Number(b.dataset.statGiorni));
+    if (b.id === "stat-scarica-richieste") return scaricaRichieste();
+    if (b.id === "stat-scarica-biscotti") return scaricaBiscotti();
   });
   $("form-accesso").addEventListener("submit", inviaAccesso);
   $("notifica").addEventListener("click", function(){ $("notifica").classList.remove("vista"); });
