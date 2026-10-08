@@ -150,14 +150,25 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px;back
 .ctrl-voce.fuori{border:2px solid var(--c);background:var(--c-bg);box-shadow:inset 6px 0 0 var(--c);padding-left:16px}
 .ctrl-voce.comprare{--c:var(--ink);--c-ink:var(--bg);--c-bg:var(--surface-2)}
 .ctrl-scelte{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.ctrl-fuori{display:flex;flex-wrap:wrap;gap:8px}
-.ctrl-fuori label{display:flex;flex-direction:column;gap:4px;flex:1 1 140px;min-width:0}
-.ctrl-fuori label.ora{flex:0 1 130px}
-.ctrl-fuori input{width:100%;min-height:42px;padding:0 10px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);font-size:16px}
-.ctrl-fuori input:focus{outline:3px solid var(--accent);outline-offset:1px;border-color:transparent}
+.ctrl-fuori{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px 10px;align-items:end}
+.ctrl-fuori label{display:flex;flex-direction:column;gap:4px;min-width:0}
+.ctrl-fuori label.largo{grid-column:1 / -1}
+.ctrl-fuori .label-sm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ctrl-fuori input,.ctrl-fuori select{-webkit-appearance:none;appearance:none;box-sizing:border-box;width:100%;min-width:0;height:44px;min-height:44px;margin:0;padding:0 10px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font-size:16px;font-weight:700;line-height:normal;text-align:left}
+.ctrl-fuori input[type="time"]::-webkit-date-and-time-value{text-align:left}
+.ctrl-fuori select{padding-right:30px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%2367635A' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;cursor:pointer}
+.ctrl-fuori input:focus,.ctrl-fuori select:focus{outline:3px solid var(--accent);outline-offset:1px;border-color:transparent}
 .ctrl-fuori input[aria-invalid="true"]{border-color:var(--urgent);background:var(--urgent-bg)}
 .pill.origine.ritiro-fuori{background:var(--surface-2);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ink)}
 .pill.p-ora{background:var(--ink);color:var(--bg)}
+/* notifica in alto, come quelle del telefono */
+.notifica{position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 10px);z-index:95;max-width:440px;margin:0 auto;display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:16px;border:1px solid var(--line);background:var(--surface);color:var(--ink);box-shadow:0 12px 32px rgba(0,0,0,.28);cursor:pointer;transform:translateY(calc(-100% - 40px));visibility:hidden;transition:transform .3s ease,visibility 0s linear .3s}
+.notifica.vista{transform:none;visibility:visible;transition:transform .3s ease}
+.notifica-icona{flex:none;width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:var(--urgent);color:var(--urgent-ink)}
+.notifica.ok .notifica-icona{background:var(--done);color:var(--done-ink)}
+.notifica-titolo{font-weight:700;font-size:16px;line-height:1.25}
+.notifica-testo{font-size:14px;line-height:1.35;color:var(--muted);margin-top:2px}
+@media (prefers-reduced-motion: reduce){ .notifica,.notifica.vista{transition:none} }
 .pill.p-coda{background:var(--urgent-bg);color:var(--urgent-txt);box-shadow:inset 0 0 0 1.5px var(--urgent)}
 .coda-avviso{padding:10px 14px;border-radius:var(--r-md);background:var(--urgent-bg);color:var(--urgent-txt);border:1.5px solid var(--urgent);font-size:15px;font-weight:700;line-height:1.35}
 select.prov{width:auto;min-width:0;flex:1 1 150px;min-height:42px;padding:0 8px 0 10px;font-weight:700;font-size:14px;border-radius:10px}
@@ -666,6 +677,10 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
 </div>
 
 <p class="avviso" id="avviso" role="status" aria-live="polite"></p>
+<div class="notifica" id="notifica" role="status" aria-live="assertive">
+  <span class="notifica-icona" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8.8a15 15 0 0 1 20 0"></path><path d="M5 12.6a10 10 0 0 1 14 0"></path><path d="M8.5 16.2a5 5 0 0 1 7 0"></path><circle cx="12" cy="19.6" r="0.9" fill="currentColor"></circle></svg></span>
+  <div><p class="notifica-titolo" id="notifica-titolo"></p><p class="notifica-testo" id="notifica-testo"></p></div>
+</div>
 <div class="conferma-velo" id="controllo" role="dialog" aria-modal="true" aria-labelledby="ctrl-titolo" hidden>
   <div class="riep-box">
     <h2 id="ctrl-titolo">Controlla prima di inviare</h2>
@@ -1068,7 +1083,12 @@ async function aggiungi(voci, comuni){
       da: x.da || "Panificio", urgente: x.urgente === true
     });
     if (x.reparto) voce.reparto = x.reparto;
-    if (voce.da === FUORI){ voce.ritiroDove = String(x.ritiroDove || "").trim().slice(0,60); if (x.ritiroOra) voce.ritiroOra = x.ritiroOra; }
+    if (voce.da === FUORI){
+      voce.ritiroDove = String(x.ritiroDove || "").trim().slice(0,60);
+      if (x.ritiroOra) voce.ritiroOra = x.ritiroOra;
+      /* dopo il ritiro si porta qui (di solito il negozio che l'ha chiesto) */
+      if (DESTINAZIONI.indexOf(x.portaA) >= 0) voce.per = x.portaA;
+    }
     const fatto = await scrivi(function(){ return store.aggiungi(voce); }, true);
     if (!fatto) break;
     ok++;
@@ -1151,11 +1171,15 @@ function renderControllo(){
     }
     let extra = null;
     if (v.da === FUORI){
+      const porta = el("select", {"data-ctrl-porta":String(i), disabled:c.inviando, "aria-label":"Dove va portato " + v.articolo});
+      DESTINAZIONI.forEach(function(d){ porta.append(el("option", {value:d, text:d})); });
+      porta.value = v.portaA || (DESTINAZIONI.indexOf(c.per) >= 0 ? c.per : "Corso");
       extra = el("div", {class:"ctrl-fuori"},
-        el("label", null, el("span", {class:"label-sm", text:"Dove si ritira"}),
+        el("label", {class:"largo"}, el("span", {class:"label-sm", text:"Dove si ritira"}),
           el("input", {type:"text", "data-ctrl-dove":String(i), list:"posti-fuori", maxlength:"60", autocomplete:"off", placeholder:"Es. Macelleria", value:v.ritiroDove || "", disabled:c.inviando, "aria-invalid": c.mancaDove && !String(v.ritiroDove || "").trim() ? "true" : null})),
-        el("label", {class:"ora"}, el("span", {class:"label-sm", text:"Entro le (se serve)"}),
-          el("input", {type:"time", "data-ctrl-ora":String(i), value:v.ritiroOra || "", disabled:c.inviando})));
+        el("label", null, el("span", {class:"label-sm", text:"Entro le"}),
+          el("input", {type:"time", "data-ctrl-ora":String(i), value:v.ritiroOra || "", disabled:c.inviando})),
+        el("label", null, el("span", {class:"label-sm", text:"Poi portalo a"}), porta));
     }
     scelte.append(el("button", {type:"button", class:"urg-mini", "data-ctrl-urg":String(i), "aria-pressed":String(v.urgente), disabled:c.inviando,
       "aria-label":"Urgente: " + v.articolo, text:"Urgente"}));
@@ -1520,7 +1544,7 @@ function pillOrigine(r){
   if (r.da === FUORI) return el("span", {class:"pill origine ritiro-fuori", text:testoFuori(r)});
   return el("span", {class:"pill origine " + classeDest(r.da), text:"Da prendere " + (PREP[r.da] || "a " + r.da)});
 }
-function testoFuori(r){ return "Da ritirare: " + (r.ritiroDove || "fuori") + (r.ritiroOra ? " entro le " + r.ritiroOra : ""); }
+function testoFuori(r){ return "Da ritirare: " + (r.ritiroDove || "fuori") + (r.ritiroOra ? " entro le " + r.ritiroOra : "") + (DESTINAZIONI.indexOf(r.per) >= 0 ? ", poi " + (PREP[r.per] || "a " + r.per) : ""); }
 function origineTesto(r){
   if (r.per === PROMEMORIA || r.da === "Panificio" || r.da === r.per) return null;
   if (r.da === "Da comprare") return nomeOrigine(r.da);
@@ -2348,6 +2372,7 @@ function collega(){
     if (b.dataset.azzera) return azzeraPersona(b.dataset.azzera);
   });
   $("form-accesso").addEventListener("submit", inviaAccesso);
+  $("notifica").addEventListener("click", function(){ $("notifica").classList.remove("vista"); });
   $("codici-box").addEventListener("toggle", function(){ if ($("codici-box").open) mostraCodici(); });
   $("persone-box").addEventListener("toggle", function(){ if ($("persone-box").open){ S.armatoPersona = null; mostraPersone(); } });
   document.addEventListener("change", function(ev){
@@ -2368,6 +2393,7 @@ function collega(){
     const t = ev.target; if (!S.ctrl) return;
     if (t.dataset.ctrlDove){ const v = S.ctrl.voci[Number(t.dataset.ctrlDove)]; if (v){ v.ritiroDove = t.value; if (t.value.trim()) t.removeAttribute("aria-invalid"); } }
     if (t.dataset.ctrlOra){ const v = S.ctrl.voci[Number(t.dataset.ctrlOra)]; if (v) v.ritiroOra = t.value; }
+    if (t.dataset.ctrlPorta){ const v = S.ctrl.voci[Number(t.dataset.ctrlPorta)]; if (v) v.portaA = t.value; }
   });
   $("righe").addEventListener("input", aggiornaForm);
   $("righe-giro").addEventListener("input", aggiornaFormGiro);
@@ -2570,6 +2596,18 @@ function ascoltaSB(){
   S.canale = canale;
 }
 
+/* notifica in alto, come quelle del telefono: si vede subito senza scorrere */
+let timerNotifica = 0;
+function notifica(titolo, testo, tipo){
+  const n = $("notifica");
+  if (!n) return;
+  $("notifica-titolo").textContent = titolo;
+  $("notifica-testo").textContent = testo || "";
+  n.classList.toggle("ok", tipo === "ok");
+  n.classList.add("vista");
+  clearTimeout(timerNotifica);
+  timerNotifica = setTimeout(function(){ n.classList.remove("vista"); }, 6000);
+}
 /* ---------- senza campo: coda delle scritture ----------
    Se manca la rete, quello che si invia resta salvato sul telefono (localStorage)
    e parte da solo appena torna il campo, o la prossima volta che si apre l'app. */
@@ -2600,6 +2638,8 @@ function accoda(op){
     else S.coda[i] = op;
   } else S.coda.push(op);
   salvaCoda();
+  const n = S.coda.length;
+  notifica("Senza campo: salvata sul telefono", (n === 1 ? "1 cosa aspetta" : n + " cose aspettano") + " la rete e parte da sola appena torna il campo.");
   clearTimeout(S.timerCoda);
   S.timerCoda = setTimeout(svuotaCoda, 20000);
 }
@@ -2641,8 +2681,8 @@ async function svuotaCoda(){
   } finally {
     S.svuotando = false;
     if (S.coda.length){ clearTimeout(S.timerCoda); S.timerCoda = setTimeout(svuotaCoda, 20000); }
-    else if (scartate) avviso(scartate === 1 ? "1 cosa salvata senza rete non è stata accettata." : scartate + " cose salvate senza rete non sono state accettate.");
-    else avviso("Tornato il campo: tutto inviato.");
+    else if (scartate) notifica("Tornato il campo", scartate === 1 ? "1 cosa salvata senza rete non è stata accettata." : scartate + " cose salvate senza rete non sono state accettate.");
+    else notifica("Tornato il campo", "Tutto quello che era salvato sul telefono è stato inviato.", "ok");
     emettiSB(true);
   }
 }
@@ -2784,6 +2824,7 @@ async function entraConSessione(sess){
   S.nomi[S.mioId] = S.nomeMio;
   store = storeSB();
   leggiCoda();
+  if (S.coda.length && navigator.onLine === false) notifica("Senza campo", (S.coda.length === 1 ? "1 cosa aspetta" : S.coda.length + " cose aspettano") + " la rete: parte da sola appena torna il campo.");
   $("accesso").hidden = true;
   $("chi-sei-testo").replaceChildren("Sei entrato come ", el("b", { text: S.nomeMio }), " · " + (NOMI_RUOLI[prof[0].ruolo] || ""));
   $("chi-sei").hidden = false;
@@ -2931,7 +2972,11 @@ async function avviaSupabase(){
     if (S.senzaSessione){ location.reload(); return; }
     svuotaCoda(); caricaTuttoSB();
   });
-  window.addEventListener("offline", function(){ if (store) bannerSenzaRete(); });
+  window.addEventListener("offline", function(){
+    if (!store) return;
+    bannerSenzaRete();
+    notifica("Sei senza campo", "Puoi continuare a usare l'app: quello che invii parte da solo appena torna la rete.");
+  });
   attesaAccesso("Un attimo…");
   try {
     if (!window.supabase || !window.supabase.createClient) await caricaScript(SB_LIBRERIA);
