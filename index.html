@@ -98,6 +98,8 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px;back
 
 /* testata: nero e oro del logo, a tutta larghezza */
 .testata{background:var(--nero);border-bottom:2px solid var(--oro);color:#FFFFFF;padding-top:env(safe-area-inset-top,0px)}
+/* striscia scura sotto l'ora e la batteria del telefono: la lista che scorre non ci finisce sotto */
+body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top,0px);background:var(--nero);z-index:30;pointer-events:none}
 .testata-in{max-width:560px;margin:0 auto;display:flex;align-items:center;gap:10px;padding:10px 16px}
 .logo{flex:none;width:44px;height:44px;border-radius:10px;display:block;background:#3E362B url("data:image/jpeg;base64,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") center/cover no-repeat}
 .testata-titolo{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:3px}
@@ -167,6 +169,8 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px;back
 .ctrl-voce .qta{margin-right:0}
 .ctrl-voce.fuori{border:2px solid var(--c);background:var(--c-bg);box-shadow:inset 6px 0 0 var(--c);padding-left:16px}
 .ctrl-voce.comprare{--c:var(--ink);--c-ink:var(--bg);--c-bg:var(--surface-2)}
+.ctrl-gia{background:var(--urgent-bg);color:var(--urgent-txt);border:1px solid var(--urgent)}
+.ctrl-togli{appearance:none;flex:none;min-height:42px;padding:0 12px;border:1.5px solid var(--urgent);border-radius:10px;background:var(--surface);color:var(--urgent-txt);font-weight:700;font-size:15px;cursor:pointer}
 .ctrl-scelte{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .ctrl-quando{display:flex;flex-direction:column;gap:8px;padding:10px 12px;border-radius:var(--r-md);background:var(--surface);border:1.5px solid var(--line)}
 .ctrl-quando .field{flex:none}
@@ -1319,7 +1323,13 @@ function renderControllo(){
   if (!c) return;
   const promem = c.per === PROMEMORIA;
   const opz = originiPer(c.per);
-  const gia = new Set(S.richieste.filter(function(r){ return r.per === c.per && r.stato !== "consegnato"; }).map(function(r){ return chiave(r.articolo); }));
+  /* cose già chieste per lo stesso posto e non ancora arrivate: si avvisa, per non chiederle due volte */
+  const gia = new Map();
+  S.richieste.filter(function(r){ return r.per === c.per && r.stato !== "consegnato"; })
+    .sort(function(a, b){ return a.creato - b.creato; })
+    .forEach(function(r){ const k = chiave(r.articolo); if (!gia.has(k)) gia.set(k, r); });
+  const giaQuando = function(r){ const q = quando(r.creato); return "Già chiesto " + (/^\d/.test(q) ? "alle " + q : q); };
+  const doppie = promem ? [] : c.voci.filter(function(v){ return gia.has(chiave(v.articolo)); });
   const n = c.voci.length;
   $("ctrl-sotto").textContent = promem
     ? (n === 1 ? "1 promemoria per te." : n + " promemoria per te.")
@@ -1327,14 +1337,20 @@ function renderControllo(){
   const altrove = c.voci.filter(function(v){ return v.da !== "Panificio"; }).length;
   const dom = $("ctrl-domanda");
   dom.hidden = promem;
-  dom.className = "ctrl-domanda" + (altrove ? " diverso" : "");
+  dom.className = "ctrl-domanda" + (altrove || doppie.length ? " diverso" : "");
   if (!altrove) dom.textContent = n === 1 ? "Si prende al Panificio. È giusto?" : "Tutto si prende al Panificio. È giusto?";
   else dom.textContent = "Attenzione: " + (altrove === 1 ? "1 cosa non si prende" : altrove + " cose non si prendono") + " al Panificio. Controlla qui sotto.";
+  if (doppie.length){
+    const nomi = doppie.map(function(v){ return v.articolo; });
+    const elencoNomi = nomi.length === 1 ? nomi[0] : nomi.slice(0, -1).join(", ") + " e " + nomi[nomi.length - 1];
+    dom.textContent = "Attenzione: " + elencoNomi + (doppie.length === 1 ? " è già stato chiesto e non è ancora arrivato." : " sono già stati chiesti e non sono ancora arrivati.") +
+      " Se non serve di nuovo, tocca «Non serve»." + (altrove ? " Controlla anche da dove si prende." : "");
+  }
   riempi($("ctrl-lista"), c.voci.map(function(v, i){
     const fuori = v.da !== "Panificio";
     const cls = fuori ? ((v.da === "Da comprare" || v.da === FUORI) ? " fuori comprare" : " fuori " + classeDest(v.da)) : "";
     const testa = el("p", {class:"articolo"}, v.quantita ? el("span", {class:"qta", text:v.quantita}) : null, v.articolo,
-      gia.has(chiave(v.articolo)) ? el("span", {class:"pill p-attesa ctrl-gia", text:"Già chiesto"}) : null);
+      (!promem && gia.has(chiave(v.articolo))) ? el("span", {class:"pill ctrl-gia", text:giaQuando(gia.get(chiave(v.articolo)))}) : null);
     const scelte = el("div", {class:"ctrl-scelte"});
     if (!promem){
       const sel = el("select", {class:"prov", "data-ctrl-da":String(i), "aria-label":"Da dove si prende " + v.articolo, disabled:c.inviando});
@@ -1356,6 +1372,8 @@ function renderControllo(){
     }
     scelte.append(el("button", {type:"button", class:"urg-mini", "data-ctrl-urg":String(i), "aria-pressed":String(v.urgente), disabled:c.inviando,
       "aria-label":"Urgente: " + v.articolo, text:"Urgente"}));
+    if (!promem && gia.has(chiave(v.articolo))) scelte.append(el("button", {type:"button", class:"ctrl-togli", "data-ctrl-togli":String(i), disabled:c.inviando,
+      "aria-label":"Non serve di nuovo: togli " + v.articolo, text:"Non serve"}));
     if (!v.conNota) scelte.append(el("button", {type:"button", class:"link", "data-ctrl-nota-apri":String(i), disabled:c.inviando, "aria-label":"Aggiungi una nota a " + v.articolo, text:"+ Nota"}));
     const nota = v.conNota ? el("label", {class:"ctrl-nota"}, el("span", {class:"label-sm", text:"Nota per chi prepara"}),
       el("input", {type:"text", "data-ctrl-nota":String(i), maxlength:"140", autocomplete:"off", placeholder:"Es. quelle del frigo grande", value:v.nota || "", disabled:c.inviando})) : null;
@@ -3022,6 +3040,22 @@ function collega(){
     if (b.id === "riep-indietro") return chiudiRiepilogo(false);
     if (b.id === "ctrl-indietro"){ chiudiControllo(); const t = S.vista === "consegne" ? $("righe-giro") : $("righe"); if (t) t.focus(); return; }
     if (b.id === "ctrl-invia") return confermaControllo();
+    if (b.dataset.ctrlTogli && S.ctrl && !S.ctrl.inviando){
+      const c = S.ctrl;
+      c.voci.splice(Number(b.dataset.ctrlTogli), 1);
+      if (!c.voci.length){
+        const giro = c.dove === "giro";
+        chiudiControllo();
+        $(giro ? "righe-giro" : "righe").value = "";
+        esito(giro ? "esito-giro" : "esito", "Niente di nuovo da inviare: era già stato chiesto.");
+        renderTutto();
+        return;
+      }
+      renderControllo();
+      const nb = document.querySelector("[data-ctrl-togli]") || $("ctrl-invia");
+      if (nb) nb.focus();
+      return;
+    }
     if (b.dataset.ctrlUrg && S.ctrl){
       const v = S.ctrl.voci[Number(b.dataset.ctrlUrg)];
       if (v){ v.urgente = !v.urgente; renderControllo(); const nb = document.querySelector('[data-ctrl-urg="' + b.dataset.ctrlUrg + '"]'); if (nb) nb.focus(); }
