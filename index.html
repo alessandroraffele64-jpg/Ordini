@@ -41,6 +41,7 @@
   --done-bg:#E3EAF2;
   --prep:#5B3F8C; --prep-bg:#ECE6F5;
   --ferma:#8A4B00; --ferma-bg:#FDEBCC; --ferma-bordo:#C77700;
+  --nuova:#0B5A8C; --nuova-bg:#DDEFFC; --nuova-bordo:#3C8DD0;
   --pronto:#0B5563; --pronto-bg:#DDF1F4; --pronto-solid:#0B7285; --pronto-solid-ink:#FFFFFF;
   --corso:#7A4A24; --corso-ink:#FFFFFF; --corso-bg:#F3E8DD; --corso-txt:#7A4A24;
   --nenni:#1E5B36; --nenni-ink:#FFFFFF; --nenni-bg:#E1EFE5; --nenni-txt:#1E5B36;
@@ -58,7 +59,7 @@
     --urgent:#F08074; --urgent-txt:#F5A097; --urgent-bg:#3B1E1B; --urgent-ink:#2A0D0A;
     --done:#8FB4DE; --done-ink:#0E1A2A; --done-bg:#1C2736;
     --prep:#C3AEEA; --prep-bg:#2A2140;
-    --ferma:#F5BC6A; --ferma-bg:#3A2A12; --ferma-bordo:#D99A3D; --pronto:#7DD3DF; --pronto-bg:#12343A; --pronto-solid:#5CC4D2; --pronto-solid-ink:#062328;
+    --ferma:#F5BC6A; --ferma-bg:#3A2A12; --ferma-bordo:#D99A3D; --nuova:#8CC8F5; --nuova-bg:#123248; --nuova-bordo:#4D9BD6; --pronto:#7DD3DF; --pronto-bg:#12343A; --pronto-solid:#5CC4D2; --pronto-solid-ink:#062328;
     --corso:#C9925F; --corso-ink:#1F1206; --corso-bg:#33241A; --corso-txt:#D9A574;
     --nenni:#5DB884; --nenni-ink:#06200F; --nenni-bg:#15301F; --nenni-txt:#6FC995;
     --panif:#F2C640; --panif-ink:#241B00; --panif-bg:#362C0D; --panif-txt:#F2C640;
@@ -72,7 +73,7 @@
   --urgent:#F08074; --urgent-txt:#F5A097; --urgent-bg:#3B1E1B; --urgent-ink:#2A0D0A;
   --done:#8FB4DE; --done-ink:#0E1A2A; --done-bg:#1C2736;
   --prep:#C3AEEA; --prep-bg:#2A2140;
-  --ferma:#F5BC6A; --ferma-bg:#3A2A12; --ferma-bordo:#D99A3D; --pronto:#7DD3DF; --pronto-bg:#12343A; --pronto-solid:#5CC4D2; --pronto-solid-ink:#062328;
+  --ferma:#F5BC6A; --ferma-bg:#3A2A12; --ferma-bordo:#D99A3D; --nuova:#8CC8F5; --nuova-bg:#123248; --nuova-bordo:#4D9BD6; --pronto:#7DD3DF; --pronto-bg:#12343A; --pronto-solid:#5CC4D2; --pronto-solid-ink:#062328;
   --corso:#C9925F; --corso-ink:#1F1206; --corso-bg:#33241A; --corso-txt:#D9A574;
   --nenni:#5DB884; --nenni-ink:#06200F; --nenni-bg:#15301F; --nenni-txt:#6FC995;
   --panif:#F2C640; --panif-ink:#241B00; --panif-bg:#362C0D; --panif-txt:#F2C640;
@@ -194,8 +195,16 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px;back
 .notifica-icona{flex:none;width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:var(--urgent);color:var(--urgent-ink)}
 .notifica.ok .notifica-icona{background:var(--done);color:var(--done-ink)}
 .notifica-titolo{font-weight:700;font-size:16px;line-height:1.25}
+.notifica-azioni{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.notifica-azioni:empty{display:none}
+.notifica-azioni li{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:14.5px;font-weight:700}
+.notifica-azioni .mini{min-height:36px;flex:none}
 .notifica-testo{font-size:14px;line-height:1.35;color:var(--muted);margin-top:2px}
 @media (prefers-reduced-motion: reduce){ .notifica,.notifica.vista{transition:none} }
+.riga.nuova{background:linear-gradient(100deg,var(--nuova-bg) 0%,color-mix(in srgb,var(--nuova-bg) 35%,var(--surface)) 100%);box-shadow:inset 4px 0 0 var(--nuova-bordo)}
+.gruppo.nuove{border:1.5px solid var(--nuova-bordo)}
+.gruppo.nuove .gruppo-head{background:linear-gradient(100deg,var(--nuova-bg) 0%,var(--surface) 90%)}
+.gruppo.nuove h3,.gruppo.nuove .gh-per{color:var(--nuova)}
 .pill.p-ferma{background:var(--ferma-bg);color:var(--ferma);box-shadow:inset 0 0 0 1.5px var(--ferma-bordo)}
 .gruppo.ferme{border:1.5px solid var(--ferma-bordo)}
 .gruppo.ferme .gruppo-head{background:linear-gradient(100deg,var(--ferma-bg) 0%,var(--surface) 90%)}
@@ -519,6 +528,7 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
       <h2>Cosa serve ai negozi</h2>
       <p class="hint">Tutto quello che i negozi hanno chiesto. Il colore dice per quale negozio è.</p>
       <div class="legenda" id="legenda-panif" aria-label="Richieste aperte per negozio"></div>
+      <div class="blocco" id="gruppi-nuove-panif"></div>
       <div class="blocco">
         <p class="label-sm">Panificazione</p>
         <p class="hint">Pane, pitte e prodotti da forno. Segna a che punto sei: chi fa il giro e il negozio lo vedono subito.</p>
@@ -559,6 +569,17 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
     </div>
 
     <!-- Biscotti: sezione a parte, non va nel giro delle consegne -->
+    <!-- Notifiche su questo telefono: scelte dal menu -->
+    <div class="view" id="pannello-notifiche" hidden>
+      <section class="card" id="notifiche-box">
+        <h3 class="comanda-titolo">Notifiche su questo telefono</h3>
+        <p class="hint" id="notif-stato"></p>
+        <button type="button" class="primary" id="notif-attiva" hidden>Attiva le notifiche</button>
+        <ul class="notif-scelte" id="notif-scelte"></ul>
+        <button type="button" class="link" id="notif-spegni" hidden>Spegni le notifiche su questo telefono</button>
+      </section>
+    </div>
+
     <!-- Prenotazioni dei clienti: separate dalle consegne -->
     <div class="view" id="pannello-prenotazioni" hidden>
       <button type="button" class="primary" id="pren-nuova">+ Nuova prenotazione</button>
@@ -753,16 +774,6 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
     </div>
   </details>
 
-  <!-- Sito: notifiche su questo telefono -->
-  <details class="card" id="notifiche-box" hidden>
-    <summary>Notifiche su questo telefono</summary>
-    <div class="blocco">
-      <p class="hint" id="notif-stato"></p>
-      <button type="button" class="primary" id="notif-attiva" hidden>Attiva le notifiche</button>
-      <ul class="notif-scelte" id="notif-scelte"></ul>
-      <button type="button" class="link" id="notif-spegni" hidden>Spegni le notifiche su questo telefono</button>
-    </div>
-  </details>
 
   <p class="chi-sei" id="chi-sei" hidden><span id="chi-sei-testo"></span><button type="button" class="link" id="esci">Esci</button></p>
 </main>
@@ -794,7 +805,7 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
 <p class="avviso" id="avviso" role="status" aria-live="polite"></p>
 <div class="notifica" id="notifica" role="status" aria-live="assertive">
   <span class="notifica-icona" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8.8a15 15 0 0 1 20 0"></path><path d="M5 12.6a10 10 0 0 1 14 0"></path><path d="M8.5 16.2a5 5 0 0 1 7 0"></path><circle cx="12" cy="19.6" r="0.9" fill="currentColor"></circle></svg></span>
-  <div><p class="notifica-titolo" id="notifica-titolo"></p><p class="notifica-testo" id="notifica-testo"></p></div>
+  <div><p class="notifica-titolo" id="notifica-titolo"></p><p class="notifica-testo" id="notifica-testo"></p><ul class="notifica-azioni" id="notifica-azioni"></ul></div>
 </div>
 <div class="conferma-velo" id="controllo" role="dialog" aria-modal="true" aria-labelledby="ctrl-titolo" hidden>
   <div class="riep-box">
@@ -1043,6 +1054,25 @@ function testoGiorno(s){
   if (s === domaniStr()) return "domani";
   return fmtGiornoLungo.format(msDelGiorno(s));
 }
+/* cose appena arrivate (da altri): azzurre e in cima per 20 secondi, poi vanno al loro posto */
+const SECONDI_NUOVE = 20;
+S.visti = new Set(); S.nuove = new Map(); S.vistiPronti = false;
+function segnaNuove(richieste, pren){
+  const ora = Date.now();
+  richieste.concat(pren).forEach(function(r){
+    if (S.visti.has(r.id)) return;
+    S.visti.add(r.id);
+    if (S.vistiPronti && !r.mio) S.nuove.set(r.id, ora);
+  });
+  if (S.pronto) S.vistiPronti = true;
+  let prossima = 0;
+  S.nuove.forEach(function(t, id){ if (ora - t >= SECONDI_NUOVE * 1000) S.nuove.delete(id); else prossima = Math.max(prossima, t); });
+  richieste.concat(pren).forEach(function(r){ r.nuova = S.nuove.has(r.id); });
+  if (S.nuove.size){
+    clearTimeout(S.timerNuove);
+    S.timerNuove = setTimeout(function(){ ricomponi(); renderTutto(); }, Math.max(500, prossima + SECONDI_NUOVE * 1000 - ora + 200));
+  }
+}
 function ricomponi(){
   const out = [], tolte = [], programmate = [], pren = [];
   const domani = domaniStr();
@@ -1063,6 +1093,7 @@ function ricomponi(){
   S.richieste = out;
   S.tolte = tolte;
   S.prenotazioni = pren;
+  segnaNuove(out, pren);
   S.programmate = programmate.sort(function(a, b){ return a.perIl.localeCompare(b.perIl) || a.creato - b.creato; });
 }
 const SETTE_GIORNI = 7 * 86400000;
@@ -2074,7 +2105,8 @@ function renderBiscPanificio(){
   $("vuoto-crono-fatti").hidden = fatti.length > 0;
 }
 function mostraSez(sez){
-  S.sez = sez === "biscotti" || sez === "statistiche" || sez === "prenotazioni" ? sez : "richieste";
+  S.sez = ["biscotti","statistiche","prenotazioni","notifiche"].indexOf(sez) >= 0 ? sez : "richieste";
+  $("pannello-notifiche").hidden = S.sez !== "notifiche";
   $("pannello-prenotazioni").hidden = S.sez !== "prenotazioni";
   $("pannello-richieste").hidden = S.sez !== "richieste";
   $("pannello-biscotti").hidden = S.sez !== "biscotti";
@@ -2084,13 +2116,17 @@ function mostraSez(sez){
 /* ---------- menu con le tre lineette ---------- */
 function vociMenu(){
   const nPren = S.prenotazioni.filter(function(p){ return p.stato !== "ritirata" && p.perIl <= domaniStr(); }).length;
-  if (S.ruolo.tipo === "giro") return [{ id:"prenotazioni", nome:"Prenotazioni", n:nPren }];
+  const notif = notificheDisponibili() ? [{ id:"notifiche", nome:"Notifiche", n:null }] : [];
+  if (S.ruolo.tipo === "giro") return [{ id:"prenotazioni", nome:"Prenotazioni", n:nPren }].concat(notif);
   const panif = S.punto === "Panificio";
   const nBisc = panif ? biscDaFare().length : S.biscotti.filter(function(b){ return b.stato === "manca" && b.negozio === S.punto; }).length;
   const voci = [{ id:"prenotazioni", nome:"Prenotazioni", n:nPren }, { id:"biscotti", nome:"Biscotti", n:nBisc }];
   if (puoStat()) voci.push({ id:"statistiche", nome:"Statistiche", n:null });
+  voci.push.apply(voci, notif);
   return voci;
 }
+function inNotif(){ return S.vista === "negozio" && S.sez === "notifiche"; }
+function inSezioneExtra(){ return S.vista === "negozio" && S.sez !== "richieste"; }
 function inBiscotti(){ return S.vista === "negozio" && S.sez === "biscotti"; }
 function sezioneAttuale(){ return S.vista === "consegne" ? "giro" : S.sez; }
 function nomeSezione(id){
@@ -2099,7 +2135,7 @@ function nomeSezione(id){
   return S.punto === "Panificio" ? "Ordini dei negozi" : "Richieste";
 }
 function renderMenu(){
-  const bisc = inBiscotti() || inStat() || inPren();
+  const bisc = inSezioneExtra();
   riempi($("menu-voci"), vociMenu().map(function(v){
     const badge = v.n === null ? null : el("span", {class:"badge", "data-zero": v.n ? null : "", text:String(v.n)});
     return el("li", null, el("button", {type:"button", class:"menu-voce", "data-vai":v.id, "aria-current": (v.id === S.sez && bisc) ? "page" : null}, el("span", {text:v.nome}), badge));
@@ -2109,7 +2145,7 @@ function renderMenu(){
   $("apri-menu").hidden = bisc;
   $("torna").hidden = !bisc;
   $("switch-viste").hidden = t !== "titolare" || bisc;
-  $("punti").hidden = t !== "titolare" || inStat() || inPren();
+  $("punti").hidden = t !== "titolare" || inStat() || inPren() || inNotif();
   $("link-personale").hidden = t !== "titolare" || bisc;
   $("codici-box").hidden = !S.sito || !S.owner || t !== "titolare" || bisc;
   $("persone-box").hidden = !S.sito || !S.owner || t !== "titolare" || bisc;
@@ -2122,7 +2158,9 @@ function renderTestata(){
   const t = S.ruolo.tipo, bisc = inBiscotti(), giro = S.vista === "consegne", stat = inStat(), pren = inPren();
   const panif = S.punto === "Panificio";
   let sopra, titolo, info;
-  if (pren){
+  if (inNotif()){
+    sopra = "Su questo telefono"; titolo = "Notifiche"; info = "";
+  } else if (pren){
     sopra = "Prenotazioni dei clienti"; titolo = "Prenotazioni";
     info = contaTesto(S.prenotazioni.filter(function(p){ return p.stato === "attesa" && p.perIl >= oggiStr(); }).length, "da preparare", "da preparare");
   } else if (stat){
@@ -2144,11 +2182,11 @@ function renderTestata(){
       : S.richieste.filter(function(r){ return r.per === S.punto && r.stato !== "consegnato"; }).length;
     info = panif ? contaTesto(n, "richiesta aperta", "richieste aperte") : contaTesto(n, "in arrivo", "in arrivo");
   }
-  $("fascia").className = "fascia " + (giro || stat || (pren && t === "giro") ? "giro" : classeDest(S.punto));
+  $("fascia").className = "fascia " + (giro || stat || ((pren || inNotif()) && t === "giro") ? "giro" : classeDest(S.punto));
   $("eyebrow").textContent = sopra;
   $("titolo").textContent = titolo;
   $("fascia-info").textContent = info;
-  $("app-nome").textContent = bisc ? "Biscotti" : (stat ? "Statistiche" : (pren ? "Prenotazioni" : "Rifornimenti"));
+  $("app-nome").textContent = bisc ? "Biscotti" : (stat ? "Statistiche" : (pren ? "Prenotazioni" : (inNotif() ? "Notifiche" : "Rifornimenti")));
 }
 function apriMenu(){
   $("menu").hidden = false; $("menu-velo").hidden = false;
@@ -2172,11 +2210,12 @@ function vaiSezione(id, forza){
     return;
   }
   chiudiMenu();
-  if (id === "biscotti" || id === "prenotazioni" || (id === "statistiche" && puoStat())){
-    if (!inBiscotti() && !inStat() && !inPren()) S.vistaPrima = S.vista;
+  if (id === "biscotti" || id === "prenotazioni" || id === "notifiche" || (id === "statistiche" && puoStat())){
+    if (!inSezioneExtra()) S.vistaPrima = S.vista;
     mostraVista("negozio");
     mostraSez(id);
     if (id === "statistiche") caricaStatistiche();
+    if (id === "notifiche") renderNotifiche();
   } else {
     mostraSez("richieste");
     mostraVista(S.ruolo.tipo === "titolare" ? (S.vistaPrima || S.vistaTitolare) : (S.ruolo.tipo === "giro" ? "consegne" : "negozio"));
@@ -2184,7 +2223,7 @@ function vaiSezione(id, forza){
   }
   renderTutto();
   try { window.scrollTo(0, 0); } catch(e){}
-  const f = id === "biscotti" || id === "statistiche" || id === "prenotazioni" ? $("torna") : $("apri-menu");
+  const f = id !== "richieste" ? $("torna") : $("apri-menu");
   if (f && !f.hidden) f.focus();
 }
 
@@ -2201,7 +2240,11 @@ function legendaNegozi(lista){
   return out;
 }
 function renderPanificio(){
-  const aperte = S.richieste.filter(function(r){ return perIlPanificio(r) && r.stato === "attesa"; });
+  const tutteAperte = S.richieste.filter(function(r){ return perIlPanificio(r) && r.stato === "attesa"; });
+  const nuoveP = tutteAperte.filter(function(r){ return r.nuova; });
+  riempi($("gruppi-nuove-panif"), nuoveP.length ? [el("section", {class:"gruppo nuove", "aria-label":"Appena arrivate"}, testaGruppo("Adesso", "Appena arrivate", nuoveP.length),
+    el("ul", {class:"lista"}, ...nuoveP.map(function(r){ return isPanificazione(r) ? rigaPanificio(r) : rigaMagazzino(r); })))] : []);
+  const aperte = tutteAperte.filter(function(r){ return !r.nuova; });
   const forno = aperte.filter(isPanificazione);
   const magazzino = aperte.filter(function(r){ return !isPanificazione(r); });
   const caricate = S.richieste.filter(function(r){ return perIlPanificio(r) && r.stato === "caricato"; }).length;
@@ -2285,7 +2328,7 @@ function rigaCarico(r, conSposta, conAzioni, conDove, conOra){
     REPARTI.forEach(function(n){ if (n !== attuale) sel.append(el("option", {value:n, text:n})); });
     parti.push(sel);
   }
-  const li = el("li", {class:"riga " + classeDest(r.per) + (r.urgente ? " urgente" : "") + (nonDisponibile(r) ? " e-finito" : "")}, sigla(r.per), el("div", {class:"riga-main"}, testoArticolo(r), meta(parti)));
+  const li = el("li", {class:"riga " + classeDest(r.per) + (r.urgente ? " urgente" : "") + (nonDisponibile(r) ? " e-finito" : "") + (r.nuova ? " nuova" : "")}, sigla(r.per), el("div", {class:"riga-main"}, testoArticolo(r), meta(parti)));
   const az = conAzioni === false ? null : azioniGiro(r);
   if (az) li.append(az);
   return li;
@@ -2300,7 +2343,7 @@ function rigaPanificio(r){
     REPARTI.forEach(function(n){ if (n !== attuale) sel.append(el("option", {value:n, text:n})); });
     parti.push(sel);
   }
-  const li = el("li", {class:"riga riga-panif " + classeDest(r.per) + (nonDisponibile(r) ? " e-finito" : "")},
+  const li = el("li", {class:"riga riga-panif " + classeDest(r.per) + (nonDisponibile(r) ? " e-finito" : "") + (r.nuova ? " nuova" : "")},
     sigla(r.per), el("div", {class:"riga-main"}, testoArticolo(r), meta(parti)));
   if (!S.sola && store){
     const off = S.pending.has(r.id);
@@ -2336,7 +2379,7 @@ function rigaMagazzino(r){
     REPARTI.forEach(function(n){ if (n !== attuale) sel.append(el("option", {value:n, text:n})); });
     parti.push(sel);
   }
-  const li = el("li", {class:"riga " + classeDest(r.per) + (nonDisponibile(r) ? " e-finito" : "")},
+  const li = el("li", {class:"riga " + classeDest(r.per) + (nonDisponibile(r) ? " e-finito" : "") + (r.nuova ? " nuova" : "")},
     sigla(r.per), el("div", {class:"riga-main"}, testoArticolo(r), meta(parti)));
   if (!S.sola && store) li.append(el("div", {class:"azioni"}, bottoneManca(r)));
   return li;
@@ -2350,7 +2393,7 @@ function rigaGiro(r){
     ? el("span", {class:"pill p-caricato", text:"Caricata"})
     : (pillPrep(r) || el("span", {class:"pill p-attesa", text:"Da caricare"})));
   const ritiro = pillOrigine(r);
-  const li = el("li", {class: "riga" + (r.urgente ? " urgente" : "") + (r.stato === "caricato" ? " e-caricato" : "") + (nonDisponibile(r) && r.stato === "attesa" ? " e-finito" : "")},
+  const li = el("li", {class: "riga" + (r.nuova ? " nuova" : "") + (r.urgente ? " urgente" : "") + (r.stato === "caricato" ? " e-caricato" : "") + (nonDisponibile(r) && r.stato === "attesa" ? " e-finito" : "")},
     el("div", {class:"riga-main"}, testoArticolo(r),
       meta([pillUrgente(r), statoPill, ritiro || (promem ? null : repartoDi(r)), "chiesto " + quando(r.creato), tag(r, "giro"), bottoneChi(r)])));
   const az = azioniGiro(r);
@@ -2382,8 +2425,9 @@ function gruppoCarico(r){
 }
 function gruppiCarico(aperte){
   const per = new Map();
-  const urgenti = [], ferme = [];
+  const urgenti = [], ferme = [], nuove = [];
   aperte.filter(function(r){ return r.stato === "attesa"; }).forEach(function(r){
+    if (r.nuova){ nuove.push(r); return; }
     if (r.urgente){ urgenti.push(r); return; }
     if (infoFerma(r)){ ferme.push(r); return; }
     const g = gruppoCarico(r);
@@ -2395,6 +2439,11 @@ function gruppiCarico(aperte){
   const fuori = Array.from(per.keys()).filter(function(k){ return k.indexOf("Fuori ") === 0; })
     .sort(function(a, b){ return oraMin(a).localeCompare(oraMin(b)) || a.localeCompare(b, "it"); });
   const out = [];
+  /* appena arrivate: azzurre, in cima per qualche secondo */
+  if (nuove.length){
+    out.push(el("section", {class:"gruppo nuove", "aria-label":"Appena arrivate"}, testaGruppo("Adesso", "Appena arrivate", nuove.length),
+      el("ul", {class:"lista"}, ...nuove.map(function(r){ return rigaCarico(r, false, true, true); }))));
+  }
   /* le cose urgenti stanno in cima, fuori dai reparti: ogni riga dice dove si trova */
   if (urgenti.length){
     urgenti.sort(ordinaCarico);
@@ -2556,7 +2605,7 @@ function rigaPren(p){
       azioni.append(el("button", {type:"button", class: armato ? "link pericolo" : "link", "data-pren-togli":p.id, disabled:off, text: armato ? "Conferma: togli" : "Togli"}));
     }
   }
-  return el("li", {class:"riga pren " + classeDest(p.ritiro) + (p.stato === "ritirata" ? " e-caricato" : "")},
+  return el("li", {class:"riga pren " + classeDest(p.ritiro) + (p.stato === "ritirata" ? " e-caricato" : "") + (p.nuova ? " nuova" : "")},
     sigla(p.ritiro),
     el("div", {class:"riga-main"},
       el("p", {class:"articolo"}, p.cliente ? el("span", {text:p.cliente + ": "}) : null, voci),
@@ -3229,6 +3278,7 @@ function caricaTuttoSB(){
     if (S.bannerRete) { banner(""); S.bannerRete = false; }
     emettiSB(true);
     if (S.coda.length) svuotaCoda();
+    if (S.daRiepilogare){ S.daRiepilogare = false; riepilogoArrivi(); }
   }).catch(function(){
     S.pronto = true;
     if (!S.ultimoCarico && !S.fotoQuando){ S.fotoQuando = caricaFoto() || 0; riapplicaCoda(); emettiSB(true); }
@@ -3333,14 +3383,9 @@ async function iscrizioneAttuale(){
 }
 async function renderNotifiche(){
   const box = $("notifiche-box");
-  if (!box) return;
-  box.hidden = !notificheDisponibili() || !store;
-  if (box.hidden) return;
+  if (!box || !notificheDisponibili() || !store) return;
   const stato = $("notif-stato"), btn = $("notif-attiva"), scelte = $("notif-scelte"), spegni = $("notif-spegni");
   btn.hidden = true; spegni.hidden = true; riempi(scelte, []);
-  /* la prima volta il riquadro si apre da solo, così si nota */
-  const sub0 = suIphoneSenzaHome() ? null : await iscrizioneAttuale();
-  if (!sub0 && !S.notifAperta){ box.open = true; S.notifAperta = true; }
   if (suIphoneSenzaHome()){
     stato.textContent = "Sull'iPhone le notifiche funzionano solo dall'icona sulla schermata Home: in Safari tocca Condividi → Aggiungi alla schermata Home, apri l'app da lì e torna qui.";
     return;
@@ -3426,16 +3471,53 @@ async function caricaPreferenzeNotifiche(){
 
 /* notifica in alto, come quelle del telefono: si vede subito senza scorrere */
 let timerNotifica = 0;
-function notifica(titolo, testo, tipo){
+function notifica(titolo, testo, tipo, azioni){
   const n = $("notifica");
   if (!n) return;
   $("notifica-titolo").textContent = titolo;
   $("notifica-testo").textContent = testo || "";
+  /* azioni: [{testo, vai}] — un pulsante "Apri" per ogni sezione */
+  riempi($("notifica-azioni"), (azioni || []).map(function(a){
+    return el("li", null, el("span", {text:a.testo}), el("button", {type:"button", class:"mini", "data-vai":a.vai, text:"Apri"}));
+  }));
   n.classList.toggle("ok", tipo === "ok");
   n.classList.add("vista");
   clearTimeout(timerNotifica);
-  timerNotifica = setTimeout(function(){ n.classList.remove("vista"); }, 6000);
+  timerNotifica = setTimeout(function(){ n.classList.remove("vista"); }, azioni && azioni.length ? 15000 : 6000);
 }
+/* all'apertura dell'app: cosa è arrivato mentre eri via, con "Apri" per andare alla sezione */
+function chiaveVisita(){ return "pdp-visita-" + (S.mioId || "x"); }
+function riepilogoArrivi(){
+  if (!S.mioId || !S.pronto) return;
+  let ultima = 0;
+  try { ultima = Number(localStorage.getItem(chiaveVisita())) || 0; } catch(e){}
+  segnaVisita();
+  if (!ultima) return;
+  const ruolo = S.ruoloSito || (S.ruolo.tipo === "giro" ? "consegne" : (S.ruolo.tipo === "titolare" ? "titolare" : ""));
+  const negozio = { "corso":"Corso", "piazza-nenni":"Piazza Nenni", "panificio":"Panificio" }[ruolo] || "";
+  const azioni = [];
+  const conta = function(n, una, tante){ return n === 1 ? "1 " + una : n + " " + tante; };
+  const nuoveR = S.richieste.filter(function(r){ return !r.mio && r.creato > ultima && r.per !== PROMEMORIA && r.stato !== "consegnato"; });
+  if (ruolo === "consegne" || ruolo === "titolare"){
+    const n = nuoveR.length;
+    if (n) azioni.push({ testo: conta(n, "nuova richiesta", "nuove richieste") + (nuoveR.some(function(r){ return r.urgente; }) ? " (anche urgenti)" : ""), vai: "richieste" });
+  } else if (ruolo === "panificio"){
+    const n = nuoveR.filter(perIlPanificio).length;
+    if (n) azioni.push({ testo: conta(n, "nuova richiesta dai negozi", "nuove richieste dai negozi"), vai: "richieste" });
+  } else if (negozio){
+    const manca = S.richieste.filter(function(r){ const st = S.stati[r.id] || {}; return r.per === negozio && r.prep === "manca" && Number(st.prepAlle) > ultima; }).length;
+    if (manca) azioni.push({ testo: conta(manca, "cosa non c'è in magazzino", "cose non ci sono in magazzino"), vai: "richieste" });
+  }
+  if (ruolo === "panificio" || ruolo === "titolare"){
+    const b = S.biscotti.filter(function(x){ return x.stato === "manca" && x.segnatoAlle > ultima && x.segnatoDa !== S.mioId; }).length;
+    if (b) azioni.push({ testo: conta(b, "nuovo biscotto da fare", "nuovi biscotti da fare"), vai: "biscotti" });
+  }
+  const p = S.prenotazioni.filter(function(x){ return !x.mio && x.creato > ultima && x.stato !== "ritirata" &&
+    (ruolo === "panificio" || ruolo === "titolare" || ruolo === "consegne" || x.ritiro === negozio); }).length;
+  if (p) azioni.push({ testo: conta(p, "nuova prenotazione", "nuove prenotazioni"), vai: "prenotazioni" });
+  if (azioni.length) notifica("Mentre eri via", "", null, azioni);
+}
+function segnaVisita(){ try { if (S.mioId) localStorage.setItem(chiaveVisita(), String(Date.now())); } catch(e){} }
 /* ---------- senza campo: coda delle scritture ----------
    Se manca la rete, quello che si invia resta salvato sul telefono (localStorage)
    e parte da solo appena torna il campo, o la prossima volta che si apre l'app. */
@@ -3665,6 +3747,7 @@ async function entraConSessione(sess){
   applicaRuolo();
   ascoltaSB();
   caricaPreferenzeNotifiche();
+  S.daRiepilogare = true;
   await caricaTuttoSB();
   return true;
 }
@@ -3824,7 +3907,8 @@ async function avviaSupabase(){
   sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, autoRefreshToken: true, storageKey: "pdp-ordini-accesso" } });
   try { sb.auth.onAuthStateChange(function(_e, sess){ if (sess && sess.access_token) S.token = sess.access_token; }); } catch(e){}
   document.addEventListener("visibilitychange", function(){
-    if (document.visibilityState === "visible" && store) caricaTuttoSB();
+    if (document.visibilityState === "visible" && store){ S.daRiepilogare = true; caricaTuttoSB(); }
+    if (document.visibilityState === "hidden") segnaVisita();
   });
   try {
     const r = await sb.auth.getSession();
