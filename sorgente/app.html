@@ -3387,8 +3387,9 @@ async function renderNotifiche(){
     return;
   }
   const sub = await iscrizioneAttuale();
+  $("notif-prova").hidden = false;
   if (!sub){
-    stato.textContent = "Ricevi un avviso sul telefono anche con l'app chiusa.";
+    stato.textContent = "Su questo telefono le notifiche non sono ancora attive. Tocca il pulsante qui sotto: il telefono ti chiederà il permesso.";
     btn.hidden = false; btn.disabled = !!S.attivandoNotifiche;
     btn.textContent = S.attivandoNotifiche ? "Attivo…" : "Attiva le notifiche";
     return;
