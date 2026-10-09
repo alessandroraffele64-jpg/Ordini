@@ -40,14 +40,19 @@ self.addEventListener("fetch", function(e){
 self.addEventListener("push", function(e){
   let d = {};
   try { d = e.data ? e.data.json() : {}; } catch(x){ d = { titolo: "Ordini", testo: e.data ? e.data.text() : "" }; }
+  const vai = /^[a-z]+$/.test(d.vai || "") ? d.vai : "richieste";
   e.waitUntil(self.registration.showNotification(d.titolo || "Ordini · Profumo di Pane", {
-    body: d.testo || "", tag: d.tag || undefined, icon: "icone/icona-192.png", badge: "icone/icona-192.png", data: { url: "./" }
+    body: d.testo || "", tag: d.tag || undefined, icon: "icone/icona-192.png", badge: "icone/icona-192.png", data: { vai: vai }
   }));
 });
+/* toccando la notifica si apre l'app nella sezione giusta */
 self.addEventListener("notificationclick", function(e){
   e.notification.close();
+  const vai = (e.notification.data && e.notification.data.vai) || "richieste";
   e.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(function(finestre){
-    for (const f of finestre){ if ("focus" in f) return f.focus(); }
-    return self.clients.openWindow("./");
+    for (const f of finestre){
+      if ("focus" in f){ f.postMessage({ vai: vai }); return f.focus(); }
+    }
+    return self.clients.openWindow("./?vai=" + vai);
   }));
 });

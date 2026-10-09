@@ -71,7 +71,7 @@ export function componi(eventi, iscrizioni, mittente) {
           const cose = (Array.isArray(d.voci) ? d.voci : []).map((x) => nomeCosa(x));
           const quandoTesto = d.perIl ? new Intl.DateTimeFormat("it-IT", { weekday: "long", day: "numeric", month: "long", timeZone: "Europe/Rome" }).format(new Date(d.perIl + "T12:00:00Z")) : "";
           out.push({ isc, titolo: "Nuova prenotazione – " + (quandoTesto || "") + (d.ora ? " ore " + d.ora : ""),
-            testo: elenco(cose) + " · ritiro " + (PREP[d.ritiro] || d.ritiro || "") + (d.cliente ? " · " + d.cliente : ""), tag: "pren-" + v.id });
+            testo: elenco(cose) + " · ritiro " + (PREP[d.ritiro] || d.ritiro || "") + (d.cliente ? " · " + d.cliente : ""), tag: "pren-" + v.id, vai: "prenotazioni" });
         }
       } else if (ev.tipo === "pronto") {
         if (!((r === "consegne" && vuole(isc, "pronto", true)) || tutto)) continue;
@@ -96,7 +96,7 @@ export function componi(eventi, iscrizioni, mittente) {
           const pochi = vv.filter((v) => v.dati.livello !== "finiti");
           const titolo = "Biscotti – " + neg + (finiti.length ? ": " + contaCose(finiti.length, "finito", "finiti") : "") + (pochi.length ? (finiti.length ? ", " : ": ") + pochi.length + " con pochi pacchi" : "");
           const nomi = finiti.concat(pochi).map((v) => v.dati.nome || "?");
-          out.push({ isc, titolo, testo: elenco(nomi), tag: "biscotti-" + neg + "-" + ev.quando, urgente: finiti.length > 0 });
+          out.push({ isc, titolo, testo: elenco(nomi), tag: "biscotti-" + neg + "-" + ev.quando, urgente: finiti.length > 0, vai: "biscotti" });
         }
       }
     }
@@ -205,7 +205,7 @@ if (typeof Deno !== "undefined") {
     try {
       await webpush.sendNotification(
         { endpoint: m.isc.endpoint, keys: { p256dh: m.isc.p256dh, auth: m.isc.auth } },
-        JSON.stringify({ titolo: m.titolo, testo: m.testo, tag: m.tag }),
+        JSON.stringify({ titolo: m.titolo, testo: m.testo, tag: m.tag, vai: m.vai || "richieste" }),
         { TTL: 6 * 3600, urgency: m.urgente ? "high" : "normal" },
       );
       return "";

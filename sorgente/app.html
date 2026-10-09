@@ -3038,6 +3038,7 @@ function collega(){
     if (b.dataset.acc) return mostraAccesso(b.dataset.acc);
     if (b.id === "esci") return esciSB();
     if (b.dataset.azzera) return azzeraPersona(b.dataset.azzera);
+    if (b.dataset.apriArrivi){ $("notifica").classList.remove("vista"); return apriDaNotifica(b.dataset.apriArrivi); }
     if (b.id === "notif-attiva") return attivaNotifiche();
     if (b.id === "pren-nuova"){ S.formPren.aperto = true; renderPrenotazioni(); $("pren-righe").focus(); return; }
     if (b.id === "pren-annulla"){ S.formPren.aperto = false; renderPrenotazioni(); return; }
@@ -3267,6 +3268,7 @@ function caricaTuttoSB(){
     emettiSB(true);
     if (S.coda.length) svuotaCoda();
     if (S.daRiepilogare){ S.daRiepilogare = false; riepilogoArrivi(); }
+    if (S.vaiDopo){ const v = S.vaiDopo; S.vaiDopo = null; apriDaNotifica(v); }
   }).catch(function(){
     S.pronto = true;
     if (!S.ultimoCarico && !S.fotoQuando){ S.fotoQuando = caricaFoto() || 0; riapplicaCoda(); emettiSB(true); }
@@ -3488,12 +3490,35 @@ function notifica(titolo, testo, tipo, azioni){
   $("notifica-testo").textContent = testo || "";
   /* azioni: [{testo, vai}] — un pulsante "Apri" per ogni sezione */
   riempi($("notifica-azioni"), (azioni || []).map(function(a){
-    return el("li", null, el("span", {text:a.testo}), el("button", {type:"button", class:"mini", "data-vai":a.vai, text:"Apri"}));
+    return el("li", null, el("span", {text:a.testo}), el("button", {type:"button", class:"mini", "data-apri-arrivi":a.vai, text:"Apri"}));
   }));
   n.classList.toggle("ok", tipo === "ok");
   n.classList.add("vista");
   clearTimeout(timerNotifica);
   timerNotifica = setTimeout(function(){ n.classList.remove("vista"); }, azioni && azioni.length ? 15000 : 6000);
+}
+/* le cose arrivate dopo "dal" (non mie) diventano azzurre per 20 secondi da adesso */
+function evidenziaDopo(dal){
+  const ora = Date.now();
+  let quante = 0;
+  S.richieste.concat(S.prenotazioni).forEach(function(r){
+    if (!r.mio && r.creato > dal){ S.nuove.set(r.id, ora); quante++; }
+  });
+  if (quante){ ricomponi(); renderTutto(); }
+  return quante;
+}
+/* arrivando da una notifica o da "Apri": le nuove ripartono da adesso, così si vedono */
+function riaccendiNuove(){
+  const ora = Date.now();
+  S.nuove.forEach(function(_t, id){ S.nuove.set(id, ora); });
+  if (S.ultimaVistaPrima) evidenziaDopo(S.ultimaVistaPrima);
+  ricomponi(); renderTutto();
+}
+function apriDaNotifica(vai){
+  if (!store) { S.vaiDopo = vai; return; }
+  const sezioni = ["richieste","biscotti","prenotazioni","notifiche"];
+  vaiSezione(sezioni.indexOf(vai) >= 0 ? vai : "richieste", true);
+  riaccendiNuove();
 }
 /* all'apertura dell'app: cosa è arrivato mentre eri via, con "Apri" per andare alla sezione */
 function chiaveVisita(){ return "pdp-visita-" + (S.mioId || "x"); }
@@ -3501,8 +3526,10 @@ function riepilogoArrivi(){
   if (!S.mioId || !S.pronto) return;
   let ultima = 0;
   try { ultima = Number(localStorage.getItem(chiaveVisita())) || 0; } catch(e){}
+  S.ultimaVistaPrima = ultima;
   segnaVisita();
   if (!ultima) return;
+  evidenziaDopo(ultima);
   const ruolo = S.ruoloSito || (S.ruolo.tipo === "giro" ? "consegne" : (S.ruolo.tipo === "titolare" ? "titolare" : ""));
   const negozio = { "corso":"Corso", "piazza-nenni":"Piazza Nenni", "panificio":"Panificio" }[ruolo] || "";
   const azioni = [];
@@ -3895,6 +3922,11 @@ async function avviaSupabase(){
   S.sito = true;
   /* il telefono si tiene una copia dell'app: si apre anche senza campo */
   try { if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(function(){}); } catch(e){}
+  try {
+    if ("serviceWorker" in navigator) navigator.serviceWorker.addEventListener("message", function(ev){ if (ev.data && ev.data.vai) apriDaNotifica(ev.data.vai); });
+    const q = new URLSearchParams(location.search).get("vai");
+    if (q){ S.vaiDopo = q; history.replaceState(null, "", location.pathname + location.hash); }
+  } catch(e){}
   window.addEventListener("online", function(){
     if (!store) return;
     if (S.senzaSessione){ location.reload(); return; }
