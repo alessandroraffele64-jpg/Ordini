@@ -159,19 +159,50 @@ function risposta(dati, stato = 200) {
   return new Response(JSON.stringify(dati), { status: stato, headers: { ...CORS, "Content-Type": "application/json" } });
 }
 
+// toglie spazi, virgolette o testo incollato per sbaglio intorno a una chiave
+export function pulisciChiave(v) {
+  const pezzi = String(v || "").replace(/["'\s]+/g, " ").trim().split(" ");
+  return pezzi[pezzi.length - 1] || "";
+}
+
 if (typeof Deno !== "undefined") {
   const { createClient } = await import("jsr:@supabase/supabase-js@2");
   const webpush = (await import("npm:web-push@3.6.7")).default;
-  webpush.setVapidDetails("mailto:ordini@profumodipane.it", Deno.env.get("VAPID_PUBLICA"), Deno.env.get("VAPID_PRIVATA"));
+  let chiaviOk = "";
+  try {
+    webpush.setVapidDetails("mailto:ordini@profumodipane.it", pulisciChiave(Deno.env.get("VAPID_PUBLICA")), pulisciChiave(Deno.env.get("VAPID_PRIVATA")));
+    chiaviOk = "si";
+  } catch (e) {
+    chiaviOk = String(e && e.message || e);
+    console.log("notifiche: chiavi VAPID non valide:", chiaviOk);
+  }
   // chiave segreta del progetto: quella nuova se c'è, altrimenti quella vecchia
   let chiave = "";
   try { const d = JSON.parse(Deno.env.get("SUPABASE_SECRET_KEYS") || "{}"); chiave = d.default || Object.values(d)[0] || ""; } catch (_) { /* niente */ }
   if (!chiave) chiave = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
   const db = createClient(Deno.env.get("SUPABASE_URL"), chiave, { auth: { persistSession: false } });
 
+  async function manda(m) {
+    try {
+      await webpush.sendNotification(
+        { endpoint: m.isc.endpoint, keys: { p256dh: m.isc.p256dh, auth: m.isc.auth } },
+        JSON.stringify({ titolo: m.titolo, testo: m.testo, tag: m.tag }),
+        { TTL: 6 * 3600, urgency: m.urgente ? "high" : "normal" },
+      );
+      return "";
+    } catch (e) {
+      const stato = e && e.statusCode;
+      console.log("notifiche: invio non riuscito", stato, e && (e.body || e.message));
+      // telefono che non c'è più (app tolta, notifiche spente): si cancella l'iscrizione
+      if (stato === 404 || stato === 410) await db.from("iscrizioni").delete().eq("endpoint", m.isc.endpoint);
+      return String(stato || (e && e.message) || "errore");
+    }
+  }
+
   Deno.serve(async (req) => {
     if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
     try {
+      if (chiaviOk !== "si") return risposta({ errore: "Chiavi delle notifiche non valide: " + chiaviOk }, 500);
       const token = (req.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
       const { data: u } = await db.auth.getUser(token);
       const mittente = u && u.user && u.user.id;
@@ -180,8 +211,25 @@ if (typeof Deno !== "undefined") {
       if (!io || io.attivo === false) return risposta({ errore: "Non autorizzato" }, 401);
 
       const corpo = await req.json().catch(() => ({}));
+
+      // prova: una notifica ai telefoni di chi la chiede
+      if (corpo.prova === true) {
+        const { data: miei } = await db.from("iscrizioni").select("endpoint,p256dh,auth").eq("utente", mittente);
+        const errori = [];
+        let inviate = 0;
+        for (const isc of miei || []) {
+          const e = await manda({ isc, titolo: "Prova riuscita ✓", testo: "Le notifiche arrivano su questo telefono.", tag: "prova-" + Date.now() });
+          if (e) errori.push(e); else inviate++;
+        }
+        console.log("notifiche: prova", JSON.stringify({ telefoni: (miei || []).length, inviate, errori }));
+        return risposta({ prova: true, telefoni: (miei || []).length, inviate, errori });
+      }
+
       const eventi = await leggiEventi(db, Array.isArray(corpo.eventi) ? corpo.eventi : [], mittente, Date.now());
-      if (!eventi.length) return risposta({ inviate: 0 });
+      if (!eventi.length) {
+        console.log("notifiche: nessun evento valido", JSON.stringify(corpo.eventi || []));
+        return risposta({ inviate: 0, motivo: "nessun evento" });
+      }
 
       const [{ data: isc }, { data: prof }] = await Promise.all([
         db.from("iscrizioni").select("endpoint,p256dh,auth,utente,preferenze"),
@@ -191,22 +239,15 @@ if (typeof Deno !== "undefined") {
       const iscrizioni = (isc || []).filter((i) => ruoli.has(i.utente)).map((i) => ({ ...i, ruolo: ruoli.get(i.utente) }));
       const messaggi = componi(eventi, iscrizioni, mittente);
 
-      let inviate = 0;
-      await Promise.all(messaggi.map(async (m) => {
-        try {
-          await webpush.sendNotification(
-            { endpoint: m.isc.endpoint, keys: { p256dh: m.isc.p256dh, auth: m.isc.auth } },
-            JSON.stringify({ titolo: m.titolo, testo: m.testo, tag: m.tag }),
-            { TTL: 6 * 3600, urgency: m.urgente ? "high" : "normal" },
-          );
-          inviate++;
-        } catch (e) {
-          // telefono che non c'è più (app tolta, notifiche spente): si cancella l'iscrizione
-          if (e && (e.statusCode === 404 || e.statusCode === 410)) await db.from("iscrizioni").delete().eq("endpoint", m.isc.endpoint);
-        }
+      const esiti = await Promise.all(messaggi.map(manda));
+      const inviate = esiti.filter((e) => !e).length;
+      console.log("notifiche:", JSON.stringify({
+        eventi: eventi.map((e) => e.tipo + ":" + e.voci.length), telefoni: iscrizioni.length,
+        messaggi: messaggi.length, inviate, errori: esiti.filter(Boolean),
       }));
-      return risposta({ inviate });
+      return risposta({ inviate, messaggi: messaggi.length, telefoni: iscrizioni.length });
     } catch (e) {
+      console.log("notifiche: errore", String(e && e.message || e));
       return risposta({ errore: String(e && e.message || e) }, 500);
     }
   });

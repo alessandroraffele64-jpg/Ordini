@@ -576,6 +576,8 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
         <p class="hint" id="notif-stato"></p>
         <button type="button" class="primary" id="notif-attiva" hidden>Attiva le notifiche</button>
         <ul class="notif-scelte" id="notif-scelte"></ul>
+        <button type="button" class="mini" id="notif-prova" hidden>Manda una notifica di prova a questo telefono</button>
+        <p class="hint" id="notif-esito-prova" role="status"></p>
         <button type="button" class="link" id="notif-spegni" hidden>Spegni le notifiche su questo telefono</button>
       </section>
     </div>
@@ -3058,6 +3060,7 @@ function collega(){
     if (b.dataset.prenStato) return statoPren(b.dataset.id, b.dataset.prenStato);
     if (b.dataset.prenTogli) return togliPren(b.dataset.prenTogli);
     if (b.id === "notif-spegni") return spegniNotifiche(false);
+    if (b.id === "notif-prova") return provaNotifica();
     if (b.dataset.ctrlNotaApri && S.ctrl){
       const v = S.ctrl.voci[Number(b.dataset.ctrlNotaApri)];
       if (v){ v.conNota = true; renderControllo(); const inp = document.querySelector('[data-ctrl-nota="' + b.dataset.ctrlNotaApri + '"]'); if (inp) inp.focus(); }
@@ -3385,7 +3388,7 @@ async function renderNotifiche(){
   const box = $("notifiche-box");
   if (!box || !notificheDisponibili() || !store) return;
   const stato = $("notif-stato"), btn = $("notif-attiva"), scelte = $("notif-scelte"), spegni = $("notif-spegni");
-  btn.hidden = true; spegni.hidden = true; riempi(scelte, []);
+  btn.hidden = true; spegni.hidden = true; $("notif-prova").hidden = true; riempi(scelte, []);
   if (suIphoneSenzaHome()){
     stato.textContent = "Sull'iPhone le notifiche funzionano solo dall'icona sulla schermata Home: in Safari tocca Condividi → Aggiungi alla schermata Home, apri l'app da lì e torna qui.";
     return;
@@ -3416,6 +3419,27 @@ async function renderNotifiche(){
   }));
   scelte.querySelectorAll("input[data-notif]").forEach(function(inp){ inp.checked = inp.hasAttribute("checked"); });
   spegni.hidden = false;
+  $("notif-prova").hidden = false;
+}
+/* prova: la funzione manda una notifica ai telefoni di chi la chiede */
+async function provaNotifica(){
+  const esito = $("notif-esito-prova");
+  esito.textContent = "Mando la prova…";
+  let token = S.token;
+  try { const r = await sb.auth.getSession(); token = (r.data.session && r.data.session.access_token) || token; } catch(e){}
+  try {
+    const res = await fetch(SB_URL + "/functions/v1/notifiche", {
+      method: "POST", headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token, "apikey": SB_KEY },
+      body: JSON.stringify({ prova: true })
+    });
+    const d = await res.json().catch(function(){ return {}; });
+    if (d.errore) esito.textContent = "Non riuscita: " + d.errore;
+    else if (!d.telefoni) esito.textContent = "Il database non trova questo telefono tra quelli iscritti. Spegni e riattiva le notifiche, poi riprova.";
+    else if (d.inviate) esito.textContent = "Prova mandata: entro pochi secondi deve arrivare la notifica \"Prova riuscita\".";
+    else esito.textContent = "Il servizio delle notifiche ha rifiutato l'invio (" + (d.errori || []).join(", ") + "). Spegni e riattiva le notifiche, poi riprova.";
+  } catch(e){
+    esito.textContent = "Non riesco a raggiungere la funzione delle notifiche. Controlla la connessione.";
+  }
 }
 async function salvaIscrizione(sub){
   const j = sub.toJSON();
