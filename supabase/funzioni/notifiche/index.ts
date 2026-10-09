@@ -176,11 +176,30 @@ if (typeof Deno !== "undefined") {
     chiaviOk = String(e && e.message || e);
     console.log("notifiche: chiavi VAPID non valide:", chiaviOk);
   }
-  // chiave segreta del progetto: quella nuova se c'è, altrimenti quella vecchia
-  let chiave = "";
-  try { const d = JSON.parse(Deno.env.get("SUPABASE_SECRET_KEYS") || "{}"); chiave = d.default || Object.values(d)[0] || ""; } catch (_) { /* niente */ }
-  if (!chiave) chiave = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-  const db = createClient(Deno.env.get("SUPABASE_URL"), chiave, { auth: { persistSession: false } });
+  // chiavi del progetto: quelle nuove se ci sono, altrimenti quelle vecchie
+  function chiaveDa(nomeNuove, nomeVecchia) {
+    const grezzo = Deno.env.get(nomeNuove) || "";
+    try {
+      const d = JSON.parse(grezzo || "{}");
+      const v = typeof d === "string" ? d : (d.default || Object.values(d)[0]);
+      if (v) return String(v);
+    } catch (_) { if (grezzo && !grezzo.trim().startsWith("{")) return grezzo.trim(); }
+    return Deno.env.get(nomeVecchia) || "";
+  }
+  const URL_PROGETTO = Deno.env.get("SUPABASE_URL");
+  const chiave = chiaveDa("SUPABASE_SECRET_KEYS", "SUPABASE_SERVICE_ROLE_KEY");
+  const pubblica = chiaveDa("SUPABASE_PUBLISHABLE_KEYS", "SUPABASE_ANON_KEY");
+  console.log("notifiche: chiavi", chiave.slice(0, 9) || "nessuna", pubblica.slice(0, 14) || "nessuna");
+  const db = createClient(URL_PROGETTO, chiave, { auth: { persistSession: false } });
+
+  // chi sta chiamando: lo chiede al servizio di accesso con il suo "lasciapassare"
+  async function chiEntra(token) {
+    if (!token) return { errore: "manca il lasciapassare" };
+    const res = await fetch(URL_PROGETTO + "/auth/v1/user", { headers: { apikey: pubblica || chiave, Authorization: "Bearer " + token } });
+    if (!res.ok) return { errore: "accesso rifiutato (" + res.status + ")" };
+    const u = await res.json().catch(() => null);
+    return u && u.id ? { id: u.id } : { errore: "utente non trovato" };
+  }
 
   async function manda(m) {
     try {
@@ -204,11 +223,12 @@ if (typeof Deno !== "undefined") {
     try {
       if (chiaviOk !== "si") return risposta({ errore: "Chiavi delle notifiche non valide: " + chiaviOk }, 500);
       const token = (req.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
-      const { data: u } = await db.auth.getUser(token);
-      const mittente = u && u.user && u.user.id;
-      if (!mittente) return risposta({ errore: "Non autorizzato" }, 401);
-      const { data: io } = await db.from("profili").select("attivo").eq("id", mittente).maybeSingle();
-      if (!io || io.attivo === false) return risposta({ errore: "Non autorizzato" }, 401);
+      const chi = await chiEntra(token);
+      if (!chi.id) { console.log("notifiche: non autorizzato,", chi.errore); return risposta({ errore: "Non autorizzato: " + chi.errore }, 401); }
+      const mittente = chi.id;
+      const { data: io, error: eProf } = await db.from("profili").select("attivo").eq("id", mittente).maybeSingle();
+      if (eProf) { console.log("notifiche: database non raggiungibile,", eProf.message); return risposta({ errore: "Database: " + eProf.message }, 500); }
+      if (!io || io.attivo === false) return risposta({ errore: "Non autorizzato: profilo non trovato" }, 401);
 
       const corpo = await req.json().catch(() => ({}));
 
