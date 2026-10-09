@@ -8,7 +8,7 @@
 //
 // Segreti da impostare in Supabase (Edge Functions → Secrets):
 //   VAPID_PUBLICA  e  VAPID_PRIVATA  (le chiavi delle notifiche)
-// SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY ci sono già, li mette Supabase.
+// SUPABASE_URL e le chiavi segrete del progetto ci sono già, li mette Supabase.
 
 const RECENTE = 15 * 60 * 1000; // si notifica solo quello che è successo da poco
 const NEGOZIO_DI_RUOLO = { "corso": "Corso", "piazza-nenni": "Piazza Nenni", "panificio": "Panificio" };
@@ -163,7 +163,11 @@ if (typeof Deno !== "undefined") {
   const { createClient } = await import("jsr:@supabase/supabase-js@2");
   const webpush = (await import("npm:web-push@3.6.7")).default;
   webpush.setVapidDetails("mailto:ordini@profumodipane.it", Deno.env.get("VAPID_PUBLICA"), Deno.env.get("VAPID_PRIVATA"));
-  const db = createClient(Deno.env.get("SUPABASE_URL"), Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"), { auth: { persistSession: false } });
+  // chiave segreta del progetto: quella nuova se c'è, altrimenti quella vecchia
+  let chiave = "";
+  try { const d = JSON.parse(Deno.env.get("SUPABASE_SECRET_KEYS") || "{}"); chiave = d.default || Object.values(d)[0] || ""; } catch (_) { /* niente */ }
+  if (!chiave) chiave = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+  const db = createClient(Deno.env.get("SUPABASE_URL"), chiave, { auth: { persistSession: false } });
 
   Deno.serve(async (req) => {
     if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
