@@ -2,7 +2,7 @@
 // Ordini · Profumo di Pane — funzione "notifiche" (Supabase Edge Function)
 //
 // L'app la chiama dopo aver salvato qualcosa (nuove richieste, "pronto", "non c'è",
-// "partite", comande di biscotti, prenotazioni nuove o disdette). La funzione rilegge dal database cosa è successo
+// "partite", "arrivata in magazzino", comande di biscotti, prenotazioni nuove o disdette). La funzione rilegge dal database cosa è successo
 // davvero (non si fida di quello che le arriva), decide chi deve saperlo e manda
 // UNA notifica per invio, raggruppando le cose.
 //
@@ -93,6 +93,16 @@ export function componi(eventi, iscrizioni, mittente, ruoloMittente) {
             testo: "Disdetta: " + elenco(cose) + (g ? " per " + g : "") + (d.cliente ? " · " + d.cliente : "") + (st.disdettaMotivo ? " · " + st.disdettaMotivo : ""),
             tag: "disd-" + v.id, vai: "prenotazioni" });
         }
+      } else if (ev.tipo === "arrivata") {
+        // una cosa che mancava è arrivata in magazzino: a chi fa il giro e ai titolari con "Ricevi tutto"
+        if (!((r === "consegne" && vuole(isc, "arrivata", true)) || tutto)) continue;
+        for (const [neg, vv] of perGruppo(ev.voci, (v) => v.dati.per)) {
+          const nomi = vv.map((v) => v.dati.articolo || "?");
+          const una = nomi.length === 1;
+          out.push({ isc, titolo: (una ? "Arrivata" : "Arrivate") + " in magazzino – per " + neg,
+            testo: elenco(nomi) + (una ? " è arrivata" : " sono arrivate") + " in magazzino: da portare " + (PREP[neg] || "a " + neg),
+            tag: "arrivata-" + neg + "-" + ev.quando });
+        }
       } else if (ev.tipo === "pronto") {
         if (!((r === "consegne" && vuole(isc, "pronto", true)) || tutto)) continue;
         for (const [neg, vv] of perGruppo(ev.voci, (v) => v.dati.per)) {
@@ -160,6 +170,14 @@ export async function leggiEventi(db, richiesti, mittente, ora) {
       const { data: rr } = await db.from("richieste").select("id,autore,dati").in("id", rids);
       const voci = (rr || []).filter((x) => !(x.dati && x.dati.annullato)).map((x) => ({ id: x.id, autore: x.autore, dati: x.dati || {} }));
       if (voci.length) eventi.push({ tipo: e.tipo, voci, quando: ora });
+    } else if (e.tipo === "arrivata") {
+      const { data: st } = await db.from("stati").select("id,dati,aggiornato").in("id", ids);
+      const ok = (st || []).filter((x) => x.dati && !x.dati.prep && x.dati.arrivatoAlle && recente(x.aggiornato) && recente(new Date(Number(x.dati.arrivatoAlle)).toISOString()));
+      if (!ok.length) continue;
+      const rids = ok.map((x) => x.id.split("~")[1]).filter(Boolean);
+      const { data: rr } = await db.from("richieste").select("id,autore,dati").in("id", rids);
+      const voci = (rr || []).filter((x) => !(x.dati && x.dati.annullato)).map((x) => ({ id: x.id, autore: x.autore, dati: x.dati || {} }));
+      if (voci.length) eventi.push({ tipo: "arrivata", voci, quando: ora });
     } else if (e.tipo === "disdetta") {
       const { data: st } = await db.from("stati").select("id,dati,aggiornato").in("id", ids);
       const ok = (st || []).filter((x) => x.dati && x.dati.disdetta === true && x.dati.disdettaDa === mittente && recente(x.aggiornato));

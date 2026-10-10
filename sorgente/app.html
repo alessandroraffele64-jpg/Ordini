@@ -31,6 +31,7 @@
   --ferma:#8A4B00; --ferma-bg:#FDEBCC; --ferma-bordo:#C77700;
   --nuova:#0B5A8C; --nuova-bg:#DDEFFC; --nuova-bordo:#3C8DD0;
   --pronto:#0B5563; --pronto-bg:#DDF1F4; --pronto-solid:#0B7285; --pronto-solid-ink:#FFFFFF;
+  --arrivo-bg:#DDF2E1; --arrivo-txt:#1B6A33;
   --corso:#7A4A24; --corso-ink:#FFFFFF; --corso-bg:#F3E8DD; --corso-txt:#7A4A24;
   --nenni:#1E5B36; --nenni-ink:#FFFFFF; --nenni-bg:#E1EFE5; --nenni-txt:#1E5B36;
   --panif:#E5B20A; --panif-ink:#2A2922; --panif-bg:#FBF1CF; --panif-txt:#7F6000;
@@ -48,6 +49,7 @@
     --done:#8FB4DE; --done-ink:#0E1A2A; --done-bg:#1C2736;
     --prep:#C3AEEA; --prep-bg:#2A2140; --altrog:#6C4FB0; --altrog-ink:#FFFFFF; --altrog-bg:#2A2140; --giorno-bg:#4A2D0E; --giorno-bordo:#F0A04B; --giorno-ink:#FFD6A6;
     --ferma:#F5BC6A; --ferma-bg:#3A2A12; --ferma-bordo:#D99A3D; --nuova:#8CC8F5; --nuova-bg:#123248; --nuova-bordo:#4D9BD6; --pronto:#7DD3DF; --pronto-bg:#12343A; --pronto-solid:#5CC4D2; --pronto-solid-ink:#062328;
+    --arrivo-bg:#163322; --arrivo-txt:#86D69C;
     --corso:#C9925F; --corso-ink:#1F1206; --corso-bg:#33241A; --corso-txt:#D9A574;
     --nenni:#5DB884; --nenni-ink:#06200F; --nenni-bg:#15301F; --nenni-txt:#6FC995;
     --panif:#F2C640; --panif-ink:#241B00; --panif-bg:#362C0D; --panif-txt:#F2C640;
@@ -62,6 +64,7 @@
   --done:#8FB4DE; --done-ink:#0E1A2A; --done-bg:#1C2736;
   --prep:#C3AEEA; --prep-bg:#2A2140; --altrog:#6C4FB0; --altrog-ink:#FFFFFF; --altrog-bg:#2A2140; --giorno-bg:#4A2D0E; --giorno-bordo:#F0A04B; --giorno-ink:#FFD6A6;
   --ferma:#F5BC6A; --ferma-bg:#3A2A12; --ferma-bordo:#D99A3D; --nuova:#8CC8F5; --nuova-bg:#123248; --nuova-bordo:#4D9BD6; --pronto:#7DD3DF; --pronto-bg:#12343A; --pronto-solid:#5CC4D2; --pronto-solid-ink:#062328;
+  --arrivo-bg:#163322; --arrivo-txt:#86D69C;
   --corso:#C9925F; --corso-ink:#1F1206; --corso-bg:#33241A; --corso-txt:#D9A574;
   --nenni:#5DB884; --nenni-ink:#06200F; --nenni-bg:#15301F; --nenni-txt:#6FC995;
   --panif:#F2C640; --panif-ink:#241B00; --panif-bg:#362C0D; --panif-txt:#F2C640;
@@ -247,17 +250,19 @@ body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area
 .domanda-testo{font-size:18px;font-weight:700;line-height:1.3}
 /* non in magazzino: striscia sottile al negozio, riquadro piccolo in fondo */
 .strisce-mag{position:sticky;top:calc(env(safe-area-inset-top,0px) + 6px);z-index:5;display:flex;flex-direction:column;gap:6px}
-.striscia-mag{display:flex;align-items:baseline;gap:8px;padding:7px 12px;border-radius:10px;font-size:14px;line-height:1.3;box-shadow:0 4px 12px rgba(0,0,0,.14)}
-.striscia-mag b{flex:none;font-weight:700}
-.striscia-mag span{min-width:0;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-.striscia-mag.manca{background:var(--urgent-bg);color:var(--urgent-txt);box-shadow:inset 4px 0 0 var(--urgent),0 4px 12px rgba(0,0,0,.14)}
-.striscia-mag.arrivata{background:var(--pronto-bg);color:var(--pronto);box-shadow:inset 4px 0 0 var(--pronto-solid),0 4px 12px rgba(0,0,0,.14)}
-.mag-piccolo{gap:6px;padding:10px 14px;border-color:var(--urgent);background:color-mix(in srgb,var(--urgent-bg) 45%,var(--surface))}
-.mag-piccolo .label-sm{color:var(--urgent-txt)}
-.mag-piccolo-lista{display:flex;flex-direction:column;gap:2px;font-size:14px}
-.mag-piccolo-lista li{display:flex;justify-content:space-between;gap:10px}
-.mag-piccolo-lista li span:last-child{flex:none;color:var(--muted)}
-.pill.p-arrivata{background:var(--pronto-solid);color:var(--pronto-solid-ink)}
+.striscia-mag{display:flex;align-items:center;gap:8px;padding:7px 8px 7px 12px;border-radius:10px;font-size:14px;line-height:1.3;background:var(--urgent-bg);color:var(--urgent-txt);box-shadow:inset 4px 0 0 var(--urgent),0 4px 12px rgba(0,0,0,.14)}
+.striscia-testo{appearance:none;flex:1 1 auto;min-width:0;padding:0;border:0;background:none;color:inherit;font:inherit;text-align:left;cursor:default}
+button.striscia-testo{cursor:pointer}
+.striscia-testo .nomi{overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.striscia-mag .mostra{appearance:none;flex:none;align-self:center;min-height:36px;padding:0 10px;border:1.5px solid var(--urgent);border-radius:999px;background:var(--surface);color:var(--urgent-txt);font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap}
+.mag-velo{-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+.mag-tutto-box{max-height:80vh;border:2px solid var(--urgent)}
+.mag-tutto-box .domanda-testo{color:var(--urgent-txt)}
+.mag-tutto-lista{display:flex;flex-direction:column;gap:6px;overflow-y:auto;min-height:0;font-size:16px;font-weight:600}
+.mag-tutto-lista li{padding:6px 0;border-bottom:1px dashed var(--line)}
+.mag-tutto-lista li:last-child{border-bottom:0}
+/* arrivata in magazzino: come la casella «Urgente», ma verde */
+.pill.p-arrivata{background:var(--arrivo-bg);color:var(--arrivo-txt)}
 .riga.pren.messa-parte{background:color-mix(in srgb,var(--surface-2) 55%,transparent)}
 .riga.pren.messa-parte .articolo,.riga.pren.messa-parte .nota{text-decoration:line-through;color:var(--muted)}
 /* prenotazione disdetta: barrata, grigia, in fondo al giorno */
@@ -292,9 +297,10 @@ body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area
 .pren-ris .meta-ris{font-size:13px;color:var(--muted);font-weight:600}
 .pren-ris.disdetta strong{text-decoration:line-through;color:var(--muted)}
 /* da controllare (solo titolari) */
-.pren-dacontrollare{border:2px solid var(--oro);gap:10px}
-.pren-dc-voce{display:flex;flex-direction:column;gap:8px;padding:10px 0;border-top:1px dashed var(--line)}
-.pren-dc-voce:first-of-type{border-top:0;padding-top:0}
+.pren-dacontrollare{display:flex;background:none;border:0;padding:0}
+.dc-apri{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--surface);color:var(--ink);border:2px solid var(--oro)}
+.dc-apri .badge{background:var(--oro);color:var(--nero)}
+.pren-dc-voce{gap:8px}
 .pren-dc-voce .row{gap:8px;align-items:center}
 .pren-dc-voce select{min-height:44px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font-size:16px;font-weight:700;padding:0 10px;max-width:100%}
 .stat-per[aria-pressed="true"],.stat-per[aria-pressed="true"]:hover{background:var(--ink);border-color:var(--ink);color:var(--bg)}
@@ -500,6 +506,9 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
 .gruppo.urgenti .gruppo-head{background:linear-gradient(100deg,var(--urgent-bg) 0%,var(--surface) 90%);border-bottom-color:color-mix(in srgb,var(--urgent) 35%,var(--line))}
 .gruppo.urgenti h3{color:var(--urgent-txt)}
 .gruppo.urgenti .gh-per{color:var(--urgent-txt)}
+.gruppo.arrivate{border:1.5px solid color-mix(in srgb,var(--arrivo-txt) 45%,var(--line-2))}
+.gruppo.arrivate .gruppo-head{background:linear-gradient(100deg,var(--arrivo-bg) 0%,var(--surface) 90%);border-bottom-color:color-mix(in srgb,var(--arrivo-txt) 35%,var(--line))}
+.gruppo.arrivate h3,.gruppo.arrivate .gh-per{color:var(--arrivo-txt)}
 .riga.e-caricato{background:color-mix(in srgb,var(--surface-2) 55%,transparent)}
 .riga.urgente{background:linear-gradient(100deg,var(--urgent-bg) 0%,color-mix(in srgb,var(--urgent-bg) 25%,var(--surface)) 100%)}
 .passa{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:var(--r-md);background:var(--surface-2);color:var(--ink);font-weight:700}
@@ -575,6 +584,8 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
   </nav>
 
   <p class="banner" id="banner" hidden></p>
+  <!-- Striscia rossa: tutto quello che non c'è in magazzino, per tutti, finché non arriva -->
+  <div class="strisce-mag" id="strisce-mag" role="status" hidden></div>
   <p class="coda-avviso" id="coda-avviso" role="status" hidden></p>
 
   <!-- Negozio: chi lavora al banco chiede cosa serve -->
@@ -589,8 +600,6 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
     </fieldset>
 
     <div class="view" id="pannello-richieste">
-    <!-- Negozio: striscia sottile per le cose che non ci sono in magazzino (o appena arrivate) -->
-    <div class="strisce-mag" id="strisce-mag" role="status" hidden></div>
     <form class="card" id="form-richiesta" novalidate>
       <label class="label" for="righe">Cosa serve?</label>
       <p class="chi-ordina" id="chi-ordina"></p>
@@ -629,10 +638,6 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
       <h2 id="titolo-arrivo">In arrivo al Corso</h2>
       <ul class="lista" id="lista-arrivo"></ul>
       <p class="vuoto" id="vuoto-arrivo">Carico le richieste…</p>
-      <div class="card mag-piccolo" id="mag-piccolo" hidden>
-        <p class="label-sm">Cose non in magazzino</p>
-        <ul class="mag-piccolo-lista" id="mag-piccolo-lista"></ul>
-      </div>
       <details id="det-cons-negozio" hidden>
         <summary>Consegnato oggi (<span id="n-cons-negozio">0</span>)</summary>
         <ul class="lista" id="lista-cons-negozio"></ul>
@@ -658,10 +663,6 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
       <p class="hint" id="mancanti-spiega"></p>
       <div class="blocco" id="mancanti-gruppi"></div>
       <p class="vuoto" id="mancanti-vuoto">In magazzino c'è tutto quello che è stato chiesto.</p>
-      <div class="blocco" id="arrivate-box" hidden>
-        <p class="label-sm">Arrivate in magazzino, da portare</p>
-        <ul class="lista" id="arrivate-lista"></ul>
-      </div>
     </div>
 
     <!-- Biscotti: sezione a parte, non va nel giro delle consegne -->
@@ -680,7 +681,7 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
 
     <!-- Prenotazioni dei clienti: separate dalle consegne -->
     <div class="view" id="pannello-prenotazioni" hidden>
-      <div class="card pren-dacontrollare" id="pren-dacontrollare" hidden></div>
+      <div class="pren-dacontrollare" id="pren-dacontrollare" hidden></div>
       <div class="pren-cerca" id="pren-cerca">
         <button type="button" class="mini pren-cerca-apri" id="pren-cerca-apri" aria-expanded="false">🔍 Cerca</button>
         <div class="pren-cerca-campo" id="pren-cerca-campo" hidden>
@@ -965,6 +966,26 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
     <div class="riep-azioni"><button type="button" class="mini" id="domanda-no">No</button><button type="button" class="primary" id="domanda-si">Sì</button></div>
   </div>
 </div>
+<!-- «Mostra tutto» della striscia rossa: tutte le cose che non ci sono in magazzino -->
+<div class="domanda-velo mag-velo" id="mag-tutto" role="dialog" aria-modal="true" aria-labelledby="mag-tutto-titolo" hidden>
+  <div class="card domanda-box mag-tutto-box">
+    <p class="domanda-testo" id="mag-tutto-titolo">Non in magazzino</p>
+    <ul class="mag-tutto-lista" id="mag-tutto-lista"></ul>
+    <div class="riep-azioni"><button type="button" class="mini" id="mag-tutto-chiudi">Chiudi</button><button type="button" class="primary" id="mag-tutto-apri" hidden>Apri Non in magazzino</button></div>
+  </div>
+</div>
+<!-- Prodotti nuovi delle prenotazioni da controllare (solo titolari): schermata a parte -->
+<div class="conferma-velo pren-velo" id="dc-schermo" role="dialog" aria-modal="true" aria-labelledby="dc-titolo" hidden>
+  <div class="pren-box">
+    <div class="pren-testa">
+      <button type="button" class="pren-chiudi" id="dc-chiudi" aria-label="Chiudi i prodotti da controllare">✕ Chiudi</button>
+      <h2 class="comanda-titolo" id="dc-titolo">Prodotti da controllare</h2>
+    </div>
+    <p class="hint">«Conferma»: il prodotto entra nell'elenco. «È un errore, era…»: scegli il prodotto giusto e tutte le prenotazioni scritte così si correggono da sole.</p>
+    <div class="blocco" id="dc-lista"></div>
+    <p class="vuoto" id="dc-vuoto" hidden>Nessun prodotto da controllare.</p>
+  </div>
+</div>
 <!-- Disdici una prenotazione: il motivo è obbligatorio -->
 <div class="domanda-velo" id="disdici" role="alertdialog" aria-modal="true" aria-labelledby="disdici-testo" hidden>
   <div class="card domanda-box disdici-box">
@@ -1171,11 +1192,15 @@ function nonDisponibile(r){ return r.prep === "finito" || r.prep === "manca"; }
 function rangoPrep(r){ return (r.prep === "pronto" || appenaArrivata(r)) ? 0 : (nonDisponibile(r) ? 2 : 1); }
 /* arrivata in magazzino dopo essere mancata, e non ancora caricata */
 function appenaArrivata(r){ return !r.prep && !!r.arrivatoAlle && r.stato === "attesa"; }
+/* nelle consegne resta "arrivata" (verde e in cima) finché non è consegnata, anche quando è caricata */
+function arrivataDaPortare(r){ return !r.prep && !!r.arrivatoAlle && r.stato !== "consegnato" && r.per !== PROMEMORIA; }
+function pillArrivata(){ return el("span", {class:"pill p-arrivata", text:"Arrivata in magazzino"}); }
+/* nelle consegne (Massimo e titolari) le cose che non ci sono in magazzino escono dalla lista */
+function mancaInMagazzino(r){ return r.prep === "manca" && r.stato === "attesa"; }
 /* "È arrivato in magazzino" lo segnano solo i titolari e chi fa il giro */
 function puoArrivato(){ return !!store && !S.sola && !!S.ruolo && (S.ruolo.tipo === "titolare" || S.ruolo.tipo === "giro"); }
 /* cose che non ci sono in magazzino, ancora da portare */
 function nonInMagazzino(){ return S.richieste.filter(function(r){ return r.prep === "manca" && r.stato === "attesa" && r.per !== PROMEMORIA; }); }
-const ORA_E_MEZZA = 90 * 60000;
 function norma(k, d, st, autore, rid){
   const stati = ["attesa","caricato","consegnato"];
   st = st || {};
@@ -1949,34 +1974,50 @@ function renderMancanti(){
   riempi($("mancanti-gruppi"), gruppi);
   $("mancanti-vuoto").hidden = gruppi.length > 0;
   $("mancanti-vuoto").textContent = S.pronto ? "In magazzino c'è tutto quello che è stato chiesto." : "Carico le richieste…";
-  /* arrivate da poco e non ancora caricate */
-  const arr = S.richieste.filter(appenaArrivata).sort(function(a, b){ return b.arrivatoAlle - a.arrivatoAlle; });
-  $("arrivate-box").hidden = !arr.length;
-  riempi($("arrivate-lista"), arr.map(function(r){
-    return el("li", {class:"riga " + classeDest(r.per)}, sigla(r.per), el("div", {class:"riga-main"}, testoArticolo(r),
-      meta([el("span", {class:"pill p-arrivata", text:"Arrivata " + quando(r.arrivatoAlle)}), pillDest(r.per), bottoneChi(r)])));
-  }));
 }
-/* al negozio: striscia sottile per un'ora e mezza, poi nel riquadro piccolo in fondo;
-   quando arriva in magazzino ricompare una volta, "arrivata" */
+/* Striscia rossa, uguale per tutti: solo i nomi di quello che non c'è in magazzino,
+   una volta sola anche se manca per tutti e due i negozi. Resta in alto finché la cosa non arriva.
+   Alta al massimo 2 righe; se non ci sta tutto, «Mostra tutto». */
+function vedeMancanti(){ return !!S.ruolo && (S.ruolo.tipo === "titolare" || S.ruolo.tipo === "giro"); }
+function nomiNonInMagazzino(){
+  const visti = new Set(), nomi = [];
+  nonInMagazzino().sort(function(a, b){ return a.prepAlle - b.prepAlle; }).forEach(function(r){
+    const k = chiave(r.articolo);
+    if (!k || visti.has(k)) return;
+    visti.add(k); nomi.push(r.articolo);
+  });
+  return nomi;
+}
 function renderStrisceMag(){
-  const neg = PUNTI_RITIRO.indexOf(S.punto) >= 0 ? S.punto : "";
-  const box = $("strisce-mag"), piccolo = $("mag-piccolo");
-  if (!neg){ box.hidden = true; piccolo.hidden = true; return; }
-  const ora = Date.now();
-  const nome = function(r){ return (r.quantita ? r.quantita + " " : "") + r.articolo; };
-  const mancano = nonInMagazzino().filter(function(r){ return r.per === neg; });
-  const recenti = mancano.filter(function(r){ return ora - r.prepAlle < ORA_E_MEZZA; });
-  const vecchie = mancano.filter(function(r){ return ora - r.prepAlle >= ORA_E_MEZZA; });
-  const arrivate = S.richieste.filter(function(r){ return r.per === neg && r.arrivatoAlle && ora - r.arrivatoAlle < ORA_E_MEZZA && r.stato !== "consegnato" && r.prep !== "manca"; });
-  const strisce = [];
-  if (recenti.length) strisce.push(el("p", {class:"striscia-mag manca"}, el("b", {text:"Non in magazzino:"}), el("span", {text:recenti.map(nome).join(" · ")})));
-  if (arrivate.length) strisce.push(el("p", {class:"striscia-mag arrivata"}, el("b", {text: arrivate.length === 1 ? "Arrivata in magazzino:" : "Arrivate in magazzino:"}), el("span", {text:arrivate.map(nome).join(" · ") + " · sta arrivando"})));
-  riempi(box, strisce);
-  box.hidden = !strisce.length;
-  riempi($("mag-piccolo-lista"), vecchie.map(function(r){ return el("li", null, el("span", {text:nome(r)}), el("span", {text:"dalle " + fmtOra.format(r.prepAlle)})); }));
-  piccolo.hidden = !vecchie.length;
+  const box = $("strisce-mag");
+  /* nelle richieste, nel panificio e nelle consegne; non nelle altre sezioni del menu */
+  const nomi = S.ruolo && !inSezioneExtra() ? nomiNonInMagazzino() : [];
+  if (!nomi.length){ box.hidden = true; riempi(box, []); return; }
+  const testo = [el("b", {text:"Non in magazzino: "}), nomi.join(" · ")];
+  /* titolari e Massimo: toccando la striscia si apre la sezione; per gli altri è solo da leggere */
+  const parte = vedeMancanti()
+    ? el("button", {type:"button", class:"striscia-testo", "data-apri-mancanti":"1", "aria-label":"Apri Non in magazzino: " + nomi.join(", ")}, el("span", {class:"nomi"}, ...testo))
+    : el("div", {class:"striscia-testo"}, el("span", {class:"nomi"}, ...testo));
+  const mostra = el("button", {type:"button", class:"mostra", id:"mag-mostra", hidden:true, text:"Mostra tutto"});
+  riempi(box, [el("div", {class:"striscia-mag manca"}, parte, mostra)]);
+  box.hidden = false;
+  controllaStriscia();
 }
+/* «Mostra tutto» solo se i nomi non stanno in 2 righe */
+function controllaStriscia(){
+  const n = document.querySelector("#strisce-mag .nomi"), b = $("mag-mostra");
+  if (!n || !b) return;
+  b.hidden = true;
+  b.hidden = !(n.scrollHeight > n.clientHeight + 1);
+}
+function apriMagTutto(){
+  const nomi = nomiNonInMagazzino();
+  riempi($("mag-tutto-lista"), nomi.map(function(x){ return el("li", {text:x}); }));
+  $("mag-tutto-apri").hidden = !vedeMancanti();
+  $("mag-tutto").hidden = false;
+  try { $("mag-tutto-chiudi").focus(); } catch(e){}
+}
+function chiudiMagTutto(){ $("mag-tutto").hidden = true; }
 /* Spostare una cosa di reparto: vale per questa richiesta e, da ora, per tutte quelle con lo stesso nome */
 async function spostaReparto(id, rep){
   const r = S.richieste.find(function(x){ return x.id === id; });
@@ -2049,6 +2090,7 @@ function pillUrgente(r){
     /* salvata sul telefono senza rete: partirà appena torna il campo */
     r.inCoda ? el("span", {class:"pill p-coda", text:"Non ancora inviata"}) : null,
     r.urgente ? el("span", {class:"pill p-urgente", text:"Urgente"}) : null,
+    S.vista === "consegne" && arrivataDaPortare(r) ? pillArrivata() : null,
     r.perIl && r.perIl !== oggiStr() ? el("span", {class:"pill p-ora", text:"Per " + testoGiorno(r.perIl)}) : (r.perIl ? el("span", {class:"pill p-ora", text:"Per oggi"}) : null),
     infoFerma(r) ? el("span", {class:"pill p-ferma", text:infoFerma(r)}) : null
   ].filter(Boolean);
@@ -2058,7 +2100,8 @@ function pillUrgente(r){
   return f;
 }
 function pillPrep(r){
-  if (appenaArrivata(r) && r.per !== PROMEMORIA) return el("span", {class:"pill p-arrivata", text:"Arrivata in magazzino, da portare"});
+  /* al negozio "Arrivata in magazzino" finché non viene caricata; nelle consegne la casella verde è già accanto a "Urgente" */
+  if (appenaArrivata(r) && r.per !== PROMEMORIA) return S.vista === "consegne" ? null : pillArrivata();
   if (!r.prep || r.stato !== "attesa" || r.per === PROMEMORIA) return null;
   return el("span", {class:"pill " + CLASSI_PREP[r.prep], text:NOMI_PREP[r.prep]});
 }
@@ -2367,6 +2410,7 @@ function mostraSez(sez){
   $("pannello-richieste").hidden = S.sez !== "richieste";
   $("pannello-biscotti").hidden = S.sez !== "biscotti";
   $("pannello-statistiche").hidden = S.sez !== "statistiche";
+  renderStrisceMag();
 }
 
 /* ---------- menu con le tre lineette ---------- */
@@ -2377,7 +2421,8 @@ function vociMenu(){
   if (S.ruolo.tipo === "giro") return [mancanti].concat(notif);
   const panif = S.punto === "Panificio";
   const nBisc = panif ? biscDaFare().length : S.biscotti.filter(function(b){ return b.stato === "manca" && b.negozio === S.punto; }).length;
-  const voci = [{ id:"prenotazioni", nome:"Prenotazioni", n:nPren }, { id:"biscotti", nome:"Biscotti", n:nBisc }, mancanti];
+  const voci = [{ id:"prenotazioni", nome:"Prenotazioni", n:nPren }, { id:"biscotti", nome:"Biscotti", n:nBisc }];
+  if (vedeMancanti()) voci.push(mancanti);
   if (puoStat()) voci.push({ id:"statistiche", nome:"Statistiche", n:null });
   if (puoPersone()) voci.push({ id:"persone", nome:"Persone registrate", n:null });
   voci.push.apply(voci, notif);
@@ -2474,7 +2519,7 @@ function vaiSezione(id, forza){
     return;
   }
   chiudiMenu();
-  if (id === "biscotti" || id === "mancanti" || (id === "prenotazioni" && vedePren()) || id === "notifiche" || (id === "statistiche" && puoStat()) || (id === "persone" && puoPersone())){
+  if (id === "biscotti" || (id === "mancanti" && vedeMancanti()) || (id === "prenotazioni" && vedePren()) || id === "notifiche" || (id === "statistiche" && puoStat()) || (id === "persone" && puoPersone())){
     if (!inSezioneExtra()) S.vistaPrima = S.vista;
     mostraVista("negozio");
     mostraSez(id);
@@ -2693,8 +2738,9 @@ function gruppoCarico(r){
 }
 function gruppiCarico(aperte){
   const per = new Map();
-  const urgenti = [], ferme = [], nuove = [];
+  const urgenti = [], ferme = [], nuove = [], arrivate = [];
   aperte.filter(function(r){ return r.stato === "attesa"; }).forEach(function(r){
+    if (arrivataDaPortare(r)){ arrivate.push(r); return; }
     if (r.nuova){ nuove.push(r); return; }
     if (r.urgente){ urgenti.push(r); return; }
     if (infoFerma(r)){ ferme.push(r); return; }
@@ -2707,6 +2753,12 @@ function gruppiCarico(aperte){
   const fuori = Array.from(per.keys()).filter(function(k){ return k.indexOf("Fuori ") === 0; })
     .sort(function(a, b){ return oraMin(a).localeCompare(oraMin(b)) || a.localeCompare(b, "it"); });
   const out = [];
+  /* arrivate in magazzino dopo essere mancate: per prime, con la casella verde */
+  if (arrivate.length){
+    arrivate.sort(function(a, b){ return (b.urgente - a.urgente) || a.arrivatoAlle - b.arrivatoAlle; });
+    out.push(el("section", {class:"gruppo arrivate", "aria-label":"Arrivate in magazzino"}, testaGruppo("Da portare", "Arrivate in magazzino", arrivate.length),
+      el("ul", {class:"lista"}, ...arrivate.map(function(r){ return rigaCarico(r, false, true, true); }))));
+  }
   /* appena arrivate: azzurre, in cima per qualche secondo */
   if (nuove.length){
     out.push(el("section", {class:"gruppo nuove", "aria-label":"Appena arrivate"}, testaGruppo("Adesso", "Appena arrivate", nuove.length),
@@ -2744,7 +2796,8 @@ function gruppiNegozio(aperte){
     .filter(function(p){ return DESTINAZIONI.indexOf(p) < 0 && p !== PROMEMORIA; })));
   const gruppi = [];
   [PROMEMORIA].concat(DESTINAZIONI, extra).forEach(function(dest){
-    const items = aperte.filter(function(r){ return r.per === dest; }).sort(ordinaPerReparto);
+    /* le cose arrivate in magazzino stanno in cima al loro negozio */
+    const items = aperte.filter(function(r){ return r.per === dest; }).sort(function(a, b){ return (arrivataDaPortare(b) - arrivataDaPortare(a)) || ordinaPerReparto(a, b); });
     if (!items.length) return;
     if (dest === PROMEMORIA){
       gruppi.push(el("section", {class:"gruppo", "aria-label":"Promemoria"}, testaGruppo("Da ricordare", "Promemoria", items.length),
@@ -2759,7 +2812,8 @@ function gruppiNegozio(aperte){
   return gruppi;
 }
 function renderConsegne(){
-  const aperte = S.richieste.filter(function(r){ return r.stato !== "consegnato"; });
+  /* le cose che non ci sono in magazzino non stanno nella lista: sono nella striscia rossa */
+  const aperte = S.richieste.filter(function(r){ return r.stato !== "consegnato" && !mancaInMagazzino(r); });
   const nAttesa = aperte.filter(function(r){ return r.stato === "attesa" && r.per !== PROMEMORIA; }).length;
   const nViaggio = aperte.filter(function(r){ return r.stato === "caricato"; }).length;
   const nUrg = aperte.filter(function(r){ return r.urgente; }).length;
@@ -3162,10 +3216,10 @@ function chiedi(testo, sotto, si, no){
     rispostaDomanda = function(r){ rispostaDomanda = null; $("domanda").hidden = true; ok(r); };
   });
 }
-/* riquadro dei titolari: prodotti nuovi da confermare o correggere */
-function renderDaControllare(){
-  const box = $("pren-dacontrollare");
-  if (!S.owner || !puoPrenotare()){ box.hidden = true; return; }
+/* prodotti nuovi da confermare o correggere (solo titolari):
+   in Prenotazioni un tasto, che apre una schermata a parte con tutti i prodotti da accettare */
+S.dcAperto = false;
+function gruppiDaControllare(){
   const limite = dataLocale(Date.now() - 7 * 86400000);
   const gruppi = new Map();
   S.prenotazioni.forEach(function(p){
@@ -3178,15 +3232,28 @@ function renderDaControllare(){
       gruppi.get(k).pren.push(p);
     });
   });
+  return gruppi;
+}
+function renderDaControllare(){
+  const box = $("pren-dacontrollare");
+  const titolare = !!S.owner && puoPrenotare() && inPren();
+  const gruppi = titolare ? gruppiDaControllare() : new Map();
   box.hidden = !gruppi.size;
-  if (!gruppi.size) return;
+  riempi(box, gruppi.size ? [el("button", {type:"button", class:"primary dc-apri", id:"dc-apri"},
+    "Prodotti da controllare ", el("span", {class:"badge", text:String(gruppi.size)}))] : []);
+  /* la schermata a parte */
+  const aperto = S.dcAperto && titolare;
+  $("dc-schermo").hidden = !aperto;
+  if (!aperto) return;
+  document.body.style.overflow = "hidden";
+  $("dc-vuoto").hidden = gruppi.size > 0;
   const elenco = elencoProdotti();
-  const voci = Array.from(gruppi.entries()).map(function(e){
+  riempi($("dc-lista"), Array.from(gruppi.entries()).map(function(e){
     const k = e[0], g = e[1];
     const dove = g.pren.slice(0, 3).map(function(p){ return fmtCortoGiorno(p.perIl) + (p.cliente ? ", " + p.cliente : ""); }).join(" · ") + (g.pren.length > 3 ? " e altre" : "");
     const correggi = S.prenCorreggi === k;
     const off = S.pending.has("prodotti");
-    return el("div", {class:"pren-dc-voce"},
+    return el("div", {class:"card pren-dc-voce"},
       el("p", {class:"articolo"}, el("strong", {text:"«" + g.testo + "»"}), " · " + (g.pren.length === 1 ? "1 prenotazione" : g.pren.length + " prenotazioni")),
       el("p", {class:"hint", text:dove}),
       correggi
@@ -3197,10 +3264,13 @@ function renderDaControllare(){
         : el("div", {class:"row"},
             el("button", {type:"button", class:"mini", "data-pren-dc-conferma":k, "data-testo":g.testo, disabled:off, text:"Conferma"}),
             el("button", {type:"button", class:"mini", "data-pren-dc-errore":k, disabled:off, text:"È un errore, era…"})));
-  });
-  riempi(box, [el("p", {class:"label-sm", text:"Prodotti nuovi da controllare (solo titolari)"}),
-    el("p", {class:"hint", text:"«Conferma»: entra nell'elenco dei prodotti. «È un errore, era…»: scegli il prodotto giusto e tutte le prenotazioni scritte così si correggono da sole."}),
-    ...voci]);
+  }));
+}
+function chiudiDaControllare(){
+  S.dcAperto = false; S.prenCorreggi = "";
+  $("dc-schermo").hidden = true;
+  document.body.style.overflow = "";
+  renderPrenotazioni();
 }
 async function salvaProdotti(cambia){
   if (!store || !store.prodotti || S.pending.has("prodotti")) return false;
@@ -3744,6 +3814,7 @@ function mostraVista(v){
   $("tab-negozio").setAttribute("aria-selected", String(v === "negozio"));
   $("tab-consegne").setAttribute("aria-selected", String(v === "consegne"));
   renderTestata();
+  renderStrisceMag();
 }
 function applicaRuolo(){
   S.ruolo = leggiRuolo();
@@ -3894,6 +3965,13 @@ function collega(){
       return;
     }
     /* prodotti da controllare (titolari) */
+    if (b.id === "dc-apri"){ S.dcAperto = true; renderPrenotazioni(); try { $("dc-schermo").scrollTop = 0; $("dc-chiudi").focus(); } catch(e){} return; }
+    if (b.id === "dc-chiudi") return chiudiDaControllare();
+    /* striscia rossa */
+    if (b.dataset.apriMancanti){ if (vedeMancanti()) vaiSezione("mancanti"); return; }
+    if (b.id === "mag-mostra") return apriMagTutto();
+    if (b.id === "mag-tutto-chiudi") return chiudiMagTutto();
+    if (b.id === "mag-tutto-apri"){ chiudiMagTutto(); if (vedeMancanti()) vaiSezione("mancanti"); return; }
     if (b.dataset.prenDcConferma) return confermaProdotto(b.dataset.testo);
     if (b.dataset.prenDcErrore){ S.prenCorreggi = b.dataset.prenDcErrore; renderPrenotazioni(); const sc = $("pren-dc-scelta"); if (sc) sc.focus(); return; }
     if (b.dataset.prenDcAnnulla){ S.prenCorreggi = ""; return renderPrenotazioni(); }
@@ -3938,6 +4016,11 @@ function collega(){
   $("pren-schermo").addEventListener("keydown", function(ev){ if (ev.key === "Escape" && $("domanda").hidden) chiudiFormPren(); });
   $("domanda").addEventListener("keydown", function(ev){ if (ev.key === "Escape" && rispostaDomanda) rispostaDomanda(false); });
   $("disdici").addEventListener("keydown", function(ev){ if (ev.key === "Escape") chiudiDisdici(); });
+  /* «Mostra tutto»: si chiude con «Chiudi», toccando fuori o con Esc */
+  $("mag-tutto").addEventListener("click", function(ev){ if (ev.target === this) chiudiMagTutto(); });
+  $("mag-tutto").addEventListener("keydown", function(ev){ if (ev.key === "Escape") chiudiMagTutto(); });
+  $("dc-schermo").addEventListener("keydown", function(ev){ if (ev.key === "Escape") chiudiDaControllare(); });
+  window.addEventListener("resize", controllaStriscia);
   $("disdici-altro").addEventListener("input", renderDisdici);
   $("pren-cerca-testo").addEventListener("input", function(){ S.prenCerca.testo = this.value; renderCerca(); });
   $("notifica").addEventListener("click", function(){ if (Date.now() - fineTrascina > 400) chiudiNotifica(); });
@@ -4239,6 +4322,7 @@ async function mandaEventi(chiudendo){
   }
 }
 function eventoStato(k, p){
+  if (p.arrivatoAlle && !p.prep) return { tipo: "arrivata", id: k };
   if (p.disdetta === true) return { tipo: "disdetta", id: k };
   if (p.prep === "pronto") return { tipo: "pronto", id: k };
   if (p.prep === "manca") return { tipo: "manca", id: k };
@@ -4248,11 +4332,11 @@ function eventoStato(k, p){
 
 /* scelte per ruolo: cosa si può ricevere su questo telefono */
 const SCELTE_NOTIFICHE = {
-  "consegne": [["nuove", "Ogni nuova richiesta", "Le urgenti arrivano sempre."], ["pronto", "Pronto da caricare dal panificio", ""]],
+  "consegne": [["nuove", "Ogni nuova richiesta", "Le urgenti arrivano sempre."], ["pronto", "Pronto da caricare dal panificio", ""], ["arrivata", "Cose arrivate in magazzino, da portare", ""]],
   "panificio": [["nuove", "Nuove richieste per il panificio", ""], ["prenotazioni", "Nuove prenotazioni dei clienti", ""], ["biscotti", "Comande di biscotti", ""]],
   "corso": [["manca", "Una nostra richiesta non c'è in magazzino", ""], ["partite", "Le nostre cose sono partite", ""], ["prenotazioni", "Prenotazioni che i clienti ritirano da noi", ""], ["disdette", "Prenotazioni disdette", "Quando qualcun altro disdice una prenotazione che si ritira da noi."]],
   "piazza-nenni": [["manca", "Una nostra richiesta non c'è in magazzino", ""], ["partite", "Le nostre cose sono partite", ""], ["prenotazioni", "Prenotazioni che i clienti ritirano da noi", ""], ["disdette", "Prenotazioni disdette", "Quando qualcun altro disdice una prenotazione che si ritira da noi."]],
-  "titolare": [["tutto", "Ricevi tutto", "Nuove richieste, prenotazioni e disdette, cose che mancano, pronti da caricare, biscotti."]]
+  "titolare": [["tutto", "Ricevi tutto", "Nuove richieste, prenotazioni e disdette, cose che mancano e che arrivano in magazzino, pronti da caricare, biscotti."]]
 };
 function sceltaNormale(k){ return k !== "tutto"; }
 function chiaveB64(s){
