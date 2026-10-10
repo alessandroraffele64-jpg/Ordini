@@ -274,6 +274,43 @@ body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area
 .pill.p-arrivata{background:var(--pronto-solid);color:var(--pronto-solid-ink)}
 .riga.pren.messa-parte{background:color-mix(in srgb,var(--surface-2) 55%,transparent)}
 .riga.pren.messa-parte .articolo,.riga.pren.messa-parte .nota{text-decoration:line-through;color:var(--muted)}
+/* prenotazione disdetta: barrata, grigia, in fondo al giorno */
+.riga.pren.disdetta{background:var(--surface-2);opacity:.85}
+.riga.pren.disdetta .articolo,.riga.pren.disdetta .nota{text-decoration:line-through;color:var(--muted)}
+.pren-disdetta-info{font-size:13.5px;font-weight:700;color:var(--urgent-txt)}
+.pren-tel{appearance:none;display:inline-flex;align-items:center;gap:4px;min-height:32px;padding:0 10px;border:1.5px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);font-weight:700;font-size:14px;font-variant-numeric:tabular-nums;cursor:pointer}
+.primary.pericolo-pieno{background:var(--urgent);color:#fff}
+.disdici-box .field{flex:none}
+.disdici-box input{min-height:46px}
+.disdici-box .chip-add[aria-pressed="true"]{background:var(--urgent);border-color:var(--urgent);color:#fff}
+/* controllo dei prodotti dopo «Salva» */
+.pren-campi{display:flex;flex-direction:column;gap:14px}
+.pren-controllo{display:flex;flex-direction:column;gap:12px}
+.pren-ctrl-lista{overflow:visible}
+.pren-ctrl-voce .scritto{font-size:13px;color:var(--muted)}
+.pren-ctrl-voce .link{align-self:flex-start}
+.pren-ctrl-voce.sicuro{border-color:var(--line-2)}
+.pren-ctrl-voce.da-decidere{border:2px solid var(--urgent);background:var(--urgent-bg)}
+.pren-ctrl-voce .ok{color:var(--done);font-weight:800}
+.pren-ctrl-voce .domanda{font-weight:700;font-size:15.5px}
+.pren-ctrl-voce select{min-height:44px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font-size:16px;font-weight:700;padding:0 10px;max-width:100%}
+/* cerca */
+.pren-cerca{display:flex;flex-direction:column;gap:8px}
+.pren-cerca-apri{align-self:flex-end}
+.pren-cerca-campo{display:flex;align-items:flex-end;gap:8px}
+.pren-cerca-campo .field{flex:1 1 auto;min-width:0}
+.pren-cerca-campo input{min-height:48px;width:100%}
+.pren-cerca-campo .mini{min-height:48px}
+.pren-ris-giorno{display:flex;flex-direction:column;gap:6px}
+.pren-ris{appearance:none;display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;text-align:left;padding:10px 12px;border:1.5px solid var(--line-2);border-radius:12px;background:var(--surface);color:var(--ink);font-size:15px;cursor:pointer}
+.pren-ris .meta-ris{font-size:13px;color:var(--muted);font-weight:600}
+.pren-ris.disdetta strong{text-decoration:line-through;color:var(--muted)}
+/* da controllare (solo titolari) */
+.pren-dacontrollare{border:2px solid var(--oro);gap:10px}
+.pren-dc-voce{display:flex;flex-direction:column;gap:8px;padding:10px 0;border-top:1px dashed var(--line)}
+.pren-dc-voce:first-of-type{border-top:0;padding-top:0}
+.pren-dc-voce .row{gap:8px;align-items:center}
+.pren-dc-voce select{min-height:44px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font-size:16px;font-weight:700;padding:0 10px;max-width:100%}
 .stat-per[aria-pressed="true"],.stat-per[aria-pressed="true"]:hover{background:var(--ink);border-color:var(--ink);color:var(--bg)}
 .barre{display:flex;flex-direction:column;gap:12px}
 .barra{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;align-items:baseline}
@@ -658,6 +695,15 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
 
     <!-- Prenotazioni dei clienti: separate dalle consegne -->
     <div class="view" id="pannello-prenotazioni" hidden>
+      <div class="card pren-dacontrollare" id="pren-dacontrollare" hidden></div>
+      <div class="pren-cerca" id="pren-cerca">
+        <button type="button" class="mini pren-cerca-apri" id="pren-cerca-apri" aria-expanded="false">🔍 Cerca</button>
+        <div class="pren-cerca-campo" id="pren-cerca-campo" hidden>
+          <label class="field" for="pren-cerca-testo"><span class="label-sm">Cerca cliente, prodotto o telefono</span><input id="pren-cerca-testo" type="search" autocomplete="off" placeholder="Es. Rossi, pitta, 333"></label>
+          <button type="button" class="mini" id="pren-cerca-chiudi">Chiudi</button>
+        </div>
+      </div>
+      <div class="blocco" id="pren-risultati" hidden></div>
       <div class="pren-pagine" id="pren-pagine" role="group" aria-label="Quale giorno guardare"></div>
       <div class="card pren-scegli" id="pren-scegli" hidden>
         <label class="field" for="pren-pagina-data"><span class="label-sm">Scegli il giorno</span><input type="date" id="pren-pagina-data"></label>
@@ -899,6 +945,7 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
       <button type="button" class="pren-chiudi" id="pren-chiudi" aria-label="Chiudi la nuova prenotazione">✕ Chiudi</button>
       <h2 class="comanda-titolo" id="pren-titolo">Nuova prenotazione</h2>
     </div>
+    <div class="pren-campi" id="pren-campi">
     <p class="chi-ordina" id="pren-chi"></p>
     <div class="blocco"><p class="label-sm">Per quando?</p><div class="chips" id="pren-quando"></div>
       <label class="field" id="pren-data-riga" hidden><span class="label-sm">Giorno</span><input type="date" id="pren-data"></label>
@@ -906,13 +953,23 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
     <div class="blocco" id="pren-ritiro-blocco"><p class="label-sm">Dove la ritira il cliente</p><div class="chips" id="pren-ritiro"></div></div>
     <div class="row">
       <label class="field" for="pren-cliente"><span class="label-sm">Nome del cliente (se serve)</span><input id="pren-cliente" type="text" maxlength="60" autocomplete="off" placeholder="Es. Sig. Rossi"></label>
+      <label class="field" for="pren-tel"><span class="label-sm">Numero di telefono (opzionale)</span><input id="pren-tel" type="tel" inputmode="tel" maxlength="20" autocomplete="off" placeholder="Es. 333 1234567"></label>
       <label class="field pren-ora" for="pren-ora"><span class="label-sm">Ora di ritiro</span><input id="pren-ora" type="time"></label>
     </div>
     <label class="label" for="pren-righe">Cosa?</label>
-    <textarea id="pren-righe" rows="4" autocomplete="off" placeholder="Una cosa per riga, per esempio:&#10;40 filoncini&#10;3 pitte piene"></textarea>
+    <textarea id="pren-righe" rows="4" autocomplete="off" placeholder="Una cosa per riga, per esempio:&#10;40 filoncini&#10;3 pitte chine&#10;1 kg pane casereccio"></textarea>
     <label class="field" for="pren-nota"><span class="label-sm">Nota (se serve)</span><input id="pren-nota" type="text" maxlength="140" autocomplete="off" placeholder="Es. ben cotti"></label>
     <div class="riep-azioni"><button type="button" class="mini" id="pren-annulla">Annulla</button><button type="submit" class="primary" id="pren-salva" disabled>Salva prenotazione</button></div>
     <p class="esito" id="pren-esito" role="status"></p>
+    </div>
+    <!-- dopo «Salva»: controllo dei prodotti, come «Controlla prima di inviare» -->
+    <div class="pren-controllo" id="pren-controllo" hidden>
+      <p class="ctrl-domanda" id="pren-ctrl-domanda"></p>
+      <p class="hint" id="pren-ctrl-sotto"></p>
+      <ul class="ctrl-lista pren-ctrl-lista" id="pren-ctrl-lista"></ul>
+      <div class="riep-azioni"><button type="button" class="mini" id="pren-ctrl-indietro">Torna a scrivere</button><button type="button" class="primary" id="pren-ctrl-salva">Sì, salva</button></div>
+      <p class="esito" id="pren-ctrl-esito" role="status"></p>
+    </div>
   </form>
 </div>
 <!-- Una domanda con Sì / No, nello stile dell'app -->
@@ -921,6 +978,17 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
     <p class="domanda-testo" id="domanda-testo"></p>
     <p class="hint" id="domanda-sotto" hidden></p>
     <div class="riep-azioni"><button type="button" class="mini" id="domanda-no">No</button><button type="button" class="primary" id="domanda-si">Sì</button></div>
+  </div>
+</div>
+<!-- Disdici una prenotazione: il motivo è obbligatorio -->
+<div class="domanda-velo" id="disdici" role="alertdialog" aria-modal="true" aria-labelledby="disdici-testo" hidden>
+  <div class="card domanda-box disdici-box">
+    <p class="domanda-testo" id="disdici-testo">Disdici la prenotazione</p>
+    <p class="hint" id="disdici-cosa"></p>
+    <p class="label-sm">Perché? (obbligatorio)</p>
+    <div class="chips" id="disdici-scelte"></div>
+    <label class="field" for="disdici-altro"><span class="label-sm">Altro motivo</span><input id="disdici-altro" type="text" maxlength="80" autocomplete="off" placeholder="Scrivi il motivo"></label>
+    <div class="riep-azioni"><button type="button" class="mini" id="disdici-no">Indietro</button><button type="button" class="primary pericolo-pieno" id="disdici-si" disabled>Disdici</button></div>
   </div>
 </div>
 <div class="conferma-velo" id="riepilogo" role="dialog" aria-modal="true" aria-labelledby="riep-titolo" hidden>
@@ -2318,7 +2386,7 @@ function mostraSez(sez){
 
 /* ---------- menu con le tre lineette ---------- */
 function vociMenu(){
-  const nPren = prenVisibili().filter(function(p){ return p.stato !== "parte" && p.perIl >= oggiStr() && p.perIl <= domaniStr(); }).length;
+  const nPren = prenVisibili().filter(function(p){ return prenAperta(p) && p.perIl >= oggiStr() && p.perIl <= domaniStr(); }).length;
   const notif = notificheDisponibili() ? [{ id:"notifiche", nome:"Notifiche", n:null }] : [];
   const mancanti = { id:"mancanti", nome:"Non in magazzino", n:nonInMagazzino().length };
   if (S.ruolo.tipo === "giro") return [mancanti].concat(notif);
@@ -2373,7 +2441,7 @@ function renderTestata(){
     sopra = "Solo per i titolari"; titolo = "Persone registrate"; info = "";
   } else if (pren){
     sopra = "Prenotazioni dei clienti"; titolo = "Prenotazioni";
-    info = contaTesto(prenVisibili().filter(function(p){ return p.stato !== "parte" && p.perIl >= oggiStr(); }).length, "da preparare", "da preparare");
+    info = contaTesto(prenVisibili().filter(function(p){ return prenAperta(p) && p.perIl >= oggiStr(); }).length, "da preparare", "da preparare");
   } else if (stat){
     sopra = "Solo per i titolari"; titolo = "Statistiche"; info = "";
   } else if (giro){
@@ -2777,7 +2845,120 @@ function prenVisibili(){
   return neg ? S.prenotazioni.filter(function(p){ return p.ritiro === neg || p.presaDa === neg || p.mio; }) : S.prenotazioni;
 }
 S.prenotazioni = [];
-S.formPren = { aperto: false, quando: "domani", data: "", ritiro: "", inviando: false };
+S.formPren = { aperto: false, quando: "domani", data: "", ritiro: "", inviando: false, ctrl: null };
+S.prenCerca = { aperto: false, testo: "" };
+S.prenCorreggi = "";
+/* ---------- prodotti delle prenotazioni: tutti scritti allo stesso modo ----------
+   Si scrive libero ("3 pitte chine"); l'app riconosce il prodotto giusto ("Pitta china")
+   così il totale «Ancora da preparare» somma tutto sulla stessa riga.
+   L'elenco di partenza è qui; i prodotti confermati dai titolari e le correzioni
+   («È un errore, era…») si salvano nelle impostazioni condivise (chiave "prodotti"). */
+const PRODOTTI_BASE = ["Pane casereccio", "Pitta china", "Filoncini"];
+/* altri modi di scrivere lo stesso prodotto (si confrontano senza maiuscole e accenti) */
+const ALIAS_BASE = {
+  "casereccio": "Pane casereccio", "casareccio": "Pane casereccio", "pane casareccio": "Pane casereccio",
+  "pane di casa": "Pane casereccio",
+  "pitta piena": "Pitta china", "pitte piene": "Pitta china", "pitte pie": "Pitta china", "pitta pie": "Pitta china",
+  "pitta chjina": "Pitta china", "pitte chjine": "Pitta china", "pitta china": "Pitta china",
+  "filoncino": "Filoncini"
+};
+S.prodImp = { elenco: [], alias: {} };
+function prodottiCondivisi(d){
+  d = d || {};
+  const elenco = Array.isArray(d.elenco) ? d.elenco.filter(function(x){ return typeof x === "string" && x.trim(); }).map(function(x){ return x.trim().slice(0, 60); }).slice(0, 200) : [];
+  const alias = {};
+  if (d.alias && typeof d.alias === "object"){
+    for (const k in d.alias){ if (typeof d.alias[k] === "string" && d.alias[k].trim()) alias[chiave(k)] = d.alias[k].trim().slice(0, 60); }
+  }
+  return { elenco: elenco, alias: alias };
+}
+/* elenco completo: quelli di partenza più quelli confermati dai titolari */
+function elencoProdotti(){
+  const out = PRODOTTI_BASE.slice();
+  S.prodImp.elenco.forEach(function(n){ if (!out.some(function(x){ return chiave(x) === chiave(n); })) out.push(n); });
+  return out.sort(function(a, b){ return a.localeCompare(b, "it"); });
+}
+/* la parola senza la vocale finale: "pitte" e "pitta" diventano uguali */
+const PAROLE_VUOTE = { "di":1, "de":1, "del":1, "della":1, "dei":1, "delle":1, "al":1, "alla":1, "con":1 };
+function formaProdotto(k){
+  return chiave(k).split(" ").filter(function(w){ return w && !PAROLE_VUOTE[w]; })
+    .map(function(w){ return w.length > 3 ? w.replace(/[aeiou]$/, "") : w; }).join(" ");
+}
+function distanza(a, b){
+  if (a === b) return 0;
+  const m = a.length, n = b.length;
+  let prima = []; for (let j = 0; j <= n; j++) prima.push(j);
+  for (let i = 1; i <= m; i++){
+    const ora = [i];
+    for (let j = 1; j <= n; j++) ora.push(Math.min(prima[j] + 1, ora[j - 1] + 1, prima[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)));
+    prima = ora;
+  }
+  return prima[n];
+}
+/* tutti i modi conosciuti di scrivere ogni prodotto: [forma, nome giusto] */
+function formeConosciute(){
+  const out = [];
+  elencoProdotti().forEach(function(n){ out.push([formaProdotto(n), n]); });
+  const alias = Object.assign({}, ALIAS_BASE, S.prodImp.alias);
+  for (const k in alias) out.push([formaProdotto(k), alias[k]]);
+  return out.filter(function(x){ return x[0]; });
+}
+/* Riconosce il prodotto scritto.
+   sicuro: è proprio quello · dubbio: forse è quello (si chiede) · nuovo: non somiglia a niente */
+function trovaProdotto(testo){
+  const k = chiave(testo);
+  /* una correzione del titolare vale sempre */
+  if (S.prodImp.alias[k]) return { esito: "sicuro", nome: S.prodImp.alias[k] };
+  const f = formaProdotto(testo);
+  if (!f) return { esito: "nuovo", nome: "" };
+  const forme = formeConosciute();
+  const uguale = forme.find(function(x){ return x[0] === f; });
+  if (uguale) return { esito: "sicuro", nome: uguale[1] };
+  let meglio = null, punti = 99;
+  const parole = f.split(" ");
+  forme.forEach(function(x){
+    const sue = x[0].split(" ");
+    /* parole a metà o in più: "pane" → "Pane casereccio", "pitta" → "Pitta china" */
+    const dentro = parole.every(function(w){ return w.length >= 3 && sue.some(function(s){ return s.indexOf(w) === 0 || w.indexOf(s) === 0; }); }) ||
+      sue.every(function(s){ return s.length >= 3 && parole.some(function(w){ return w.indexOf(s) === 0 || s.indexOf(w) === 0; }); });
+    /* piccoli errori di battitura: "caserecio", "filoncinni" */
+    const d = distanza(f, x[0]);
+    const tollera = Math.max(1, Math.floor(Math.max(f.length, x[0].length) / 5));
+    const p = d <= tollera ? d : (dentro ? 10 : 99);
+    if (p < punti){ punti = p; meglio = x[1]; }
+  });
+  if (meglio && punti < 99) return { esito: "dubbio", nome: meglio };
+  return { esito: "nuovo", nome: "" };
+}
+/* il nome giusto di una cosa prenotata (salvato, corretto dal titolare o riconosciuto ora) */
+function nomeProdotto(v){
+  const k = chiave(v.articolo);
+  if (S.prodImp.alias[k]) return S.prodImp.alias[k];
+  if (v.prodotto) return v.prodotto;
+  const t = trovaProdotto(v.articolo);
+  return t.esito === "sicuro" ? t.nome : v.articolo;
+}
+/* da far controllare ai titolari: prodotto nuovo o mai riconosciuto */
+function daControllare(v){
+  const k = chiave(v.articolo);
+  if (S.prodImp.alias[k] || v.prodotto) return false;
+  return trovaProdotto(v.articolo).esito !== "sicuro";
+}
+/* il testo di una riga: quantità e nome giusto */
+function testoVocePren(v){ return (v.quantita ? v.quantita + " " : "") + nomeProdotto(v); }
+/* quantità: "1,5 kg" → 1.5 kg, "500 g" → 0,5 kg, "40" o "40 pz" → 40 pezzi; senza numero conta 1 */
+const UNITA_PREN = { "kg":["kg",1], "k":["kg",1], "chili":["kg",1], "chilo":["kg",1], "kili":["kg",1], "kilo":["kg",1], "kilogrammi":["kg",1],
+  "g":["kg",0.001], "gr":["kg",0.001], "grammi":["kg",0.001], "hg":["kg",0.1], "etti":["kg",0.1], "etto":["kg",0.1],
+  "pz":["",1], "pezzi":["",1], "pezzo":["",1] };
+function quantitaPren(q){
+  const m = String(q || "").replace(",", ".").match(/^\s*(\d+(?:\.\d+)?)\s*\.?\s*(.*)$/);
+  if (!m) return { n: 1, unita: "", senzaNumero: true };
+  const u = chiave(m[2]);
+  const conv = UNITA_PREN[u];
+  return conv ? { n: Number(m[1]) * conv[1], unita: conv[0], senzaNumero: false } : { n: Number(m[1]), unita: u, senzaNumero: false };
+}
+
+/* ---------- prenotazioni dei clienti ---------- */
 function normaPren(k, d, st, autore, rid){
   st = st || {};
   return {
@@ -2787,57 +2968,77 @@ function normaPren(k, d, st, autore, rid){
     ritiro: DESTINAZIONI.indexOf(d.ritiro) >= 0 ? d.ritiro : "Panificio",
     presaDa: PUNTI_RITIRO.indexOf(d.presaDa) >= 0 ? d.presaDa : "",
     cliente: String(d.cliente || "").slice(0, 60),
-    voci: (Array.isArray(d.voci) ? d.voci : []).slice(0, 30).map(function(v){ return { articolo: String(v.articolo || "").slice(0, 120) || "?", quantita: String(v.quantita || "").slice(0, 24) }; }),
+    telefono: String(d.telefono || "").replace(/[^\d+ ]/g, "").trim().slice(0, 20),
+    voci: (Array.isArray(d.voci) ? d.voci : []).slice(0, 30).map(function(v){
+      return { articolo: String(v.articolo || "").slice(0, 120) || "?", quantita: String(v.quantita || "").slice(0, 24),
+        prodotto: typeof v.prodotto === "string" ? v.prodotto.slice(0, 60) : "", nuovo: v.nuovo === true };
+    }),
     nota: String(d.nota || "").slice(0, 140),
     creato: Number(d.creato) || 0,
     inCoda: !!S.inCoda && S.inCoda.has(rid),
     stato: (st.stato === "parte" || st.stato === "pronta" || st.stato === "ritirata") ? "parte" : "attesa",
-    statoAlle: Number(st.statoAlle) || 0
+    statoAlle: Number(st.statoAlle) || 0,
+    /* disdetta: si salva negli stati, dove tutti possono scrivere */
+    disdetta: st.disdetta === true,
+    disdettaDa: typeof st.disdettaDa === "string" ? st.disdettaDa : "",
+    disdettaNome: String(st.disdettaNome || "").slice(0, 60),
+    disdettaMotivo: String(st.disdettaMotivo || "").slice(0, 120),
+    disdettaAlle: Number(st.disdettaAlle) || 0
   };
 }
+/* ancora da preparare: né messa da parte né disdetta */
+function prenAperta(p){ return p.stato !== "parte" && !p.disdetta; }
 function inPren(){ return S.vista === "negozio" && S.sez === "prenotazioni"; }
 function puoPrenotare(){ return !!store && !S.sola && !!S.mioId; }
-/* "40 filoncini" + "20 filoncini" = "60 filoncini": si sommano i numeri con la stessa unità */
+/* "40 filoncini" + "20 filoncini" = "60 Filoncini": si sommano le stesse unità dello stesso prodotto */
 function totaliDaProdurre(lista){
   const m = new Map();
   lista.forEach(function(p){
     p.voci.forEach(function(v){
-      const q = String(v.quantita || "").replace(",", ".").match(/^(\d+(?:\.\d+)?)\s*(.*)$/);
-      const n = q ? Number(q[1]) : 1, unita = q ? q[2].trim().toLowerCase() : "";
-      const k = chiave(v.articolo) + "|" + unita;
-      if (!m.has(k)) m.set(k, { articolo: v.articolo, unita: unita, n: 0, senzaNumero: !q });
-      const g = m.get(k); g.n += n; if (q) g.senzaNumero = false;
+      const nome = nomeProdotto(v), q = quantitaPren(v.quantita);
+      const k = chiave(nome) + "|" + q.unita;
+      if (!m.has(k)) m.set(k, { articolo: nome, unita: q.unita, n: 0, senzaNumero: q.senzaNumero });
+      const g = m.get(k); g.n += q.n; if (!q.senzaNumero) g.senzaNumero = false;
     });
   });
-  return Array.from(m.values()).sort(function(a, b){ return a.articolo.localeCompare(b.articolo, "it"); });
+  return Array.from(m.values()).sort(function(a, b){ return a.articolo.localeCompare(b.articolo, "it") || a.unita.localeCompare(b.unita); });
 }
-function testoTotale(t){ return (t.n % 1 ? t.n.toFixed(1).replace(".", ",") : String(t.n)) + (t.unita ? " " + t.unita : "") + " " + t.articolo; }
+function numeroBello(n){ n = Math.round(n * 100) / 100; return String(n).replace(".", ","); }
+function testoTotale(t){ return numeroBello(t.n) + (t.unita ? " " + t.unita : "") + " " + t.articolo; }
 function nomeGiornoTitolo(s){
   const g = testoGiorno(s);
   return g.charAt(0).toUpperCase() + g.slice(1);
 }
+function chiDisdetta(p){
+  if (p.disdettaDa && p.disdettaDa === S.mioId) return "te";
+  return S.nomi[p.disdettaDa] || p.disdettaNome || "…";
+}
 function rigaPren(p){
-  const voci = p.voci.map(function(v){ return (v.quantita ? v.quantita + " " : "") + v.articolo; }).join(", ");
-  const parte = p.stato === "parte";
-  const statoPill = parte ? el("span", {class:"pill p-consegnato", text:"Messo da parte"}) : null;
+  const voci = p.voci.map(testoVocePren).join(", ");
+  const parte = p.stato === "parte", disd = p.disdetta;
+  const statoPill = disd ? el("span", {class:"pill ctrl-gia", text:"Disdetta"}) : (parte ? el("span", {class:"pill p-consegnato", text:"Messo da parte"}) : null);
   const chi = p.mio ? "te" : (S.nomi[p.autore] || "…");
   const off = S.pending.has(p.id);
   const azioni = el("div", {class:"azioni"});
   if (puoPrenotare()){
-    /* "Messo da parte" solo per il punto vendita dove il cliente ritira */
-    const mioNegozio = !!negozioPren() && p.ritiro === negozioPren();
-    if (mioNegozio && !parte) azioni.append(el("button", {type:"button", class:"azione b-consegna", "data-pren-stato":"parte", "data-id":p.id, disabled:off, text:"Messo da parte"}));
-    if (mioNegozio && parte) azioni.append(el("button", {type:"button", class:"link", "data-pren-stato":"attesa", "data-id":p.id, disabled:off, "aria-label":"Annulla messo da parte", text:"Annulla"}));
-    if (!parte && (p.mio || S.owner)){
-      const armato = S.armatoPren === p.id;
-      azioni.append(el("button", {type:"button", class: armato ? "link pericolo" : "link", "data-pren-togli":p.id, disabled:off, text: armato ? "Conferma: togli" : "Togli"}));
+    if (disd){
+      azioni.append(el("button", {type:"button", class:"link", "data-pren-ripristina":p.id, disabled:off, text:"Ripristina"}));
+    } else {
+      /* "Messo da parte" solo per il punto vendita dove il cliente ritira */
+      const mioNegozio = !!negozioPren() && p.ritiro === negozioPren();
+      if (mioNegozio && !parte) azioni.append(el("button", {type:"button", class:"azione b-consegna", "data-pren-stato":"parte", "data-id":p.id, disabled:off, text:"Messo da parte"}));
+      if (mioNegozio && parte) azioni.append(el("button", {type:"button", class:"link", "data-pren-stato":"attesa", "data-id":p.id, disabled:off, "aria-label":"Annulla messo da parte", text:"Annulla"}));
+      azioni.append(el("button", {type:"button", class:"link pericolo", "data-pren-disdici":p.id, disabled:off, text:"Disdici"}));
     }
   }
-  return el("li", {class:"riga pren " + classeDest(p.ritiro) + (parte ? " messa-parte" : "") + (p.nuova ? " nuova" : "")},
+  const tel = p.telefono ? el("button", {type:"button", class:"pren-tel", "data-copia-tel":p.telefono, "aria-label":"Copia il numero " + p.telefono, text:"☎ " + p.telefono}) : null;
+  return el("li", {class:"riga pren " + classeDest(p.ritiro) + (parte && !disd ? " messa-parte" : "") + (disd ? " disdetta" : "") + (p.nuova ? " nuova" : ""), id:"pren-" + p.id.replace(/[^a-zA-Z0-9_-]/g, "_")},
     sigla(p.ritiro),
     el("div", {class:"riga-main"},
       el("p", {class:"articolo"}, p.cliente ? el("span", {text:p.cliente + ": "}) : null, voci),
+      tel ? el("p", null, tel) : null,
       p.nota ? el("p", {class:"nota", text:"“" + p.nota + "”"}) : null,
+      disd ? el("p", {class:"pren-disdetta-info", text:"Disdetta da " + chiDisdetta(p) + (p.disdettaMotivo ? " · " + p.disdettaMotivo : "") + (p.disdettaAlle ? " · " + quando(p.disdettaAlle) : "")}) : null,
       meta([p.inCoda ? el("span", {class:"pill p-coda", text:"Non ancora inviata"}) : null, statoPill,
         el("span", {class:"pill dest " + classeDest(p.ritiro), text:"Ritiro " + (PREP[p.ritiro] || p.ritiro).replace(/^a /, "a ")}),
         p.ora ? el("span", {class:"pill p-ora", text:"ore " + p.ora}) : null,
@@ -2861,6 +3062,12 @@ function renderFormPren(){
   /* dietro il modulo la pagina non scorre */
   document.body.style.overflow = aperto ? "hidden" : "";
   if (!aperto) return;
+  /* dopo «Salva»: la schermata di controllo prende il posto del modulo */
+  const inCtrl = !!f.ctrl;
+  $("pren-campi").hidden = inCtrl;
+  $("pren-controllo").hidden = !inCtrl;
+  $("pren-titolo").textContent = inCtrl ? "Controlla prima di salvare" : "Nuova prenotazione";
+  if (inCtrl){ renderCtrlPren(); return; }
   const oggi = oggiStr();
   riempi($("pren-quando"), [["oggi","Oggi"],["domani","Domani"],["altro","Altro giorno"]].map(function(o){
     return el("button", {type:"button", class:"chip-add stat-per pren-q" + (o[0] !== "oggi" ? " diverso" : ""), "data-pren-quando":o[0], "aria-pressed":String(f.quando === o[0]), disabled:f.inviando, text:o[1]});
@@ -2886,15 +3093,61 @@ function renderFormPren(){
   $("pren-ritiro").querySelectorAll("input").forEach(function(i){ i.checked = i.value === rit; });
   const n = righeDi("pren-righe").length;
   $("pren-salva").disabled = f.inviando || !n;
-  $("pren-salva").textContent = f.inviando ? "Salvo…" : "Salva prenotazione";
+  $("pren-salva").textContent = "Salva prenotazione";
   $("pren-chi").textContent = S.nomeMio ? "La prendi tu, " + S.nomeMio + (negozioPren() ? " (" + negozioPren() + ")" : "") + "." : "";
+}
+/* la schermata di controllo: ogni riga con il prodotto riconosciuto o una domanda */
+function ctrlPrenRisolta(v){ return v.esito === "sicuro" || !!v.scelta; }
+function renderCtrlPren(){
+  const c = S.formPren.ctrl, f = S.formPren;
+  const mancano = c.voci.filter(function(v){ return !ctrlPrenRisolta(v); }).length;
+  const dom = $("pren-ctrl-domanda");
+  dom.className = "ctrl-domanda" + (mancano ? " diverso" : "");
+  dom.textContent = mancano
+    ? (mancano === 1 ? "C'è 1 dubbio: rispondi qui sotto." : "Ci sono " + mancano + " dubbi: rispondi qui sotto.")
+    : "Tutto chiaro. È giusto?";
+  $("pren-ctrl-sotto").textContent = nomeGiornoTitolo(c.giorno) + " · ritiro " + (PREP[c.ritiro] || c.ritiro) + (c.cliente ? " · " + c.cliente : "");
+  const elenco = elencoProdotti();
+  riempi($("pren-ctrl-lista"), c.voci.map(function(v, i){
+    const q = v.quantita ? el("span", {class:"qta", text:v.quantita}) : null;
+    const scritto = el("p", {class:"scritto", text:"Hai scritto: «" + (v.quantita ? v.quantita + " " : "") + v.articolo + "»"});
+    if (v.esito === "sicuro" || v.scelta){
+      const nome = v.scelta === "nuovo" ? v.articolo : (v.scelta && v.scelta !== "nuovo" ? v.scelta : v.nome);
+      const cambia = v.esito !== "sicuro" ? el("button", {type:"button", class:"link", "data-pren-ctrl-cambia":String(i), disabled:f.inviando, text:"Cambia"}) : null;
+      return el("li", {class:"ctrl-voce pren-ctrl-voce sicuro"},
+        el("p", {class:"articolo"}, q, nome, v.scelta === "nuovo" ? el("span", {class:"pill p-ora", text:"Prodotto nuovo"}) : el("span", {class:"ok", "aria-label":"riconosciuto", text:"✓"})),
+        chiave(nome) !== chiave(v.articolo) || v.scelta ? scritto : null,
+        v.scelta === "nuovo" ? el("p", {class:"hint", text:"Si salva com'è scritto; poi lo controlla il titolare."}) : null,
+        cambia);
+    }
+    if (v.esito === "dubbio"){
+      return el("li", {class:"ctrl-voce pren-ctrl-voce da-decidere"},
+        el("p", {class:"articolo"}, q, v.articolo),
+        el("p", {class:"domanda", text:"Volevi dire " + v.nome + "?"}),
+        el("div", {class:"ctrl-scelte"},
+          el("button", {type:"button", class:"mini", "data-pren-ctrl-si":String(i), disabled:f.inviando, text:"Sì, " + v.nome}),
+          el("button", {type:"button", class:"mini", "data-pren-ctrl-nuovo":String(i), disabled:f.inviando, text:"No, è un prodotto nuovo"})));
+    }
+    /* non somiglia a niente: prodotto nuovo, oppure si sceglie dall'elenco */
+    const sel = el("select", {"data-pren-ctrl-scegli":String(i), "aria-label":"Scegli il prodotto giusto per " + v.articolo, disabled:f.inviando},
+      el("option", {value:"", text:"Oppure è uno di questi…"}), ...elenco.map(function(n){ return el("option", {value:n, text:n}); }));
+    return el("li", {class:"ctrl-voce pren-ctrl-voce da-decidere"},
+      el("p", {class:"articolo"}, q, v.articolo),
+      el("p", {class:"domanda", text:"Non lo conosco. È un prodotto nuovo?"}),
+      el("div", {class:"ctrl-scelte"},
+        el("button", {type:"button", class:"mini", "data-pren-ctrl-nuovo":String(i), disabled:f.inviando, text:"Sì, è un prodotto nuovo"}), sel));
+  }));
+  $("pren-ctrl-salva").disabled = f.inviando || mancano > 0;
+  $("pren-ctrl-salva").textContent = f.inviando ? "Salvo…" : (mancano ? "Rispondi prima ai dubbi" : "Sì, salva");
+  $("pren-ctrl-indietro").disabled = f.inviando;
 }
 /* ha già scritto qualcosa nel modulo? */
 function formPrenScritto(){
-  return ["pren-righe","pren-cliente","pren-nota","pren-ora"].some(function(id){ return String($(id).value || "").trim() !== ""; });
+  return ["pren-righe","pren-cliente","pren-tel","pren-nota","pren-ora"].some(function(id){ return String($(id).value || "").trim() !== ""; });
 }
 function svuotaFormPren(){
-  ["pren-righe","pren-cliente","pren-nota","pren-ora","pren-data"].forEach(function(id){ $(id).value = ""; });
+  ["pren-righe","pren-cliente","pren-tel","pren-nota","pren-ora","pren-data"].forEach(function(id){ $(id).value = ""; });
+  S.formPren.ctrl = null;
   esito("pren-esito", "");
 }
 async function chiudiFormPren(){
@@ -2924,48 +3177,170 @@ function chiedi(testo, sotto, si, no){
     rispostaDomanda = function(r){ rispostaDomanda = null; $("domanda").hidden = true; ok(r); };
   });
 }
+/* riquadro dei titolari: prodotti nuovi da confermare o correggere */
+function renderDaControllare(){
+  const box = $("pren-dacontrollare");
+  if (!S.owner || !puoPrenotare()){ box.hidden = true; return; }
+  const limite = dataLocale(Date.now() - 7 * 86400000);
+  const gruppi = new Map();
+  S.prenotazioni.forEach(function(p){
+    if (p.disdetta || p.perIl < limite) return;
+    p.voci.forEach(function(v){
+      if (!daControllare(v)) return;
+      const k = chiave(v.articolo);
+      if (!k) return;
+      if (!gruppi.has(k)) gruppi.set(k, { testo: v.articolo, pren: [] });
+      gruppi.get(k).pren.push(p);
+    });
+  });
+  box.hidden = !gruppi.size;
+  if (!gruppi.size) return;
+  const elenco = elencoProdotti();
+  const voci = Array.from(gruppi.entries()).map(function(e){
+    const k = e[0], g = e[1];
+    const dove = g.pren.slice(0, 3).map(function(p){ return fmtCortoGiorno(p.perIl) + (p.cliente ? ", " + p.cliente : ""); }).join(" · ") + (g.pren.length > 3 ? " e altre" : "");
+    const correggi = S.prenCorreggi === k;
+    const off = S.pending.has("prodotti");
+    return el("div", {class:"pren-dc-voce"},
+      el("p", {class:"articolo"}, el("strong", {text:"«" + g.testo + "»"}), " · " + (g.pren.length === 1 ? "1 prenotazione" : g.pren.length + " prenotazioni")),
+      el("p", {class:"hint", text:dove}),
+      correggi
+        ? el("div", {class:"row"},
+            el("select", {id:"pren-dc-scelta", "aria-label":"Il prodotto giusto per " + g.testo}, el("option", {value:"", text:"Era…"}), ...elenco.map(function(n){ return el("option", {value:n, text:n}); })),
+            el("button", {type:"button", class:"mini", "data-pren-dc-salva":k, disabled:off, text:"Correggi"}),
+            el("button", {type:"button", class:"link", "data-pren-dc-annulla":k, text:"Annulla"}))
+        : el("div", {class:"row"},
+            el("button", {type:"button", class:"mini", "data-pren-dc-conferma":k, "data-testo":g.testo, disabled:off, text:"Conferma"}),
+            el("button", {type:"button", class:"mini", "data-pren-dc-errore":k, disabled:off, text:"È un errore, era…"})));
+  });
+  riempi(box, [el("p", {class:"label-sm", text:"Prodotti nuovi da controllare (solo titolari)"}),
+    el("p", {class:"hint", text:"«Conferma»: entra nell'elenco dei prodotti. «È un errore, era…»: scegli il prodotto giusto e tutte le prenotazioni scritte così si correggono da sole."}),
+    ...voci]);
+}
+async function salvaProdotti(cambia){
+  if (!store || !store.prodotti || S.pending.has("prodotti")) return false;
+  S.pending.add("prodotti"); renderTutto();
+  const ok = await scrivi(function(){ return store.prodotti(cambia); });
+  S.pending.delete("prodotti");
+  renderTutto();
+  return ok;
+}
+async function confermaProdotto(testo){
+  let nome = String(testo || "").trim().slice(0, 60);
+  if (!nome) return;
+  nome = nome.charAt(0).toUpperCase() + nome.slice(1);
+  const ok = await salvaProdotti(function(d){
+    const elenco = (Array.isArray(d.elenco) ? d.elenco : []).slice();
+    if (!elenco.some(function(x){ return chiave(x) === chiave(nome); })) elenco.push(nome);
+    return { elenco: elenco };
+  });
+  if (ok) avviso("«" + nome + "» è nell'elenco dei prodotti.");
+}
+async function correggiProdotto(k){
+  const sel = $("pren-dc-scelta");
+  const nome = sel ? sel.value : "";
+  if (!nome){ if (sel) sel.focus(); return; }
+  const ok = await salvaProdotti(function(d){
+    const alias = Object.assign({}, d.alias); alias[k] = nome;
+    return { alias: alias };
+  });
+  if (ok){ S.prenCorreggi = ""; avviso("Corretto: ora è «" + nome + "»."); renderTutto(); }
+}
+/* ---------- cerca: cliente, prodotto o telefono, da 7 giorni fa in avanti ---------- */
+function cercaPren(testo){
+  const q = chiave(testo);
+  const cifre = String(testo || "").replace(/\D/g, "");
+  if (!q && cifre.length < 3) return [];
+  const parole = q.split(" ").filter(Boolean);
+  const dal = dataLocale(Date.now() - 7 * 86400000);
+  return prenVisibili().filter(function(p){
+    if (p.perIl < dal) return false;
+    if (cifre.length >= 3 && p.telefono.replace(/\D/g, "").indexOf(cifre) >= 0) return true;
+    const testoP = chiave([p.cliente, p.telefono, p.nota].concat(p.voci.map(function(v){ return v.articolo + " " + nomeProdotto(v); })).join(" "));
+    const sue = testoP.split(" ");
+    /* parole a metà ("casar" trova "casareccio"); dalle 4 lettere va bene anche una lettera sbagliata ("casar" trova "casereccio") */
+    return parole.length > 0 && parole.every(function(w){
+      return testoP.indexOf(w) >= 0 || (w.length >= 4 && sue.some(function(s){ return s.length >= w.length && distanza(w, s.slice(0, w.length)) <= 1; }));
+    });
+  }).sort(function(a, b){ return a.perIl.localeCompare(b.perIl) || (a.ora || "99").localeCompare(b.ora || "99") || a.creato - b.creato; });
+}
+function renderCerca(){
+  const c = S.prenCerca;
+  $("pren-cerca-apri").hidden = c.aperto;
+  $("pren-cerca-apri").setAttribute("aria-expanded", String(c.aperto));
+  $("pren-cerca-campo").hidden = !c.aperto;
+  const box = $("pren-risultati");
+  box.hidden = !c.aperto;
+  if (!c.aperto) return;
+  const testo = c.testo.trim();
+  if (!testo){ riempi(box, [el("p", {class:"hint", text:"Scrivi il nome del cliente, un prodotto o il numero di telefono. Cerca da 7 giorni fa in avanti."})]); return; }
+  const trovate = cercaPren(testo);
+  if (!trovate.length){ riempi(box, [el("p", {class:"vuoto", text:"Nessuna prenotazione trovata per «" + testo + "»."})]); return; }
+  const perGiorno = new Map();
+  trovate.forEach(function(p){ if (!perGiorno.has(p.perIl)) perGiorno.set(p.perIl, []); perGiorno.get(p.perIl).push(p); });
+  const oggi = oggiStr(), domani = domaniStr();
+  riempi(box, [el("p", {class:"hint", text: trovate.length === 1 ? "1 prenotazione trovata. Toccala per andare a quel giorno." : trovate.length + " prenotazioni trovate. Toccane una per andare a quel giorno."})].concat(
+    Array.from(perGiorno.entries()).map(function(e){
+      const g = e[0];
+      const titolo = (g === oggi ? "Oggi, " : (g === domani ? "Domani, " : "")) + fmtGiornoLungo.format(msDelGiorno(g));
+      return el("div", {class:"pren-ris-giorno"}, el("p", {class:"label-sm", text: titolo + (g < oggi ? " (passato)" : "")}),
+        ...e[1].map(function(p){
+          const stato = p.disdetta ? "Disdetta" : (p.stato === "parte" ? "Messo da parte" : "");
+          return el("button", {type:"button", class:"pren-ris" + (p.disdetta ? " disdetta" : ""), "data-pren-vai":p.id},
+            el("strong", {text:(p.cliente ? p.cliente + ": " : "") + p.voci.map(testoVocePren).join(", ")}),
+            el("span", {class:"meta-ris", text:["Ritiro " + (PREP[p.ritiro] || p.ritiro), p.ora ? "ore " + p.ora : "", p.telefono ? "☎ " + p.telefono : "", stato].filter(Boolean).join(" · ")}));
+        }));
+    })));
+}
 function renderPrenotazioni(){
   renderFormPren();
   if (!inPren()) return;
-  $("pren-nuova").hidden = !puoPrenotare();
+  renderDaControllare();
+  renderCerca();
+  const cerca = S.prenCerca.aperto;
+  $("pren-nuova").hidden = !puoPrenotare() || cerca;
   /* una pagina per giorno: Oggi, Domani o un giorno scelto */
   const oggi = oggiStr(), domani = domaniStr();
   if (!S.prenGiorno) S.prenGiorno = oggi;
   const g = S.prenGiorno;
   const vis = prenVisibili();
-  const daFare = function(giorno){ return vis.filter(function(p){ return p.perIl === giorno && p.stato !== "parte"; }).length; };
+  const daFare = function(giorno){ return vis.filter(function(p){ return p.perIl === giorno && prenAperta(p); }).length; };
   const altro = g !== oggi && g !== domani;
   const pagina = function(k, nome, n, on, diverso){
     return el("button", {type:"button", class:"pren-pagina" + (diverso ? " diverso" : ""), "data-pren-pagina":k, "aria-pressed":String(on)},
       el("span", {text:nome}), n ? el("span", {class:"badge", text:String(n)}) : null);
   };
+  $("pren-pagine").hidden = cerca;
   riempi($("pren-pagine"), [
     pagina("oggi", "Oggi", daFare(oggi), g === oggi, false),
     pagina("domani", "Domani", daFare(domani), g === domani, true),
     pagina("altro", altro ? fmtCortoGiorno(g) : "Scegli data", null, altro || !!S.prenScegli, true)
   ]);
-  const scegli = !!S.prenScegli || altro;
+  const scegli = (!!S.prenScegli || altro) && !cerca;
   $("pren-scegli").hidden = !scegli;
   if (scegli){
     const inp = $("pren-pagina-data");
     if (altro && inp.value !== g) inp.value = g;
-    const giorni = Array.from(new Set(vis.filter(function(p){ return p.perIl > domani && p.stato !== "parte"; }).map(function(p){ return p.perIl; }))).sort().slice(0, 12);
+    const giorni = Array.from(new Set(vis.filter(function(p){ return p.perIl > domani && prenAperta(p); }).map(function(p){ return p.perIl; }))).sort().slice(0, 12);
     $("pren-altri-box").hidden = !giorni.length;
     riempi($("pren-altri-giorni"), giorni.map(function(d){
       return el("button", {type:"button", class:"chip-add stat-per", "data-pren-giorno":d, "aria-pressed":String(d === g), text: fmtCortoGiorno(d) + " · " + daFare(d)});
     }));
   }
   /* su un giorno diverso da oggi deve vedersi subito */
-  $("pannello-prenotazioni").classList.toggle("altro-giorno", g !== oggi);
-  $("pren-fascia").hidden = g === oggi;
+  $("pannello-prenotazioni").classList.toggle("altro-giorno", g !== oggi && !cerca);
+  $("pren-fascia").hidden = g === oggi || cerca;
   if (g !== oggi){
     $("pren-fascia-giorno").textContent = (g === domani ? "Domani, " : "") + fmtGiornoLungo.format(msDelGiorno(g));
     $("pren-fascia-nota").textContent = g < oggi ? "Giorno passato, non è oggi" : "Non è oggi";
   }
+  /* le disdette in fondo, poi le messe da parte, le altre per ora */
   const lista = vis.filter(function(p){ return p.perIl === g; }).sort(function(a, b){
-    return ((a.stato === "parte") - (b.stato === "parte")) || (a.ora || "99").localeCompare(b.ora || "99") || a.creato - b.creato;
+    return (a.disdetta - b.disdetta) || ((a.stato === "parte") - (b.stato === "parte")) || (a.ora || "99").localeCompare(b.ora || "99") || a.creato - b.creato;
   });
-  const aperte = lista.filter(function(p){ return p.stato !== "parte"; });
+  const aperte = lista.filter(prenAperta);
+  const vive = lista.filter(function(p){ return !p.disdetta; }).length;
+  const disdette = lista.length - vive;
   const gruppi = [];
   if (lista.length){
     const tot = totaliDaProdurre(aperte);
@@ -2973,11 +3348,11 @@ function renderPrenotazioni(){
       el("ul", {class:"pren-tot"}, ...tot.map(function(t){ return el("li", {text:testoTotale(t)}); }))) : null;
     const titolo = fmtGiornoLungo.format(msDelGiorno(g));
     gruppi.push(el("section", {class:"gruppo"}, testaGruppo(g === oggi ? "Oggi" : (g === domani ? "Domani" : "Altro giorno"), titolo.charAt(0).toUpperCase() + titolo.slice(1),
-      lista.length === 1 ? "1 prenotazione" : lista.length + " prenotazioni"),
+      (vive === 1 ? "1 prenotazione" : vive + " prenotazioni") + (disdette ? " · " + disdette + (disdette === 1 ? " disdetta" : " disdette") : "")),
       totali, el("ul", {class:"lista"}, ...lista.map(rigaPren))));
   }
-  riempi($("pren-giorni"), gruppi);
-  $("pren-vuoto").hidden = gruppi.length > 0;
+  riempi($("pren-giorni"), cerca ? [] : gruppi);
+  $("pren-vuoto").hidden = cerca || gruppi.length > 0;
   $("pren-vuoto").textContent = "Nessuna prenotazione per " + testoGiorno(g) + ".";
 }
 const fmtCortoG = new Intl.DateTimeFormat("it-IT", {weekday:"short", day:"numeric", month:"short"});
@@ -3001,22 +3376,49 @@ function vaiGiornoPren(g){
   renderPrenotazioni();
   try { window.scrollTo(0, 0); } catch(e){}
 }
-async function salvaPrenotazione(ev){
+/* «Salva»: si controlla il modulo e si apre la schermata di controllo dei prodotti */
+function salvaPrenotazione(ev){
   if (ev) ev.preventDefault();
   const f = S.formPren;
   const voci = righeDi("pren-righe");
-  if (!voci.length || f.inviando || !puoPrenotare()) return;
+  if (!voci.length || f.inviando || !puoPrenotare() || f.ctrl) return;
   const giorno = giornoFormPren();
   if (!giorno || giorno < oggiStr()){ esito("pren-esito", "Scegli il giorno (oggi o dopo)."); $("pren-data").focus(); return; }
   const ritiroSel = document.querySelector('input[name="pren-ritiro"]:checked');
   const ritiro = ritiroSel ? ritiroSel.value : "";
   if (PUNTI_RITIRO.indexOf(ritiro) < 0){ esito("pren-esito", "Scegli dove la ritira il cliente."); return; }
+  const tel = $("pren-tel").value.trim();
+  if (tel && tel.replace(/\D/g, "").length < 6){ esito("pren-esito", "Il numero di telefono sembra incompleto: controllalo o lascialo vuoto."); $("pren-tel").focus(); return; }
+  f.ctrl = {
+    giorno: giorno, ritiro: ritiro, cliente: $("pren-cliente").value.trim().slice(0, 60),
+    voci: voci.map(function(x){
+      const t = trovaProdotto(x.articolo);
+      return { articolo: x.articolo, quantita: x.quantita, esito: t.esito, nome: t.nome, scelta: "" };
+    })
+  };
+  renderPrenotazioni();
+  try { $("pren-schermo").scrollTop = 0; } catch(e){}
+  try { $("pren-ctrl-salva").focus(); } catch(e){}
+}
+/* dopo il controllo: si salva davvero */
+async function salvaPrenDavvero(){
+  const f = S.formPren, c = f.ctrl;
+  if (!c || f.inviando || !puoPrenotare()) return;
+  if (c.voci.some(function(v){ return !ctrlPrenRisolta(v); })) return;
   const voce = {
-    tipo: "prenotazione", perIl: giorno, ora: $("pren-ora").value || "",
-    ritiro: ritiro,
+    tipo: "prenotazione", perIl: c.giorno, ora: $("pren-ora").value || "",
+    ritiro: c.ritiro,
     presaDa: negozioPren(),
-    cliente: $("pren-cliente").value.trim().slice(0, 60),
-    voci: voci.map(function(x){ return { articolo: x.articolo, quantita: x.quantita }; }),
+    cliente: c.cliente,
+    telefono: $("pren-tel").value.replace(/[^\d+ ]/g, "").replace(/\s+/g, " ").trim().slice(0, 20),
+    /* ogni cosa salva il testo scritto e il nome giusto del prodotto */
+    voci: c.voci.map(function(v){
+      const nuovo = v.scelta === "nuovo";
+      const prodotto = nuovo ? "" : (v.scelta || v.nome);
+      const out = { articolo: v.articolo, quantita: v.quantita, prodotto: prodotto };
+      if (nuovo) out.nuovo = true;
+      return out;
+    }),
     nota: $("pren-nota").value.trim().slice(0, 140),
     creato: Date.now()
   };
@@ -3026,33 +3428,81 @@ async function salvaPrenotazione(ev){
   if (ok){
     svuotaFormPren();
     f.aperto = false; f.ritiro = "";
-    S.prenGiorno = giorno; S.prenScegli = false;
-    avviso("Prenotazione salvata per " + testoGiorno(giorno) + ".");
+    S.prenGiorno = c.giorno; S.prenScegli = false;
+    avviso("Prenotazione salvata per " + testoGiorno(c.giorno) + ".");
   }
   renderTutto();
 }
 async function statoPren(id, stato){
   const p = S.prenotazioni.find(function(x){ return x.id === id; });
-  if (!p || !store || S.pending.has(id) || STATI_PREN.indexOf(stato) < 0) return;
+  if (!p || !store || S.pending.has(id) || STATI_PREN.indexOf(stato) < 0 || p.disdetta) return;
   S.pending.add(id); renderTutto();
   await scrivi(function(){ return store.stato(id, { stato: stato, statoAlle: Date.now() }); });
   S.pending.delete(id); renderTutto();
 }
-let timerPren = 0;
-async function togliPren(id){
+/* ---------- disdici: tutti tranne chi fa il giro, con il motivo obbligatorio ---------- */
+const MOTIVI_DISDETTA = ["Il cliente ha disdetto", "Prenotazione sbagliata", "Doppia"];
+S.disdici = null;
+function motivoDisdetta(){
+  const d = S.disdici;
+  if (!d) return "";
+  return [d.scelta, $("disdici-altro").value.trim()].filter(Boolean).join(" · ").slice(0, 120);
+}
+function renderDisdici(){
+  const d = S.disdici;
+  if (!d) return;
+  riempi($("disdici-scelte"), MOTIVI_DISDETTA.map(function(m){
+    return el("button", {type:"button", class:"chip-add", "data-disdici-motivo":m, "aria-pressed":String(d.scelta === m), text:m});
+  }));
+  $("disdici-si").disabled = !motivoDisdetta() || S.pending.has(d.id);
+}
+function apriDisdici(id){
   const p = S.prenotazioni.find(function(x){ return x.id === id; });
-  if (!p || !(p.mio || S.owner)) return;
-  if (S.armatoPren !== id){
-    S.armatoPren = id; renderTutto();
-    clearTimeout(timerPren); timerPren = setTimeout(function(){ S.armatoPren = null; renderTutto(); }, 4000);
-    return;
-  }
-  clearTimeout(timerPren); S.armatoPren = null;
+  if (!p || p.disdetta || !puoPrenotare() || !vedePren()) return;
+  S.disdici = { id: id, scelta: "" };
+  $("disdici-altro").value = "";
+  $("disdici-cosa").textContent = nomeGiornoTitolo(p.perIl) + (p.ora ? " ore " + p.ora : "") + " · " + (p.cliente ? p.cliente + ": " : "") + p.voci.map(testoVocePren).join(", ");
+  renderDisdici();
+  $("disdici").hidden = false;
+  try { $("disdici-no").focus(); } catch(e){}
+}
+function chiudiDisdici(){ S.disdici = null; $("disdici").hidden = true; }
+async function confermaDisdici(){
+  const d = S.disdici;
+  const motivo = motivoDisdetta();
+  if (!d || !motivo || !store || S.pending.has(d.id)) return;
+  const id = d.id;
+  chiudiDisdici();
   S.pending.add(id); renderTutto();
-  const ok = await scrivi(function(){ return store.annulla(p); });
+  const ok = await scrivi(function(){
+    return store.stato(id, { disdetta: true, disdettaDa: S.mioId, disdettaNome: S.nomeMio || "", disdettaMotivo: motivo, disdettaAlle: Date.now() });
+  });
   S.pending.delete(id);
-  if (ok) avviso("Prenotazione tolta.");
+  if (ok) avviso("Prenotazione disdetta.");
   renderTutto();
+}
+async function ripristinaPren(id){
+  const p = S.prenotazioni.find(function(x){ return x.id === id; });
+  if (!p || !p.disdetta || !store || !puoPrenotare() || S.pending.has(id)) return;
+  const si = await chiedi("Rimettere la prenotazione?", "Torna tra quelle da preparare.", "Sì, rimetti", "No");
+  if (!si) return;
+  S.pending.add(id); renderTutto();
+  const ok = await scrivi(function(){ return store.stato(id, { disdetta: false, ripristinataDa: S.mioId, ripristinataAlle: Date.now() }); });
+  S.pending.delete(id);
+  if (ok) avviso("Prenotazione rimessa.");
+  renderTutto();
+}
+/* telefono del cliente: un tocco e si copia */
+async function copiaTelefono(n){
+  let ok = false;
+  try { if (navigator.clipboard && navigator.clipboard.writeText){ await navigator.clipboard.writeText(n); ok = true; } } catch(e){}
+  if (!ok){
+    try {
+      const t = el("textarea", {readonly:true, style:"position:fixed;top:-100px;opacity:0"});
+      t.value = n; document.body.append(t); t.select(); ok = document.execCommand("copy"); t.remove();
+    } catch(e){}
+  }
+  avviso(ok ? "Numero copiato: " + n : "Numero: " + n);
 }
 /* ---------- statistiche (solo titolari) ---------- */
 /* Statistiche spente finché si fanno le prove: i dati intanto si salvano lo stesso.
@@ -3230,7 +3680,7 @@ function renderStatistiche(){
   const limP = Date.now() - S.stat.giorni * 86400000;
   const prenS = S.stat.righe.filter(function(x){ return x.v.tipo === "prenotazione" && !x.v.annullato; })
     .map(function(x){ return normaPren(x.autore + "~" + x.rid, x.v, x.st, x.autore, x.rid); })
-    .filter(function(p){ return p.creato >= limP; });
+    .filter(function(p){ return p.creato >= limP && !p.disdetta; });
   if (prenS.length){
     const perRitiro = {};
     prenS.forEach(function(p){ perRitiro[p.ritiro] = (perRitiro[p.ritiro] || 0) + 1; });
@@ -3272,12 +3722,12 @@ function scaricaRichieste(){
 function scaricaPren(){
   if (!S.stat) return;
   const ST = {attesa:"Da preparare", parte:"Messa da parte"};
-  const righe = [["Per il giorno","Ora","Ritiro","Cliente","Cosa","Quantità","Nota","Stato","Presa da","Presa il"]];
+  const righe = [["Per il giorno","Ora","Ritiro","Cliente","Telefono","Prodotto","Scritto","Quantità","Nota","Stato","Presa da","Presa il"]];
   S.stat.righe.filter(function(x){ return x.v.tipo === "prenotazione" && !x.v.annullato; })
     .map(function(x){ return normaPren(x.autore + "~" + x.rid, x.v, x.st, x.autore, x.rid); })
     .sort(function(a, b){ return a.perIl.localeCompare(b.perIl); })
     .forEach(function(p){ p.voci.forEach(function(v){
-      righe.push([fmtData.format(msDelGiorno(p.perIl)), p.ora, p.ritiro, p.cliente, v.articolo, v.quantita, p.nota, ST[p.stato], S.nomi[p.autore] || "", fmtData.format(p.creato) + " " + fmtOra.format(p.creato)]);
+      righe.push([fmtData.format(msDelGiorno(p.perIl)), p.ora, p.ritiro, p.cliente, p.telefono, nomeProdotto(v), v.articolo, v.quantita, p.nota, p.disdetta ? "Disdetta: " + p.disdettaMotivo : ST[p.stato], S.nomi[p.autore] || "", fmtData.format(p.creato) + " " + fmtOra.format(p.creato)]);
     }); });
   scaricaCsv("ordini-prenotazioni-" + oggiFile() + ".csv", righe);
 }
@@ -3429,7 +3879,40 @@ function collega(){
     if (b.id === "domanda-si" || b.id === "domanda-no"){ if (rispostaDomanda) rispostaDomanda(b.id === "domanda-si"); return; }
     if (b.dataset.prenQuando){ S.formPren.quando = b.dataset.prenQuando; renderPrenotazioni(); if (b.dataset.prenQuando === "altro") $("pren-data").focus(); return; }
     if (b.dataset.prenStato) return statoPren(b.dataset.id, b.dataset.prenStato);
-    if (b.dataset.prenTogli) return togliPren(b.dataset.prenTogli);
+    if (b.dataset.prenDisdici) return apriDisdici(b.dataset.prenDisdici);
+    if (b.dataset.prenRipristina) return ripristinaPren(b.dataset.prenRipristina);
+    if (b.dataset.copiaTel) return copiaTelefono(b.dataset.copiaTel);
+    if (b.dataset.disdiciMotivo && S.disdici){ S.disdici.scelta = S.disdici.scelta === b.dataset.disdiciMotivo ? "" : b.dataset.disdiciMotivo; return renderDisdici(); }
+    if (b.id === "disdici-no") return chiudiDisdici();
+    if (b.id === "disdici-si") return confermaDisdici();
+    /* controllo dei prodotti dopo «Salva» */
+    if (b.id === "pren-ctrl-indietro"){ S.formPren.ctrl = null; renderPrenotazioni(); try { $("pren-righe").focus(); } catch(e){} return; }
+    if (b.id === "pren-ctrl-salva") return salvaPrenDavvero();
+    if ((b.dataset.prenCtrlSi || b.dataset.prenCtrlNuovo || b.dataset.prenCtrlCambia) && S.formPren.ctrl){
+      const i = Number(b.dataset.prenCtrlSi || b.dataset.prenCtrlNuovo || b.dataset.prenCtrlCambia);
+      const v = S.formPren.ctrl.voci[i];
+      if (v) v.scelta = b.dataset.prenCtrlSi ? v.nome : (b.dataset.prenCtrlNuovo ? "nuovo" : "");
+      return renderPrenotazioni();
+    }
+    /* cerca */
+    if (b.id === "pren-cerca-apri"){ S.prenCerca.aperto = true; renderPrenotazioni(); $("pren-cerca-testo").focus(); return; }
+    if (b.id === "pren-cerca-chiudi"){ S.prenCerca = { aperto: false, testo: "" }; $("pren-cerca-testo").value = ""; return renderPrenotazioni(); }
+    if (b.dataset.prenVai){
+      const p = S.prenotazioni.find(function(x){ return x.id === b.dataset.prenVai; });
+      S.prenCerca = { aperto: false, testo: "" }; $("pren-cerca-testo").value = "";
+      if (!p) return renderPrenotazioni();
+      S.prenScegli = false;
+      vaiGiornoPren(p.perIl);
+      /* si mostra la prenotazione trovata */
+      const riga = document.getElementById("pren-" + p.id.replace(/[^a-zA-Z0-9_-]/g, "_"));
+      if (riga){ try { riga.scrollIntoView({ block: "center" }); } catch(e){} riga.classList.add("nuova"); setTimeout(function(){ riga.classList.remove("nuova"); }, 4000); }
+      return;
+    }
+    /* prodotti da controllare (titolari) */
+    if (b.dataset.prenDcConferma) return confermaProdotto(b.dataset.testo);
+    if (b.dataset.prenDcErrore){ S.prenCorreggi = b.dataset.prenDcErrore; renderPrenotazioni(); const sc = $("pren-dc-scelta"); if (sc) sc.focus(); return; }
+    if (b.dataset.prenDcAnnulla){ S.prenCorreggi = ""; return renderPrenotazioni(); }
+    if (b.dataset.prenDcSalva) return correggiProdotto(b.dataset.prenDcSalva);
     if (b.id === "notif-spegni") return spegniNotifiche(false);
     if (b.id === "notif-prova") return provaNotifica();
     if (b.dataset.ctrlNotaApri && S.ctrl){
@@ -3469,6 +3952,9 @@ function collega(){
   ["input","change"].forEach(function(t){ $("pren-data").addEventListener(t, renderFormPren); });
   $("pren-schermo").addEventListener("keydown", function(ev){ if (ev.key === "Escape" && $("domanda").hidden) chiudiFormPren(); });
   $("domanda").addEventListener("keydown", function(ev){ if (ev.key === "Escape" && rispostaDomanda) rispostaDomanda(false); });
+  $("disdici").addEventListener("keydown", function(ev){ if (ev.key === "Escape") chiudiDisdici(); });
+  $("disdici-altro").addEventListener("input", renderDisdici);
+  $("pren-cerca-testo").addEventListener("input", function(){ S.prenCerca.testo = this.value; renderCerca(); });
   $("notifica").addEventListener("click", function(){ if (Date.now() - fineTrascina > 400) chiudiNotifica(); });
   /* la notifica si toglie anche spingendola verso l'alto col dito, come quelle del telefono */
   (function(){
@@ -3496,6 +3982,11 @@ function collega(){
     if (nt) cambiaSceltaNotifica(nt.dataset.notif, nt.checked);
     const s = ev.target.closest && ev.target.closest("select[data-sposta]");
     if (s && s.value) spostaReparto(s.dataset.sposta, s.value);
+    const pc = ev.target.closest && ev.target.closest("select[data-pren-ctrl-scegli]");
+    if (pc && pc.value && S.formPren.ctrl){
+      const v = S.formPren.ctrl.voci[Number(pc.dataset.prenCtrlScegli)];
+      if (v){ v.scelta = pc.value; renderPrenotazioni(); }
+    }
     const p = ev.target.closest && ev.target.closest("select[data-ctrl-da]");
     if (p && S.ctrl){
       const v = S.ctrl.voci[Number(p.dataset.ctrlDa)];
@@ -3533,6 +4024,7 @@ function collega(){
 /* Senza archivio condiviso (pagina aperta fuori da Claude): prova su questo schermo */
 function usaLocale(){
   const docs = new Map(); const stati = {}; const bisc = new Map();
+  let prodGrezzo = {};
   S.mioId = "locale"; S.owner = true;
   const emetti = function(){
     S.docsRichieste = Array.from(docs.entries()).map(function(e){ return { id:e[0], voci:e[1] }; });
@@ -3551,7 +4043,8 @@ function usaLocale(){
       if (dati === null) bisc.delete(id); else bisc.set(id, Object.assign({}, bisc.get(id), dati));
       emetti();
     },
-    aggiunteBisc: async function(arr){ S.aggiunteBisc = arr.slice(); emetti(); }
+    aggiunteBisc: async function(arr){ S.aggiunteBisc = arr.slice(); emetti(); },
+    prodotti: async function(cambia){ prodGrezzo = Object.assign({}, prodGrezzo, cambia(prodGrezzo)); S.prodImp = prodottiCondivisi(prodGrezzo); emetti(); }
   };
   banner("Modalità prova: le richieste restano solo su questo schermo e spariscono chiudendo la pagina.");
   emetti();
@@ -3628,6 +4121,7 @@ function applicaImpostazioni(){
   }
   S.mappa = pulita; S.frequenti = freq;
   S.aggiunteBisc = bis ? testi(bis.aggiunte, 60, -60) : [];
+  S.prodImp = prodottiCondivisi(RAW.imp.prodotti);
 }
 function applicaRiga(tab, riga, via){
   if (!riga) return;
@@ -3760,6 +4254,7 @@ async function mandaEventi(chiudendo){
   }
 }
 function eventoStato(k, p){
+  if (p.disdetta === true) return { tipo: "disdetta", id: k };
   if (p.prep === "pronto") return { tipo: "pronto", id: k };
   if (p.prep === "manca") return { tipo: "manca", id: k };
   if (p.stato === "caricato") return { tipo: "partite", id: k };
@@ -3770,9 +4265,9 @@ function eventoStato(k, p){
 const SCELTE_NOTIFICHE = {
   "consegne": [["nuove", "Ogni nuova richiesta", "Le urgenti arrivano sempre."], ["pronto", "Pronto da caricare dal panificio", ""]],
   "panificio": [["nuove", "Nuove richieste per il panificio", ""], ["prenotazioni", "Nuove prenotazioni dei clienti", ""], ["biscotti", "Comande di biscotti", ""]],
-  "corso": [["manca", "Una nostra richiesta non c'è in magazzino", ""], ["partite", "Le nostre cose sono partite", ""], ["prenotazioni", "Prenotazioni che i clienti ritirano da noi", ""]],
-  "piazza-nenni": [["manca", "Una nostra richiesta non c'è in magazzino", ""], ["partite", "Le nostre cose sono partite", ""], ["prenotazioni", "Prenotazioni che i clienti ritirano da noi", ""]],
-  "titolare": [["tutto", "Ricevi tutto", "Nuove richieste, prenotazioni, cose che mancano, pronti da caricare, biscotti."]]
+  "corso": [["manca", "Una nostra richiesta non c'è in magazzino", ""], ["partite", "Le nostre cose sono partite", ""], ["prenotazioni", "Prenotazioni che i clienti ritirano da noi", ""], ["disdette", "Prenotazioni disdette", "Quando qualcun altro disdice una prenotazione che si ritira da noi."]],
+  "piazza-nenni": [["manca", "Una nostra richiesta non c'è in magazzino", ""], ["partite", "Le nostre cose sono partite", ""], ["prenotazioni", "Prenotazioni che i clienti ritirano da noi", ""], ["disdette", "Prenotazioni disdette", "Quando qualcun altro disdice una prenotazione che si ritira da noi."]],
+  "titolare": [["tutto", "Ricevi tutto", "Nuove richieste, prenotazioni e disdette, cose che mancano, pronti da caricare, biscotti."]]
 };
 function sceltaNormale(k){ return k !== "tutto"; }
 function chiaveB64(s){
@@ -3971,7 +4466,7 @@ function riepilogoArrivi(){
     const b = S.biscotti.filter(function(x){ return x.stato === "manca" && x.segnatoAlle > ultima && x.segnatoDa !== S.mioId; }).length;
     if (b) azioni.push({ testo: conta(b, "nuovo biscotto da fare", "nuovi biscotti da fare"), vai: "biscotti" });
   }
-  const p = prenVisibili().filter(function(x){ return !x.mio && x.creato > ultima && x.stato !== "parte"; }).length;
+  const p = prenVisibili().filter(function(x){ return !x.mio && x.creato > ultima && prenAperta(x); }).length;
   if (p) azioni.push({ testo: conta(p, "nuova prenotazione", "nuove prenotazioni"), vai: "prenotazioni" });
   if (azioni.length) notifica("Mentre eri via", "", null, azioni);
 }
@@ -4125,6 +4620,7 @@ function storeSB(){
     ripristina: function(r){ return cambiaVoce(r, { annullato: false, ripristinatoAlle: Date.now() }); },
     rimuoviEsempi: async function(){},
     salvaMappa: function(k, rep){ return salvaImp("reparti", function(d){ const m = Object.assign({}, d.mappa); m[k] = rep; return { mappa: m }; }); },
+    prodotti: function(cambia){ return salvaImp("prodotti", cambia); },
     bisc: async function(id, dati){
       if (dati === null){
         await sbFai(sb.from("biscotti").delete().eq("id", id));
@@ -4423,7 +4919,8 @@ async function avvia(){
       const ref = db.collection("biscotti").doc(id);
       return dati === null ? ref.delete() : aggiornaOCrea(ref, dati);
     },
-    aggiunteBisc: function(arr){ return aggiornaOCrea(db.doc("impostazioni/biscotti"), { aggiunte: arr }); }
+    aggiunteBisc: function(arr){ return aggiornaOCrea(db.doc("impostazioni/biscotti"), { aggiunte: arr }); },
+    prodotti: function(cambia){ return aggiornaOCrea(db.doc("impostazioni/prodotti"), cambia(S.prodGrezzo || {})); }
   };
   if (user){
     S.utente = user;
@@ -4445,8 +4942,10 @@ async function avvia(){
   db.collection("impostazioni").onSnapshot(function(snap){
     const pulita = {}, freq = {};
     let aggiunte = [];
+    S.prodGrezzo = {};
     snap.docs.forEach(function(d){
       const dati = d.exists ? (d.data() || {}) : {};
+      if (d.id === "prodotti") S.prodGrezzo = dati;
       if (d.id === "reparti" && dati.mappa && typeof dati.mappa === "object"){
         for (const k in dati.mappa){ if (REPARTI.indexOf(dati.mappa[k]) >= 0) pulita[k] = dati.mappa[k]; }
       }
@@ -4461,6 +4960,7 @@ async function avvia(){
       }
     });
     S.mappa = pulita; S.frequenti = freq; S.aggiunteBisc = aggiunte;
+    S.prodImp = prodottiCondivisi(S.prodGrezzo);
     renderTutto();
   }, function(){});
   const errore = function(err){

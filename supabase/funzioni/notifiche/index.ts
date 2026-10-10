@@ -2,7 +2,7 @@
 // Ordini · Profumo di Pane — funzione "notifiche" (Supabase Edge Function)
 //
 // L'app la chiama dopo aver salvato qualcosa (nuove richieste, "pronto", "non c'è",
-// "partite", comande di biscotti). La funzione rilegge dal database cosa è successo
+// "partite", comande di biscotti, prenotazioni nuove o disdette). La funzione rilegge dal database cosa è successo
 // davvero (non si fida di quello che le arriva), decide chi deve saperlo e manda
 // UNA notifica per invio, raggruppando le cose.
 //
@@ -15,7 +15,8 @@ const NEGOZIO_DI_RUOLO = { "corso": "Corso", "piazza-nenni": "Piazza Nenni", "pa
 const PREP = { "Corso": "al Corso", "Piazza Nenni": "a Piazza Nenni", "Panificio": "al Panificio" };
 
 function nomeCosa(d) {
-  return ((d.quantita ? d.quantita + " " : "") + (d.articolo || d.nome || "?")).trim();
+  // nelle prenotazioni c'è anche il nome giusto del prodotto ("Pitta china" invece di "pitte chine")
+  return ((d.quantita ? d.quantita + " " : "") + (d.prodotto || d.articolo || d.nome || "?")).trim();
 }
 function elenco(nomi) {
   if (nomi.length <= 3) return nomi.join(", ");
@@ -35,10 +36,17 @@ function perGruppo(voci, chiave) {
   return m;
 }
 function contaCose(n, una, tante) { return n === 1 ? "1 " + una : n + " " + tante; }
+function giornoTesto(perIl, ora) {
+  if (!perIl) return "";
+  const oggi = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Rome" }).format(new Date(ora));
+  if (perIl === oggi) return "oggi";
+  if (perIl === domaniRoma(ora)) return "domani";
+  return new Intl.DateTimeFormat("it-IT", { weekday: "long", day: "numeric", month: "long", timeZone: "Europe/Rome" }).format(new Date(perIl + "T12:00:00Z"));
+}
 
 // eventi: [{ tipo, voci: [{ id, autore, dati }] }]   iscrizioni: [{ endpoint, p256dh, auth, utente, ruolo, preferenze }]
 // restituisce i messaggi da mandare: [{ isc, titolo, testo, tag, urgente }]
-export function componi(eventi, iscrizioni, mittente) {
+export function componi(eventi, iscrizioni, mittente, ruoloMittente) {
   const out = [];
   for (const isc of iscrizioni) {
     if (isc.utente === mittente) continue;
@@ -72,6 +80,18 @@ export function componi(eventi, iscrizioni, mittente) {
           const quandoTesto = d.perIl ? new Intl.DateTimeFormat("it-IT", { weekday: "long", day: "numeric", month: "long", timeZone: "Europe/Rome" }).format(new Date(d.perIl + "T12:00:00Z")) : "";
           out.push({ isc, titolo: "Nuova prenotazione – " + (quandoTesto || "") + (d.ora ? " ore " + d.ora : ""),
             testo: elenco(cose) + " · ritiro " + (PREP[d.ritiro] || d.ritiro || "") + (d.cliente ? " · " + d.cliente : ""), tag: "pren-" + v.id, vai: "prenotazioni" });
+        }
+      } else if (ev.tipo === "disdetta") {
+        // al negozio dove si ritira, se a disdire è stato qualcun altro; ai titolari con "Ricevi tutto"
+        for (const v of ev.voci) {
+          const d = v.dati, st = v.st || {};
+          const negozio = NEGOZIO_DI_RUOLO[r] === d.ritiro && r !== "panificio" && ruoloMittente !== r && vuole(isc, "disdette", true);
+          if (!(negozio || tutto)) continue;
+          const cose = (Array.isArray(d.voci) ? d.voci : []).map((x) => nomeCosa(x));
+          const g = giornoTesto(d.perIl, ev.quando);
+          out.push({ isc, titolo: "Prenotazione disdetta – ritiro " + (PREP[d.ritiro] || d.ritiro || ""),
+            testo: "Disdetta: " + elenco(cose) + (g ? " per " + g : "") + (d.cliente ? " · " + d.cliente : "") + (st.disdettaMotivo ? " · " + st.disdettaMotivo : ""),
+            tag: "disd-" + v.id, vai: "prenotazioni" });
         }
       } else if (ev.tipo === "pronto") {
         if (!((r === "consegne" && vuole(isc, "pronto", true)) || tutto)) continue;
@@ -140,6 +160,15 @@ export async function leggiEventi(db, richiesti, mittente, ora) {
       const { data: rr } = await db.from("richieste").select("id,autore,dati").in("id", rids);
       const voci = (rr || []).filter((x) => !(x.dati && x.dati.annullato)).map((x) => ({ id: x.id, autore: x.autore, dati: x.dati || {} }));
       if (voci.length) eventi.push({ tipo: e.tipo, voci, quando: ora });
+    } else if (e.tipo === "disdetta") {
+      const { data: st } = await db.from("stati").select("id,dati,aggiornato").in("id", ids);
+      const ok = (st || []).filter((x) => x.dati && x.dati.disdetta === true && x.dati.disdettaDa === mittente && recente(x.aggiornato));
+      if (!ok.length) continue;
+      const perRid = new Map(ok.map((x) => [x.id.split("~")[1], x.dati]));
+      const { data: rr } = await db.from("richieste").select("id,autore,dati").in("id", Array.from(perRid.keys()).filter(Boolean));
+      const voci = (rr || []).filter((x) => x.dati && x.dati.tipo === "prenotazione" && !x.dati.annullato)
+        .map((x) => ({ id: x.id, autore: x.autore, dati: x.dati, st: perRid.get(x.id) }));
+      if (voci.length) eventi.push({ tipo: "disdetta", voci, quando: ora });
     } else if (e.tipo === "biscotti") {
       const { data } = await db.from("biscotti").select("id,dati,aggiornato").in("id", ids);
       const voci = (data || []).filter((x) => recente(x.aggiornato) && x.dati && x.dati.stato === "manca")
@@ -257,7 +286,7 @@ if (typeof Deno !== "undefined") {
       ]);
       const ruoli = new Map((prof || []).filter((p) => p.attivo !== false).map((p) => [p.id, p.ruolo]));
       const iscrizioni = (isc || []).filter((i) => ruoli.has(i.utente)).map((i) => ({ ...i, ruolo: ruoli.get(i.utente) }));
-      const messaggi = componi(eventi, iscrizioni, mittente);
+      const messaggi = componi(eventi, iscrizioni, mittente, ruoli.get(mittente) || "");
 
       const esiti = await Promise.all(messaggi.map(manda));
       const inviate = esiti.filter((e) => !e).length;
