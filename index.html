@@ -41,6 +41,7 @@
   --done-bg:#E3EAF2;
   --prep:#5B3F8C; --prep-bg:#ECE6F5;
   --altrog:#5B3F8C; --altrog-ink:#FFFFFF; --altrog-bg:#ECE6F5;
+  --giorno-bg:#FFE3C2; --giorno-bordo:#E08A1E; --giorno-ink:#6B3700;
   --ferma:#8A4B00; --ferma-bg:#FDEBCC; --ferma-bordo:#C77700;
   --nuova:#0B5A8C; --nuova-bg:#DDEFFC; --nuova-bordo:#3C8DD0;
   --pronto:#0B5563; --pronto-bg:#DDF1F4; --pronto-solid:#0B7285; --pronto-solid-ink:#FFFFFF;
@@ -59,7 +60,7 @@
     --accent:#CDB389; --accent-ink:#1A1814; --accent-soft:#3A3328;
     --urgent:#F08074; --urgent-txt:#F5A097; --urgent-bg:#3B1E1B; --urgent-ink:#2A0D0A;
     --done:#8FB4DE; --done-ink:#0E1A2A; --done-bg:#1C2736;
-    --prep:#C3AEEA; --prep-bg:#2A2140; --altrog:#6C4FB0; --altrog-ink:#FFFFFF; --altrog-bg:#2A2140;
+    --prep:#C3AEEA; --prep-bg:#2A2140; --altrog:#6C4FB0; --altrog-ink:#FFFFFF; --altrog-bg:#2A2140; --giorno-bg:#4A2D0E; --giorno-bordo:#F0A04B; --giorno-ink:#FFD6A6;
     --ferma:#F5BC6A; --ferma-bg:#3A2A12; --ferma-bordo:#D99A3D; --nuova:#8CC8F5; --nuova-bg:#123248; --nuova-bordo:#4D9BD6; --pronto:#7DD3DF; --pronto-bg:#12343A; --pronto-solid:#5CC4D2; --pronto-solid-ink:#062328;
     --corso:#C9925F; --corso-ink:#1F1206; --corso-bg:#33241A; --corso-txt:#D9A574;
     --nenni:#5DB884; --nenni-ink:#06200F; --nenni-bg:#15301F; --nenni-txt:#6FC995;
@@ -73,7 +74,7 @@
   --accent:#CDB389; --accent-ink:#1A1814; --accent-soft:#3A3328;
   --urgent:#F08074; --urgent-txt:#F5A097; --urgent-bg:#3B1E1B; --urgent-ink:#2A0D0A;
   --done:#8FB4DE; --done-ink:#0E1A2A; --done-bg:#1C2736;
-  --prep:#C3AEEA; --prep-bg:#2A2140; --altrog:#6C4FB0; --altrog-ink:#FFFFFF; --altrog-bg:#2A2140;
+  --prep:#C3AEEA; --prep-bg:#2A2140; --altrog:#6C4FB0; --altrog-ink:#FFFFFF; --altrog-bg:#2A2140; --giorno-bg:#4A2D0E; --giorno-bordo:#F0A04B; --giorno-ink:#FFD6A6;
   --ferma:#F5BC6A; --ferma-bg:#3A2A12; --ferma-bordo:#D99A3D; --nuova:#8CC8F5; --nuova-bg:#123248; --nuova-bordo:#4D9BD6; --pronto:#7DD3DF; --pronto-bg:#12343A; --pronto-solid:#5CC4D2; --pronto-solid-ink:#062328;
   --corso:#C9925F; --corso-ink:#1F1206; --corso-bg:#33241A; --corso-txt:#D9A574;
   --nenni:#5DB884; --nenni-ink:#06200F; --nenni-bg:#15301F; --nenni-txt:#6FC995;
@@ -216,9 +217,6 @@ body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area
 .gruppo.ferme h3,.gruppo.ferme .gh-per{color:var(--ferma)}
 /* statistiche: barre orizzontali, una tinta; per negozio i colori del negozio */
 .stat-carta{gap:14px}
-#pren-form .field{flex:none}
-#pren-form .row .field{flex:1 1 160px}
-#pren-form .row .pren-ora{flex:0 1 130px}
 .pren-totali{display:flex;flex-direction:column;gap:6px;padding:12px 14px;border-bottom:1.5px dashed var(--line);background:var(--surface-2)}
 .pren-tot{display:flex;flex-wrap:wrap;gap:6px 14px;font-weight:700;font-size:16px}
 .riga.pren .articolo span{color:var(--muted)}
@@ -238,6 +236,23 @@ body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area
 .pren-fascia .mini{background:var(--altrog-ink);color:var(--altrog);border-color:var(--altrog-ink)}
 #pannello-prenotazioni.altro-giorno .gruppo{border:2px solid var(--altrog)}
 #pannello-prenotazioni.altro-giorno .gruppo-head{background:var(--altrog-bg)}
+/* nuova prenotazione: schermo intero; in alto a sinistra si chiude */
+.pren-velo{overflow-y:auto;align-items:flex-start}
+.pren-box{width:100%;max-width:560px;display:flex;flex-direction:column;gap:14px;padding-bottom:24px}
+.pren-box .field{flex:none}
+.pren-box .row .field{flex:1 1 160px}
+.pren-box .row .pren-ora{flex:0 1 130px}
+.pren-testa{position:sticky;top:calc(-16px - env(safe-area-inset-top,0px));z-index:2;display:flex;align-items:center;gap:12px;margin:-16px -16px 0;padding:12px 16px;background:var(--bg);border-bottom:2px solid var(--oro)}
+.pren-chiudi{appearance:none;flex:none;min-height:44px;padding:0 14px;border:1.5px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);font-weight:700;font-size:16px;cursor:pointer}
+/* giorno diverso da oggi: arancione chiaro, si legge anche col telefono scuro */
+.pren-q.diverso[aria-pressed="true"],.pren-q.diverso[aria-pressed="true"]:hover{background:var(--giorno-bg);border-color:var(--giorno-bordo);color:var(--giorno-ink)}
+#pren-data.diverso{background:var(--giorno-bg);border-color:var(--giorno-bordo);color:var(--giorno-ink);font-weight:700}
+.pren-giorno-scelto{font-weight:700;font-size:16px}
+.pren-giorno-scelto.diverso{display:inline-block;align-self:flex-start;padding:6px 12px;border-radius:10px;background:var(--giorno-bg);color:var(--giorno-ink);box-shadow:inset 0 0 0 1.5px var(--giorno-bordo)}
+/* domanda Sì / No sopra tutto */
+.domanda-velo{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(10,14,18,.55)}
+.domanda-box{width:100%;max-width:420px;box-shadow:0 12px 32px rgba(0,0,0,.3)}
+.domanda-testo{font-size:18px;font-weight:700;line-height:1.3}
 .riga.pren.messa-parte{background:color-mix(in srgb,var(--surface-2) 55%,transparent)}
 .riga.pren.messa-parte .articolo,.riga.pren.messa-parte .nota{text-decoration:line-through;color:var(--muted)}
 .stat-per[aria-pressed="true"],.stat-per[aria-pressed="true"]:hover{background:var(--ink);border-color:var(--ink);color:var(--bg)}
@@ -617,23 +632,6 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
         <button type="button" class="mini" id="pren-torna-oggi">Torna a oggi</button>
       </div>
       <button type="button" class="primary" id="pren-nuova">+ Nuova prenotazione</button>
-      <form class="card" id="pren-form" novalidate hidden>
-        <h3 class="comanda-titolo">Nuova prenotazione</h3>
-        <p class="chi-ordina" id="pren-chi"></p>
-        <div class="blocco"><p class="label-sm">Per quando?</p><div class="chips" id="pren-quando"></div>
-          <label class="field" id="pren-data-riga" hidden><span class="label-sm">Giorno</span><input type="date" id="pren-data"></label></div>
-        <div class="blocco" id="pren-ritiro-blocco"><p class="label-sm">Dove la ritira il cliente</p><div class="chips" id="pren-ritiro"></div></div>
-        <p class="hint" id="pren-ritiro-fisso" hidden></p>
-        <div class="row">
-          <label class="field" for="pren-cliente"><span class="label-sm">Nome del cliente (se serve)</span><input id="pren-cliente" type="text" maxlength="60" autocomplete="off" placeholder="Es. Sig. Rossi"></label>
-          <label class="field pren-ora" for="pren-ora"><span class="label-sm">Ora di ritiro</span><input id="pren-ora" type="time"></label>
-        </div>
-        <label class="label" for="pren-righe">Cosa?</label>
-        <textarea id="pren-righe" rows="3" autocomplete="off" placeholder="Una cosa per riga, per esempio:&#10;40 filoncini&#10;3 pitte piene"></textarea>
-        <label class="field" for="pren-nota"><span class="label-sm">Nota (se serve)</span><input id="pren-nota" type="text" maxlength="140" autocomplete="off" placeholder="Es. ben cotti"></label>
-        <div class="riep-azioni"><button type="button" class="mini" id="pren-annulla">Annulla</button><button type="submit" class="primary" id="pren-salva" disabled>Salva prenotazione</button></div>
-        <p class="esito" id="pren-esito" role="status"></p>
-      </form>
       <div class="blocco" id="pren-giorni"></div>
       <p class="vuoto" id="pren-vuoto">Nessuna prenotazione. Quando un cliente prenota, scrivila qui: il panificio vede subito quanto preparare per ogni giorno.</p>
     </div>
@@ -855,6 +853,37 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
     <ul class="ctrl-lista" id="ctrl-lista"></ul>
     <datalist id="posti-fuori"></datalist>
     <div class="riep-azioni"><button type="button" class="mini" id="ctrl-indietro">Torna a scrivere</button><button type="button" class="primary" id="ctrl-invia">Sì, invia</button></div>
+  </div>
+</div>
+<!-- Nuova prenotazione: a schermo intero, dietro non si preme niente -->
+<div class="conferma-velo pren-velo" id="pren-schermo" role="dialog" aria-modal="true" aria-labelledby="pren-titolo" hidden>
+  <form class="pren-box" id="pren-form" novalidate>
+    <div class="pren-testa">
+      <button type="button" class="pren-chiudi" id="pren-chiudi" aria-label="Chiudi la nuova prenotazione">✕ Chiudi</button>
+      <h2 class="comanda-titolo" id="pren-titolo">Nuova prenotazione</h2>
+    </div>
+    <p class="chi-ordina" id="pren-chi"></p>
+    <div class="blocco"><p class="label-sm">Per quando?</p><div class="chips" id="pren-quando"></div>
+      <label class="field" id="pren-data-riga" hidden><span class="label-sm">Giorno</span><input type="date" id="pren-data"></label>
+      <p class="pren-giorno-scelto" id="pren-giorno-scelto"></p></div>
+    <div class="blocco" id="pren-ritiro-blocco"><p class="label-sm">Dove la ritira il cliente</p><div class="chips" id="pren-ritiro"></div></div>
+    <div class="row">
+      <label class="field" for="pren-cliente"><span class="label-sm">Nome del cliente (se serve)</span><input id="pren-cliente" type="text" maxlength="60" autocomplete="off" placeholder="Es. Sig. Rossi"></label>
+      <label class="field pren-ora" for="pren-ora"><span class="label-sm">Ora di ritiro</span><input id="pren-ora" type="time"></label>
+    </div>
+    <label class="label" for="pren-righe">Cosa?</label>
+    <textarea id="pren-righe" rows="4" autocomplete="off" placeholder="Una cosa per riga, per esempio:&#10;40 filoncini&#10;3 pitte piene"></textarea>
+    <label class="field" for="pren-nota"><span class="label-sm">Nota (se serve)</span><input id="pren-nota" type="text" maxlength="140" autocomplete="off" placeholder="Es. ben cotti"></label>
+    <div class="riep-azioni"><button type="button" class="mini" id="pren-annulla">Annulla</button><button type="submit" class="primary" id="pren-salva" disabled>Salva prenotazione</button></div>
+    <p class="esito" id="pren-esito" role="status"></p>
+  </form>
+</div>
+<!-- Una domanda con Sì / No, nello stile dell'app -->
+<div class="domanda-velo" id="domanda" role="alertdialog" aria-modal="true" aria-labelledby="domanda-testo" hidden>
+  <div class="card domanda-box">
+    <p class="domanda-testo" id="domanda-testo"></p>
+    <p class="hint" id="domanda-sotto" hidden></p>
+    <div class="riep-azioni"><button type="button" class="mini" id="domanda-no">No</button><button type="button" class="primary" id="domanda-si">Sì</button></div>
   </div>
 </div>
 <div class="conferma-velo" id="riepilogo" role="dialog" aria-modal="true" aria-labelledby="riep-titolo" hidden>
@@ -2608,13 +2637,14 @@ function renderConsegne(){
 /* "parte" = messo da parte dal punto vendita (le vecchie "pronta"/"ritirata" contano come messe da parte) */
 const STATI_PREN = ["attesa", "parte"];
 const PUNTI_RITIRO = ["Corso", "Piazza Nenni"];
-/* chi vede quali prenotazioni: ogni punto vendita le sue, il panificio e i titolari tutte, chi fa il giro nessuna */
+/* chi vede quali prenotazioni: ogni punto vendita quelle che si ritirano da lui e quelle che ha preso lui,
+   il panificio e i titolari tutte, chi fa il giro nessuna */
 function negozioPren(){ return S.ruolo && S.ruolo.tipo === "negozio" && PUNTI_RITIRO.indexOf(S.punto) >= 0 ? S.punto : ""; }
 function vedePren(){ return !!S.ruolo && S.ruolo.tipo !== "giro"; }
 function prenVisibili(){
   if (!vedePren()) return [];
   const neg = negozioPren();
-  return neg ? S.prenotazioni.filter(function(p){ return p.ritiro === neg || p.mio; }) : S.prenotazioni;
+  return neg ? S.prenotazioni.filter(function(p){ return p.ritiro === neg || p.presaDa === neg || p.mio; }) : S.prenotazioni;
 }
 S.prenotazioni = [];
 S.formPren = { aperto: false, quando: "domani", data: "", ritiro: "", inviando: false };
@@ -2625,6 +2655,7 @@ function normaPren(k, d, st, autore, rid){
     perIl: /^\d{4}-\d{2}-\d{2}$/.test(d.perIl || "") ? d.perIl : dataLocale(Number(d.creato) || Date.now()),
     ora: /^\d{2}:\d{2}$/.test(d.ora || "") ? d.ora : "",
     ritiro: DESTINAZIONI.indexOf(d.ritiro) >= 0 ? d.ritiro : "Panificio",
+    presaDa: PUNTI_RITIRO.indexOf(d.presaDa) >= 0 ? d.presaDa : "",
     cliente: String(d.cliente || "").slice(0, 60),
     voci: (Array.isArray(d.voci) ? d.voci : []).slice(0, 30).map(function(v){ return { articolo: String(v.articolo || "").slice(0, 120) || "?", quantita: String(v.quantita || "").slice(0, 24) }; }),
     nota: String(d.nota || "").slice(0, 140),
@@ -2680,36 +2711,93 @@ function rigaPren(p){
       meta([p.inCoda ? el("span", {class:"pill p-coda", text:"Non ancora inviata"}) : null, statoPill,
         el("span", {class:"pill dest " + classeDest(p.ritiro), text:"Ritiro " + (PREP[p.ritiro] || p.ritiro).replace(/^a /, "a ")}),
         p.ora ? el("span", {class:"pill p-ora", text:"ore " + p.ora}) : null,
-        "presa da " + chi + ", " + quando(p.creato)])),
+        "presa da " + chi + (p.presaDa && p.presaDa !== p.ritiro ? " " + (PREP[p.presaDa] || p.presaDa) : "") + ", " + quando(p.creato)])),
     azioni.childNodes.length ? azioni : null);
 }
-function renderPrenotazioni(){
-  if (!inPren()) return;
+/* il giorno scelto nel modulo: Oggi, Domani o quello scritto nella casella */
+function giornoFormPren(){
   const f = S.formPren;
-  const box = $("pren-form");
-  $("pren-nuova").hidden = f.aperto || !puoPrenotare();
-  box.hidden = !f.aperto;
-  if (f.aperto){
-    riempi($("pren-quando"), [["oggi","Oggi"],["domani","Domani"],["altro","Altro giorno"]].map(function(o){
-      return el("button", {type:"button", class:"chip-add stat-per", "data-pren-quando":o[0], "aria-pressed":String(f.quando === o[0]), disabled:f.inviando, text:o[1]});
-    }));
-    $("pren-data-riga").hidden = f.quando !== "altro";
-    $("pren-data").min = oggiStr();
-    /* il punto vendita prende le prenotazioni per sé; panificio e titolari scelgono dove */
-    const neg = negozioPren();
-    $("pren-ritiro-blocco").hidden = !!neg;
-    $("pren-ritiro-fisso").hidden = !neg;
-    if (neg) $("pren-ritiro-fisso").textContent = "Il cliente la ritira " + (PREP[neg] || neg) + ".";
-    const rit = f.ritiro || "";
-    riempi($("pren-ritiro"), PUNTI_RITIRO.map(function(d){
-      return el("label", {class:"chip " + classeDest(d)}, el("input", {type:"radio", name:"pren-ritiro", value:d, checked: d === rit ? true : null, disabled:f.inviando}), el("span", {text:d}));
-    }));
-    $("pren-ritiro").querySelectorAll("input").forEach(function(i){ i.checked = i.value === rit; });
-    const n = righeDi("pren-righe").length;
-    $("pren-salva").disabled = f.inviando || !n;
-    $("pren-salva").textContent = f.inviando ? "Salvo…" : "Salva prenotazione";
-    $("pren-chi").textContent = S.nomeMio ? "La prendi tu, " + S.nomeMio + "." : "";
+  return f.quando === "oggi" ? oggiStr() : (f.quando === "domani" ? domaniStr() : ($("pren-data").value || ""));
+}
+/* i punti vendita da mostrare: il proprio negozio sempre per primo */
+function puntiRitiroOrdinati(){
+  const neg = negozioPren();
+  return neg ? [neg].concat(PUNTI_RITIRO.filter(function(d){ return d !== neg; })) : PUNTI_RITIRO.slice();
+}
+function renderFormPren(){
+  const f = S.formPren;
+  const aperto = f.aperto && inPren();
+  $("pren-schermo").hidden = !aperto;
+  /* dietro il modulo la pagina non scorre */
+  document.body.style.overflow = aperto ? "hidden" : "";
+  if (!aperto) return;
+  const oggi = oggiStr();
+  riempi($("pren-quando"), [["oggi","Oggi"],["domani","Domani"],["altro","Altro giorno"]].map(function(o){
+    return el("button", {type:"button", class:"chip-add stat-per pren-q" + (o[0] !== "oggi" ? " diverso" : ""), "data-pren-quando":o[0], "aria-pressed":String(f.quando === o[0]), disabled:f.inviando, text:o[1]});
+  }));
+  $("pren-data-riga").hidden = f.quando !== "altro";
+  $("pren-data").min = oggi;
+  const g = giornoFormPren();
+  const diverso = !!g && g !== oggi;
+  $("pren-data").classList.toggle("diverso", f.quando === "altro" && diverso);
+  /* il giorno scritto per intero, così non ci si sbaglia */
+  const scritto = $("pren-giorno-scelto");
+  if (!g) scritto.textContent = "Scegli il giorno qui sopra.";
+  else {
+    const lungo = fmtGiornoLungo.format(msDelGiorno(g));
+    scritto.textContent = g === oggi ? "Oggi, " + lungo : (g === domaniStr() ? "Domani, " + lungo : lungo.charAt(0).toUpperCase() + lungo.slice(1));
   }
+  scritto.classList.toggle("diverso", diverso);
+  /* dove ritira il cliente: tutti e due i negozi, il proprio primo e già scelto */
+  const rit = f.ritiro || "";
+  riempi($("pren-ritiro"), puntiRitiroOrdinati().map(function(d){
+    return el("label", {class:"chip " + classeDest(d)}, el("input", {type:"radio", name:"pren-ritiro", value:d, checked: d === rit ? true : null, disabled:f.inviando}), el("span", {text:d}));
+  }));
+  $("pren-ritiro").querySelectorAll("input").forEach(function(i){ i.checked = i.value === rit; });
+  const n = righeDi("pren-righe").length;
+  $("pren-salva").disabled = f.inviando || !n;
+  $("pren-salva").textContent = f.inviando ? "Salvo…" : "Salva prenotazione";
+  $("pren-chi").textContent = S.nomeMio ? "La prendi tu, " + S.nomeMio + (negozioPren() ? " (" + negozioPren() + ")" : "") + "." : "";
+}
+/* ha già scritto qualcosa nel modulo? */
+function formPrenScritto(){
+  return ["pren-righe","pren-cliente","pren-nota","pren-ora"].some(function(id){ return String($(id).value || "").trim() !== ""; });
+}
+function svuotaFormPren(){
+  ["pren-righe","pren-cliente","pren-nota","pren-ora","pren-data"].forEach(function(id){ $(id).value = ""; });
+  esito("pren-esito", "");
+}
+async function chiudiFormPren(){
+  const f = S.formPren;
+  if (!f.aperto || f.inviando) return;
+  if (formPrenScritto()){
+    const esci = await chiedi("Vuoi uscire dalla prenotazione?", "Quello che hai scritto si perde.", "Sì, esci", "No, resto");
+    if (!esci) return;
+  }
+  svuotaFormPren();
+  f.aperto = false; f.ritiro = "";
+  renderPrenotazioni();
+  try { $("pren-nuova").focus(); } catch(e){}
+}
+/* domanda Sì / No nello stile dell'app; risponde true se si preme Sì */
+let rispostaDomanda = null;
+function chiedi(testo, sotto, si, no){
+  if (rispostaDomanda) rispostaDomanda(false);
+  $("domanda-testo").textContent = testo;
+  $("domanda-sotto").textContent = sotto || "";
+  $("domanda-sotto").hidden = !sotto;
+  $("domanda-si").textContent = si || "Sì";
+  $("domanda-no").textContent = no || "No";
+  $("domanda").hidden = false;
+  $("domanda-no").focus();
+  return new Promise(function(ok){
+    rispostaDomanda = function(r){ rispostaDomanda = null; $("domanda").hidden = true; ok(r); };
+  });
+}
+function renderPrenotazioni(){
+  renderFormPren();
+  if (!inPren()) return;
+  $("pren-nuova").hidden = !puoPrenotare();
   /* una pagina per giorno: Oggi, Domani o un giorno scelto */
   const oggi = oggiStr(), domani = domaniStr();
   if (!S.prenGiorno) S.prenGiorno = oggi;
@@ -2767,11 +2855,15 @@ function fmtCortoGiorno(s){ return fmtCortoG.format(msDelGiorno(s)); }
 /* il modulo parte dal giorno che si sta guardando */
 function apriFormPren(){
   const f = S.formPren, g = S.prenGiorno || oggiStr();
+  svuotaFormPren();
   f.aperto = true;
-  if (g === oggiStr() || g < oggiStr()) f.quando = "oggi";
+  if (g <= oggiStr()) f.quando = "oggi";
   else if (g === domaniStr()) f.quando = "domani";
   else { f.quando = "altro"; $("pren-data").value = g; }
+  /* il punto vendita che la prende ha già premuto il suo negozio */
+  f.ritiro = negozioPren() || "";
   renderPrenotazioni();
+  try { $("pren-schermo").scrollTop = 0; } catch(e){}
   $("pren-righe").focus();
 }
 function vaiGiornoPren(g){
@@ -2784,14 +2876,15 @@ async function salvaPrenotazione(ev){
   const f = S.formPren;
   const voci = righeDi("pren-righe");
   if (!voci.length || f.inviando || !puoPrenotare()) return;
-  const giorno = f.quando === "oggi" ? oggiStr() : (f.quando === "domani" ? domaniStr() : $("pren-data").value);
+  const giorno = giornoFormPren();
   if (!giorno || giorno < oggiStr()){ esito("pren-esito", "Scegli il giorno (oggi o dopo)."); $("pren-data").focus(); return; }
   const ritiroSel = document.querySelector('input[name="pren-ritiro"]:checked');
-  const ritiro = negozioPren() || (ritiroSel ? ritiroSel.value : "");
+  const ritiro = ritiroSel ? ritiroSel.value : "";
   if (PUNTI_RITIRO.indexOf(ritiro) < 0){ esito("pren-esito", "Scegli dove la ritira il cliente."); return; }
   const voce = {
     tipo: "prenotazione", perIl: giorno, ora: $("pren-ora").value || "",
     ritiro: ritiro,
+    presaDa: negozioPren(),
     cliente: $("pren-cliente").value.trim().slice(0, 60),
     voci: voci.map(function(x){ return { articolo: x.articolo, quantita: x.quantita }; }),
     nota: $("pren-nota").value.trim().slice(0, 140),
@@ -2801,7 +2894,7 @@ async function salvaPrenotazione(ev){
   const ok = await scrivi(function(){ return store.aggiungi(voce); }, true);
   f.inviando = false;
   if (ok){
-    ["pren-righe","pren-cliente","pren-nota","pren-ora"].forEach(function(id){ $(id).value = ""; });
+    svuotaFormPren();
     f.aperto = false; f.ritiro = "";
     S.prenGiorno = giorno; S.prenScegli = false;
     avviso("Prenotazione salvata per " + testoGiorno(giorno) + ".");
@@ -3200,7 +3293,8 @@ function collega(){
     }
     if (b.dataset.prenGiorno) return vaiGiornoPren(b.dataset.prenGiorno);
     if (b.id === "pren-torna-oggi"){ S.prenScegli = false; return vaiGiornoPren(oggiStr()); }
-    if (b.id === "pren-annulla"){ S.formPren.aperto = false; renderPrenotazioni(); return; }
+    if (b.id === "pren-annulla" || b.id === "pren-chiudi") return chiudiFormPren();
+    if (b.id === "domanda-si" || b.id === "domanda-no"){ if (rispostaDomanda) rispostaDomanda(b.id === "domanda-si"); return; }
     if (b.dataset.prenQuando){ S.formPren.quando = b.dataset.prenQuando; renderPrenotazioni(); if (b.dataset.prenQuando === "altro") $("pren-data").focus(); return; }
     if (b.dataset.prenStato) return statoPren(b.dataset.id, b.dataset.prenStato);
     if (b.dataset.prenTogli) return togliPren(b.dataset.prenTogli);
@@ -3227,7 +3321,22 @@ function collega(){
   $("pren-form").addEventListener("submit", salvaPrenotazione);
   $("pren-righe").addEventListener("input", function(){ $("pren-salva").disabled = S.formPren.inviando || !righeDi("pren-righe").length; });
   $("pren-pagina-data").addEventListener("change", function(){ if (/^\d{4}-\d{2}-\d{2}$/.test(this.value)) vaiGiornoPren(this.value); });
-  $("pren-ritiro").addEventListener("change", function(ev){ if (ev.target.name === "pren-ritiro") S.formPren.ritiro = ev.target.value; });
+  /* cambiare il negozio del ritiro: prima si chiede */
+  $("pren-ritiro").addEventListener("change", async function(ev){
+    if (ev.target.name !== "pren-ritiro") return;
+    const f = S.formPren, nuovo = ev.target.value, neg = negozioPren();
+    if (neg && nuovo !== neg && f.ritiro !== nuovo){
+      renderFormPren(); /* intanto resta premuto quello di prima */
+      const si = await chiedi("Sei sicuro di cambiare il luogo del ritiro?", "Il cliente la ritirerà " + (PREP[nuovo] || nuovo) + ".", "Sì, cambia", "No");
+      if (si) f.ritiro = nuovo;
+      renderFormPren();
+      return;
+    }
+    f.ritiro = nuovo;
+  });
+  ["input","change"].forEach(function(t){ $("pren-data").addEventListener(t, renderFormPren); });
+  $("pren-schermo").addEventListener("keydown", function(ev){ if (ev.key === "Escape" && $("domanda").hidden) chiudiFormPren(); });
+  $("domanda").addEventListener("keydown", function(ev){ if (ev.key === "Escape" && rispostaDomanda) rispostaDomanda(false); });
   $("notifica").addEventListener("click", function(){ $("notifica").classList.remove("vista"); });
   $("codici-box").addEventListener("toggle", function(){ if ($("codici-box").open) mostraCodici(); });
   document.addEventListener("change", function(ev){
