@@ -184,6 +184,12 @@ body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area
 /* notifica in alto, come quelle del telefono */
 .notifica{position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 10px);z-index:95;max-width:440px;margin:0 auto;display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:16px;border:1px solid var(--line);background:var(--surface);color:var(--ink);box-shadow:0 12px 32px rgba(0,0,0,.28);cursor:pointer;transform:translateY(calc(-100% - 40px));visibility:hidden;transition:transform .3s ease,visibility 0s linear .3s}
 .notifica.vista{transform:none;visibility:visible;transition:transform .3s ease}
+.notifica.trascina{transition:none}
+.notifica-corpo{flex:1 1 auto;min-width:0}
+.notifica-chiudi{appearance:none;flex:none;width:36px;height:36px;margin:-4px -6px 0 0;display:flex;align-items:center;justify-content:center;border:0;border-radius:10px;background:transparent;color:var(--muted);font-size:18px;font-weight:700;cursor:pointer}
+.notifica-chiudi:hover{background:var(--surface-2);color:var(--ink)}
+.notifica{touch-action:pan-x;padding-bottom:16px}
+.notifica::after{content:"";position:absolute;left:50%;bottom:5px;width:36px;height:4px;margin-left:-18px;border-radius:2px;background:var(--line)}
 .notifica-icona{flex:none;width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:var(--urgent);color:var(--urgent-ink)}
 .notifica.ok .notifica-icona{background:var(--done);color:var(--done-ink)}
 .notifica-titolo{font-weight:700;font-size:16px;line-height:1.25}
@@ -239,6 +245,19 @@ body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area
 .domanda-velo{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(10,14,18,.55)}
 .domanda-box{width:100%;max-width:420px;box-shadow:0 12px 32px rgba(0,0,0,.3)}
 .domanda-testo{font-size:18px;font-weight:700;line-height:1.3}
+/* non in magazzino: striscia sottile al negozio, riquadro piccolo in fondo */
+.strisce-mag{position:sticky;top:calc(env(safe-area-inset-top,0px) + 6px);z-index:5;display:flex;flex-direction:column;gap:6px}
+.striscia-mag{display:flex;align-items:baseline;gap:8px;padding:7px 12px;border-radius:10px;font-size:14px;line-height:1.3;box-shadow:0 4px 12px rgba(0,0,0,.14)}
+.striscia-mag b{flex:none;font-weight:700}
+.striscia-mag span{min-width:0;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.striscia-mag.manca{background:var(--urgent-bg);color:var(--urgent-txt);box-shadow:inset 4px 0 0 var(--urgent),0 4px 12px rgba(0,0,0,.14)}
+.striscia-mag.arrivata{background:var(--pronto-bg);color:var(--pronto);box-shadow:inset 4px 0 0 var(--pronto-solid),0 4px 12px rgba(0,0,0,.14)}
+.mag-piccolo{gap:6px;padding:10px 14px;border-color:var(--urgent);background:color-mix(in srgb,var(--urgent-bg) 45%,var(--surface))}
+.mag-piccolo .label-sm{color:var(--urgent-txt)}
+.mag-piccolo-lista{display:flex;flex-direction:column;gap:2px;font-size:14px}
+.mag-piccolo-lista li{display:flex;justify-content:space-between;gap:10px}
+.mag-piccolo-lista li span:last-child{flex:none;color:var(--muted)}
+.pill.p-arrivata{background:var(--pronto-solid);color:var(--pronto-solid-ink)}
 .riga.pren.messa-parte{background:color-mix(in srgb,var(--surface-2) 55%,transparent)}
 .riga.pren.messa-parte .articolo,.riga.pren.messa-parte .nota{text-decoration:line-through;color:var(--muted)}
 .stat-per[aria-pressed="true"],.stat-per[aria-pressed="true"]:hover{background:var(--ink);border-color:var(--ink);color:var(--bg)}
@@ -533,6 +552,8 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
     </fieldset>
 
     <div class="view" id="pannello-richieste">
+    <!-- Negozio: striscia sottile per le cose che non ci sono in magazzino (o appena arrivate) -->
+    <div class="strisce-mag" id="strisce-mag" role="status" hidden></div>
     <form class="card" id="form-richiesta" novalidate>
       <label class="label" for="righe">Cosa serve?</label>
       <p class="chi-ordina" id="chi-ordina"></p>
@@ -571,6 +592,10 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
       <h2 id="titolo-arrivo">In arrivo al Corso</h2>
       <ul class="lista" id="lista-arrivo"></ul>
       <p class="vuoto" id="vuoto-arrivo">Carico le richieste…</p>
+      <div class="card mag-piccolo" id="mag-piccolo" hidden>
+        <p class="label-sm">Cose non in magazzino</p>
+        <ul class="mag-piccolo-lista" id="mag-piccolo-lista"></ul>
+      </div>
       <details id="det-cons-negozio" hidden>
         <summary>Consegnato oggi (<span id="n-cons-negozio">0</span>)</summary>
         <ul class="lista" id="lista-cons-negozio"></ul>
@@ -589,6 +614,17 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
         </div>
       </details>
     </div>
+    </div>
+
+    <!-- Non in magazzino: tutte le cose segnate "non c'è", finché non arrivano -->
+    <div class="view" id="pannello-mancanti" hidden>
+      <p class="hint" id="mancanti-spiega"></p>
+      <div class="blocco" id="mancanti-gruppi"></div>
+      <p class="vuoto" id="mancanti-vuoto">In magazzino c'è tutto quello che è stato chiesto.</p>
+      <div class="blocco" id="arrivate-box" hidden>
+        <p class="label-sm">Arrivate in magazzino, da portare</p>
+        <ul class="lista" id="arrivate-lista"></ul>
+      </div>
     </div>
 
     <!-- Biscotti: sezione a parte, non va nel giro delle consegne -->
@@ -823,7 +859,8 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
 <p class="avviso" id="avviso" role="status" aria-live="polite"></p>
 <div class="notifica" id="notifica" role="status" aria-live="assertive">
   <span class="notifica-icona" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8.8a15 15 0 0 1 20 0"></path><path d="M5 12.6a10 10 0 0 1 14 0"></path><path d="M8.5 16.2a5 5 0 0 1 7 0"></path><circle cx="12" cy="19.6" r="0.9" fill="currentColor"></circle></svg></span>
-  <div><p class="notifica-titolo" id="notifica-titolo"></p><p class="notifica-testo" id="notifica-testo"></p><ul class="notifica-azioni" id="notifica-azioni"></ul></div>
+  <div class="notifica-corpo"><p class="notifica-titolo" id="notifica-titolo"></p><p class="notifica-testo" id="notifica-testo"></p><ul class="notifica-azioni" id="notifica-azioni"></ul></div>
+  <button type="button" class="notifica-chiudi" id="notifica-chiudi" aria-label="Chiudi l'avviso">✕</button>
 </div>
 <div class="conferma-velo" id="controllo" role="dialog" aria-modal="true" aria-labelledby="ctrl-titolo" hidden>
   <div class="riep-box">
@@ -1063,7 +1100,14 @@ const CLASSI_PREP = {preparazione:"p-prep", pronto:"p-pronto", finito:"p-finito"
 const REPARTO_FORNO = "Pane e forno";
 function nonDisponibile(r){ return r.prep === "finito" || r.prep === "manca"; }
 /* ordine: pronte prima (si caricano subito), finite e mancanti in fondo */
-function rangoPrep(r){ return r.prep === "pronto" ? 0 : (nonDisponibile(r) ? 2 : 1); }
+function rangoPrep(r){ return (r.prep === "pronto" || appenaArrivata(r)) ? 0 : (nonDisponibile(r) ? 2 : 1); }
+/* arrivata in magazzino dopo essere mancata, e non ancora caricata */
+function appenaArrivata(r){ return !r.prep && !!r.arrivatoAlle && r.stato === "attesa"; }
+/* "È arrivato in magazzino" lo segnano solo i titolari e chi fa il giro */
+function puoArrivato(){ return !!store && !S.sola && !!S.ruolo && (S.ruolo.tipo === "titolare" || S.ruolo.tipo === "giro"); }
+/* cose che non ci sono in magazzino, ancora da portare */
+function nonInMagazzino(){ return S.richieste.filter(function(r){ return r.prep === "manca" && r.stato === "attesa" && r.per !== PROMEMORIA; }); }
+const ORA_E_MEZZA = 90 * 60000;
 function norma(k, d, st, autore, rid){
   const stati = ["attesa","caricato","consegnato"];
   st = st || {};
@@ -1089,7 +1133,10 @@ function norma(k, d, st, autore, rid){
     daGiro: d.daGiro === true,
     reparto: REPARTI.indexOf(st.reparto) >= 0 ? st.reparto : (REPARTI.indexOf(d.reparto) >= 0 ? d.reparto : ""),
     /* a che punto è il panificio: "", "preparazione", "pronto", "finito" */
-    prep: STATI_PREP.indexOf(st.prep) >= 0 ? st.prep : ""
+    prep: STATI_PREP.indexOf(st.prep) >= 0 ? st.prep : "",
+    prepAlle: Number(st.prepAlle) || 0,
+    /* "È arrivato in magazzino": da portare subito */
+    arrivatoAlle: Number(st.arrivatoAlle) || 0
   };
 }
 /* richieste per un giorno preciso: compaiono a tutti dal giorno prima */
@@ -1153,7 +1200,8 @@ function avviso(msg){
   timerAvviso = setTimeout(function(){ $("avviso").textContent = ""; }, 5000);
 }
 function nuovoId(){ return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
-function puoTogliere(r){ return !!store && !S.sola && (r.mio || S.owner); }
+/* una cosa segnata "non c'è in magazzino" resta finché non arriva: la può togliere solo il titolare */
+function puoTogliere(r){ return !!store && !S.sola && (r.mio || S.owner) && (r.prep !== "manca" || S.owner); }
 function nomeDi(id){
   if (S.mioId && id === S.mioId) return "te";
   if (!(id in S.nomi)) return "…";
@@ -1779,6 +1827,8 @@ async function rimettiBisc(chiaveLotto){
 async function impostaPrep(id, valore){
   const r = S.richieste.find(function(x){ return x.id === id; });
   if (!r || !store || S.sola || S.pending.has(id) || STATI_PREP.indexOf(valore) < 0) return;
+  /* "non c'è in magazzino" si toglie solo con "È arrivato" (titolari e giro) */
+  if (r.prep === "manca" && !puoArrivato()) return;
   const nuovo = r.prep === valore ? "" : valore;
   S.pending.add(id); renderTutto();
   const patch = { prep: nuovo, prepAlle: Date.now() };
@@ -1787,6 +1837,77 @@ async function impostaPrep(id, valore){
   if (nuovo === "finito") patch.finito = true;
   await scrivi(function(){ return store.stato(id, patch); });
   S.pending.delete(id); renderTutto();
+}
+function bottoneArrivato(r){
+  return el("button", {type:"button", class:"mini b-arrivato", "data-arrivato":r.id, disabled:S.pending.has(r.id), "aria-label":r.articolo + " è arrivato in magazzino", text:"È arrivato"});
+}
+/* "È arrivato in magazzino": prima si chiede, poi torna nella lista di chi fa il giro da portare */
+async function segnaArrivato(id){
+  const r = S.richieste.find(function(x){ return x.id === id; });
+  if (!r || r.prep !== "manca" || !puoArrivato() || S.pending.has(id)) return;
+  const si = await chiedi("Sei sicuro che è arrivato in magazzino?",
+    (r.quantita ? r.quantita + " " : "") + r.articolo + " per " + (r.per || "") + ": torna nel giro, da portare.", "Sì, è arrivato", "No");
+  if (!si) return;
+  S.pending.add(id); renderTutto();
+  const ora = Date.now();
+  const ok = await scrivi(function(){ return store.stato(id, { prep: "", prepAlle: ora, arrivatoAlle: ora }); });
+  S.pending.delete(id);
+  if (ok) avviso(r.articolo + ": arrivato in magazzino, da portare.");
+  renderTutto();
+}
+function inMancanti(){ return S.vista === "negozio" && S.sez === "mancanti"; }
+function renderMancanti(){
+  if (!inMancanti()) return;
+  const lista = nonInMagazzino();
+  const mio = PUNTI_RITIRO.indexOf(S.punto) >= 0 && S.ruolo.tipo === "negozio" ? S.punto : "";
+  /* il proprio negozio per primo */
+  const ordine = (mio ? [mio] : []).concat(DESTINAZIONI.filter(function(d){ return d !== mio; }));
+  $("mancanti-spiega").textContent = puoArrivato()
+    ? "Quando una cosa arriva in magazzino, premi «È arrivato»: torna nel giro, da portare subito."
+    : "Restano qui finché non arrivano in magazzino. «È arrivato» lo segnano i titolari o chi fa il giro.";
+  const gruppi = [];
+  ordine.forEach(function(d){
+    const items = lista.filter(function(r){ return r.per === d; }).sort(function(a, b){ return (b.urgente - a.urgente) || a.prepAlle - b.prepAlle; });
+    if (!items.length) return;
+    gruppi.push(el("section", {class:"gruppo " + classeDest(d)}, testaGruppo("Per", d, items.length === 1 ? "1 cosa" : items.length + " cose"),
+      el("ul", {class:"lista"}, ...items.map(function(r){
+        const li = el("li", {class:"riga " + classeDest(r.per) + (r.urgente ? " urgente" : "")}, sigla(r.per),
+          el("div", {class:"riga-main"}, testoArticolo(r),
+            meta([pillUrgente(r), el("span", {class:"pill p-finito", text:"Non in magazzino"}), r.prepAlle ? "segnato " + quando(r.prepAlle) : null, "chiesto " + quando(r.creato), bottoneChi(r)])));
+        if (puoArrivato()) li.append(el("div", {class:"azioni"}, bottoneArrivato(r)));
+        return li;
+      }))));
+  });
+  riempi($("mancanti-gruppi"), gruppi);
+  $("mancanti-vuoto").hidden = gruppi.length > 0;
+  $("mancanti-vuoto").textContent = S.pronto ? "In magazzino c'è tutto quello che è stato chiesto." : "Carico le richieste…";
+  /* arrivate da poco e non ancora caricate */
+  const arr = S.richieste.filter(appenaArrivata).sort(function(a, b){ return b.arrivatoAlle - a.arrivatoAlle; });
+  $("arrivate-box").hidden = !arr.length;
+  riempi($("arrivate-lista"), arr.map(function(r){
+    return el("li", {class:"riga " + classeDest(r.per)}, sigla(r.per), el("div", {class:"riga-main"}, testoArticolo(r),
+      meta([el("span", {class:"pill p-arrivata", text:"Arrivata " + quando(r.arrivatoAlle)}), pillDest(r.per), bottoneChi(r)])));
+  }));
+}
+/* al negozio: striscia sottile per un'ora e mezza, poi nel riquadro piccolo in fondo;
+   quando arriva in magazzino ricompare una volta, "arrivata" */
+function renderStrisceMag(){
+  const neg = PUNTI_RITIRO.indexOf(S.punto) >= 0 ? S.punto : "";
+  const box = $("strisce-mag"), piccolo = $("mag-piccolo");
+  if (!neg){ box.hidden = true; piccolo.hidden = true; return; }
+  const ora = Date.now();
+  const nome = function(r){ return (r.quantita ? r.quantita + " " : "") + r.articolo; };
+  const mancano = nonInMagazzino().filter(function(r){ return r.per === neg; });
+  const recenti = mancano.filter(function(r){ return ora - r.prepAlle < ORA_E_MEZZA; });
+  const vecchie = mancano.filter(function(r){ return ora - r.prepAlle >= ORA_E_MEZZA; });
+  const arrivate = S.richieste.filter(function(r){ return r.per === neg && r.arrivatoAlle && ora - r.arrivatoAlle < ORA_E_MEZZA && r.stato !== "consegnato" && r.prep !== "manca"; });
+  const strisce = [];
+  if (recenti.length) strisce.push(el("p", {class:"striscia-mag manca"}, el("b", {text:"Non in magazzino:"}), el("span", {text:recenti.map(nome).join(" · ")})));
+  if (arrivate.length) strisce.push(el("p", {class:"striscia-mag arrivata"}, el("b", {text: arrivate.length === 1 ? "Arrivata in magazzino:" : "Arrivate in magazzino:"}), el("span", {text:arrivate.map(nome).join(" · ") + " · sta arrivando"})));
+  riempi(box, strisce);
+  box.hidden = !strisce.length;
+  riempi($("mag-piccolo-lista"), vecchie.map(function(r){ return el("li", null, el("span", {text:nome(r)}), el("span", {text:"dalle " + fmtOra.format(r.prepAlle)})); }));
+  piccolo.hidden = !vecchie.length;
 }
 /* Spostare una cosa di reparto: vale per questa richiesta e, da ora, per tutte quelle con lo stesso nome */
 async function spostaReparto(id, rep){
@@ -1869,6 +1990,7 @@ function pillUrgente(r){
   return f;
 }
 function pillPrep(r){
+  if (appenaArrivata(r) && r.per !== PROMEMORIA) return el("span", {class:"pill p-arrivata", text:"Arrivata in magazzino, da portare"});
   if (!r.prep || r.stato !== "attesa" || r.per === PROMEMORIA) return null;
   return el("span", {class:"pill " + CLASSI_PREP[r.prep], text:NOMI_PREP[r.prep]});
 }
@@ -2020,6 +2142,7 @@ function renderNegozio(){
   renderFrequenti(mie);
   aggiornaForm();
   renderBiscotti();
+  renderStrisceMag();
 }
 
 /* ---------- render: biscotti ---------- */
@@ -2168,7 +2291,8 @@ function renderBiscPanificio(){
   $("vuoto-crono-fatti").hidden = fatti.length > 0;
 }
 function mostraSez(sez){
-  S.sez = ["biscotti","statistiche","prenotazioni","notifiche","persone"].indexOf(sez) >= 0 ? sez : "richieste";
+  S.sez = ["biscotti","statistiche","prenotazioni","notifiche","persone","mancanti"].indexOf(sez) >= 0 ? sez : "richieste";
+  $("pannello-mancanti").hidden = S.sez !== "mancanti";
   $("pannello-notifiche").hidden = S.sez !== "notifiche";
   $("pannello-persone").hidden = S.sez !== "persone";
   $("pannello-prenotazioni").hidden = S.sez !== "prenotazioni";
@@ -2181,10 +2305,11 @@ function mostraSez(sez){
 function vociMenu(){
   const nPren = prenVisibili().filter(function(p){ return p.stato !== "parte" && p.perIl >= oggiStr() && p.perIl <= domaniStr(); }).length;
   const notif = notificheDisponibili() ? [{ id:"notifiche", nome:"Notifiche", n:null }] : [];
-  if (S.ruolo.tipo === "giro") return notif;
+  const mancanti = { id:"mancanti", nome:"Non in magazzino", n:nonInMagazzino().length };
+  if (S.ruolo.tipo === "giro") return [mancanti].concat(notif);
   const panif = S.punto === "Panificio";
   const nBisc = panif ? biscDaFare().length : S.biscotti.filter(function(b){ return b.stato === "manca" && b.negozio === S.punto; }).length;
-  const voci = [{ id:"prenotazioni", nome:"Prenotazioni", n:nPren }, { id:"biscotti", nome:"Biscotti", n:nBisc }];
+  const voci = [{ id:"prenotazioni", nome:"Prenotazioni", n:nPren }, { id:"biscotti", nome:"Biscotti", n:nBisc }, mancanti];
   if (puoStat()) voci.push({ id:"statistiche", nome:"Statistiche", n:null });
   if (puoPersone()) voci.push({ id:"persone", nome:"Persone registrate", n:null });
   voci.push.apply(voci, notif);
@@ -2212,7 +2337,7 @@ function renderMenu(){
   $("apri-menu").hidden = bisc;
   $("torna").hidden = !bisc;
   $("switch-viste").hidden = t !== "titolare" || bisc;
-  $("punti").hidden = t !== "titolare" || inStat() || inPren() || inNotif() || inPersone();
+  $("punti").hidden = t !== "titolare" || inStat() || inPren() || inNotif() || inPersone() || inMancanti();
   $("link-personale").hidden = t !== "titolare" || bisc;
   $("codici-box").hidden = !S.sito || !S.owner || t !== "titolare" || bisc;
   renderTestata();
@@ -2224,7 +2349,10 @@ function renderTestata(){
   const t = S.ruolo.tipo, bisc = inBiscotti(), giro = S.vista === "consegne", stat = inStat(), pren = inPren();
   const panif = S.punto === "Panificio";
   let sopra, titolo, info;
-  if (inNotif()){
+  if (inMancanti()){
+    sopra = "Da aspettare"; titolo = "Non in magazzino";
+    info = contaTesto(nonInMagazzino().length, "cosa", "cose");
+  } else if (inNotif()){
     sopra = "Su questo telefono"; titolo = "Notifiche"; info = "";
   } else if (inPersone()){
     sopra = "Solo per i titolari"; titolo = "Persone registrate"; info = "";
@@ -2250,11 +2378,11 @@ function renderTestata(){
       : S.richieste.filter(function(r){ return r.per === S.punto && r.stato !== "consegnato"; }).length;
     info = panif ? contaTesto(n, "richiesta aperta", "richieste aperte") : contaTesto(n, "in arrivo", "in arrivo");
   }
-  $("fascia").className = "fascia " + (giro || stat || ((pren || inNotif()) && t === "giro") ? "giro" : classeDest(S.punto));
+  $("fascia").className = "fascia " + (giro || stat || ((pren || inNotif() || inMancanti()) && t === "giro") ? "giro" : classeDest(S.punto));
   $("eyebrow").textContent = sopra;
   $("titolo").textContent = titolo;
   $("fascia-info").textContent = info;
-  $("app-nome").textContent = bisc ? "Biscotti" : (stat ? "Statistiche" : (pren ? "Prenotazioni" : (inNotif() ? "Notifiche" : (inPersone() ? "Persone" : "Rifornimenti"))));
+  $("app-nome").textContent = inMancanti() ? "Magazzino" : bisc ? "Biscotti" : (stat ? "Statistiche" : (pren ? "Prenotazioni" : (inNotif() ? "Notifiche" : (inPersone() ? "Persone" : "Rifornimenti"))));
 }
 function apriMenu(){
   $("menu").hidden = false; $("menu-velo").hidden = false;
@@ -2278,7 +2406,7 @@ function vaiSezione(id, forza){
     return;
   }
   chiudiMenu();
-  if (id === "biscotti" || (id === "prenotazioni" && vedePren()) || id === "notifiche" || (id === "statistiche" && puoStat()) || (id === "persone" && puoPersone())){
+  if (id === "biscotti" || id === "mancanti" || (id === "prenotazioni" && vedePren()) || id === "notifiche" || (id === "statistiche" && puoStat()) || (id === "persone" && puoPersone())){
     if (!inSezioneExtra()) S.vistaPrima = S.vista;
     mostraVista("negozio");
     mostraSez(id);
@@ -2374,7 +2502,7 @@ function azioniGiro(r){
     if (r.mio) box.append(bottoneTogli(r, true));
   } else if (r.stato === "attesa"){
     box.append(el("button", {type:"button", class:"azione b-carica", "data-id":r.id, "data-stato":"caricato", disabled:off, "aria-label":"Caricato: " + r.articolo, text:"Caricato"}));
-    if (dalMagazzino(r)) box.append(bottoneManca(r));
+    if (dalMagazzino(r)){ const bm = bottoneManca(r); if (bm) box.append(bm); }
     if (r.mio) box.append(bottoneTogli(r, true));
   } else {
     box.append(
@@ -2419,7 +2547,7 @@ function rigaPanificio(r){
     const off = S.pending.has(r.id);
     const box = el("div", {class:"stati-panif", role:"group", "aria-label":"A che punto è: " + r.articolo});
     [["preparazione","In preparazione"],["pronto","Pronto da caricare"],["finito","Finito scorte"]].forEach(function(x){
-      box.append(el("button", {type:"button", class:"b-stato", "data-id":r.id, "data-prep":x[0], "aria-pressed":String(r.prep === x[0]), disabled:off, text:x[1]}));
+      box.append(el("button", {type:"button", class:"b-stato", "data-id":r.id, "data-prep":x[0], "aria-pressed":String(r.prep === x[0]), disabled:off || (r.prep === "manca" && !puoArrivato()), text:x[1]}));
     });
     li.append(box);
   } else if (r.prep){
@@ -2432,7 +2560,8 @@ function rangoPanificio(r){ return r.prep === "pronto" ? 1 : (nonDisponibile(r) 
 function bottoneManca(r){
   const off = S.pending.has(r.id);
   if (r.prep === "manca"){
-    return el("button", {type:"button", class:"link", "data-id":r.id, "data-prep":"manca", disabled:off, "aria-label":r.articolo + " è arrivato in magazzino", text:"È arrivato"});
+    /* "È arrivato" solo per titolari e chi fa il giro; gli altri vedono solo la scritta rossa */
+    return puoArrivato() ? bottoneArrivato(r) : null;
   }
   const armato = S.armatoManca === r.id;
   return el("button", {type:"button", class: armato ? "link pericolo" : "link", "data-manca":r.id, disabled:off,
@@ -2451,7 +2580,8 @@ function rigaMagazzino(r){
   }
   const li = el("li", {class:"riga " + classeDest(r.per) + (nonDisponibile(r) ? " e-finito" : "") + (r.nuova ? " nuova" : "")},
     sigla(r.per), el("div", {class:"riga-main"}, testoArticolo(r), meta(parti)));
-  if (!S.sola && store) li.append(el("div", {class:"azioni"}, bottoneManca(r)));
+  const bm = !S.sola && store ? bottoneManca(r) : null;
+  if (bm) li.append(el("div", {class:"azioni"}, bm));
   return li;
 }
 function ordinaPanificio(a, b){ return (rangoPanificio(a) - rangoPanificio(b)) || ordina(a, b); }
@@ -3153,6 +3283,7 @@ function renderTutto(){
   renderMenu();
   renderStatistiche();
   renderPrenotazioni();
+  renderMancanti();
 }
 
 /* ---------- interfacce ---------- */
@@ -3247,6 +3378,7 @@ function collega(){
     if (b.dataset.biscFatto) return fattoBisc(b.dataset.biscFatto);
     if (b.dataset.biscRimetti) return rimettiBisc(b.dataset.biscRimetti);
     if (b.dataset.manca) return armaManca(b.dataset.manca);
+    if (b.dataset.arrivato) return segnaArrivato(b.dataset.arrivato);
     if (b.dataset.prep) return impostaPrep(b.dataset.id, b.dataset.prep);
     if (b.dataset.stato) return cambiaStato(b.dataset.id, b.dataset.stato);
     if (b.dataset.tutto) return consegnaTutto(b.dataset.tutto);
@@ -3322,7 +3454,27 @@ function collega(){
   ["input","change"].forEach(function(t){ $("pren-data").addEventListener(t, renderFormPren); });
   $("pren-schermo").addEventListener("keydown", function(ev){ if (ev.key === "Escape" && $("domanda").hidden) chiudiFormPren(); });
   $("domanda").addEventListener("keydown", function(ev){ if (ev.key === "Escape" && rispostaDomanda) rispostaDomanda(false); });
-  $("notifica").addEventListener("click", function(){ $("notifica").classList.remove("vista"); });
+  $("notifica").addEventListener("click", function(){ if (Date.now() - fineTrascina > 400) chiudiNotifica(); });
+  /* la notifica si toglie anche spingendola verso l'alto col dito, come quelle del telefono */
+  (function(){
+    const n = $("notifica");
+    let y0 = null, dy = 0;
+    n.addEventListener("touchstart", function(ev){ if (ev.touches.length === 1){ y0 = ev.touches[0].clientY; dy = 0; } }, {passive:true});
+    n.addEventListener("touchmove", function(ev){
+      if (y0 === null) return;
+      dy = Math.min(0, ev.touches[0].clientY - y0);
+      if (dy < -4){ n.classList.add("trascina"); n.style.transform = "translateY(" + dy + "px)"; }
+    }, {passive:true});
+    const fine = function(){
+      if (y0 === null) return;
+      y0 = null;
+      n.classList.remove("trascina"); n.style.transform = "";
+      if (dy < -30){ fineTrascina = Date.now(); chiudiNotifica(); }
+      else if (dy < -4) fineTrascina = Date.now();
+    };
+    n.addEventListener("touchend", fine);
+    n.addEventListener("touchcancel", fine);
+  })();
   $("codici-box").addEventListener("toggle", function(){ if ($("codici-box").open) mostraCodici(); });
   document.addEventListener("change", function(ev){
     const nt = ev.target.closest && ev.target.closest("input[data-notif]");
@@ -3734,8 +3886,10 @@ async function caricaPreferenzeNotifiche(){
   renderNotifiche();
 }
 
-/* notifica in alto, come quelle del telefono: si vede subito senza scorrere */
-let timerNotifica = 0;
+/* notifica in alto, come quelle del telefono: si vede subito senza scorrere.
+   Si chiude da sola, toccandola, con la ✕ o spingendola verso l'alto. */
+let timerNotifica = 0, fineTrascina = 0;
+function chiudiNotifica(){ clearTimeout(timerNotifica); $("notifica").classList.remove("vista"); }
 function notifica(titolo, testo, tipo, azioni){
   const n = $("notifica");
   if (!n) return;
