@@ -1,7 +1,7 @@
 /* Copia dell'app sul telefono: si apre anche senza campo.
    La pagina si prende sempre dalla rete se c'è (così gli aggiornamenti arrivano subito);
    senza rete si usa la copia. I dati di Supabase non passano mai di qui. */
-const VERSIONE = "9ba1b48fbf";
+const VERSIONE = "18135aa457";
 const CACHE = "ordini-" + VERSIONE;
 const BASE = ["./", "manifest.webmanifest", "icone/icona-180.png", "icone/icona-192.png"];
 
@@ -36,14 +36,26 @@ self.addEventListener("fetch", function(e){
   }));
 });
 
+/* per il registro di come si usa l'app: quali notifiche arrivano (solo il tipo, al massimo 50) */
+function segnaRicevuta(tipo){
+  return caches.open("registro-ordini").then(function(c){
+    return c.match("notifiche-ricevute").then(function(r){ return r ? r.json() : []; }).catch(function(){ return []; }).then(function(lista){
+      lista = (Array.isArray(lista) ? lista : []).concat([{ tipo: tipo, t: Date.now() }]).slice(-50);
+      return c.put("notifiche-ricevute", new Response(JSON.stringify(lista), { headers: { "Content-Type": "application/json" } }));
+    });
+  }).catch(function(){});
+}
 /* notifiche: arrivano anche con l'app chiusa */
 self.addEventListener("push", function(e){
   let d = {};
   try { d = e.data ? e.data.json() : {}; } catch(x){ d = { titolo: "Ordini", testo: e.data ? e.data.text() : "" }; }
   const vai = /^[a-z]+$/.test(d.vai || "") ? d.vai : "richieste";
-  e.waitUntil(self.registration.showNotification(d.titolo || "Ordini · Profumo di Pane", {
-    body: d.testo || "", tag: d.tag || undefined, icon: "icone/icona-192.png", badge: "icone/icona-192.png", data: { vai: vai }
-  }));
+  e.waitUntil(Promise.all([
+    self.registration.showNotification(d.titolo || "Ordini · Profumo di Pane", {
+      body: d.testo || "", tag: d.tag || undefined, icon: "icone/icona-192.png", badge: "icone/icona-192.png", data: { vai: vai }
+    }),
+    segnaRicevuta(String(d.tag || "").split("-")[0])
+  ]));
 });
 /* toccando la notifica si apre l'app nella sezione giusta */
 self.addEventListener("notificationclick", function(e){

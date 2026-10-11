@@ -1438,7 +1438,7 @@ async function scrivi(fn, crea){
       if (c === "invalid_argument"){ banner("Questa richiesta è appena stata cambiata da qualcun altro."); return false; }
       if (c === "quota_exceeded"){ banner("L'archivio è pieno: rimuovi gli esempi o le richieste vecchie, poi riprova."); return false; }
       if (c === "revoked" || c === "not_granted" || c === "capability_disabled" || c === "capability_removed"){ solaLettura(); return false; }
-      registra("errore salvataggio", { codice: String(c || "?").slice(0, 40) });
+      registra("errore salvataggio", Object.assign({ codice: String(c || "?").slice(0, 40), messaggio: String(e && e.message || "").slice(0, 160) }, contestoErrore()));
       banner("Non sono riuscito a salvare. Controlla la connessione e riprova.");
       return false;
     }
@@ -1515,6 +1515,7 @@ function apriControllo(dove, per, rr){
   $("ctrl-invia").focus();
 }
 function chiudiControllo(){
+  if (S.ctrl && !S.ctrl.inviando) registra("controllo richiesta chiuso senza inviare", { cose: S.ctrl.voci.length });
   $("controllo").hidden = true;
   S.ctrl = null;
   try { document.body.style.overflow = ""; } catch(e){}
@@ -3276,10 +3277,12 @@ function svuotaFormPren(){
 async function chiudiFormPren(){
   const f = S.formPren;
   if (!f.aperto || f.inviando) return;
-  if (formPrenScritto()){
+  const scritto = formPrenScritto();
+  if (scritto){
     const esci = await chiedi("Vuoi uscire dalla prenotazione?", "Quello che hai scritto si perde.", "Sì, esci", "No, resto");
-    if (!esci) return;
+    if (!esci){ registra("prenotazione: ha ripensato e resta", {}); return; }
   }
+  registra("prenotazione lasciata a metà", { avevaScritto: scritto, eraNelControllo: !!f.ctrl, dubbiAperti: f.ctrl ? f.ctrl.voci.filter(function(v){ return !ctrlPrenRisolta(v); }).length : 0 });
   svuotaFormPren();
   f.aperto = false; f.ritiro = "";
   renderPrenotazioni();
@@ -3613,7 +3616,10 @@ function apriDisdici(id){
   $("disdici").hidden = false;
   try { $("disdici-no").focus(); } catch(e){}
 }
-function chiudiDisdici(){ S.disdici = null; $("disdici").hidden = true; }
+function chiudiDisdici(annullata){
+  if (annullata && S.disdici) registra("disdetta lasciata a metà", { motivoScelto: !!motivoDisdetta() });
+  S.disdici = null; $("disdici").hidden = true;
+}
 async function confermaDisdici(){
   const d = S.disdici;
   const motivo = motivoDisdetta();
@@ -3946,6 +3952,7 @@ function collega(){
     const b = ev.target.closest("button");
     if (!b || b.disabled) return;
     registra("tasto", { tasto: nomeTasto(b) });
+    contaTocchi(nomeTasto(b));
     if (b.dataset.view){
       S.vistaTitolare = b.dataset.view; ricorda("vista", b.dataset.view);
       return mostraVista(b.dataset.view);
@@ -4037,7 +4044,7 @@ function collega(){
     if (b.dataset.prenRipristina) return ripristinaPren(b.dataset.prenRipristina);
     if (b.dataset.copiaTel) return copiaTelefono(b.dataset.copiaTel);
     if (b.dataset.disdiciMotivo && S.disdici){ S.disdici.scelta = S.disdici.scelta === b.dataset.disdiciMotivo ? "" : b.dataset.disdiciMotivo; return renderDisdici(); }
-    if (b.id === "disdici-no") return chiudiDisdici();
+    if (b.id === "disdici-no") return chiudiDisdici(true);
     if (b.id === "disdici-si") return confermaDisdici();
     /* controllo dei prodotti dopo «Salva» */
     if (b.id === "pren-ctrl-indietro"){ S.formPren.ctrl = null; renderPrenotazioni(); try { $("pren-righe").focus(); } catch(e){} return; }
@@ -4117,7 +4124,7 @@ function collega(){
   ["input","change"].forEach(function(t){ $("pren-data").addEventListener(t, renderFormPren); });
   $("pren-schermo").addEventListener("keydown", function(ev){ if (ev.key === "Escape" && $("domanda").hidden) chiudiFormPren(); });
   $("domanda").addEventListener("keydown", function(ev){ if (ev.key === "Escape" && rispostaDomanda) rispostaDomanda(false); });
-  $("disdici").addEventListener("keydown", function(ev){ if (ev.key === "Escape") chiudiDisdici(); });
+  $("disdici").addEventListener("keydown", function(ev){ if (ev.key === "Escape") chiudiDisdici(true); });
   /* «Mostra tutto»: si chiude con «Chiudi», toccando fuori o con Esc */
   $("mag-tutto").addEventListener("click", function(ev){ if (ev.target === this) chiudiMagTutto(); });
   $("mag-tutto").addEventListener("keydown", function(ev){ if (ev.key === "Escape") chiudiMagTutto(); });
@@ -4330,6 +4337,7 @@ function emettiSB(subito){
 let caricando = null;
 function caricaTuttoSB(){
   if (caricando) return caricando;
+  S.inizioCarico = Date.now();
   const da = new Date(Date.now() - GIORNI_CARICATI * 86400000).toISOString();
   caricando = Promise.all([
     tuttePagine(function(){ return sb.from("profili").select("id,nome").order("id"); }),
@@ -4348,6 +4356,9 @@ function caricaTuttoSB(){
     riapplicaCoda();
     S.ultimoCarico = Date.now(); S.fotoQuando = 0;
     S.prontoR = S.prontoS = S.pronto = true;
+    if (!S.tempoApertura){ S.tempoApertura = true; try { registra("app pronta", { secondi: Math.round(performance.now() / 100) / 10 }); } catch(e){} }
+    else if (S.inizioCarico){ const sec = (Date.now() - S.inizioCarico) / 1000; if (sec > 4) registra("caricamento lento", { secondi: Math.round(sec * 10) / 10 }); }
+    S.inizioCarico = 0;
     if (S.bannerRete) { banner(""); S.bannerRete = false; }
     emettiSB(true);
     if (S.coda.length) svuotaCoda();
@@ -4397,6 +4408,22 @@ const VAPID_PUBLICA = "";
 const REGISTRO_ATTIVO = false;
 const VERSIONE_APP = "";
 S.reg = [];
+S.ultimoTasto = { nome: "", alle: 0 };
+S.tocchi = { nome: "", volte: 0, alle: 0, segnato: false };
+/* tocchi ripetuti: lo stesso tasto 3 o più volte in pochi secondi (forse non risponde o non si capisce) */
+function contaTocchi(nome){
+  const t = S.tocchi, ora = Date.now();
+  if (t.nome === nome && ora - t.alle < 3000){ t.volte++; }
+  else { t.nome = nome; t.volte = 1; t.segnato = false; }
+  t.alle = ora;
+  if (t.volte >= 3 && !t.segnato){ t.segnato = true; registra("tocchi ripetuti", { tasto: nome }); }
+  S.ultimoTasto = { nome: nome, alle: ora };
+}
+/* per gli errori: l'ultimo tasto premuto e da quanti secondi */
+function contestoErrore(){
+  return { ultimoTasto: S.ultimoTasto.nome, secondiDopo: S.ultimoTasto.alle ? Math.round((Date.now() - S.ultimoTasto.alle) / 1000) : null,
+    vista: S.vista || "", sezione: S.sez || "", inCoda: S.coda ? S.coda.length : 0, rete: navigator.onLine !== false };
+}
 function registra(evento, dati){
   if (!REGISTRO_ATTIVO || !S.sito || !S.ruoloSito) return;
   if (S.reg.length >= 400) return;
@@ -4411,6 +4438,19 @@ function salvaRegistro(){ try { localStorage.setItem("pdp-registro", JSON.string
 function caricaRegistro(){
   if (!REGISTRO_ATTIVO) { try { localStorage.removeItem("pdp-registro"); } catch(e){} return; }
   try { const r = JSON.parse(localStorage.getItem("pdp-registro") || "[]"); if (Array.isArray(r)) S.reg = r.slice(-400); } catch(e){}
+  leggiNotificheRicevute();
+}
+/* le notifiche arrivate sul telefono (anche ad app chiusa): le conta il service worker, qui si registrano */
+async function leggiNotificheRicevute(){
+  try {
+    if (!("caches" in window)) return;
+    const c = await caches.open("registro-ordini");
+    const r = await c.match("notifiche-ricevute");
+    if (!r) return;
+    const lista = await r.json();
+    await c.delete("notifiche-ricevute");
+    (Array.isArray(lista) ? lista : []).slice(-50).forEach(function(n){ registra("notifica ricevuta", { tipo: String(n.tipo || "").slice(0, 20), alle: Number(n.t) || 0 }); });
+  } catch(e){}
 }
 async function mandaRegistro(){
   clearTimeout(S.timerReg);
@@ -4665,6 +4705,7 @@ function riaccendiNuove(){
   ricomponi(); renderTutto();
 }
 function apriDaNotifica(vai){
+  registra("aperta da notifica", { sezione: String(vai || "").slice(0, 20) });
   if (!store) { S.vaiDopo = vai; return; }
   const sezioni = ["richieste","biscotti","prenotazioni","notifiche","mancanti"];
   vaiSezione(sezioni.indexOf(vai) >= 0 ? vai : "richieste", true);
@@ -4756,7 +4797,12 @@ async function eseguiOp(op){
 }
 /* prova online; se manca la rete mette in coda e va avanti come se fosse partita */
 async function scriviOp(op, evento){
-  try { await eseguiOp(op); }
+  const inizio = Date.now();
+  try {
+    await eseguiOp(op);
+    const ms = Date.now() - inizio;
+    if (ms > 3000) registra("salvataggio lento", { tabella: op.tab, secondi: Math.round(ms / 100) / 10 });
+  }
   catch(e){
     if (e && e.code === "unavailable"){ delete op.controlla; if (evento) op.evento = evento; accoda(op); return; }
     throw e;
@@ -5074,7 +5120,12 @@ function confirmUscita(){
 async function avviaSupabase(){
   S.sito = true;
   /* il telefono si tiene una copia dell'app: si apre anche senza campo */
-  try { if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(function(){}); } catch(e){}
+  try {
+    if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").then(function(reg){
+      /* una versione nuova scaricata sul telefono */
+      reg.addEventListener("updatefound", function(){ registra("aggiornamento scaricato", { versionePrima: VERSIONE_APP }); });
+    }).catch(function(){});
+  } catch(e){}
   try {
     if ("serviceWorker" in navigator) navigator.serviceWorker.addEventListener("message", function(ev){ if (ev.data && ev.data.vai) apriDaNotifica(ev.data.vai); });
     const q = new URLSearchParams(location.search).get("vai");
@@ -5091,8 +5142,8 @@ async function avviaSupabase(){
     else registra("riaperta", {});
   });
   /* errori dell'app: per trovarli e correggerli */
-  window.addEventListener("error", function(ev){ registra("errore app", { msg: String(ev && ev.message || "").slice(0, 200), riga: ev && ev.lineno || 0 }); });
-  window.addEventListener("unhandledrejection", function(ev){ registra("errore app", { msg: String(ev && ev.reason && (ev.reason.message || ev.reason) || "").slice(0, 200) }); });
+  window.addEventListener("error", function(ev){ registra("errore app", Object.assign({ msg: String(ev && ev.message || "").slice(0, 200), riga: ev && ev.lineno || 0, colonna: ev && ev.colno || 0 }, contestoErrore())); });
+  window.addEventListener("unhandledrejection", function(ev){ registra("errore app", Object.assign({ msg: String(ev && ev.reason && (ev.reason.message || ev.reason) || "").slice(0, 200) }, contestoErrore())); });
   window.addEventListener("pagehide", function(){ if (S.eventi.length) mandaEventi(true); });
   window.addEventListener("offline", function(){
     registra("rete", { campo: false });
