@@ -4344,8 +4344,21 @@ function caricaTuttoSB(){
     tuttePagine(function(){ return sb.from("richieste").select("id,autore,dati").gte("creato", da).order("id"); }),
     tuttePagine(function(){ return sb.from("stati").select("id,dati").gte("aggiornato", da).order("id"); }),
     tuttePagine(function(){ return sb.from("biscotti").select("id,dati").order("id"); }),
-    tuttePagine(function(){ return sb.from("impostazioni").select("chiave,dati").order("chiave"); })
-  ]).then(function(r){
+    tuttePagine(function(){ return sb.from("impostazioni").select("chiave,dati").order("chiave"); }),
+    /* le prenotazioni da 7 giorni fa in avanti, anche se sono state prese molto tempo prima
+       (es. una comunione prenotata due mesi prima): non devono mai sparire dalla lista */
+    tuttePagine(function(){ return sb.from("richieste").select("id,autore,dati").eq("dati->>tipo", "prenotazione").gte("dati->>perIl", dataLocale(Date.now() - 7 * 86400000)).order("id"); }).catch(function(){ return []; })
+  ]).then(async function(r){
+    /* i loro stati (messa da parte, disdetta…) anche se sono vecchi */
+    const giaR = new Set(r[1].map(function(x){ return x.id; }));
+    const giaS = new Set(r[2].map(function(x){ return x.id; }));
+    const chiavi = r[5].filter(function(x){ return !giaR.has(x.id); }).map(function(x){ return x.autore + "~" + x.id; }).filter(function(k){ return !giaS.has(k); });
+    for (let i = 0; i < chiavi.length; i += 100){
+      const pezzo = chiavi.slice(i, i + 100);
+      const st = await tuttePagine(function(){ return sb.from("stati").select("id,dati").in("id", pezzo).order("id"); }).catch(function(){ return []; });
+      r[2] = r[2].concat(st);
+    }
+    r[1] = r[1].concat(r[5].filter(function(x){ return !giaR.has(x.id); }));
     RAW.voci = {}; RAW.autori = {}; RAW.bisc = {}; RAW.imp = {};
     S.stati = {}; S.nomi = {};
     r[0].forEach(function(x){ applicaRiga("profili", x); });
