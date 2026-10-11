@@ -87,6 +87,8 @@ def main():
     src = sostituisci(src, "SB_URL", url)
     src = sostituisci(src, "SB_KEY", key)
     src = sostituisci(src, "VAPID_PUBLICA", vapid)
+    # versione dell'app (per il registro di come si usa): cambia a ogni modifica della sorgente
+    src = sostituisci(src, "VERSIONE_APP", hashlib.sha1((QUI / "app.html").read_bytes()).hexdigest()[:8])
 
     # quello che sta prima della testata (titolo, caratteri, stile) va nella <head>
     taglio = src.index('<header class="testata">')

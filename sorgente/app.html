@@ -1438,6 +1438,7 @@ async function scrivi(fn, crea){
       if (c === "invalid_argument"){ banner("Questa richiesta è appena stata cambiata da qualcun altro."); return false; }
       if (c === "quota_exceeded"){ banner("L'archivio è pieno: rimuovi gli esempi o le richieste vecchie, poi riprova."); return false; }
       if (c === "revoked" || c === "not_granted" || c === "capability_disabled" || c === "capability_removed"){ solaLettura(); return false; }
+      registra("errore salvataggio", { codice: String(c || "?").slice(0, 40) });
       banner("Non sono riuscito a salvare. Controlla la connessione e riprova.");
       return false;
     }
@@ -1627,6 +1628,9 @@ async function confermaControllo(){
   if (giro) S.inviandoGiro = false; else S.inviando = false;
   chiudiControllo();
   if (ok){
+    registra(giro ? "aggiunte dal giro" : "richieste mandate", { cose: ok, provate: c.voci.length, senzaRete: !!salvateSenzaRete,
+      secondi: !giro && S.inizioRighe ? Math.round((Date.now() - S.inizioRighe) / 1000) : null });
+    if (!giro) S.inizioRighe = 0;
     $(giro ? "righe-giro" : "righe").value = "";
     if (salvateSenzaRete) esito(giro ? "esito-giro" : "esito", "Senza rete: salvata sul telefono, parte da sola appena torna il campo.");
     else if (giro) esito("esito-giro", ok === 1 ? "Aggiunta." : ok + " cose aggiunte.");
@@ -2479,6 +2483,7 @@ function mostraSez(sez){
   $("pannello-biscotti").hidden = S.sez !== "biscotti";
   $("pannello-statistiche").hidden = S.sez !== "statistiche";
   renderStrisceMag();
+  registraSchermata();
 }
 
 /* ---------- menu con le tre lineette ---------- */
@@ -3368,7 +3373,7 @@ async function confermaProdotto(testo){
     if (!elenco.some(function(x){ return chiave(x) === chiave(nome); })) elenco.push(nome);
     return { elenco: elenco };
   });
-  if (ok) avviso("«" + nome + "» è nell'elenco dei prodotti.");
+  if (ok){ avviso("«" + nome + "» è nell'elenco dei prodotti."); registra("prodotto confermato", {}); }
 }
 async function correggiProdotto(k){
   const sel = $("pren-dc-scelta");
@@ -3378,7 +3383,7 @@ async function correggiProdotto(k){
     const alias = Object.assign({}, d.alias); alias[k] = nome;
     return { alias: alias };
   });
-  if (ok){ S.prenCorreggi = ""; avviso("Corretto: ora è «" + nome + "»."); renderTutto(); }
+  if (ok){ registra("prodotto corretto", {}); S.prenCorreggi = ""; avviso("Corretto: ora è «" + nome + "»."); renderTutto(); }
 }
 /* ---------- cerca: cliente, prodotto o telefono, da 7 giorni fa in avanti ---------- */
 function cercaPren(testo){
@@ -3562,6 +3567,12 @@ async function salvaPrenDavvero(){
   const ok = await scrivi(function(){ return store.aggiungi(voce); }, true);
   f.inviando = false;
   if (ok){
+    registra("prenotazione salvata", { cose: c.voci.length,
+      riconosciute: c.voci.filter(function(v){ return v.esito === "sicuro"; }).length,
+      dubbiAccettati: c.voci.filter(function(v){ return v.esito === "dubbio" && v.scelta && v.scelta !== "nuovo" && v.scelta === v.nome; }).length,
+      sceltiDaElenco: c.voci.filter(function(v){ return v.esito !== "sicuro" && v.scelta && v.scelta !== "nuovo" && v.scelta !== v.nome; }).length,
+      nuove: c.voci.filter(function(v){ return v.scelta === "nuovo"; }).length,
+      tuttaGiornata: !!f.tuttoGiorno, telefono: !!voce.telefono, ritiro: voce.ritiro });
     svuotaFormPren();
     f.aperto = false; f.ritiro = "";
     S.prenGiorno = c.giorno; S.prenScegli = false;
@@ -3614,7 +3625,7 @@ async function confermaDisdici(){
     return store.stato(id, { disdetta: true, disdettaDa: S.mioId, disdettaNome: S.nomeMio || "", disdettaMotivo: motivo, disdettaAlle: Date.now() });
   });
   S.pending.delete(id);
-  if (ok) avviso("Prenotazione disdetta.");
+  if (ok){ avviso("Prenotazione disdetta."); registra("prenotazione disdetta", { motivo: d.scelta || "scritto a mano" }); }
   renderTutto();
 }
 async function ripristinaPren(id){
@@ -3896,6 +3907,7 @@ function mostraVista(v){
   $("tab-consegne").setAttribute("aria-selected", String(v === "consegne"));
   renderTestata();
   renderStrisceMag();
+  registraSchermata();
 }
 function applicaRuolo(){
   S.ruolo = leggiRuolo();
@@ -3933,6 +3945,7 @@ function collega(){
   document.addEventListener("click", function(ev){
     const b = ev.target.closest("button");
     if (!b || b.disabled) return;
+    registra("tasto", { tasto: nomeTasto(b) });
     if (b.dataset.view){
       S.vistaTitolare = b.dataset.view; ricorda("vista", b.dataset.view);
       return mostraVista(b.dataset.view);
@@ -4163,7 +4176,7 @@ function collega(){
     if (t.dataset.ctrlPorta){ const v = S.ctrl.voci[Number(t.dataset.ctrlPorta)]; if (v) v.portaA = t.value; }
   });
   $("ctrl-quando-data").addEventListener("input", function(){ if (S.ctrl){ S.ctrl.perIl = this.value || ""; } });
-  $("righe").addEventListener("input", aggiornaForm);
+  $("righe").addEventListener("input", function(){ if (this.value.trim() && !S.inizioRighe) S.inizioRighe = Date.now(); if (!this.value.trim()) S.inizioRighe = 0; aggiornaForm(); });
   $("righe-giro").addEventListener("input", aggiornaFormGiro);
   $("per-giro").addEventListener("change", aggiornaFormGiro);
   $("form-richiesta").addEventListener("submit", invia);
@@ -4374,6 +4387,67 @@ function ascoltaSB(){
    Dopo un salvataggio l'app avvisa la funzione "notifiche" su Supabase, che decide chi
    deve saperlo. Gli avvisi si raggruppano: 8 cose inviate insieme = 1 notifica. */
 const VAPID_PUBLICA = "";
+
+/* ---------- registro di come si usa l'app (lo legge Claude; nell'app non si vede) ----------
+   SPENTO: si accende con REGISTRO_ATTIVO = true solo alla partenza vera, quando il proprietario lo dice
+   (e dopo il parere del consulente del lavoro: Statuto dei lavoratori e privacy).
+   Non registra quello che si scrive (nomi dei clienti, telefoni, cose chieste, note): solo quale tasto,
+   quale schermata, quanto tempo, errori, rete e tipo di telefono. Le persone non hanno nome ("Persona 1"…):
+   lo decide il database (funzione "registra", supabase/aggiornamento-4-registro.sql). */
+const REGISTRO_ATTIVO = false;
+const VERSIONE_APP = "";
+S.reg = [];
+function registra(evento, dati){
+  if (!REGISTRO_ATTIVO || !S.sito || !S.ruoloSito) return;
+  if (S.reg.length >= 400) return;
+  let s = "";
+  try { s = sezioneAttuale(); } catch(e){}
+  S.reg.push({ e: String(evento).slice(0, 40), t: Date.now(), s: s, d: dati || {} });
+  salvaRegistro();
+  clearTimeout(S.timerReg);
+  S.timerReg = setTimeout(mandaRegistro, 30000);
+}
+function salvaRegistro(){ try { localStorage.setItem("pdp-registro", JSON.stringify(S.reg)); } catch(e){} }
+function caricaRegistro(){
+  if (!REGISTRO_ATTIVO) { try { localStorage.removeItem("pdp-registro"); } catch(e){} return; }
+  try { const r = JSON.parse(localStorage.getItem("pdp-registro") || "[]"); if (Array.isArray(r)) S.reg = r.slice(-400); } catch(e){}
+}
+async function mandaRegistro(){
+  clearTimeout(S.timerReg);
+  if (!REGISTRO_ATTIVO || !S.reg.length || !sb) return;
+  if (navigator.onLine === false){ S.timerReg = setTimeout(mandaRegistro, 60000); return; }
+  const pacco = S.reg.slice(0, 200);
+  try {
+    const r = await sb.rpc("registra", { eventi: pacco });
+    if (r.error) throw r.error;
+    S.reg = S.reg.slice(pacco.length); salvaRegistro();
+    if (S.reg.length) S.timerReg = setTimeout(mandaRegistro, 2000);
+  } catch(e){ S.timerReg = setTimeout(mandaRegistro, 60000); }
+}
+/* il telefono: una volta per ogni apertura */
+function registraDispositivo(){
+  let scuro = false, installata = false;
+  try { scuro = matchMedia("(prefers-color-scheme: dark)").matches; } catch(e){}
+  try { installata = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true; } catch(e){}
+  registra("apertura", { telefono: String(navigator.userAgent || "").slice(0, 300), lingua: navigator.language || "",
+    schermo: screen.width + "x" + screen.height, finestra: innerWidth + "x" + innerHeight, scuro: scuro, installata: installata,
+    notifiche: typeof Notification !== "undefined" ? Notification.permission : "", versione: VERSIONE_APP });
+}
+/* il nome del tasto premuto, senza quello che c'è scritto dentro */
+const VALORI_TASTO = ["stato", "prep", "prenStato", "view", "modo", "prenQuando", "prenPagina", "statGiorni", "disdiciMotivo", "acc", "vai"];
+function nomeTasto(b){
+  if (b.id) return b.id;
+  const chiavi = Object.keys(b.dataset).filter(function(k){ return k !== "id" && k !== "testo"; });
+  if (chiavi.length){ const k = chiavi[0]; return VALORI_TASTO.indexOf(k) >= 0 ? k + ":" + String(b.dataset[k]).slice(0, 30) : k; }
+  return String(b.className || "tasto").split(" ")[0];
+}
+let ultimaSchermata = "";
+function registraSchermata(){
+  const s = (S.vista || "") + "/" + (S.sez || "");
+  if (s === ultimaSchermata) return;
+  ultimaSchermata = s;
+  registra("schermata", { vista: S.vista || "", sezione: S.sez || "" });
+}
 S.eventi = [];
 function notificheDisponibili(){ return !!(S.sito && VAPID_PUBLICA); }
 function aggiungiEvento(ev){
@@ -4661,6 +4735,7 @@ function accoda(op){
   } else S.coda.push(op);
   salvaCoda();
   const n = S.coda.length;
+  registra("salvata senza rete", { tabella: op.tab, inCoda: n });
   notifica("Senza campo: salvata sul telefono", (n === 1 ? "1 cosa aspetta" : n + " cose aspettano") + " la rete e parte da sola appena torna il campo.");
   clearTimeout(S.timerCoda);
   S.timerCoda = setTimeout(svuotaCoda, 20000);
@@ -4703,6 +4778,7 @@ async function svuotaCoda(){
     }
   } finally {
     S.svuotando = false;
+    registra("coda inviata", { scartate: scartate, restano: S.coda.length });
     if (S.coda.length){ clearTimeout(S.timerCoda); S.timerCoda = setTimeout(svuotaCoda, 20000); }
     else if (scartate) notifica("Tornato il campo", scartate === 1 ? "1 cosa salvata senza rete non è stata accettata." : scartate + " cose salvate senza rete non sono state accettate.");
     else notifica("Tornato il campo", "Tutto quello che era salvato sul telefono è stato inviato.", "ok");
@@ -4845,6 +4921,7 @@ async function entraConSessione(sess){
   }
   S.mioId = sess.user.id;
   S.ruoloSito = prof[0].ruolo;
+  caricaRegistro(); registraDispositivo();
   S.token = sess.access_token || S.token;
   S.nomeMio = prof[0].nome;
   S.owner = prof[0].ruolo === "titolare";
@@ -5004,13 +5081,21 @@ async function avviaSupabase(){
     if (q){ S.vaiDopo = q; history.replaceState(null, "", location.pathname + location.hash); }
   } catch(e){}
   window.addEventListener("online", function(){
+    registra("rete", { campo: true });
     if (!store) return;
     if (S.senzaSessione){ location.reload(); return; }
     svuotaCoda(); caricaTuttoSB();
   });
-  document.addEventListener("visibilitychange", function(){ if (document.visibilityState === "hidden" && S.eventi.length) mandaEventi(true); });
+  document.addEventListener("visibilitychange", function(){
+    if (document.visibilityState === "hidden"){ if (S.eventi.length) mandaEventi(true); registra("chiusa o in pausa", {}); mandaRegistro(); }
+    else registra("riaperta", {});
+  });
+  /* errori dell'app: per trovarli e correggerli */
+  window.addEventListener("error", function(ev){ registra("errore app", { msg: String(ev && ev.message || "").slice(0, 200), riga: ev && ev.lineno || 0 }); });
+  window.addEventListener("unhandledrejection", function(ev){ registra("errore app", { msg: String(ev && ev.reason && (ev.reason.message || ev.reason) || "").slice(0, 200) }); });
   window.addEventListener("pagehide", function(){ if (S.eventi.length) mandaEventi(true); });
   window.addEventListener("offline", function(){
+    registra("rete", { campo: false });
     if (!store) return;
     bannerSenzaRete();
     notifica("Sei senza campo", "Puoi continuare a usare l'app: quello che invii parte da solo appena torna la rete.");
