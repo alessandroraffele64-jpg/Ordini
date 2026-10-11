@@ -4421,7 +4421,7 @@ const VAPID_PUBLICA = "BC9TAKzQiQ-x3xtX0KWauGtV-uvIk9VFwqLjWAOzrJbe4e5w2AWyXMIej
    quale schermata, quanto tempo, errori, rete e tipo di telefono. Le persone non hanno nome ("Persona 1"…):
    lo decide il database (funzione "registra", supabase/aggiornamento-4-registro.sql). */
 const REGISTRO_ATTIVO = false;
-const VERSIONE_APP = "2793b7d2";
+const VERSIONE_APP = "896fdf7c";
 S.reg = [];
 S.ultimoTasto = { nome: "", alle: 0 };
 S.tocchi = { nome: "", volte: 0, alle: 0, segnato: false };
@@ -4545,7 +4545,6 @@ function eventoStato(k, p){
   if (p.disdetta === true) return { tipo: "disdetta", id: k };
   if (p.prep === "pronto") return { tipo: "pronto", id: k };
   if (p.prep === "manca") return { tipo: "manca", id: k };
-  if (p.stato === "caricato") return { tipo: "partite", id: k };
   return null;
 }
 
@@ -4553,8 +4552,8 @@ function eventoStato(k, p){
 const SCELTE_NOTIFICHE = {
   "consegne": [["nuove", "Ogni nuova richiesta", "Le urgenti arrivano sempre."], ["pronto", "Pronto da caricare dal panificio", ""], ["arrivata", "Cose arrivate in magazzino, da portare", ""]],
   "panificio": [["nuove", "Nuove richieste per il panificio", ""], ["prenotazioni", "Nuove prenotazioni dei clienti", ""], ["disdette", "Prenotazioni disdette", "Quando qualcun altro disdice una prenotazione che si ritira al panificio."], ["biscotti", "Comande di biscotti", ""]],
-  "corso": [["manca", "Una nostra richiesta non c'è in magazzino", ""], ["partite", "Le nostre cose sono partite", ""], ["prenotazioni", "Prenotazioni che i clienti ritirano da noi", ""], ["disdette", "Prenotazioni disdette", "Quando qualcun altro disdice una prenotazione che si ritira da noi."]],
-  "piazza-nenni": [["manca", "Una nostra richiesta non c'è in magazzino", ""], ["partite", "Le nostre cose sono partite", ""], ["prenotazioni", "Prenotazioni che i clienti ritirano da noi", ""], ["disdette", "Prenotazioni disdette", "Quando qualcun altro disdice una prenotazione che si ritira da noi."]],
+  "corso": [["manca", "Una nostra richiesta non c'è in magazzino", ""], ["altroNegozio", "L'altro negozio chiede qualcosa a noi", "Per esempio il Corso chiede i vassoi da prendere a Piazza Nenni."], ["prenotazioni", "Prenotazioni che i clienti ritirano da noi", ""], ["disdette", "Prenotazioni disdette", "Quando qualcun altro disdice una prenotazione che si ritira da noi."]],
+  "piazza-nenni": [["manca", "Una nostra richiesta non c'è in magazzino", ""], ["altroNegozio", "L'altro negozio chiede qualcosa a noi", "Per esempio il Corso chiede i vassoi da prendere a Piazza Nenni."], ["prenotazioni", "Prenotazioni che i clienti ritirano da noi", ""], ["disdette", "Prenotazioni disdette", "Quando qualcun altro disdice una prenotazione che si ritira da noi."]],
   "titolare": [["tutto", "Ricevi tutto", "Nuove richieste, prenotazioni e disdette, cose che mancano e che arrivano in magazzino, cose segnate come finite in magazzino, pronti da caricare, biscotti."]]
 };
 function sceltaNormale(k){ return k !== "tutto"; }

@@ -2,7 +2,7 @@
 // Ordini · Profumo di Pane — funzione "notifiche" (Supabase Edge Function)
 //
 // L'app la chiama dopo aver salvato qualcosa (nuove richieste, "pronto", "non c'è",
-// "partite", "arrivata in magazzino", comande di biscotti, prenotazioni nuove o disdette). La funzione rilegge dal database cosa è successo
+// richieste da prendere in un altro negozio, "arrivata in magazzino", comande di biscotti, prenotazioni nuove o disdette). La funzione rilegge dal database cosa è successo
 // davvero (non si fida di quello che le arriva), decide chi deve saperlo e manda
 // UNA notifica per invio, raggruppando le cose.
 //
@@ -13,6 +13,7 @@
 const RECENTE = 15 * 60 * 1000; // si notifica solo quello che è successo da poco
 const NEGOZIO_DI_RUOLO = { "corso": "Corso", "piazza-nenni": "Piazza Nenni", "panificio": "Panificio" };
 const PREP = { "Corso": "al Corso", "Piazza Nenni": "a Piazza Nenni", "Panificio": "al Panificio" };
+const CHI = { "Corso": "Il Corso", "Piazza Nenni": "Piazza Nenni", "Panificio": "Il Panificio" };
 
 function nomeCosa(d) {
   // nelle prenotazioni c'è anche il nome giusto del prodotto ("Pitta china" invece di "pitte chine")
@@ -70,6 +71,17 @@ export function componi(eventi, iscrizioni, mittente, ruoloMittente) {
             : neg + " – " + contaCose(n, "nuova richiesta", "nuove richieste");
           out.push({ isc, titolo, testo: elenco(ordinate.map((v) => nomeCosa(v.dati))), tag: "nuove-" + neg + "-" + ev.quando, urgente: urg > 0 });
         }
+        // al negozio da cui si prende la cosa: "Il Corso chiede a voi: 50 Vassoi"
+        const mio = NEGOZIO_DI_RUOLO[r];
+        if (mio && r !== "panificio" && vuole(isc, "altroNegozio", true)) {
+          const daNoi = ev.voci.filter((v) => v.dati.da === mio && v.dati.per !== mio && v.dati.per !== "Promemoria" && v.dati.tipo !== "prenotazione" && v.dati.tipo !== "magazzino");
+          for (const [chi, vv] of perGruppo(daNoi, (v) => v.dati.per)) {
+            const urg = vv.some((v) => v.dati.urgente === true);
+            const ordinate = vv.slice().sort((a, b) => (b.dati.urgente ? 1 : 0) - (a.dati.urgente ? 1 : 0));
+            out.push({ isc, titolo: (urg ? "⚠ URGENTE – " : "") + (CHI[chi] || chi) + " chiede a voi",
+              testo: elenco(ordinate.map((v) => nomeCosa(v.dati))), tag: "altro-" + chi + "-" + ev.quando, urgente: urg, vai: "richieste" });
+          }
+        }
       } else if (ev.tipo === "prenotazioni") {
         for (const v of ev.voci) {
           const d = v.dati;
@@ -121,11 +133,7 @@ export function componi(eventi, iscrizioni, mittente, ruoloMittente) {
         for (const [neg, vv] of perGruppo(scelte, (v) => v.dati.per)) {
           out.push({ isc, titolo: "Non c'è in magazzino – per " + neg, testo: elenco(vv.map((v) => nomeCosa(v.dati))), tag: "manca-" + neg + "-" + ev.quando });
         }
-      } else if (ev.tipo === "partite") {
-        const scelte = ev.voci.filter((v) => NEGOZIO_DI_RUOLO[r] === v.dati.per && vuole(isc, "partite", true));
-        for (const [neg, vv] of perGruppo(scelte, (v) => v.dati.per)) {
-          out.push({ isc, titolo: "In arrivo " + (PREP[neg] || "a " + neg), testo: elenco(vv.map((v) => nomeCosa(v.dati))), tag: "partite-" + neg + "-" + ev.quando });
-        }
+      // "partite" non si manda più (tolta l'11 ottobre)
       } else if (ev.tipo === "biscotti") {
         if (!((r === "panificio" && vuole(isc, "biscotti", true)) || tutto)) continue;
         for (const [neg, vv] of perGruppo(ev.voci, (v) => v.dati.negozio)) {
