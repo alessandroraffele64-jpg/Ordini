@@ -56,7 +56,7 @@ export function componi(eventi, iscrizioni, mittente, ruoloMittente) {
       if (ev.tipo === "nuove") {
         const scelte = ev.voci.filter((v) => {
           const d = v.dati;
-          if (d.per === "Promemoria" || d.tipo === "prenotazione") return false;
+          if (d.per === "Promemoria" || d.tipo === "prenotazione" || d.tipo === "magazzino") return false;
           if (r === "consegne") return d.urgente === true || vuole(isc, "nuove", true); // gli urgenti arrivano sempre
           if (r === "panificio") return d.da === "Panificio" && vuole(isc, "nuove", true);
           return tutto;
@@ -78,14 +78,15 @@ export function componi(eventi, iscrizioni, mittente, ruoloMittente) {
           if (!ok) continue;
           const cose = (Array.isArray(d.voci) ? d.voci : []).map((x) => nomeCosa(x));
           const quandoTesto = d.perIl ? new Intl.DateTimeFormat("it-IT", { weekday: "long", day: "numeric", month: "long", timeZone: "Europe/Rome" }).format(new Date(d.perIl + "T12:00:00Z")) : "";
-          out.push({ isc, titolo: "Nuova prenotazione – " + (quandoTesto || "") + (d.ora ? " ore " + d.ora : ""),
+          out.push({ isc, titolo: "Nuova prenotazione – " + (quandoTesto || "") + (d.tuttoGiorno ? ", tutta la giornata" : (d.ora ? " ore " + d.ora : "")),
             testo: elenco(cose) + " · ritiro " + (PREP[d.ritiro] || d.ritiro || "") + (d.cliente ? " · " + d.cliente : ""), tag: "pren-" + v.id, vai: "prenotazioni" });
         }
       } else if (ev.tipo === "disdetta") {
         // al negozio dove si ritira, se a disdire è stato qualcun altro; ai titolari con "Ricevi tutto"
         for (const v of ev.voci) {
           const d = v.dati, st = v.st || {};
-          const negozio = NEGOZIO_DI_RUOLO[r] === d.ritiro && r !== "panificio" && ruoloMittente !== r && vuole(isc, "disdette", true);
+          // vale anche per il panificio, quando il cliente ritira lì
+          const negozio = NEGOZIO_DI_RUOLO[r] === d.ritiro && ruoloMittente !== r && vuole(isc, "disdette", true);
           if (!(negozio || tutto)) continue;
           const cose = (Array.isArray(d.voci) ? d.voci : []).map((x) => nomeCosa(x));
           const g = giornoTesto(d.perIl, ev.quando);
@@ -103,6 +104,12 @@ export function componi(eventi, iscrizioni, mittente, ruoloMittente) {
             testo: elenco(nomi) + (una ? " è arrivata" : " sono arrivate") + " in magazzino: da portare " + (PREP[neg] || "a " + neg),
             tag: "arrivata-" + neg + "-" + ev.quando });
         }
+      } else if (ev.tipo === "magazzino") {
+        // cose segnate come finite in magazzino (da chi fa il giro o da un titolare): ai titolari con "Ricevi tutto"
+        if (!tutto) continue;
+        const nomi = ev.voci.map((v) => v.dati.articolo || "?");
+        out.push({ isc, titolo: "Finito in magazzino", testo: elenco(nomi) + (nomi.length === 1 ? " è finito" : " sono finiti") + " in magazzino: da ordinare",
+          tag: "magazzino-" + ev.quando, vai: "mancanti" });
       } else if (ev.tipo === "pronto") {
         if (!((r === "consegne" && vuole(isc, "pronto", true)) || tutto)) continue;
         for (const [neg, vv] of perGruppo(ev.voci, (v) => v.dati.per)) {
@@ -150,6 +157,11 @@ export async function leggiEventi(db, richiesti, mittente, ora) {
       const voci = (data || []).filter((x) => recente(x.creato) && x.dati && x.dati.tipo === "prenotazione" && !x.dati.annullato)
         .map((x) => ({ id: x.id, autore: x.autore, dati: x.dati }));
       if (voci.length) eventi.push({ tipo: "prenotazioni", voci, quando: ora });
+    } else if (e.tipo === "magazzino") {
+      const { data } = await db.from("richieste").select("id,autore,dati,creato").in("id", ids).eq("autore", mittente);
+      const voci = (data || []).filter((x) => recente(x.creato) && x.dati && x.dati.tipo === "magazzino" && !x.dati.annullato)
+        .map((x) => ({ id: x.id, autore: x.autore, dati: x.dati }));
+      if (voci.length) eventi.push({ tipo: "magazzino", voci, quando: ora });
     } else if (e.tipo === "nuove") {
       const { data } = await db.from("richieste").select("id,autore,dati,creato").in("id", ids).eq("autore", mittente);
       const domani = domaniRoma(ora);
@@ -176,7 +188,7 @@ export async function leggiEventi(db, richiesti, mittente, ora) {
       if (!ok.length) continue;
       const rids = ok.map((x) => x.id.split("~")[1]).filter(Boolean);
       const { data: rr } = await db.from("richieste").select("id,autore,dati").in("id", rids);
-      const voci = (rr || []).filter((x) => !(x.dati && x.dati.annullato)).map((x) => ({ id: x.id, autore: x.autore, dati: x.dati || {} }));
+      const voci = (rr || []).filter((x) => !(x.dati && x.dati.annullato) && !(x.dati && x.dati.tipo === "magazzino")).map((x) => ({ id: x.id, autore: x.autore, dati: x.dati || {} }));
       if (voci.length) eventi.push({ tipo: "arrivata", voci, quando: ora });
     } else if (e.tipo === "disdetta") {
       const { data: st } = await db.from("stati").select("id,dati,aggiornato").in("id", ids);
