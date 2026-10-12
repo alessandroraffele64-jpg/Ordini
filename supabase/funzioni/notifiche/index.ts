@@ -23,9 +23,37 @@ function elenco(nomi) {
   if (nomi.length <= 3) return nomi.join(", ");
   return nomi.slice(0, 3).join(", ") + " e altre " + (nomi.length - 3);
 }
-function vuole(isc, chiave, normale) {
+// Le notifiche che si possono ricevere di solito, per posto (uguale a NOTIFICHE_PERMESSI in sorgente/app.html).
+// Il titolare può darle o toglierle a una persona (impostazioni "permessi" → persone → notifiche: true / false).
+const NOTIFICHE_DI_SOLITO = {
+  nuove: ["consegne"], nuovePanif: ["panificio"], altroNegozio: ["negozio"], manca: ["negozio"],
+  pronto: ["consegne"], arrivata: ["consegne"], magazzino: [],
+  prenotazioni: ["negozio", "panificio"], disdette: ["negozio", "panificio"], biscotti: ["panificio"],
+};
+function tipoPosto(r) { return r === "corso" || r === "piazza-nenni" ? "negozio" : r; }
+// la persona può ricevere questa notifica nel posto dove è?
+export function permessa(isc, chiave) {
+  if (isc.ruolo === "titolare") return false;
+  const e = isc.notifPermessi;
+  if (e && typeof e[chiave] === "boolean") return e[chiave];
+  return (NOTIFICHE_DI_SOLITO[chiave] || []).indexOf(tipoPosto(isc.ruolo)) >= 0;
+}
+// ...e sul suo telefono è accesa? (se non l'ha mai scelta: sì)
+function vuole(isc, chiave) {
+  if (!permessa(isc, chiave)) return false;
   const p = isc.preferenze || {};
-  return p[chiave] === undefined ? normale : p[chiave] === true;
+  let v = p[chiave];
+  // «Nuove richieste da prendere al Panificio» prima si chiamava «nuove» per il panificio
+  if (v === undefined && chiave === "nuovePanif" && isc.ruolo === "panificio") v = p.nuove;
+  return v === undefined ? true : v === true;
+}
+// chi lavora in più posti: le notifiche del posto dove è adesso (se il titolare gliel'ha dato)
+const LUOGHI_LAVORO = ["corso", "piazza-nenni", "panificio"];
+export function ruoloDiIscrizione(isc, ruolo, permessi) {
+  const luogo = isc.preferenze && isc.preferenze.luogo;
+  if (!luogo || luogo === ruolo || LUOGHI_LAVORO.indexOf(ruolo) < 0 || LUOGHI_LAVORO.indexOf(luogo) < 0) return ruolo;
+  const e = permessi && permessi[isc.utente];
+  return e && Array.isArray(e.luoghi) && e.luoghi.indexOf(luogo) >= 0 ? luogo : ruolo;
 }
 function perGruppo(voci, chiave) {
   const m = new Map();
@@ -52,14 +80,18 @@ export function componi(eventi, iscrizioni, mittente, ruoloMittente) {
   for (const isc of iscrizioni) {
     if (isc.utente === mittente) continue;
     const r = isc.ruolo;
-    const tutto = r === "titolare" && vuole(isc, "tutto", false);
+    const tutto = r === "titolare" && (isc.preferenze || {}).tutto === true;
+    // il negozio dove è (Corso o Piazza Nenni); per gli altri posti le notifiche date dal titolare valgono per tutti
+    const mioNegozio = tipoPosto(r) === "negozio" ? NEGOZIO_DI_RUOLO[r] : "";
     for (const ev of eventi) {
       if (ev.tipo === "nuove") {
         const scelte = ev.voci.filter((v) => {
           const d = v.dati;
           if (d.per === "Promemoria" || d.tipo === "prenotazione" || d.tipo === "magazzino") return false;
-          if (r === "consegne") return d.urgente === true || vuole(isc, "nuove", true); // gli urgenti arrivano sempre
-          if (r === "panificio") return d.da === "Panificio" && vuole(isc, "nuove", true);
+          // a chi fa il giro le urgenti arrivano sempre (se il titolare non gliele ha tolte)
+          if (r === "consegne" && d.urgente === true && permessa(isc, "nuove")) return true;
+          if (vuole(isc, "nuove")) return true;
+          if (d.da === "Panificio" && vuole(isc, "nuovePanif")) return true;
           return tutto;
         });
         for (const [neg, vv] of perGruppo(scelte, (v) => v.dati.per)) {
@@ -72,21 +104,22 @@ export function componi(eventi, iscrizioni, mittente, ruoloMittente) {
           out.push({ isc, titolo, testo: elenco(ordinate.map((v) => nomeCosa(v.dati))), tag: "nuove-" + neg + "-" + ev.quando, urgente: urg > 0 });
         }
         // al negozio da cui si prende la cosa: "Il Corso chiede a voi: 50 Vassoi"
-        const mio = NEGOZIO_DI_RUOLO[r];
-        if (mio && r !== "panificio" && vuole(isc, "altroNegozio", true)) {
-          const daNoi = ev.voci.filter((v) => v.dati.da === mio && v.dati.per !== mio && v.dati.per !== "Promemoria" && v.dati.tipo !== "prenotazione" && v.dati.tipo !== "magazzino");
+        // (a chi non è di un negozio e ha avuto questa notifica: quando un negozio chiede all'altro)
+        if (vuole(isc, "altroNegozio")) {
+          const daNoi = ev.voci.filter((v) => (mioNegozio ? v.dati.da === mioNegozio : (v.dati.da === "Corso" || v.dati.da === "Piazza Nenni")) &&
+            v.dati.per !== v.dati.da && v.dati.per !== "Promemoria" && v.dati.tipo !== "prenotazione" && v.dati.tipo !== "magazzino");
           for (const [chi, vv] of perGruppo(daNoi, (v) => v.dati.per)) {
             const urg = vv.some((v) => v.dati.urgente === true);
             const ordinate = vv.slice().sort((a, b) => (b.dati.urgente ? 1 : 0) - (a.dati.urgente ? 1 : 0));
-            out.push({ isc, titolo: (urg ? "⚠ URGENTE – " : "") + (CHI[chi] || chi) + " chiede a voi",
+            out.push({ isc, titolo: (urg ? "⚠ URGENTE – " : "") + (CHI[chi] || chi) + (mioNegozio ? " chiede a voi" : " chiede " + (PREP[vv[0].dati.da] || "a " + vv[0].dati.da)),
               testo: elenco(ordinate.map((v) => nomeCosa(v.dati))), tag: "altro-" + chi + "-" + ev.quando, urgente: urg, vai: "richieste" });
           }
         }
       } else if (ev.tipo === "prenotazioni") {
         for (const v of ev.voci) {
           const d = v.dati;
-          const ok = (r === "panificio" && vuole(isc, "prenotazioni", true)) ||
-            (NEGOZIO_DI_RUOLO[r] === d.ritiro && r !== "panificio" && vuole(isc, "prenotazioni", true)) || tutto;
+          // in un negozio: quelle che si ritirano lì; al panificio e agli altri: tutte
+          const ok = (vuole(isc, "prenotazioni") && (!mioNegozio || mioNegozio === d.ritiro)) || tutto;
           if (!ok) continue;
           const cose = (Array.isArray(d.voci) ? d.voci : []).map((x) => nomeCosa(x));
           const quandoTesto = d.perIl ? new Intl.DateTimeFormat("it-IT", { weekday: "long", day: "numeric", month: "long", timeZone: "Europe/Rome" }).format(new Date(d.perIl + "T12:00:00Z")) : "";
@@ -98,7 +131,9 @@ export function componi(eventi, iscrizioni, mittente, ruoloMittente) {
         for (const v of ev.voci) {
           const d = v.dati, st = v.st || {};
           // vale anche per il panificio, quando il cliente ritira lì
-          const negozio = NEGOZIO_DI_RUOLO[r] === d.ritiro && ruoloMittente !== r && vuole(isc, "disdette", true);
+          // nei negozi e al panificio: quelle che si ritirano lì, disdette da qualcun altro; agli altri: tutte
+          const posto = NEGOZIO_DI_RUOLO[r];
+          const negozio = vuole(isc, "disdette") && (posto ? posto === d.ritiro && ruoloMittente !== r : true);
           if (!(negozio || tutto)) continue;
           const cose = (Array.isArray(d.voci) ? d.voci : []).map((x) => nomeCosa(x));
           const g = giornoTesto(d.perIl, ev.quando);
@@ -108,7 +143,7 @@ export function componi(eventi, iscrizioni, mittente, ruoloMittente) {
         }
       } else if (ev.tipo === "arrivata") {
         // una cosa che mancava è arrivata in magazzino: a chi fa il giro e ai titolari con "Ricevi tutto"
-        if (!((r === "consegne" && vuole(isc, "arrivata", true)) || tutto)) continue;
+        if (!(vuole(isc, "arrivata") || tutto)) continue;
         for (const [neg, vv] of perGruppo(ev.voci, (v) => v.dati.per)) {
           const nomi = vv.map((v) => v.dati.articolo || "?");
           const una = nomi.length === 1;
@@ -118,24 +153,26 @@ export function componi(eventi, iscrizioni, mittente, ruoloMittente) {
         }
       } else if (ev.tipo === "magazzino") {
         // cose segnate come finite in magazzino (da chi fa il giro o da un titolare): ai titolari con "Ricevi tutto"
-        if (!tutto) continue;
+        if (!(vuole(isc, "magazzino") || tutto)) continue;
         const nomi = ev.voci.map((v) => v.dati.articolo || "?");
         out.push({ isc, titolo: "Finito in magazzino", testo: elenco(nomi) + (nomi.length === 1 ? " è finito" : " sono finiti") + " in magazzino: da ordinare",
           tag: "magazzino-" + ev.quando, vai: "mancanti" });
       } else if (ev.tipo === "pronto") {
-        if (!((r === "consegne" && vuole(isc, "pronto", true)) || tutto)) continue;
+        if (!(vuole(isc, "pronto") || tutto)) continue;
         for (const [neg, vv] of perGruppo(ev.voci, (v) => v.dati.per)) {
           out.push({ isc, titolo: "Pronto da caricare – per " + neg, testo: elenco(vv.map((v) => nomeCosa(v.dati))), tag: "pronto-" + neg + "-" + ev.quando });
         }
       } else if (ev.tipo === "manca") {
         const scelte = ev.voci.filter((v) =>
-          (NEGOZIO_DI_RUOLO[r] === v.dati.per && vuole(isc, "manca", true)) || v.autore === isc.utente || tutto);
+          (vuole(isc, "manca") && (!mioNegozio || mioNegozio === v.dati.per)) ||
+          // le proprie richieste: sempre, se il titolare non gliel'ha tolta
+          (v.autore === isc.utente && !(isc.notifPermessi && isc.notifPermessi.manca === false)) || tutto);
         for (const [neg, vv] of perGruppo(scelte, (v) => v.dati.per)) {
           out.push({ isc, titolo: "Non c'è in magazzino – per " + neg, testo: elenco(vv.map((v) => nomeCosa(v.dati))), tag: "manca-" + neg + "-" + ev.quando });
         }
       // "partite" non si manda più (tolta l'11 ottobre)
       } else if (ev.tipo === "biscotti") {
-        if (!((r === "panificio" && vuole(isc, "biscotti", true)) || tutto)) continue;
+        if (!(vuole(isc, "biscotti") || tutto)) continue;
         for (const [neg, vv] of perGruppo(ev.voci, (v) => v.dati.negozio)) {
           const finiti = vv.filter((v) => v.dati.livello === "finiti");
           const pochi = vv.filter((v) => v.dati.livello !== "finiti");
@@ -293,9 +330,9 @@ if (typeof Deno !== "undefined") {
       const chi = await chiEntra(token);
       if (!chi.id) { console.log("notifiche: non autorizzato,", chi.errore); return risposta({ errore: "Non autorizzato: " + chi.errore }, 401); }
       const mittente = chi.id;
-      const { data: io, error: eProf } = await db.from("profili").select("attivo").eq("id", mittente).maybeSingle();
+      const { data: io, error: eProf } = await db.from("profili").select("*").eq("id", mittente).maybeSingle();
       if (eProf) { console.log("notifiche: database non raggiungibile,", eProf.message); return risposta({ errore: "Database: " + eProf.message }, 500); }
-      if (!io || io.attivo === false) return risposta({ errore: "Non autorizzato: profilo non trovato" }, 401);
+      if (!io || io.attivo === false || io.sospeso === true) return risposta({ errore: "Non autorizzato: profilo non trovato" }, 401);
 
       const corpo = await req.json().catch(() => ({}));
 
@@ -318,12 +355,18 @@ if (typeof Deno !== "undefined") {
         return risposta({ inviate: 0, motivo: "nessun evento" });
       }
 
-      const [{ data: isc }, { data: prof }] = await Promise.all([
+      const [{ data: isc }, { data: prof }, { data: imp }] = await Promise.all([
         db.from("iscrizioni").select("endpoint,p256dh,auth,utente,preferenze"),
-        db.from("profili").select("id,ruolo,attivo"),
+        db.from("profili").select("*"),
+        db.from("impostazioni").select("dati").eq("chiave", "permessi"),
       ]);
-      const ruoli = new Map((prof || []).filter((p) => p.attivo !== false).map((p) => [p.id, p.ruolo]));
-      const iscrizioni = (isc || []).filter((i) => ruoli.has(i.utente)).map((i) => ({ ...i, ruolo: ruoli.get(i.utente) }));
+      // chi è azzerato o sospeso non riceve niente
+      const ruoli = new Map((prof || []).filter((p) => p.attivo !== false && p.sospeso !== true).map((p) => [p.id, p.ruolo]));
+      const permessi = (imp && imp[0] && imp[0].dati && imp[0].dati.persone) || {};
+      const iscrizioni = (isc || []).filter((i) => ruoli.has(i.utente)).map((i) => {
+        const e = permessi[i.utente];
+        return { ...i, ruolo: ruoloDiIscrizione(i, ruoli.get(i.utente), permessi), notifPermessi: (e && e.notifiche) || null };
+      });
       const messaggi = componi(eventi, iscrizioni, mittente, ruoli.get(mittente) || "");
 
       const esiti = await Promise.all(messaggi.map(manda));
