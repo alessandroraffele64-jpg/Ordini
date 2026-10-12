@@ -177,6 +177,10 @@ body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area
 .ctrl-gia{background:var(--urgent-bg);color:var(--urgent-txt);border:1px solid var(--urgent)}
 .ctrl-togli{appearance:none;flex:none;min-height:42px;padding:0 12px;border:1.5px solid var(--urgent);border-radius:10px;background:var(--surface);color:var(--urgent-txt);font-weight:700;font-size:15px;cursor:pointer}
 .ctrl-scelte{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.ctrl-nome{margin:0}
+.ctrl-volevi{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center}
+.ctrl-volevi .mini{min-height:40px}
+.ctrl-chiedi{flex-basis:100%;font-size:14px;font-weight:700;color:var(--muted)}
 .ctrl-quando{display:flex;flex-direction:column;gap:8px;padding:10px 12px;border-radius:var(--r-md);background:var(--surface);border:1.5px solid var(--line)}
 .ctrl-quando .field{flex:none}
 .ctrl-quando input{min-height:44px}
@@ -320,6 +324,17 @@ button.striscia-testo{cursor:pointer}
 .dc-apri{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--surface);color:var(--ink);border:2px solid var(--oro)}
 .dc-apri .badge{background:var(--oro);color:var(--nero)}
 .pren-dc-voce{gap:8px}
+.corr-da{color:var(--muted);text-decoration:line-through;text-decoration-thickness:1px}
+.corr-freccia{color:var(--muted);margin:0 4px}
+.corr-rep{display:flex;flex-direction:column;gap:6px}
+.db-schede{margin-bottom:4px}
+.db-voce .domanda-db{font-weight:700;margin:0}
+.db-voce .riga-db{margin:0;display:flex;flex-wrap:wrap;gap:4px 8px;align-items:baseline}
+.db-voce .riga-db .label-sm{min-width:110px}
+.corr-prod{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;padding:6px 0;border-bottom:1px dashed var(--line)}
+.corr-prod:last-child{border-bottom:0}
+.corr-prod .nome{font-weight:700}
+.corr-prod .anche{font-size:14px;color:var(--muted);flex-basis:100%}
 .pren-dc-voce .row{gap:8px;align-items:center}
 .pren-dc-voce select{min-height:44px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font-size:16px;font-weight:700;padding:0 10px;max-width:100%}
 .stat-per[aria-pressed="true"],.stat-per[aria-pressed="true"]:hover{background:var(--ink);border-color:var(--ink);color:var(--bg)}
@@ -777,6 +792,21 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
       </div>
     </div>
 
+    <!-- Database: solo titolari. Ordini, Prenotazioni, Biscotti: cose nuove da controllare ed elenco completo -->
+    <div class="view" id="pannello-database" hidden>
+      <div class="chips db-schede" id="db-schede" role="tablist" aria-label="Parti del database"></div>
+      <p class="hint" id="db-spiega"></p>
+      <div class="blocco" id="db-lista"></div>
+      <p class="vuoto" id="db-vuoto">Niente da controllare.</p>
+      <details class="crono" id="db-elenco-box">
+        <summary><span id="db-elenco-titolo">Tutti i prodotti</span> <span class="crono-n" id="db-n"></span></summary>
+        <div class="blocco">
+          <p class="hint" id="db-elenco-spiega"></p>
+          <div class="blocco" id="db-elenco"></div>
+        </div>
+      </details>
+    </div>
+
     <!-- Statistiche: solo titolari -->
     <div class="view" id="pannello-statistiche" hidden>
       <div class="blocco">
@@ -1040,18 +1070,6 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
     <div class="riep-azioni"><button type="button" class="mini" id="mag-tutto-chiudi">Chiudi</button><button type="button" class="primary" id="mag-tutto-apri" hidden>Apri Non in magazzino</button></div>
   </div>
 </div>
-<!-- Prodotti nuovi delle prenotazioni da controllare (solo titolari): schermata a parte -->
-<div class="conferma-velo pren-velo" id="dc-schermo" role="dialog" aria-modal="true" aria-labelledby="dc-titolo" hidden>
-  <div class="pren-box">
-    <div class="pren-testa">
-      <button type="button" class="pren-chiudi" id="dc-chiudi" aria-label="Chiudi i prodotti da controllare">✕ Chiudi</button>
-      <h2 class="comanda-titolo" id="dc-titolo">Prodotti da controllare</h2>
-    </div>
-    <p class="hint">«Conferma»: il prodotto entra nell'elenco. «È un errore, era…»: scegli il prodotto giusto e tutte le prenotazioni scritte così si correggono da sole.</p>
-    <div class="blocco" id="dc-lista"></div>
-    <p class="vuoto" id="dc-vuoto" hidden>Nessun prodotto da controllare.</p>
-  </div>
-</div>
 <!-- Disdici una prenotazione: il motivo è obbligatorio -->
 <div class="domanda-velo" id="disdici" role="alertdialog" aria-modal="true" aria-labelledby="disdici-testo" hidden>
   <div class="card domanda-box disdici-box">
@@ -1119,7 +1137,10 @@ const PAROLE = [
   /* casi particolari, prima di tutto il resto */
   ["Altro", ["apribottigli","cavatapp","accendin","rotolo cassa","rotoli cassa","scontrin","lampadin","neon","tavolo"]],
   ["Dispensa", ["crema porcini","crema di porcini","polpa di pomodoro","polpa pomodoro","pomodoro pizza","pomodori pizza","succo limone","succo di limone","pesto","olio friggitrice","olio per friggitrice"]],
-  ["Pane e forno", ["panini hamburger","panino hamburger","pane per hamburger","pangoccio","pan goccio","pangrattato","pan grattato","pasta pizza","pasta per pizza","impast"]],
+  ["Pulizia", ["detersivo piatti","detersivo per piatti"]],
+  ["Dispensa", ["passata"]],
+  ["Frigo", ["tentacol"]],
+  ["Pane e forno", ["pan hamburger","panini hamburger","panino hamburger","pane per hamburger","pangoccio","pan goccio","pangrattato","pan grattato","pasta pizza","pasta per pizza","impast"]],
   /* poi i reparti */
   ["Piatti, posate e vassoi", ["piatt","posat","forchett","coltell","cucchia","bicchier","tovagliol","cannucc","vassoi","vassoio","palett","stuzzicadent","coppett","tazzin","coni ","cono ","pirottin","tappi","coperchi","tovagliett"]],
   ["Pulizia", ["detersiv","detergent","sgrassat","sapon","candeggin","amuchin","spugn","lavastovigl","brillant","sacchi spazzatura","sacchetti spazzatura","sacchi neri","guanti","golmar","carta igienic","carta mani","rotolon","asciugatutto","scottex","fustin","lavapavimen","stracci","scop","acido","alcoldet","ovenz"]],
@@ -1265,17 +1286,27 @@ function pillArrivata(){ return el("span", {class:"pill p-arrivata", text:"Arriv
 function mancaInMagazzino(r){ return r.prep === "manca" && r.stato === "attesa"; }
 /* "È arrivato in magazzino" lo segnano solo i titolari e chi fa il giro */
 function puoArrivato(){ return !!store && !S.sola && !!S.ruolo && (S.ruolo.tipo === "titolare" || S.ruolo.tipo === "giro"); }
+/* «Da comprare»: finché non arriva in magazzino sta nella sezione «Non in magazzino» (non nella striscia rossa) */
+function daComprareAperta(r){ return r.da === "Da comprare" && !r.arrivatoAlle && r.stato === "attesa" && r.per !== PROMEMORIA; }
+function daComprare(){ return S.richieste.filter(daComprareAperta); }
 /* cose che non ci sono in magazzino, ancora da portare */
 function nonInMagazzino(){ return S.richieste.filter(function(r){ return r.prep === "manca" && r.stato === "attesa" && r.per !== PROMEMORIA; }); }
 function norma(k, d, st, autore, rid){
   const stati = ["attesa","caricato","consegnato"];
   st = st || {};
+  const salvato = String(d.articolo || "").slice(0,120) || "Senza nome";
+  const scritto = typeof d.scritto === "string" ? d.scritto.slice(0,120) : "";
+  /* una correzione dei titolari («Sbagliato, era…») vale anche per le richieste già mandate */
+  const corretto = S.prodRich.alias[chiave(scritto || salvato)];
   return {
     id: k,
     rid: rid,
     autore: autore,
     mio: !!S.mioId && autore === S.mioId,
-    articolo: String(d.articolo || "").slice(0,120) || "Senza nome",
+    articolo: corretto || salvato,
+    /* com'era scritto (solo se l'app l'ha cambiato) e com'è stato mandato */
+    scritto: scritto,
+    salvato: salvato,
     quantita: String(d.quantita || "").slice(0,24),
     per: String(d.per || ""),
     da: String(d.da || "Panificio"),
@@ -1472,7 +1503,7 @@ function righeDi(id){
   });
   return out.slice(0,30);
 }
-const ETICHETTE_ORIGINE = {"Da comprare":"Da ordinare o comprare"};
+const ETICHETTE_ORIGINE = {};
 function nomeOrigine(o){ return ETICHETTE_ORIGINE[o] || o; }
 
 /* ---------- scritture ---------- */
@@ -1511,6 +1542,8 @@ async function aggiungi(voci, comuni){
       articolo: x.articolo, quantita: x.quantita, creato: Date.now(),
       da: x.da || "Panificio", urgente: x.urgente === true
     });
+    /* com'era scritto, se l'app ha messo il nome giusto: lo controllano i titolari */
+    if (x.scritto && chiave(x.scritto) !== chiave(x.articolo)) voce.scritto = String(x.scritto).slice(0, 120);
     if (x.reparto) voce.reparto = x.reparto;
     if (String(x.nota || "").trim()) voce.nota = String(x.nota).trim().slice(0, 140);
     if (comuni.perIl && comuni.perIl !== oggiStr()) voce.perIl = comuni.perIl; else delete voce.perIl;
@@ -1520,9 +1553,15 @@ async function aggiungi(voci, comuni){
       /* dopo il ritiro si porta qui (di solito il negozio che l'ha chiesto) */
       if (DESTINAZIONI.indexOf(x.portaA) >= 0) voce.per = x.portaA;
     }
-    const fatto = await scrivi(function(){ return store.aggiungi(voce); }, true);
+    let nuova = "";
+    const fatto = await scrivi(async function(){ nuova = await store.aggiungi(voce); }, true);
     if (!fatto) break;
     ok++;
+    /* chiesta una cosa che già non c'è in magazzino: parte già segnata «non c'è»,
+       così aspetta con le altre e torna in lista con «È arrivato» */
+    if (x.giaManca && voce.da === "Panificio" && nuova){
+      await scrivi(function(){ return store.stato(nuova, { prep: "manca", prepAlle: Date.now(), mancato: true, giaMancava: true }); });
+    }
   }
   return ok;
 }
@@ -1548,11 +1587,13 @@ function apriControllo(dove, per, rr){
   S.ctrl = {
     dove: dove, per: per, inviando: false,
     voci: rr.map(function(x){
-      return {
+      const v = {
         articolo: x.articolo, quantita: x.quantita, reparto: x.reparto,
         da: (x.ordinare && opz.indexOf("Da comprare") >= 0) ? "Da comprare" : "Panificio",
         urgente: x.urgente === true
       };
+      /* nomi giusti: solo per le richieste, non per i promemoria */
+      return per === PROMEMORIA ? v : riconosciVoce(v);
     })
   };
   const posti = [];
@@ -1572,7 +1613,13 @@ function chiudiControllo(){
   S.ctrl = null;
   try { document.body.style.overflow = ""; } catch(e){}
 }
-function nomeProvenienza(o){ return o === "Da comprare" ? "Da ordinare o comprare" : o; }
+function nomeProvenienza(o){ return o; }
+/* una cosa che già non c'è in magazzino (chiesta da qualcuno o segnata con «+ Segna cosa manca») */
+function mancaGia(v){
+  if (v.da !== "Panificio" || repartoDi({ articolo: v.articolo, reparto: v.reparto }) === REPARTO_FORNO) return false;
+  const k = chiave(v.articolo);
+  return nonInMagazzino().some(function(r){ return chiave(r.articolo) === k; }) || magAperte().some(function(m){ return chiave(m.articolo) === k; });
+}
 function renderControllo(){
   const c = S.ctrl;
   if (!c) return;
@@ -1605,11 +1652,21 @@ function renderControllo(){
     const fuori = v.da !== "Panificio";
     const cls = fuori ? ((v.da === "Da comprare" || v.da === FUORI) ? " fuori comprare" : " fuori " + classeDest(v.da)) : "";
     const testa = el("p", {class:"articolo"}, v.quantita ? el("span", {class:"qta", text:v.quantita}) : null, v.articolo,
-      (!promem && gia.has(chiave(v.articolo))) ? el("span", {class:"pill ctrl-gia", text:giaQuando(gia.get(chiave(v.articolo)))}) : null);
+      (!promem && gia.has(chiave(v.articolo))) ? el("span", {class:"pill ctrl-gia", text:giaQuando(gia.get(chiave(v.articolo)))}) : null,
+      (!promem && mancaGia(v)) ? el("span", {class:"pill p-finito", text:"Non c'è in magazzino: aspetta che arrivi"}) : null);
+    /* nome cambiato dall'app: si vede cosa era scritto e si può lasciare com'era */
+    const nome = v.scritto
+      ? el("p", {class:"hint ctrl-nome"}, "✓ Hai scritto «" + v.scritto + "»: l'app ha messo il nome giusto. ",
+          el("button", {type:"button", class:"link", "data-ctrl-com-era":String(i), disabled:c.inviando, "aria-label":"Lascia com'era scritto: " + v.scritto, text:"Lascia com'era"}))
+      : (v.scelte && v.scelte.length
+        ? el("div", {class:"ctrl-nome ctrl-volevi"}, el("span", {class:"ctrl-chiedi", text:(v.scelte.length === 1 ? "È questo?" : "Quale di questi?") + " Toccalo per scriverlo giusto."}),
+            ...v.scelte.map(function(n, j){ return el("button", {type:"button", class:"mini", "data-ctrl-sugg":i + "|" + j, disabled:c.inviando, text:n}); }),
+            el("button", {type:"button", class:"link", "data-ctrl-cosi":String(i), disabled:c.inviando, text: v.scelte.length === 1 ? "No, è un'altra cosa" : "Nessuno, è un'altra cosa"}))
+        : null);
     const scelte = el("div", {class:"ctrl-scelte"});
     if (!promem){
       const sel = el("select", {class:"prov", "data-ctrl-da":String(i), "aria-label":"Da dove si prende " + v.articolo, disabled:c.inviando});
-      opz.forEach(function(o){ sel.append(el("option", {value:o, text: (o === "Da comprare" ? "Da ordinare o comprare" : o === FUORI ? FUORI : (function(t){ return t.charAt(0).toUpperCase() + t.slice(1); })(daLuogo(o)))})); });
+      opz.forEach(function(o){ sel.append(el("option", {value:o, text: (o === "Da comprare" ? "Da comprare" : o === FUORI ? FUORI : (function(t){ return t.charAt(0).toUpperCase() + t.slice(1); })(daLuogo(o)))})); });
       sel.value = v.da;
       scelte.append(sel);
     }
@@ -1632,7 +1689,7 @@ function renderControllo(){
     if (!v.conNota) scelte.append(el("button", {type:"button", class:"link", "data-ctrl-nota-apri":String(i), disabled:c.inviando, "aria-label":"Aggiungi una nota a " + v.articolo, text:"+ Nota"}));
     const nota = v.conNota ? el("label", {class:"ctrl-nota"}, el("span", {class:"label-sm", text:"Nota per chi prepara"}),
       el("input", {type:"text", "data-ctrl-nota":String(i), maxlength:"140", autocomplete:"off", placeholder:"Es. quelle del frigo grande", value:v.nota || "", disabled:c.inviando})) : null;
-    return el("li", {class:"ctrl-voce" + cls}, testa, scelte, extra, nota);
+    return el("li", {class:"ctrl-voce" + cls}, testa, nome, scelte, extra, nota);
   }));
   /* per quando: oggi, domani o un altro giorno (prova, solo titolari) */
   const puoQuando = false; /* sostituito dalla sezione Prenotazioni */
@@ -1671,6 +1728,7 @@ async function confermaControllo(){
     const inp = document.querySelector('[data-ctrl-dove="' + senzaPosto + '"]'); if (inp) inp.focus();
     return;
   }
+  if (c.per !== PROMEMORIA) c.voci.forEach(function(v){ v.giaManca = mancaGia(v); });
   c.inviando = true;
   const giro = c.dove === "giro";
   if (giro) S.inviandoGiro = true; else S.inviando = true;
@@ -1811,7 +1869,10 @@ function daQuanto(ms){
 function puoTogliereBisc(b){ return !!store && !S.sola && !!b && (b.segnatoDa === S.mioId || S.owner); }
 function puoRecuperareBisc(b){ return puoTogliereBisc(b) || (!!store && !S.sola && !!b && !!S.mioId && b.toltoDa === S.mioId); }
 function catalogoBisc(){
-  const visti = new Set(), out = [];
+  /* i biscotti tolti dai titolari nel Database non si scelgono più (quelli di partenza restano) */
+  const tolti = new Set(S.biscTolti.map(chiave));
+  BISCOTTI_BASE.forEach(function(n){ tolti.delete(chiave(n)); });
+  const visti = new Set(tolti), out = [];
   BISCOTTI_BASE.concat(S.aggiunteBisc, S.biscotti.map(function(b){ return b.nome; })).forEach(function(n){
     const k = chiave(n);
     if (!k || visti.has(k)) return;
@@ -1917,6 +1978,10 @@ async function aggiungiBiscotto(ev){
   if (!esistente){
     S.inviandoBisc = true; renderBiscotti();
     await scrivi(function(){ return store.aggiunteBisc(S.aggiunteBisc.concat([nome]).slice(-60)); });
+    /* se era stato tolto e qualcuno lo aggiunge di nuovo, torna da controllare */
+    if (S.biscTolti.some(function(x){ return chiave(x) === chiave(nome); }) && store.biscImp){
+      await scrivi(function(){ return store.biscImp(function(d){ return { tolti: (Array.isArray(d.tolti) ? d.tolti : []).filter(function(x){ return chiave(x) !== chiave(nome); }) }; }); });
+    }
     S.inviandoBisc = false;
   }
   const finale = esistente || nome;
@@ -2009,17 +2074,36 @@ function bottoneArrivato(r){
   return el("button", {type:"button", class:"mini b-arrivato", "data-arrivato":r.id, disabled:S.pending.has(r.id), "aria-label":r.articolo + " è arrivato in magazzino", text:"È arrivato"});
 }
 /* "È arrivato in magazzino": prima si chiede, poi torna nella lista di chi fa il giro da portare */
+/* la stessa cosa che manca, chiesta da altri o segnata con «+ Segna cosa manca»: arriva insieme */
+function stessaCosaMancante(articolo, tranne){
+  const k = chiave(articolo);
+  return {
+    rich: nonInMagazzino().filter(function(r){ return r.id !== tranne && chiave(r.articolo) === k; }),
+    mag: magAperte().filter(function(m){ return m.id !== tranne && chiave(m.articolo) === k; })
+  };
+}
+function testoAncheArrivate(rich){
+  if (!rich.length) return "";
+  const posti = Array.from(new Set(rich.map(function(r){ return PREP[r.per] || "a " + r.per; })));
+  return " Tornano nel giro anche le altre richieste uguali, da portare " + posti.join(" e ") + ".";
+}
 async function segnaArrivato(id){
   const r = S.richieste.find(function(x){ return x.id === id; });
-  if (!r || r.prep !== "manca" || !puoArrivato() || S.pending.has(id)) return;
+  if (!r || !(r.prep === "manca" || daComprareAperta(r)) || !puoArrivato() || S.pending.has(id)) return;
+  /* «Da comprare» è comprata per quel negozio: arriva solo lei */
+  const anche = r.prep === "manca" ? stessaCosaMancante(r.articolo, id) : { rich: [], mag: [] };
   const si = await chiedi("Sei sicuro che è arrivato in magazzino?",
-    (r.quantita ? r.quantita + " " : "") + r.articolo + " per " + (r.per || "") + ": torna nel giro, da portare.", "Sì, è arrivato", "No");
+    (r.quantita ? r.quantita + " " : "") + r.articolo + ": " + (r.prep === "manca" ? "torna" : "va") + " nel giro, da portare " + (PREP[r.per] || "a " + r.per) + "." + testoAncheArrivate(anche.rich), "Sì, è arrivato", "No");
   if (!si) return;
-  S.pending.add(id); renderTutto();
+  const tutte = [r].concat(anche.rich);
+  tutte.forEach(function(x){ S.pending.add(x.id); }); anche.mag.forEach(function(m){ S.pending.add(m.id); });
+  renderTutto();
   const ora = Date.now();
-  const ok = await scrivi(function(){ return store.stato(id, { prep: "", prepAlle: ora, arrivatoAlle: ora }); });
-  S.pending.delete(id);
-  if (ok) avviso(r.articolo + ": arrivato in magazzino, da portare.");
+  let ok = true;
+  for (const x of tutte){ if (!(await scrivi(function(){ return store.stato(x.id, { prep: "", prepAlle: ora, arrivatoAlle: ora }); }))){ ok = false; break; } }
+  if (ok) for (const m of anche.mag){ if (!(await scrivi(function(){ return store.stato(m.id, { arrivatoAlle: ora }); }))){ ok = false; break; } }
+  tutte.forEach(function(x){ S.pending.delete(x.id); }); anche.mag.forEach(function(m){ S.pending.delete(m.id); });
+  if (ok) avviso(r.articolo + ": arrivato in magazzino, da portare " + (PREP[r.per] || "a " + r.per) + ".");
   renderTutto();
 }
 function inMancanti(){ return S.vista === "negozio" && S.sez === "mancanti"; }
@@ -2036,8 +2120,11 @@ function magAperte(){ return S.magazzino.filter(function(m){ return !m.arrivatoA
 function puoSegnareMag(){ return vedeMancanti() && !!store && !S.sola && !!S.mioId; }
 async function salvaMag(){
   const f = S.magForm, inp = $("mag-nuovo");
-  const nome = inp.value.replace(/\s+/g, " ").trim().slice(0, 80);
+  let nome = inp.value.replace(/\s+/g, " ").trim().slice(0, 80);
   if (!nome || f.inviando || !puoSegnareMag()) return;
+  /* stesso nome delle richieste, se l'app lo riconosce con sicurezza */
+  const t = trovaProdottoRich(nome);
+  if (t.esito === "sicuro" && t.nome) nome = t.nome;
   const k = chiave(nome);
   if (magAperte().some(function(m){ return chiave(m.articolo) === k; })){ esito("mag-esito", "«" + nome + "» è già segnato."); return; }
   f.inviando = true; renderMancanti();
@@ -2049,11 +2136,17 @@ async function salvaMag(){
 async function magArrivato(id){
   const m = S.magazzino.find(function(x){ return x.id === id; });
   if (!m || m.arrivatoAlle || !puoSegnareMag() || S.pending.has(id)) return;
-  const si = await chiedi("Sei sicuro che è arrivato in magazzino?", m.articolo + ": sparisce da questa lista.", "Sì, è arrivato", "No");
+  const anche = stessaCosaMancante(m.articolo, id);
+  const si = await chiedi("Sei sicuro che è arrivato in magazzino?", m.articolo + ": sparisce da questa lista." + testoAncheArrivate(anche.rich), "Sì, è arrivato", "No");
   if (!si) return;
-  S.pending.add(id); renderTutto();
-  const ok = await scrivi(function(){ return store.stato(id, { arrivatoAlle: Date.now() }); });
-  S.pending.delete(id);
+  const ids = [id].concat(anche.mag.map(function(x){ return x.id; }));
+  ids.forEach(function(x){ S.pending.add(x); }); anche.rich.forEach(function(r){ S.pending.add(r.id); });
+  renderTutto();
+  const ora = Date.now();
+  let ok = true;
+  for (const x of ids){ if (!(await scrivi(function(){ return store.stato(x, { arrivatoAlle: ora }); }))){ ok = false; break; } }
+  if (ok) for (const r of anche.rich){ if (!(await scrivi(function(){ return store.stato(r.id, { prep: "", prepAlle: ora, arrivatoAlle: ora }); }))){ ok = false; break; } }
+  ids.forEach(function(x){ S.pending.delete(x); }); anche.rich.forEach(function(r){ S.pending.delete(r.id); });
   if (ok) avviso(m.articolo + ": arrivato in magazzino.");
   renderTutto();
 }
@@ -2080,7 +2173,7 @@ function renderMancanti(){
   /* il proprio negozio per primo */
   const ordine = (mio ? [mio] : []).concat(DESTINAZIONI.filter(function(d){ return d !== mio; }));
   $("mancanti-spiega").textContent = puoArrivato()
-    ? "Quando una cosa arriva in magazzino, premi «È arrivato»: torna nel giro, da portare subito."
+    ? "Quando una cosa arriva in magazzino (anche quelle da comprare), premi «È arrivato»: va nel giro, da portare subito."
     : "Restano qui finché non arrivano in magazzino. «È arrivato» lo segnano i titolari o chi fa il giro.";
   const gruppi = [];
   ordine.forEach(function(d){
@@ -2095,6 +2188,18 @@ function renderMancanti(){
         return li;
       }))));
   });
+  /* «Da comprare»: tutte insieme, ognuna dice dove va portata quando arriva */
+  const comprare = daComprare().sort(function(a, b){ return (b.urgente - a.urgente) || a.creato - b.creato; });
+  if (comprare.length){
+    gruppi.push(el("section", {class:"gruppo gruppo-comprare"}, testaGruppo("Da comprare", "Poi da portare", comprare.length === 1 ? "1 cosa" : comprare.length + " cose"),
+      el("ul", {class:"lista"}, ...comprare.map(function(r){
+        const li = el("li", {class:"riga " + classeDest(r.per) + (r.urgente ? " urgente" : "")}, sigla(r.per),
+          el("div", {class:"riga-main"}, testoArticolo(r),
+            meta([pillUrgente(r), el("span", {class:"pill origine comprare", text:"Da comprare"}), el("strong", {class:"ritiro", text:"Quando arriva: da portare " + (PREP[r.per] || "a " + r.per)}), "chiesto " + quando(r.creato), bottoneChi(r)])));
+        if (puoArrivato()) li.append(el("div", {class:"azioni"}, bottoneArrivato(r)));
+        return li;
+      }))));
+  }
   riempi($("mancanti-gruppi"), gruppi);
   const nMag = renderMagSegnate();
   $("mancanti-vuoto").hidden = gruppi.length > 0 || nMag > 0;
@@ -2165,14 +2270,15 @@ function testoArticolo(r){
 }
 function pillOrigine(r){
   if (r.per === PROMEMORIA || r.da === "Panificio" || r.da === r.per) return null;
-  if (r.da === "Da comprare") return el("span", {class:"pill origine comprare", text:"Da ordinare o comprare"});
+  /* comprata e arrivata in magazzino: basta la casella verde «Arrivata in magazzino» */
+  if (r.da === "Da comprare") return r.arrivatoAlle ? null : el("span", {class:"pill origine comprare", text:"Da comprare"});
   if (r.da === FUORI) return el("span", {class:"pill origine ritiro-fuori", text:testoFuori(r)});
   return el("span", {class:"pill origine " + classeDest(r.da), text:"Da prendere " + (PREP[r.da] || "a " + r.da)});
 }
 function testoFuori(r){ return "Da ritirare: " + (r.ritiroDove || "fuori") + (r.ritiroOra ? " entro le " + r.ritiroOra : "") + (DESTINAZIONI.indexOf(r.per) >= 0 ? ", poi " + (PREP[r.per] || "a " + r.per) : ""); }
 function origineTesto(r){
   if (r.per === PROMEMORIA || r.da === "Panificio" || r.da === r.per) return null;
-  if (r.da === "Da comprare") return nomeOrigine(r.da);
+  if (r.da === "Da comprare") return r.arrivatoAlle ? null : nomeOrigine(r.da);
   if (r.da === FUORI) return testoFuori(r);
   return "Da prendere " + (PREP[r.da] || "a " + r.da);
 }
@@ -2527,7 +2633,8 @@ function renderBiscPanificio(){
   $("vuoto-crono-fatti").hidden = fatti.length > 0;
 }
 function mostraSez(sez){
-  S.sez = ["biscotti","statistiche","prenotazioni","notifiche","persone","mancanti"].indexOf(sez) >= 0 ? sez : "richieste";
+  S.sez = ["biscotti","statistiche","prenotazioni","notifiche","persone","mancanti","database"].indexOf(sez) >= 0 ? sez : "richieste";
+  $("pannello-database").hidden = S.sez !== "database";
   $("pannello-mancanti").hidden = S.sez !== "mancanti";
   $("pannello-notifiche").hidden = S.sez !== "notifiche";
   $("pannello-persone").hidden = S.sez !== "persone";
@@ -2543,13 +2650,14 @@ function mostraSez(sez){
 function vociMenu(){
   const nPren = prenVisibili().filter(function(p){ return prenAperta(p) && p.perIl >= oggiStr() && p.perIl <= domaniStr(); }).length;
   const notif = notificheDisponibili() ? [{ id:"notifiche", nome:"Notifiche", n:null }] : [];
-  const mancanti = { id:"mancanti", nome:"Non in magazzino", n:nonInMagazzino().length + magAperte().length };
+  const mancanti = { id:"mancanti", nome:"Non in magazzino", n:nonInMagazzino().length + magAperte().length + daComprare().length };
   if (S.ruolo.tipo === "giro") return [mancanti].concat(notif);
   const panif = S.punto === "Panificio";
   const nBisc = panif ? biscDaFare().length : S.biscotti.filter(function(b){ return b.stato === "manca" && b.negozio === S.punto; }).length;
   const voci = [{ id:"prenotazioni", nome:"Prenotazioni", n:nPren }, { id:"biscotti", nome:"Biscotti", n:nBisc }];
   if (vedeMancanti()) voci.push(mancanti);
   if (puoStat()) voci.push({ id:"statistiche", nome:"Statistiche", n:null });
+  if (puoDatabase()) voci.push({ id:"database", nome:"Database", n:contaDatabase().tutti });
   if (puoPersone()) voci.push({ id:"persone", nome:"Persone registrate", n:null });
   voci.push.apply(voci, notif);
   return voci;
@@ -2580,7 +2688,7 @@ function renderMenu(){
   $("apri-menu").hidden = bisc;
   $("torna").hidden = !bisc;
   $("switch-viste").hidden = t !== "titolare" || bisc;
-  $("punti").hidden = t !== "titolare" || inStat() || inPren() || inNotif() || inPersone() || inMancanti();
+  $("punti").hidden = t !== "titolare" || inStat() || inPren() || inNotif() || inPersone() || inMancanti() || inDatabase();
   $("link-personale").hidden = t !== "titolare" || bisc;
   $("codici-box").hidden = !S.sito || !S.owner || t !== "titolare" || bisc;
   renderTestata();
@@ -2594,11 +2702,14 @@ function renderTestata(){
   let sopra, titolo, info;
   if (inMancanti()){
     sopra = "Da aspettare"; titolo = "Non in magazzino";
-    info = contaTesto(nonInMagazzino().length, "cosa", "cose");
+    info = contaTesto(nonInMagazzino().length + magAperte().length + daComprare().length, "cosa", "cose");
   } else if (inNotif()){
     sopra = "Su questo telefono"; titolo = "Notifiche"; info = "";
   } else if (inPersone()){
     sopra = "Solo per i titolari"; titolo = "Persone registrate"; info = "";
+  } else if (inDatabase()){
+    sopra = "Solo per i titolari"; titolo = "Database";
+    info = contaTesto(contaDatabase().tutti, "cosa da controllare", "cose da controllare");
   } else if (pren){
     sopra = "Prenotazioni dei clienti"; titolo = "Prenotazioni";
     info = contaTesto(prenVisibili().filter(function(p){ return prenAperta(p) && p.perIl >= oggiStr(); }).length, "da preparare", "da preparare");
@@ -2625,7 +2736,7 @@ function renderTestata(){
   $("eyebrow").textContent = sopra;
   $("titolo").textContent = titolo;
   $("fascia-info").textContent = info;
-  $("app-nome").textContent = inMancanti() ? "Magazzino" : bisc ? "Biscotti" : (stat ? "Statistiche" : (pren ? "Prenotazioni" : (inNotif() ? "Notifiche" : (inPersone() ? "Persone" : "Rifornimenti"))));
+  $("app-nome").textContent = inMancanti() ? "Magazzino" : bisc ? "Biscotti" : (stat ? "Statistiche" : (pren ? "Prenotazioni" : (inNotif() ? "Notifiche" : (inPersone() ? "Persone" : (inDatabase() ? "Database" : "Rifornimenti")))));
 }
 function apriMenu(){
   $("menu").hidden = false; $("menu-velo").hidden = false;
@@ -2640,7 +2751,7 @@ function chiudiMenu(rimetti){
   $("apri-menu").setAttribute("aria-expanded", "false");
   if (rimetti) $("apri-menu").focus();
 }
-function vaiSezione(id, forza){
+function vaiSezione(id, forza, scheda){
   /* uscendo dai biscotti con una comanda in corso, prima si conferma */
   if (!forza && inBiscotti() && id !== "biscotti" && biscDaConfermare()){
     S.dopoConferma = id;
@@ -2649,12 +2760,13 @@ function vaiSezione(id, forza){
     return;
   }
   chiudiMenu();
-  if (id === "biscotti" || (id === "mancanti" && vedeMancanti()) || (id === "prenotazioni" && vedePren()) || id === "notifiche" || (id === "statistiche" && puoStat()) || (id === "persone" && puoPersone())){
+  if (id === "biscotti" || (id === "mancanti" && vedeMancanti()) || (id === "prenotazioni" && vedePren()) || id === "notifiche" || (id === "statistiche" && puoStat()) || (id === "persone" && puoPersone()) || (id === "database" && puoDatabase())){
     if (!inSezioneExtra()) S.vistaPrima = S.vista;
     mostraVista("negozio");
     mostraSez(id);
     if (id === "prenotazioni"){ S.prenGiorno = oggiStr(); S.prenScegli = false; }
     if (id === "persone"){ S.armatoPersona = null; mostraPersone(); }
+    if (id === "database"){ S.corrApri = ""; S.prenCorreggi = ""; if (scheda) S.dbScheda = scheda; else sceltaSchedaDb(); }
     if (id === "statistiche") caricaStatistiche();
     if (id === "notifiche") renderNotifiche();
   } else {
@@ -2943,7 +3055,7 @@ function gruppiNegozio(aperte){
 }
 function renderConsegne(){
   /* le cose che non ci sono in magazzino non stanno nella lista: sono nella striscia rossa */
-  const aperte = S.richieste.filter(function(r){ return r.stato !== "consegnato" && !mancaInMagazzino(r); });
+  const aperte = S.richieste.filter(function(r){ return r.stato !== "consegnato" && !mancaInMagazzino(r) && !daComprareAperta(r); });
   const nAttesa = aperte.filter(function(r){ return r.stato === "attesa" && r.per !== PROMEMORIA; }).length;
   const nViaggio = aperte.filter(function(r){ return r.stato === "caricato"; }).length;
   const nUrg = aperte.filter(function(r){ return r.urgente; }).length;
@@ -3077,32 +3189,37 @@ function formeConosciute(){
   return out.filter(function(x){ return x[0]; });
 }
 /* Riconosce il prodotto scritto.
-   sicuro: è proprio quello · dubbio: forse è quello (si chiede) · nuovo: non somiglia a niente */
-function trovaProdotto(testo){
+   sicuro: è proprio quello · dubbio: forse è quello (si chiede) · nuovo: non somiglia a niente
+   scelte: i prodotti più simili (al massimo 4), il primo è il più probabile */
+function cercaProdotto(testo, forme, correzioni){
   const k = chiave(testo);
   /* una correzione del titolare vale sempre */
-  if (S.prodImp.alias[k]) return { esito: "sicuro", nome: S.prodImp.alias[k] };
+  if (correzioni[k]) return { esito: "sicuro", nome: correzioni[k], scelte: [] };
   const f = formaProdotto(testo);
-  if (!f) return { esito: "nuovo", nome: "" };
-  const forme = formeConosciute();
+  if (!f) return { esito: "nuovo", nome: "", scelte: [] };
   const uguale = forme.find(function(x){ return x[0] === f; });
-  if (uguale) return { esito: "sicuro", nome: uguale[1] };
-  let meglio = null, punti = 99;
+  if (uguale) return { esito: "sicuro", nome: uguale[1], scelte: [] };
+  const trovati = [];
   const parole = f.split(" ");
   forme.forEach(function(x){
     const sue = x[0].split(" ");
     /* parole a metà o in più: "pane" → "Pane casereccio", "pitta" → "Pitta china" */
     const dentro = parole.every(function(w){ return w.length >= 3 && sue.some(function(s){ return s.indexOf(w) === 0 || w.indexOf(s) === 0; }); }) ||
-      sue.every(function(s){ return s.length >= 3 && parole.some(function(w){ return w.indexOf(s) === 0 || s.indexOf(w) === 0; }); });
+      sue.every(function(s){ return s.length >= 3 && parole.some(function(w){ return w.length >= 3 && (w.indexOf(s) === 0 || s.indexOf(w) === 0); }); });
     /* piccoli errori di battitura: "caserecio", "filoncinni" */
     const d = distanza(f, x[0]);
     const tollera = Math.max(1, Math.floor(Math.max(f.length, x[0].length) / 5));
     const p = d <= tollera ? d : (dentro ? 10 : 99);
-    if (p < punti){ punti = p; meglio = x[1]; }
+    if (p < 99) trovati.push([p, x[1]]);
   });
-  if (meglio && punti < 99) return { esito: "dubbio", nome: meglio };
-  return { esito: "nuovo", nome: "" };
+  /* a parità di punti resta il primo trovato (sort stabile) */
+  trovati.sort(function(a, b){ return a[0] - b[0]; });
+  const scelte = [];
+  trovati.forEach(function(t){ if (scelte.length < 4 && !scelte.some(function(n){ return chiave(n) === chiave(t[1]); })) scelte.push(t[1]); });
+  if (scelte.length) return { esito: "dubbio", nome: scelte[0], scelte: scelte };
+  return { esito: "nuovo", nome: "", scelte: [] };
 }
+function trovaProdotto(testo){ return cercaProdotto(testo, formeConosciute(), S.prodImp.alias); }
 /* il nome giusto di una cosa prenotata (salvato, corretto dal titolare o riconosciuto ora) */
 function nomeProdotto(v){
   const k = chiave(v.articolo);
@@ -3129,6 +3246,321 @@ function quantitaPren(q){
   const u = chiave(m[2]);
   const conv = UNITA_PREN[u];
   return conv ? { n: Number(m[1]) * conv[1], unita: conv[0], senzaNumero: false } : { n: Number(m[1]), unita: u, senzaNumero: false };
+}
+
+/* ---------- prodotti delle richieste dei negozi: un elenco a parte ----------
+   Si scrive veloce come in chat; quando l'app è sicura mette da sola il nome giusto
+   (e lo segna, così i titolari lo vedono nel «Database», parte Ordini); se ha un dubbio
+   chiede una volta, con «Va bene così». La quantità non è obbligatoria.
+   Elenco di partenza qui; prodotti confermati e correzioni dei titolari nelle impostazioni
+   condivise, chiave "prodotti-richieste" ({ elenco: [...], alias: { "testo scritto": "Nome giusto" } }). */
+const PRODOTTI_RICH_BASE = ["Pane casereccio","Pitta","Pitta china","Filoncini","Ciabatte","Ciabatte arabe","Panini","Pan hamburger grandi","Pan hamburger piccoli","Pizza","Pizza rotonda","Focaccia","Cornetti","Brioche","Pangrattato","Friselle","Taralli","Grissini","Mozzarella","Provola","Ricotta","Parmigiano","Scamorza","Burrata","Prosciutto cotto","Prosciutto crudo","Fesa di tacchino","Salame","Mortadella","Speck","Wurstel","Pancetta","Nduja","Salsiccia","Capocollo","Porchetta","Bresaola","Hamburger","Petti di pollo","Latte","Panna","Burro","Uova","Lievito","Insalata di mare","Tentacoli","Patatine","Crocchette","Arancini","Cotolette","Ghiaccio","Insalata","Iceberg","Rucola","Pomodori","Pomodoro fresco","Pomodorini","Cipolle","Patate","Melanzane","Peperoni","Zucchine","Funghi","Spinaci","Friarielli","Limoni","Basilico","Prezzemolo","Acqua naturale grande","Acqua naturale piccola","Acqua frizzante grande","Acqua frizzante piccola","Coca cola","Coca zero","Fanta","Sprite","Estathe limone","Estathe pesca","Succhi di frutta","Tuborg","Peroni","Nastro azzurro","Heineken","Moretti","Red bull","Farina","Semola","Olio","Olio di semi","Olio per friggitrice","Sale","Zucchero","Caffè","Ketchup","Maionese","Senape","Passata di pomodoro","Polpa di pomodoro","Pelati","Tonno","Olive","Capperi","Acciughe","Mais","Nutella","Pesto","Origano","Tovaglioli","Piatti","Bicchieri","Forchette","Coltelli","Cucchiaini","Vassoi","Cannucce","Stuzzicadenti","Pirottini","Cartoni pizza","Buste","Shopper","Carta forno","Alluminio","Pellicola","Vaschette","Etichette","Detersivo piatti","Sgrassatore","Candeggina","Spugne","Guanti","Sacchi spazzatura","Carta igienica","Carta mani","Rotoloni","Detersivo pavimenti","Rotoli cassa"];
+/* altri modi di scrivere già visti nelle chat */
+const ALIAS_RICH_BASE = { "icerbeg": "Iceberg", "aisberg": "Iceberg", "wrustel": "Wurstel", "speak": "Speck", "turborg": "Tuborg",
+  "manaiese": "Maionese", "coca": "Coca cola", "cocacola": "Coca cola", "estate pesca": "Estathe pesca", "pomodorino": "Pomodorini" };
+S.prodRich = { elenco: [], alias: {} };
+function prodottiRichCondivisi(d){
+  d = d || {};
+  const elenco = Array.isArray(d.elenco) ? d.elenco.filter(function(x){ return typeof x === "string" && x.trim(); }).map(function(x){ return x.trim().slice(0, 60); }).slice(0, 1000) : [];
+  const alias = {};
+  if (d.alias && typeof d.alias === "object"){
+    /* una correzione tolta resta salvata vuota: non vale più */
+    for (const k in d.alias){ if (typeof d.alias[k] === "string" && d.alias[k].trim()) alias[chiave(k)] = d.alias[k].trim().slice(0, 60); }
+  }
+  return { elenco: elenco, alias: alias };
+}
+function elencoProdottiRich(){
+  const out = PRODOTTI_RICH_BASE.slice();
+  S.prodRich.elenco.forEach(function(n){ if (!out.some(function(x){ return chiave(x) === chiave(n); })) out.push(n); });
+  return out.sort(function(a, b){ return a.localeCompare(b, "it"); });
+}
+function formeRich(){
+  const out = [];
+  elencoProdottiRich().forEach(function(n){ out.push([formaProdotto(n), n]); });
+  const alias = Object.assign({}, ALIAS_RICH_BASE, S.prodRich.alias);
+  for (const k in alias) out.push([formaProdotto(k), alias[k]]);
+  return out.filter(function(x){ return x[0]; });
+}
+function trovaProdottoRich(testo){ return cercaProdotto(testo, formeRich(), S.prodRich.alias); }
+/* nel controllo prima di inviare: nome giusto se l'app è sicura, altrimenti le scelte da proporre */
+function riconosciVoce(v){
+  const t = trovaProdottoRich(v.articolo);
+  if (t.esito === "sicuro" && t.nome){
+    if (chiave(t.nome) !== chiave(v.articolo)) v.scritto = v.articolo;
+    v.articolo = t.nome;
+  } else if (t.esito === "dubbio") v.scelte = t.scelte;
+  return v;
+}
+
+/* ---------- «Database» (solo titolari) ----------
+   Tre parti: Ordini (i nomi delle richieste), Prenotazioni, Biscotti.
+   In ognuna le cose nuove o corrette da controllare e, in fondo, l'elenco completo.
+   Ordini: per ogni nome degli ultimi 7 giorni, cosa era scritto e cosa ha messo l'app
+   («Sì, è giusto» / «No, era…»), oppure un nome che l'app non conosceva
+   («È un prodotto nuovo» / «È un prodotto che c'è già…»). */
+S.corrApri = "";
+S.corrGruppi = new Map();
+S.dbScheda = "ordini";
+function puoDatabase(){ return !!S.owner && !!S.ruolo && S.ruolo.tipo === "titolare" && !!store && !S.sola; }
+function inDatabase(){ return S.vista === "negozio" && S.sez === "database"; }
+function maiuscola(t){ t = String(t || "").trim(); return t.charAt(0).toUpperCase() + t.slice(1); }
+function gruppiCorrezioni(){
+  if (!puoDatabase()) return [];
+  const dal = Date.now() - SETTE_GIORNI;
+  const gruppi = new Map();
+  S.richieste.concat(S.programmate || []).forEach(function(r){
+    if (r.esempio || r.per === PROMEMORIA || r.creato < dal) return;
+    const testo = r.scritto || r.salvato, k = chiave(testo);
+    /* già sistemato da un titolare */
+    if (!k || S.prodRich.alias[k]) return;
+    let tipo;
+    if (r.scritto && chiave(r.scritto) !== chiave(r.salvato)) tipo = "corretta";
+    else if (trovaProdottoRich(r.salvato).esito !== "sicuro") tipo = "nuova";
+    else return;
+    const id = tipo === "corretta" ? k + ">" + chiave(r.salvato) : k;
+    if (!gruppi.has(id)) gruppi.set(id, { id: id, k: k, tipo: tipo, testo: testo, nome: r.salvato, rich: [] });
+    gruppi.get(id).rich.push(r);
+  });
+  /* prima i più recenti */
+  return Array.from(gruppi.values()).sort(function(a, b){
+    return Math.max.apply(null, b.rich.map(function(r){ return r.creato; })) - Math.max.apply(null, a.rich.map(function(r){ return r.creato; }));
+  });
+}
+/* biscotti aggiunti dai negozi, non ancora confermati né tolti da un titolare */
+S.biscConfermati = []; S.biscTolti = [];
+function biscNuovi(){
+  const no = new Set(BISCOTTI_BASE.concat(S.biscConfermati, S.biscTolti).map(chiave));
+  const visti = new Set();
+  return S.aggiunteBisc.filter(function(n){ const k = chiave(n); if (!k || no.has(k) || visti.has(k)) return false; visti.add(k); return true; });
+}
+function contaDatabase(){
+  if (!puoDatabase()) return { ordini: 0, prenotazioni: 0, biscotti: 0, tutti: 0 };
+  const c = { ordini: gruppiCorrezioni().length, prenotazioni: gruppiDaControllare().size, biscotti: biscNuovi().length };
+  c.tutti = c.ordini + c.prenotazioni + c.biscotti;
+  return c;
+}
+/* entrando si apre la prima parte che ha qualcosa da controllare */
+function sceltaSchedaDb(){
+  const c = contaDatabase();
+  S.dbScheda = c.ordini ? "ordini" : (c.prenotazioni ? "prenotazioni" : (c.biscotti ? "biscotti" : (S.dbScheda || "ordini")));
+}
+const SCHEDE_DB = [["ordini", "Ordini"], ["prenotazioni", "Prenotazioni"], ["biscotti", "Biscotti"]];
+function rigaDb(etichetta, valore){ return el("p", {class:"riga-db"}, el("span", {class:"label-sm", text:etichetta}), valore); }
+function renderDatabase(){
+  if (!inDatabase()) return;
+  const c = contaDatabase();
+  riempi($("db-schede"), SCHEDE_DB.map(function(x){
+    return el("button", {type:"button", class:"chip-add stat-per", role:"tab", "data-db-scheda":x[0], "aria-selected":String(S.dbScheda === x[0]), "aria-pressed":String(S.dbScheda === x[0])},
+      x[1], c[x[0]] ? el("span", {class:"badge", text:String(c[x[0]])}) : null);
+  }));
+  if (S.dbScheda === "prenotazioni") renderDbPren();
+  else if (S.dbScheda === "biscotti") renderDbBisc();
+  else renderDbOrdini();
+}
+function renderDbOrdini(){
+  const gruppi = gruppiCorrezioni();
+  S.corrGruppi = new Map(gruppi.map(function(g){ return [g.id, g]; }));
+  const off = S.pending.has("prodotti-richieste");
+  const elenco = elencoProdottiRich();
+  $("db-spiega").textContent = "Le richieste dei negozi degli ultimi 7 giorni. Qui vedi cosa ha scritto la persona e cosa ha messo l'app. Se l'app ha sbagliato, scegli il prodotto giusto: si correggono tutte le richieste scritte così e la volta dopo l'app lo sa.";
+  riempi($("db-lista"), gruppi.map(function(g){
+    const posti = Array.from(new Set(g.rich.map(function(r){ return r.per; }))).join(", ");
+    const ultima = Math.max.apply(null, g.rich.map(function(r){ return r.creato; }));
+    const parti = [rigaDb("Scritto", el("strong", {text:"«" + g.testo + "»"}))];
+    if (g.tipo === "corretta"){
+      parti.push(rigaDb("L'app ha messo", el("strong", {text:g.nome})));
+      parti.push(el("p", {class:"domanda-db", text:"È giusto?"}));
+    } else {
+      parti.push(el("p", {class:"domanda-db", text:"L'app non conosce questo prodotto. È nuovo o c'è già con un altro nome?"}));
+    }
+    parti.push(el("p", {class:"hint", text:(g.rich.length === 1 ? "1 richiesta" : g.rich.length + " richieste") + " · " + posti + " · " + quando(ultima)}));
+    let azioni;
+    if (S.corrApri === g.id){
+      const sel = el("select", {id:"corr-scelta", "aria-label":"Il prodotto giusto per " + g.testo}, el("option", {value:"", text:"Scegli il prodotto giusto…"}));
+      if (g.tipo === "corretta") sel.append(el("option", {value:"__nuovo__", text:"Nessuno: «" + maiuscola(g.testo) + "» è un prodotto nuovo"}));
+      elenco.forEach(function(n){ if (g.tipo !== "corretta" || chiave(n) !== chiave(g.nome)) sel.append(el("option", {value:n, text:n})); });
+      azioni = el("div", {class:"row"}, sel,
+        el("button", {type:"button", class:"mini", "data-corr-salva":g.id, disabled:off, text:"Correggi"}),
+        el("button", {type:"button", class:"link", "data-corr-annulla":g.id, text:"Annulla"}));
+    } else if (g.tipo === "corretta"){
+      azioni = el("div", {class:"row"},
+        el("button", {type:"button", class:"mini", "data-corr-giusto":g.id, disabled:off, "aria-label":"Sì, è giusto: " + g.testo + " è " + g.nome, text:"Sì, è giusto"}),
+        el("button", {type:"button", class:"mini", "data-corr-era":g.id, disabled:off, text:"No, era…"}));
+    } else {
+      azioni = el("div", {class:"row"},
+        el("button", {type:"button", class:"mini", "data-corr-nuovo":g.id, disabled:off, "aria-label":"È un prodotto nuovo: " + g.testo, text:"È un prodotto nuovo"}),
+        el("button", {type:"button", class:"mini", "data-corr-era":g.id, disabled:off, text:"C'è già, è…"}));
+    }
+    parti.push(azioni);
+    return el("div", {class:"card pren-dc-voce db-voce"}, ...parti);
+  }));
+  $("db-vuoto").hidden = gruppi.length > 0;
+  $("db-vuoto").textContent = S.pronto ? "Niente da controllare: tutti i nomi degli ordini sono a posto." : "Carico le richieste…";
+  $("db-elenco-titolo").textContent = "Tutti i prodotti degli ordini";
+  $("db-elenco-spiega").textContent = "L'elenco che l'app usa per riconoscere i nomi, diviso per reparto. Sotto ogni prodotto, gli altri modi di scriverlo che conosce.";
+  renderElencoRich(elenco);
+}
+function renderDbPren(){
+  const gruppi = gruppiDaControllare();
+  const elenco = elencoProdotti();
+  const off = S.pending.has("prodotti");
+  $("db-spiega").textContent = "Le prenotazioni degli ultimi 7 giorni con un prodotto che l'app non conosceva. «È un prodotto nuovo»: entra nell'elenco. «C'è già, è…»: scegli il prodotto giusto e tutte le prenotazioni scritte così si correggono da sole.";
+  riempi($("db-lista"), Array.from(gruppi.entries()).map(function(e){
+    const k = e[0], g = e[1];
+    const dove = g.pren.slice(0, 3).map(function(p){ return fmtCortoGiorno(p.perIl) + (p.cliente ? ", " + p.cliente : ""); }).join(" · ") + (g.pren.length > 3 ? " e altre" : "");
+    return el("div", {class:"card pren-dc-voce db-voce"},
+      rigaDb("Scritto", el("strong", {text:"«" + g.testo + "»"})),
+      el("p", {class:"domanda-db", text:"L'app non conosce questo prodotto. È nuovo o c'è già con un altro nome?"}),
+      el("p", {class:"hint", text:(g.pren.length === 1 ? "1 prenotazione" : g.pren.length + " prenotazioni") + " · " + dove}),
+      S.prenCorreggi === k
+        ? el("div", {class:"row"},
+            el("select", {id:"pren-dc-scelta", "aria-label":"Il prodotto giusto per " + g.testo}, el("option", {value:"", text:"Scegli il prodotto giusto…"}), ...elenco.map(function(n){ return el("option", {value:n, text:n}); })),
+            el("button", {type:"button", class:"mini", "data-pren-dc-salva":k, disabled:off, text:"Correggi"}),
+            el("button", {type:"button", class:"link", "data-pren-dc-annulla":k, text:"Annulla"}))
+        : el("div", {class:"row"},
+            el("button", {type:"button", class:"mini", "data-pren-dc-conferma":k, "data-testo":g.testo, disabled:off, text:"È un prodotto nuovo"}),
+            el("button", {type:"button", class:"mini", "data-pren-dc-errore":k, disabled:off, text:"C'è già, è…"})));
+  }));
+  $("db-vuoto").hidden = gruppi.size > 0;
+  $("db-vuoto").textContent = S.pronto ? "Niente da controllare: tutti i prodotti delle prenotazioni sono a posto." : "Carico le prenotazioni…";
+  $("db-elenco-titolo").textContent = "Tutti i prodotti delle prenotazioni";
+  $("db-elenco-spiega").textContent = "L'elenco che l'app usa per riconoscere i prodotti delle prenotazioni. Sotto ogni prodotto, gli altri modi di scriverlo che conosce.";
+  $("db-n").textContent = String(elenco.length);
+  const alias = Object.assign({}, ALIAS_BASE, S.prodImp.alias);
+  riempi($("db-elenco"), [el("div", null, ...elenco.map(function(n){ return rigaElenco(n, alias); }))]);
+}
+function renderDbBisc(){
+  const nuovi = biscNuovi();
+  const off = S.pending.has("biscotti-imp");
+  $("db-spiega").textContent = "I biscotti aggiunti dai negozi che non erano nell'elenco. «Conferma»: il biscotto resta nell'elenco. «Togli dall'elenco»: non si può più scegliere (le comande già fatte restano).";
+  riempi($("db-lista"), nuovi.map(function(n){
+    return el("div", {class:"card pren-dc-voce db-voce"},
+      rigaDb("Aggiunto", el("strong", {text:n})),
+      el("p", {class:"domanda-db", text:"Esiste davvero questo biscotto?"}),
+      el("div", {class:"row"},
+        el("button", {type:"button", class:"mini", "data-db-bisc-si":n, disabled:off, text:"Sì, conferma"}),
+        el("button", {type:"button", class:"mini", "data-db-bisc-no":n, disabled:off, text:"No, togli dall'elenco"})));
+  }));
+  $("db-vuoto").hidden = nuovi.length > 0;
+  $("db-vuoto").textContent = "Niente da controllare: nessun biscotto nuovo.";
+  const elenco = catalogoBisc();
+  $("db-elenco-titolo").textContent = "Tutti i biscotti";
+  $("db-elenco-spiega").textContent = "L'elenco dei biscotti che i negozi possono chiedere.";
+  $("db-n").textContent = String(elenco.length);
+  riempi($("db-elenco"), [el("div", null, ...elenco.map(function(n){ return rigaElenco(n, {}); }))]);
+}
+/* una riga dell'elenco: il nome e gli altri modi di scriverlo */
+function rigaElenco(n, alias){
+  const altri = [];
+  for (const k in alias){ if (chiave(alias[k]) === chiave(n) && k !== chiave(n)) altri.push("«" + k + "»"); }
+  const riga = el("div", {class:"corr-prod"}, el("span", {class:"nome", text:n}));
+  if (altri.length) riga.append(el("span", {class:"anche", text:"Scritto anche: " + altri.join(", ")}));
+  return riga;
+}
+/* tutti i prodotti degli ordini, per reparto, con gli altri modi di scriverli */
+function renderElencoRich(elenco){
+  $("db-n").textContent = String(elenco.length);
+  const alias = Object.assign({}, ALIAS_RICH_BASE, S.prodRich.alias);
+  const anche = {};
+  for (const k in alias){ const n = chiave(alias[k]); if (k !== n) (anche[n] = anche[n] || []).push(k); }
+  const perRep = new Map(REPARTI.map(function(r){ return [r, []]; }));
+  elenco.forEach(function(n){ perRep.get(repartoDi({ articolo: n })).push(n); });
+  const off = S.pending.has("prodotti-richieste");
+  const aggiunti = new Set(S.prodRich.elenco.map(chiave));
+  const base = new Set(PRODOTTI_RICH_BASE.map(chiave));
+  const out = [];
+  perRep.forEach(function(nomi, rep){
+    if (!nomi.length) return;
+    out.push(el("section", {class:"corr-rep"}, el("p", {class:"label-sm", text:rep}),
+      el("div", null, ...nomi.map(function(n){
+        const altri = anche[chiave(n)] || [];
+        const riga = el("div", {class:"corr-prod"}, el("span", {class:"nome", text:n}));
+        if (aggiunti.has(chiave(n)) && !base.has(chiave(n))) riga.append(el("button", {type:"button", class:"link", "data-corr-togli":n, disabled:off, "aria-label":"Togli dall'elenco: " + n, text:"Togli"}));
+        if (altri.length) riga.append(el("span", {class:"anche"}, "Scritto anche: ", ...altri.map(function(k, i){
+          const tuo = !!S.prodRich.alias[k];
+          return el("span", null, i ? ", " : "", "«" + k + "»",
+            tuo ? el("button", {type:"button", class:"link", "data-corr-togli-alias":k, disabled:off, "aria-label":"Togli la correzione «" + k + "» → " + n, text:" (togli)"}) : null);
+        })));
+        return riga;
+      }))));
+  });
+  riempi($("db-elenco"), out);
+}
+async function salvaProdRich(cambia){
+  if (!store || !store.prodottiRich || !puoDatabase() || S.pending.has("prodotti-richieste")) return false;
+  S.pending.add("prodotti-richieste"); renderTutto();
+  const ok = await scrivi(function(){ return store.prodottiRich(cambia); });
+  S.pending.delete("prodotti-richieste");
+  ricomponi(); renderTutto();
+  return ok;
+}
+function conAlias(d, k, nome){ const a = Object.assign({}, d.alias); a[k] = nome; return a; }
+function conProdotto(d, nome){
+  const e = (Array.isArray(d.elenco) ? d.elenco : []).slice();
+  if (!e.some(function(x){ return chiave(x) === chiave(nome); })) e.push(nome);
+  return e;
+}
+async function corrGiusto(id){
+  const g = S.corrGruppi.get(id); if (!g) return;
+  const ok = await salvaProdRich(function(d){ return { alias: conAlias(d, g.k, g.nome) }; });
+  if (ok){ avviso("Giusto: «" + g.testo + "» è " + g.nome + ". L'app se lo ricorda."); registra("correzione giusta", {}); }
+}
+async function corrNuovo(id){
+  const g = S.corrGruppi.get(id); if (!g) return;
+  const nome = maiuscola(g.testo).slice(0, 60);
+  const ok = await salvaProdRich(function(d){ return { elenco: conProdotto(d, nome) }; });
+  if (ok){ avviso("«" + nome + "» è nell'elenco dei prodotti."); registra("prodotto confermato", { dove: "richieste" }); }
+}
+async function corrSalva(id){
+  const g = S.corrGruppi.get(id), sel = $("corr-scelta");
+  const scelta = sel ? sel.value : "";
+  if (!g || !scelta){ if (sel) sel.focus(); return; }
+  const nuovo = scelta === "__nuovo__";
+  const nome = nuovo ? maiuscola(g.testo).slice(0, 60) : scelta;
+  const ok = await salvaProdRich(function(d){
+    const cambia = { alias: conAlias(d, g.k, nome) };
+    if (nuovo) cambia.elenco = conProdotto(d, nome);
+    return cambia;
+  });
+  if (ok){ S.corrApri = ""; avviso("Corretto: ora è «" + nome + "», anche nelle richieste già mandate."); registra("prodotto corretto", { dove: "richieste" }); renderTutto(); }
+}
+async function corrTogli(nome){
+  const si = await chiedi("Togliere «" + nome + "» dall'elenco dei prodotti?", "Le richieste già mandate restano come sono.", "Sì, togli", "No");
+  if (!si) return;
+  const ok = await salvaProdRich(function(d){
+    return { elenco: (Array.isArray(d.elenco) ? d.elenco : []).filter(function(x){ return chiave(x) !== chiave(nome); }) };
+  });
+  if (ok) avviso("Tolto dall'elenco: " + nome + ".");
+}
+async function corrTogliAlias(k){
+  const nome = S.prodRich.alias[k]; if (!nome) return;
+  const si = await chiedi("Togliere la correzione «" + k + "» → " + nome + "?", "Le richieste scritte «" + k + "» tornano come erano state mandate.", "Sì, togli", "No");
+  if (!si) return;
+  /* resta salvata vuota: così non vale più (anche dove le modifiche si uniscono) */
+  const ok = await salvaProdRich(function(d){ return { alias: conAlias(d, k, "") }; });
+  if (ok) avviso("Correzione tolta.");
+}
+/* biscotti nuovi: si confermano o si tolgono dall'elenco (impostazioni condivise "biscotti": confermati, tolti) */
+async function salvaBiscImp(cambia){
+  if (!store || !store.biscImp || !puoDatabase() || S.pending.has("biscotti-imp")) return false;
+  S.pending.add("biscotti-imp"); renderTutto();
+  const ok = await scrivi(function(){ return store.biscImp(cambia); });
+  S.pending.delete("biscotti-imp"); renderTutto();
+  return ok;
+}
+function conNome(l, nome){ l = (Array.isArray(l) ? l : []).slice(); if (!l.some(function(x){ return chiave(x) === chiave(nome); })) l.push(nome); return l; }
+async function biscConferma(nome){
+  const ok = await salvaBiscImp(function(d){ return { confermati: conNome(d.confermati, nome) }; });
+  if (ok) avviso(nome + ": confermato.");
+}
+async function biscTogliNuovo(nome){
+  const si = await chiedi("Togliere «" + nome + "» dall'elenco dei biscotti?", "Non si potrà più scegliere. Le comande già fatte restano.", "Sì, togli", "No");
+  if (!si) return;
+  const ok = await salvaBiscImp(function(d){
+    return { tolti: conNome(d.tolti, nome),
+      aggiunte: (Array.isArray(d.aggiunte) ? d.aggiunte : []).filter(function(x){ return chiave(x) !== chiave(nome); }) };
+  });
+  if (ok) avviso("Tolto dall'elenco: " + nome + ".");
 }
 
 /* ---------- prenotazioni dei clienti ---------- */
@@ -3361,7 +3793,6 @@ function chiedi(testo, sotto, si, no){
 }
 /* prodotti nuovi da confermare o correggere (solo titolari):
    in Prenotazioni un tasto, che apre una schermata a parte con tutti i prodotti da accettare */
-S.dcAperto = false;
 function gruppiDaControllare(){
   const limite = dataLocale(Date.now() - 7 * 86400000);
   const gruppi = new Map();
@@ -3377,43 +3808,14 @@ function gruppiDaControllare(){
   });
   return gruppi;
 }
+/* in Prenotazioni un tasto (solo titolari) che porta al Database, parte Prenotazioni */
 function renderDaControllare(){
   const box = $("pren-dacontrollare");
-  const titolare = !!S.owner && puoPrenotare() && inPren();
-  const gruppi = titolare ? gruppiDaControllare() : new Map();
-  box.hidden = !gruppi.size;
-  riempi(box, gruppi.size ? [el("button", {type:"button", class:"primary dc-apri", id:"dc-apri"},
-    "Prodotti da controllare ", el("span", {class:"badge", text:String(gruppi.size)}))] : []);
-  /* la schermata a parte */
-  const aperto = S.dcAperto && titolare;
-  $("dc-schermo").hidden = !aperto;
-  if (!aperto) return;
-  document.body.style.overflow = "hidden";
-  $("dc-vuoto").hidden = gruppi.size > 0;
-  const elenco = elencoProdotti();
-  riempi($("dc-lista"), Array.from(gruppi.entries()).map(function(e){
-    const k = e[0], g = e[1];
-    const dove = g.pren.slice(0, 3).map(function(p){ return fmtCortoGiorno(p.perIl) + (p.cliente ? ", " + p.cliente : ""); }).join(" · ") + (g.pren.length > 3 ? " e altre" : "");
-    const correggi = S.prenCorreggi === k;
-    const off = S.pending.has("prodotti");
-    return el("div", {class:"card pren-dc-voce"},
-      el("p", {class:"articolo"}, el("strong", {text:"«" + g.testo + "»"}), " · " + (g.pren.length === 1 ? "1 prenotazione" : g.pren.length + " prenotazioni")),
-      el("p", {class:"hint", text:dove}),
-      correggi
-        ? el("div", {class:"row"},
-            el("select", {id:"pren-dc-scelta", "aria-label":"Il prodotto giusto per " + g.testo}, el("option", {value:"", text:"Era…"}), ...elenco.map(function(n){ return el("option", {value:n, text:n}); })),
-            el("button", {type:"button", class:"mini", "data-pren-dc-salva":k, disabled:off, text:"Correggi"}),
-            el("button", {type:"button", class:"link", "data-pren-dc-annulla":k, text:"Annulla"}))
-        : el("div", {class:"row"},
-            el("button", {type:"button", class:"mini", "data-pren-dc-conferma":k, "data-testo":g.testo, disabled:off, text:"Conferma"}),
-            el("button", {type:"button", class:"mini", "data-pren-dc-errore":k, disabled:off, text:"È un errore, era…"})));
-  }));
-}
-function chiudiDaControllare(){
-  S.dcAperto = false; S.prenCorreggi = "";
-  $("dc-schermo").hidden = true;
-  document.body.style.overflow = "";
-  renderPrenotazioni();
+  const titolare = puoDatabase() && puoPrenotare() && inPren();
+  const n = titolare ? gruppiDaControllare().size : 0;
+  box.hidden = !n;
+  riempi(box, n ? [el("button", {type:"button", class:"primary dc-apri", id:"dc-apri"},
+    "Prodotti nuovi da controllare ", el("span", {class:"badge", text:String(n)}))] : []);
 }
 async function salvaProdotti(cambia){
   if (!store || !store.prodotti || S.pending.has("prodotti")) return false;
@@ -3958,6 +4360,7 @@ function renderTutto(){
   renderStatistiche();
   renderPrenotazioni();
   renderMancanti();
+  renderDatabase();
 }
 
 /* ---------- interfacce ---------- */
@@ -4045,6 +4448,22 @@ function collega(){
       if (nb) nb.focus();
       return;
     }
+    /* nomi nel controllo: «Volevi dire…?», «Va bene così», «Lascia com'era» */
+    if (b.dataset.ctrlSugg && S.ctrl && !S.ctrl.inviando){
+      const ij = b.dataset.ctrlSugg.split("|"), v = S.ctrl.voci[Number(ij[0])];
+      if (v && v.scelte && v.scelte[Number(ij[1])]){ v.scritto = v.articolo; v.articolo = v.scelte[Number(ij[1])]; v.scelte = null; renderControllo(); registra("nome suggerito accettato", {}); }
+      return;
+    }
+    if (b.dataset.ctrlCosi && S.ctrl && !S.ctrl.inviando){
+      const v = S.ctrl.voci[Number(b.dataset.ctrlCosi)];
+      if (v){ v.scelte = null; renderControllo(); registra("nome suggerito rifiutato", {}); }
+      return;
+    }
+    if (b.dataset.ctrlComEra && S.ctrl && !S.ctrl.inviando){
+      const v = S.ctrl.voci[Number(b.dataset.ctrlComEra)];
+      if (v && v.scritto){ v.articolo = v.scritto; v.scritto = ""; v.comEra = true; renderControllo(); registra("nome corretto rifiutato", {}); }
+      return;
+    }
     if (b.dataset.ctrlUrg && S.ctrl){
       const v = S.ctrl.voci[Number(b.dataset.ctrlUrg)];
       if (v){ v.urgente = !v.urgente; renderControllo(); const nb = document.querySelector('[data-ctrl-urg="' + b.dataset.ctrlUrg + '"]'); if (nb) nb.focus(); }
@@ -4126,16 +4545,26 @@ function collega(){
       return;
     }
     /* prodotti da controllare (titolari) */
-    if (b.id === "dc-apri"){ S.dcAperto = true; renderPrenotazioni(); try { $("dc-schermo").scrollTop = 0; $("dc-chiudi").focus(); } catch(e){} return; }
-    if (b.id === "dc-chiudi") return chiudiDaControllare();
+    if (b.id === "dc-apri") return vaiSezione("database", false, "prenotazioni");
+    /* correzioni dei nomi delle richieste (titolari) */
+    if (b.dataset.corrGiusto) return corrGiusto(b.dataset.corrGiusto);
+    if (b.dataset.corrNuovo) return corrNuovo(b.dataset.corrNuovo);
+    if (b.dataset.corrEra){ S.corrApri = b.dataset.corrEra; renderDatabase(); const sc = $("corr-scelta"); if (sc) sc.focus(); return; }
+    if (b.dataset.corrAnnulla){ S.corrApri = ""; return renderDatabase(); }
+    if (b.dataset.dbScheda){ S.dbScheda = b.dataset.dbScheda; S.corrApri = ""; S.prenCorreggi = ""; return renderDatabase(); }
+    if (b.dataset.dbBiscSi) return biscConferma(b.dataset.dbBiscSi);
+    if (b.dataset.dbBiscNo) return biscTogliNuovo(b.dataset.dbBiscNo);
+    if (b.dataset.corrSalva) return corrSalva(b.dataset.corrSalva);
+    if (b.dataset.corrTogli) return corrTogli(b.dataset.corrTogli);
+    if (b.dataset.corrTogliAlias) return corrTogliAlias(b.dataset.corrTogliAlias);
     /* striscia rossa */
     if (b.dataset.apriMancanti){ if (vedeMancanti()) vaiSezione("mancanti"); return; }
     if (b.id === "mag-mostra") return apriMagTutto();
     if (b.id === "mag-tutto-chiudi") return chiudiMagTutto();
     if (b.id === "mag-tutto-apri"){ chiudiMagTutto(); if (vedeMancanti()) vaiSezione("mancanti"); return; }
     if (b.dataset.prenDcConferma) return confermaProdotto(b.dataset.testo);
-    if (b.dataset.prenDcErrore){ S.prenCorreggi = b.dataset.prenDcErrore; renderPrenotazioni(); const sc = $("pren-dc-scelta"); if (sc) sc.focus(); return; }
-    if (b.dataset.prenDcAnnulla){ S.prenCorreggi = ""; return renderPrenotazioni(); }
+    if (b.dataset.prenDcErrore){ S.prenCorreggi = b.dataset.prenDcErrore; renderDatabase(); const sc = $("pren-dc-scelta"); if (sc) sc.focus(); return; }
+    if (b.dataset.prenDcAnnulla){ S.prenCorreggi = ""; return renderDatabase(); }
     if (b.dataset.prenDcSalva) return correggiProdotto(b.dataset.prenDcSalva);
     if (b.id === "notif-spegni") return spegniNotifiche(false);
     if (b.id === "notif-prova") return provaNotifica();
@@ -4184,7 +4613,6 @@ function collega(){
   /* «Mostra tutto»: si chiude con «Chiudi», toccando fuori o con Esc */
   $("mag-tutto").addEventListener("click", function(ev){ if (ev.target === this) chiudiMagTutto(); });
   $("mag-tutto").addEventListener("keydown", function(ev){ if (ev.key === "Escape") chiudiMagTutto(); });
-  $("dc-schermo").addEventListener("keydown", function(ev){ if (ev.key === "Escape") chiudiDaControllare(); });
   window.addEventListener("resize", controllaStriscia);
   /* altezza dei tasti «Negozio / Consegne», per mettere la striscia rossa subito sotto */
   try {
@@ -4264,7 +4692,7 @@ function collega(){
 /* Senza archivio condiviso (pagina aperta fuori da Claude): prova su questo schermo */
 function usaLocale(){
   const docs = new Map(); const stati = {}; const bisc = new Map();
-  let prodGrezzo = {};
+  let prodGrezzo = {}, prodRichGrezzo = {};
   S.mioId = "locale"; S.owner = true;
   const emetti = function(){
     S.docsRichieste = Array.from(docs.entries()).map(function(e){ return { id:e[0], voci:e[1] }; });
@@ -4273,7 +4701,7 @@ function usaLocale(){
     ricomponi(); S.pronto = true; renderTutto();
   };
   store = {
-    aggiungi: async function(voce){ if (!docs.has("locale")) docs.set("locale", {}); docs.get("locale")[nuovoId()] = Object.assign({}, voce); emetti(); },
+    aggiungi: async function(voce){ const id = nuovoId(); if (!docs.has("locale")) docs.set("locale", {}); docs.get("locale")[id] = Object.assign({}, voce); emetti(); return "locale~" + id; },
     stato: async function(k, p){ stati[k] = Object.assign({}, stati[k], p); emetti(); },
     annulla: async function(r){ const d = docs.get(r.autore); if (d && d[r.rid]) Object.assign(d[r.rid], { annullato: true, annullatoAlle: Date.now() }); emetti(); },
     ripristina: async function(r){ const d = docs.get(r.autore); if (d && d[r.rid]) Object.assign(d[r.rid], { annullato: false, ripristinatoAlle: Date.now() }); emetti(); },
@@ -4284,7 +4712,15 @@ function usaLocale(){
       emetti();
     },
     aggiunteBisc: async function(arr){ S.aggiunteBisc = arr.slice(); emetti(); },
-    prodotti: async function(cambia){ prodGrezzo = Object.assign({}, prodGrezzo, cambia(prodGrezzo)); S.prodImp = prodottiCondivisi(prodGrezzo); emetti(); }
+    biscImp: async function(cambia){
+      const d = cambia({ aggiunte: S.aggiunteBisc.slice(), confermati: S.biscConfermati.slice(), tolti: S.biscTolti.slice() });
+      if (d.aggiunte) S.aggiunteBisc = d.aggiunte.slice();
+      if (d.confermati) S.biscConfermati = d.confermati.slice();
+      if (d.tolti) S.biscTolti = d.tolti.slice();
+      emetti();
+    },
+    prodotti: async function(cambia){ prodGrezzo = Object.assign({}, prodGrezzo, cambia(prodGrezzo)); S.prodImp = prodottiCondivisi(prodGrezzo); emetti(); },
+    prodottiRich: async function(cambia){ prodRichGrezzo = Object.assign({}, prodRichGrezzo, cambia(prodRichGrezzo)); S.prodRich = prodottiRichCondivisi(prodRichGrezzo); emetti(); }
   };
   banner("Modalità prova: le richieste restano solo su questo schermo e spariscono chiudendo la pagina.");
   emetti();
@@ -4361,7 +4797,10 @@ function applicaImpostazioni(){
   }
   S.mappa = pulita; S.frequenti = freq;
   S.aggiunteBisc = bis ? testi(bis.aggiunte, 60, -60) : [];
+  S.biscConfermati = bis ? testi(bis.confermati, 60, 0) : [];
+  S.biscTolti = bis ? testi(bis.tolti, 60, 0) : [];
   S.prodImp = prodottiCondivisi(RAW.imp.prodotti);
+  S.prodRich = prodottiRichCondivisi(RAW.imp["prodotti-richieste"]);
 }
 function applicaRiga(tab, riga, via){
   if (!riga) return;
@@ -4497,7 +4936,7 @@ const VAPID_PUBLICA = "BC9TAKzQiQ-x3xtX0KWauGtV-uvIk9VFwqLjWAOzrJbe4e5w2AWyXMIej
    quale schermata, quanto tempo, errori, rete e tipo di telefono. Le persone non hanno nome ("Persona 1"…):
    lo decide il database (funzione "registra", supabase/aggiornamento-4-registro.sql). */
 const REGISTRO_ATTIVO = false;
-const VERSIONE_APP = "2a1cf371";
+const VERSIONE_APP = "6af4ac04";
 S.reg = [];
 S.ultimoTasto = { nome: "", alle: 0 };
 S.tocchi = { nome: "", volte: 0, alle: 0, segnato: false };
@@ -4620,7 +5059,8 @@ function eventoStato(k, p){
   if (p.arrivatoAlle && p.prep === "") return { tipo: "arrivata", id: k };
   if (p.disdetta === true) return { tipo: "disdetta", id: k };
   if (p.prep === "pronto") return { tipo: "pronto", id: k };
-  if (p.prep === "manca") return { tipo: "manca", id: k };
+  /* segnata «non c'è» da chi l'ha chiesta, perché mancava già: niente notifica */
+  if (p.prep === "manca" && !p.giaMancava) return { tipo: "manca", id: k };
   return null;
 }
 
@@ -4981,6 +5421,7 @@ function storeSB(){
       const id = nuovoId();
       await scriviOp({ tab: "richieste", tipo: "insert", id: id, riga: { id: id, autore: S.mioId, dati: voce } }, { tipo: voce.tipo === "prenotazione" ? "prenotazioni" : (voce.tipo === "magazzino" ? "magazzino" : "nuove"), id: id });
       applicaRiga("richieste", { id: id, autore: S.mioId, dati: voce }); emettiSB(true);
+      return S.mioId + "~" + id;
     },
     stato: async function(k, p){
       const dati = Object.assign({}, S.stati[k], p);
@@ -4992,6 +5433,7 @@ function storeSB(){
     rimuoviEsempi: async function(){},
     salvaMappa: function(k, rep){ return salvaImp("reparti", function(d){ const m = Object.assign({}, d.mappa); m[k] = rep; return { mappa: m }; }); },
     prodotti: function(cambia){ return salvaImp("prodotti", cambia); },
+    prodottiRich: function(cambia){ return salvaImp("prodotti-richieste", cambia); },
     bisc: async function(id, dati){
       if (dati === null){
         await sbFai(sb.from("biscotti").delete().eq("id", id));
@@ -5005,7 +5447,8 @@ function storeSB(){
       }
       emettiSB(true);
     },
-    aggiunteBisc: function(arr){ return salvaImp("biscotti", function(){ return { aggiunte: arr.slice() }; }); }
+    aggiunteBisc: function(arr){ return salvaImp("biscotti", function(){ return { aggiunte: arr.slice() }; }); },
+    biscImp: function(cambia){ return salvaImp("biscotti", cambia); }
   };
 }
 
@@ -5286,8 +5729,10 @@ async function avvia(){
     /* ognuno scrive solo nel proprio documento: le regole dell'archivio non permettono altro */
     aggiungi: async function(voce){
       if (!S.mioId) throw { code:"senza_account" };
-      const v = {}; v[nuovoId()] = voce;
+      const id = nuovoId();
+      const v = {}; v[id] = voce;
       await aggiornaOCrea(colR.doc(S.mioId), { voci: v });
+      return S.mioId + "~" + id;
     },
     stato: function(k, p){ return aggiornaOCrea(colS.doc(k), p); },
     annulla: function(r){
@@ -5305,7 +5750,9 @@ async function avvia(){
       return dati === null ? ref.delete() : aggiornaOCrea(ref, dati);
     },
     aggiunteBisc: function(arr){ return aggiornaOCrea(db.doc("impostazioni/biscotti"), { aggiunte: arr }); },
-    prodotti: function(cambia){ return aggiornaOCrea(db.doc("impostazioni/prodotti"), cambia(S.prodGrezzo || {})); }
+    biscImp: function(cambia){ return aggiornaOCrea(db.doc("impostazioni/biscotti"), cambia(S.biscGrezzo || {})); },
+    prodotti: function(cambia){ return aggiornaOCrea(db.doc("impostazioni/prodotti"), cambia(S.prodGrezzo || {})); },
+    prodottiRich: function(cambia){ return aggiornaOCrea(db.doc("impostazioni/prodotti-richieste"), cambia(S.prodRichGrezzo || {})); }
   };
   if (user){
     S.utente = user;
@@ -5327,12 +5774,18 @@ async function avvia(){
   db.collection("impostazioni").onSnapshot(function(snap){
     const pulita = {}, freq = {};
     let aggiunte = [];
-    S.prodGrezzo = {};
+    S.prodGrezzo = {}; S.prodRichGrezzo = {};
     snap.docs.forEach(function(d){
       const dati = d.exists ? (d.data() || {}) : {};
       if (d.id === "prodotti") S.prodGrezzo = dati;
+      if (d.id === "prodotti-richieste") S.prodRichGrezzo = dati;
       if (d.id === "reparti" && dati.mappa && typeof dati.mappa === "object"){
         for (const k in dati.mappa){ if (REPARTI.indexOf(dati.mappa[k]) >= 0) pulita[k] = dati.mappa[k]; }
+      }
+      if (d.id === "biscotti"){
+        S.biscGrezzo = dati;
+        S.biscConfermati = testi(dati.confermati, 60, 0);
+        S.biscTolti = testi(dati.tolti, 60, 0);
       }
       if (d.id === "biscotti" && Array.isArray(dati.aggiunte)){
         aggiunte = dati.aggiunte.filter(function(x){ return typeof x === "string" && x.trim(); }).map(function(x){ return x.trim().slice(0, 60); }).slice(-60);
@@ -5346,6 +5799,8 @@ async function avvia(){
     });
     S.mappa = pulita; S.frequenti = freq; S.aggiunteBisc = aggiunte;
     S.prodImp = prodottiCondivisi(S.prodGrezzo);
+    S.prodRich = prodottiRichCondivisi(S.prodRichGrezzo);
+    ricomponi();
     renderTutto();
   }, function(){});
   const errore = function(err){
