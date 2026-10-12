@@ -582,6 +582,14 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
 .man-capitoli{display:flex;flex-direction:column;gap:10px}
 .man-cerca{flex:none;margin-bottom:12px}
 .man-pagina{flex:none;margin-bottom:12px;padding:12px 14px;font-weight:700}
+.man-disegno{margin:0 0 14px;padding:10px 12px 12px;border:1.5px dashed var(--line);border-radius:var(--r-md);background:var(--bg)}
+.man-disegno figcaption{font-size:12.5px;font-weight:700;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em}
+.man-disegno-in{display:flex;flex-direction:column;gap:6px;pointer-events:none}
+.man-disegno-in .riga{padding:10px 12px;border:1px solid var(--line-2);border-radius:10px;background:var(--surface)}
+.man-stati{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.man-freccia{color:var(--muted);font-weight:700}
+.man-testata{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border-radius:10px;background:var(--nero);color:#FFFFFF;font-weight:700}
+.man-testata .aiuto-btn{display:inline-flex;align-items:center;justify-content:center}
 .man-titolo{margin:0 0 4px;font-size:18px}
 .man-domanda{border-top:1px solid var(--line-2)}
 .man-domanda summary{cursor:pointer;font-weight:700;padding:10px 0;min-height:24px}
@@ -597,6 +605,12 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
 .imp-valore.cambiato{color:var(--accent,inherit);text-decoration:underline;text-underline-offset:4px}
 .imp-salva{min-height:44px;padding:0 18px}
 .imp-base{margin:0}
+.imp-gruppo{display:flex;flex-direction:column;gap:10px}
+.imp-gruppo + .imp-gruppo{margin-top:14px}
+.imp-gruppo-titolo{margin:4px 2px 0;font-family:var(--font-display);font-size:18px;letter-spacing:.04em;text-transform:uppercase}
+.imp-voce .imp-nome{font-size:17px;line-height:1.3}
+.imp-esempio{margin:2px 0 0;padding:10px 12px;border-radius:var(--r-md);background:var(--bg);border:1px solid var(--line-2);line-height:1.45}
+.imp-prima{font-weight:700}
 .permessi{flex-basis:100%;display:flex;flex-direction:column;gap:2px;padding:6px 0 4px;border-bottom:1px dashed var(--line)}
 .perm-riga{display:flex;align-items:center;gap:8px;margin:0;min-height:40px}
 .perm-nome{flex:1;min-width:0}
@@ -869,7 +883,7 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
 
     <!-- Impostazioni: solo titolari. I numeri dell'app, uguali per tutti i telefoni -->
     <div class="view" id="pannello-impostazioni" hidden>
-      <p class="hint">Qui cambi i tempi dell'app. Valgono per tutti i telefoni. Usa − e +, poi «Salva». «Rimetti come prima» torna al numero di partenza.</p>
+      <p class="hint">Qui scegli alcuni numeri dell'app. Valgono per tutti i telefoni. Sotto ogni numero c'è un esempio, che cambia mentre tocchi − e +. Quando va bene, tocca «Salva».</p>
       <div class="blocco imp-lista" id="imp-lista"></div>
     </div>
 
@@ -1503,26 +1517,63 @@ function ricomponi(){
    ({ viaVia: 15, ferma: 3, … }); un numero che non c'è vuol dire «come prima» (base).
    Se in futuro si aggiunge un numero nuovo all'app, va messo anche qui. */
 const NUMERI = [
-  { k:"viaVia", nome:"Avviso «Mentre eri via»", unita:"secondi", base:15, min:5, max:120, passo:5,
-    spiega:"Quando riapri l'app, in alto compare l'elenco di quello che è arrivato mentre eri via. Quanti secondi resta prima di chiudersi da solo." },
-  { k:"avvisi", nome:"Avvisi brevi in alto", unita:"secondi", base:6, min:3, max:60, passo:1,
-    spiega:"Gli avvisi che compaiono in alto come quelli del telefono (per esempio quando arriva una richiesta nuova). Quanti secondi restano." },
-  { k:"nuove", nome:"Cose nuove in azzurro", unita:"secondi", base:20, min:5, max:300, passo:5,
-    spiega:"Le cose arrivate da poco si vedono in azzurro. Quanti secondi restano azzurre dopo che hai aperto l'app." },
-  { k:"ferma", nome:"«Ferma da…»", unita:"ore", base:2, min:1, max:24, passo:1,
-    spiega:"Dopo quante ore una richiesta non ancora fatta diventa arancione con la scritta «Ferma da…»." },
-  { k:"conferma", nome:"Tasti con doppio tocco", unita:"secondi", base:4, min:2, max:15, passo:1,
-    spiega:"Tasti come «Togli» e «Non c'è» chiedono un secondo tocco su «Conferma». Quanti secondi resta il «Conferma» prima di tornare com'era." },
-  { k:"crono", nome:"Cronologia delle cose tolte", unita:"giorni", base:7, min:1, max:30, passo:1,
-    spiega:"Quanti giorni restano in fondo alla pagina le richieste tolte (che si possono recuperare) e i biscotti tolti o fatti." },
-  { k:"giorni", nome:"Giorni di richieste caricate", unita:"giorni", base:45, min:14, max:180, passo:5,
-    spiega:"Quanti giorni indietro l'app carica le richieste quando si apre. Più giorni vuol dire app più lenta ad aprirsi. Le cose che non ci sono in magazzino e le prenotazioni si caricano sempre. Vale dalla prossima volta che si apre l'app." },
-  { k:"controllo", nome:"Giorni nel «Database» da controllare", unita:"giorni", base:7, min:1, max:45, passo:1,
-    spiega:"Nel «Database» (Ordini e Prenotazioni) le cose nuove o corrette da controllare sono quelle degli ultimi giorni. Quanti giorni indietro guardare." },
-  { k:"chiediLuogo", nome:"«Sei ancora al…?»", unita:"ore", base:1, min:1, max:12, passo:1,
-    spiega:"Per chi lavora in più posti: se riapre l'app dopo queste ore, gli chiede se è ancora nello stesso posto." },
-  { k:"registroMesi", nome:"Registro di come si usa l'app", unita:"mesi", base:6, min:1, max:24, passo:1,
-    spiega:"Per quanti mesi si tengono le righe del registro, poi si cancellano da sole. Adesso il registro è spento." }
+  /* gruppo: dove si vede; domanda: il titolo in parole semplici; esempio(v): una frase con il numero scelto */
+  { k:"ferma", gruppo:"Richieste dei negozi", nome:"«Ferma da…»", unita:"ore", base:2, min:1, max:24, passo:1,
+    domanda:"Dopo quante ore una richiesta diventa arancione?",
+    dove:"Nelle richieste dei negozi, al panificio e nel giro.",
+    esempio:function(v){ return "Il Corso chiede l'acqua alle 8. Se alle " + ((8 + v) % 24) + " nessuno l'ha ancora preparata o caricata, diventa arancione con la scritta «Ferma da…», così non si dimentica."; } },
+  { k:"scavalcate", gruppo:"Richieste dei negozi", nome:"«Ferma da…» se altre cose sono già arrivate", unita:"cose", base:3, min:1, max:10, passo:1,
+    domanda:"Quante cose chieste dopo devono arrivare perché una richiesta diventi arancione?",
+    dove:"Nelle richieste dei negozi, al panificio e nel giro.",
+    esempio:function(v){ return "Il Corso chiede l'acqua e poi altre cose. Se " + (v === 1 ? "1 cosa chiesta dopo è già arrivata" : v + " cose chieste dopo sono già arrivate") + " e l'acqua no, l'acqua diventa arancione: forse è stata dimenticata."; } },
+  { k:"chiestiGiorni", gruppo:"Richieste dei negozi", nome:"«Chiesti spesso»: giorni", unita:"giorni", base:30, min:7, max:90, passo:1,
+    domanda:"Quanti giorni guardare per i tasti «Chiesti spesso»?",
+    dove:"Nella pagina delle richieste dei negozi, sotto «Cosa serve?».",
+    esempio:function(v){ return "I tasti mostrano le cose che il negozio ha chiesto più spesso negli ultimi " + v + " giorni."; } },
+  { k:"chiestiTasti", gruppo:"Richieste dei negozi", nome:"«Chiesti spesso»: tasti", unita:"tasti", base:8, min:4, max:20, passo:1,
+    domanda:"Quanti tasti «Chiesti spesso» si vedono subito?",
+    dove:"Nella pagina delle richieste dei negozi, sotto «Cosa serve?».",
+    esempio:function(v){ return "Si vedono subito " + v + " tasti. Gli altri si vedono toccando «Altri…»."; } },
+  { k:"chiestiMax", gruppo:"Richieste dei negozi", nome:"«Chiesti spesso»: con «Altri…»", unita:"tasti", base:20, min:8, max:40, passo:1,
+    domanda:"Quanti tasti «Chiesti spesso» al massimo, toccando «Altri…»?",
+    dove:"Nella pagina delle richieste dei negozi, sotto «Cosa serve?».",
+    esempio:function(v){ return "Toccando «Altri…» si vedono fino a " + v + " tasti in tutto."; } },
+  { k:"viaVia", gruppo:"Avvisi e colori sullo schermo", nome:"Avviso «Mentre eri via»", unita:"secondi", base:15, min:5, max:120, passo:5,
+    domanda:"Per quanto resta l'avviso «Mentre eri via»?",
+    dove:"In alto, quando si riapre l'app.",
+    esempio:function(v){ return "Riapri l'app dopo pranzo: in alto c'è l'elenco di quello che è arrivato mentre era chiusa. Si chiude da solo dopo " + v + " secondi."; } },
+  { k:"avvisi", gruppo:"Avvisi e colori sullo schermo", nome:"Avvisi brevi in alto", unita:"secondi", base:6, min:3, max:60, passo:1,
+    domanda:"Per quanto restano gli avvisi in alto?",
+    dove:"In alto, come quelli del telefono.",
+    esempio:function(v){ return "Arriva una richiesta nuova: in alto compare «Nuova richiesta dal Corso» e resta " + v + " secondi."; } },
+  { k:"nuove", gruppo:"Avvisi e colori sullo schermo", nome:"Cose nuove in azzurro", unita:"secondi", base:20, min:5, max:300, passo:5,
+    domanda:"Per quanto restano azzurre le cose nuove?",
+    dove:"In tutte le liste.",
+    esempio:function(v){ return "Apri l'app e c'è una richiesta appena arrivata: resta azzurra per " + v + " secondi, così la noti."; } },
+  { k:"conferma", gruppo:"Avvisi e colori sullo schermo", nome:"Tasti con doppio tocco", unita:"secondi", base:4, min:2, max:15, passo:1,
+    domanda:"Quanto tempo c'è per toccare «Conferma»?",
+    dove:"Sui tasti «Togli» e «Non c'è».",
+    esempio:function(v){ return "Tocchi «Togli» e il tasto diventa «Conferma». Hai " + v + " secondi per toccarlo; poi torna com'era e non succede niente."; } },
+  { k:"crono", gruppo:"Per quanto tempo tenere le cose", nome:"Cronologia delle cose tolte", unita:"giorni", base:7, min:1, max:30, passo:1,
+    domanda:"Per quanti giorni si possono recuperare le cose tolte?",
+    dove:"In fondo alle pagine, in «Cronologia».",
+    esempio:function(v){ return "Una richiesta tolta per sbaglio lunedì si può recuperare per " + v + " giorni. Vale anche per i biscotti tolti o fatti."; } },
+  { k:"giorni", gruppo:"Per quanto tempo tenere le cose", nome:"Giorni di richieste caricate", unita:"giorni", base:45, min:14, max:180, passo:5,
+    domanda:"Quanti giorni di richieste carica l'app quando si apre?",
+    dove:"In tutta l'app (e nelle Statistiche).",
+    esempio:function(v){ return "L'app carica le richieste degli ultimi " + v + " giorni. Più giorni vuol dire app più lenta ad aprirsi. Le cose che mancano in magazzino e le prenotazioni si caricano sempre. Vale dalla prossima volta che si apre l'app."; } },
+  { k:"controllo", gruppo:"Per quanto tempo tenere le cose", nome:"Giorni nel «Database» da controllare", unita:"giorni", base:7, min:1, max:45, passo:1,
+    domanda:"Quanti giorni guardare nel «Database» per le cose da controllare?",
+    dove:"Nel «Database», parti Ordini e Prenotazioni.",
+    esempio:function(v){ return "Nel «Database» trovi da controllare i nomi nuovi o corretti dall'app negli ultimi " + v + " giorni."; } },
+  { k:"registroMesi", gruppo:"Per quanto tempo tenere le cose", nome:"Registro di come si usa l'app", unita:"mesi", base:6, min:1, max:24, passo:1,
+    domanda:"Per quanti mesi tenere il registro di come si usa l'app?",
+    dove:"Non si vede nell'app: lo legge Claude. Adesso il registro è spento.",
+    esempio:function(v){ return "Le righe del registro più vecchie di " + v + " mesi si cancellano da sole."; } },
+  { k:"chiediLuogo", gruppo:"Chi lavora in più posti", nome:"«Sei ancora al…?»", unita:"ore", base:1, min:1, max:12, passo:1,
+    domanda:"Dopo quante ore chiedere «Sei ancora al…?»",
+    dove:"A chi lavora in più posti, quando apre l'app.",
+    esempio:function(v){ return "Tua sorella apre l'app al Corso alle 9. Se la riapre dopo le " + (9 + v) + ", l'app le chiede «Sei ancora al Corso?»."; } }
 ];
 function numeriPuliti(d){
   const out = {};
@@ -2496,10 +2547,9 @@ function pillDest(per){
   return el("span", {class:"pill dest " + classeDest(per), text: per === PROMEMORIA ? "Promemoria" : "per " + per});
 }
 /* Richieste ferme: in attesa da più di num("ferma") ore, oppure rimaste indietro
-   (almeno SCAVALCATE_MIN cose chieste dopo, per lo stesso negozio e dallo stesso posto, sono già arrivate). */
+   (almeno num("scavalcate") cose chieste dopo, per lo stesso negozio e dallo stesso posto, sono già arrivate). */
 /* dopo quante ore una richiesta è «ferma»: num("ferma") */
 /* "rimasta indietro" solo se almeno tante cose chieste dopo sono già arrivate */
-const SCAVALCATE_MIN = 3;
 function testoOre(ore){ return ore < 24 ? (ore === 1 ? "1 ora" : ore + " ore") : (ore < 48 ? "1 giorno" : Math.floor(ore / 24) + " giorni"); }
 function infoFerma(r){
   if (r.per === PROMEMORIA || r.stato !== "attesa" || nonDisponibile(r) || r.esempio || r.inCoda || !r.creato) return null;
@@ -2508,7 +2558,7 @@ function infoFerma(r){
   const inizio = r.perIl ? Math.max(r.creato, msDelGiorno(r.perIl)) : r.creato;
   if (inizio > ora) return null;
   const ore = Math.floor((ora - inizio) / 3600000);
-  const indietro = S.richieste.filter(function(x){ return x.per === r.per && x.da === r.da && x.stato === "consegnato" && x.creato > r.creato; }).length >= SCAVALCATE_MIN;
+  const indietro = S.richieste.filter(function(x){ return x.per === r.per && x.da === r.da && x.stato === "consegnato" && x.creato > r.creato; }).length >= num("scavalcate");
   if (indietro) return ore >= 1 ? "Rimasta indietro da " + testoOre(ore) : "Rimasta indietro";
   /* da ritirare a un'ora precisa: non è ferma prima di quell'ora */
   if (r.da === FUORI && r.ritiroOra){
@@ -2595,9 +2645,9 @@ function renderCrono(dove, lista, conDest){
   riempi($("lista-crono-" + dove), l.map(function(r){ return rigaTolta(r, conDest); }));
   $("vuoto-crono-" + dove).hidden = l.length > 0;
 }
-/* "Chiesti spesso": solo quello che il negozio ha chiesto nell'app negli ultimi 30 giorni (la lista presa dai gruppi non si usa più).
+/* "Chiesti spesso": solo quello che il negozio ha chiesto nell'app negli ultimi num("chiestiGiorni") giorni (Impostazioni) (la lista presa dai gruppi non si usa più).
    Solo nomi giusti dell'elenco dei prodotti (con le correzioni del «Database»): un nome sconosciuto o scritto male non esce.
-   Si vedono i primi 8, con «Altri…» al massimo 20. */
+   Si vedono i primi num("chiestiTasti"), con «Altri…» al massimo num("chiestiMax"). */
 function nomeFrequente(testo){
   const t = trovaProdottoRich(testo);
   return t.esito === "sicuro" && t.nome ? t.nome : "";
@@ -2605,7 +2655,7 @@ function nomeFrequente(testo){
 function renderFrequenti(mie){
   const aperti = new Set(mie.filter(function(r){ return r.stato !== "consegnato"; }).map(function(r){ return chiave(nomeFrequente(r.articolo) || r.articolo); }));
   const scritti = new Set(righeDi("righe").map(function(x){ return chiave(nomeFrequente(x.articolo) || x.articolo); }));
-  const dal = Date.now() - 30 * 86400000;
+  const dal = Date.now() - num("chiestiGiorni") * 86400000;
   const conta = new Map();
   for (const r of mie){
     if (r.creato < dal) continue;
@@ -2615,7 +2665,7 @@ function renderFrequenti(mie){
     c.n++; conta.set(k, c);
   }
   const tutti = Array.from(conta.values()).sort(function(a,b){ return b.n - a.n; }).map(function(c){ return c.nome; });
-  const pochi = 8, max = 20;
+  const pochi = num("chiestiTasti"), max = Math.max(pochi, num("chiestiMax"));
   const quanti = S.tuttiFrequenti ? max : pochi;
   const chips = tutti.slice(0, quanti).map(function(nome){
     return el("button", {type:"button", class:"chip-add", "data-aggiungi":nome, text:"+ " + nome});
@@ -3126,25 +3176,36 @@ function segnaUsoLuogo(){
 /* ---------- Impostazioni (solo titolari) ---------- */
 function puoImpostazioni(){ return !!S.owner && !!S.ruolo && S.ruolo.tipo === "titolare" && !!store && !S.sola; }
 function inImpostazioni(){ return S.vista === "negozio" && S.sez === "impostazioni"; }
-function testoNumero(n, v){ return v + " " + (v === 1 ? { secondi:"secondo", ore:"ora", giorni:"giorno", mesi:"mese" }[n.unita] : n.unita); }
+function testoNumero(n, v){ return v + " " + (v === 1 ? { secondi:"secondo", ore:"ora", giorni:"giorno", mesi:"mese", cose:"cosa", tasti:"tasto" }[n.unita] : n.unita); }
 function renderImpostazioni(){
   if (!inImpostazioni()) return;
   const off = S.pending.has("numeri");
   S.bozzaNumeri = S.bozzaNumeri || {};
-  riempi($("imp-lista"), NUMERI.map(function(n){
-    const ora = num(n.k), bozza = S.bozzaNumeri[n.k] !== undefined ? S.bozzaNumeri[n.k] : ora;
-    const cambiato = bozza !== ora;
-    return el("div", {class:"card imp-voce"},
-      el("p", {class:"imp-nome", text:n.nome}),
-      el("p", {class:"hint", text:n.spiega}),
-      el("div", {class:"imp-numero"},
-        el("button", {type:"button", class:"mini imp-piu", "data-num-meno":n.k, disabled: off || bozza <= n.min, "aria-label":"Meno: " + n.nome, text:"−"}),
-        el("output", {class:"imp-valore" + (cambiato ? " cambiato" : ""), "aria-live":"polite", text:testoNumero(n, bozza)}),
-        el("button", {type:"button", class:"mini imp-piu", "data-num-piu":n.k, disabled: off || bozza >= n.max, "aria-label":"Più: " + n.nome, text:"+"}),
-        cambiato ? el("button", {type:"button", class:"primary imp-salva", "data-num-salva":n.k, disabled:off, text:"Salva"}) : null),
-      el("p", {class:"imp-base"},
-        ora === n.base && !cambiato ? el("span", {class:"hint", text:"Come all'inizio."})
-          : el("button", {type:"button", class:"link", "data-num-base":n.k, disabled:off, text:"Rimetti come prima (" + testoNumero(n, n.base) + ")"})));
+  /* a gruppi, nell'ordine di NUMERI: ogni numero con la domanda, dove si vede e un esempio col numero scelto */
+  const gruppi = [];
+  NUMERI.forEach(function(n){
+    let g = gruppi.find(function(x){ return x.nome === n.gruppo; });
+    if (!g){ g = { nome:n.gruppo, voci:[] }; gruppi.push(g); }
+    g.voci.push(n);
+  });
+  riempi($("imp-lista"), gruppi.map(function(g){
+    return el("section", {class:"imp-gruppo"}, el("h3", {class:"imp-gruppo-titolo", text:g.nome}), ...g.voci.map(function(n){
+      const ora = num(n.k), bozza = S.bozzaNumeri[n.k] !== undefined ? S.bozzaNumeri[n.k] : ora;
+      const cambiato = bozza !== ora;
+      return el("div", {class:"card imp-voce"},
+        el("p", {class:"imp-nome", text:n.domanda}),
+        el("p", {class:"hint", text:"Dove si vede: " + minuscolaIniziale(n.dove)}),
+        el("div", {class:"imp-numero"},
+          el("button", {type:"button", class:"mini imp-piu", "data-num-meno":n.k, disabled: off || bozza <= n.min, "aria-label":"Meno: " + n.domanda, text:"−"}),
+          el("output", {class:"imp-valore" + (cambiato ? " cambiato" : ""), "aria-live":"polite", text:testoNumero(n, bozza)}),
+          el("button", {type:"button", class:"mini imp-piu", "data-num-piu":n.k, disabled: off || bozza >= n.max, "aria-label":"Più: " + n.domanda, text:"+"}),
+          cambiato ? el("button", {type:"button", class:"primary imp-salva", "data-num-salva":n.k, disabled:off, text:"Salva"}) : null),
+        cambiato ? el("p", {class:"hint imp-prima", text:"Adesso è " + testoNumero(n, ora) + ": tocca «Salva» per cambiarlo."}) : null,
+        el("p", {class:"imp-esempio"}, el("b", {text:"Esempio: "}), n.esempio(bozza)),
+        el("p", {class:"imp-base"},
+          ora === n.base && !cambiato ? el("span", {class:"hint", text:"È com'era all'inizio."})
+            : el("button", {type:"button", class:"link", "data-num-base":n.k, disabled:off, text:"Rimetti com'era all'inizio (" + testoNumero(n, n.base) + ")"})));
+    }));
   }));
 }
 function cambiaBozzaNumero(k, verso){
@@ -3175,6 +3236,38 @@ async function salvaNumero(k, valore){
    OGNI VOLTA CHE SI CAMBIA L'APP, AGGIORNARE ANCHE QUI (vedi CLAUDE.md).
    Nelle risposte: testo semplice; tasto("…") disegna un tasto come quelli dell'app. */
 function tasto(t){ return el("span", {class:"man-tasto", text:t}); }
+/* disegni del manuale: piccole copie di come si vede nell'app (solo da guardare, non si toccano) */
+function disegno(...dentro){
+  return el("figure", {class:"man-disegno"}, el("figcaption", {text:"Così si vede nell'app:"}), el("div", {class:"man-disegno-in", "aria-hidden":"true"}, ...dentro));
+}
+function rigaFinta(articolo, parti, classe, sotto){
+  return el("div", {class:"riga " + (classe || "")}, el("div", {class:"riga-main"},
+    el("p", {class:"articolo", text:articolo}), sotto || null, meta(parti)));
+}
+function disegnoStati(){
+  const freccia = function(){ return el("span", {class:"man-freccia", text:"→"}); };
+  return disegno(el("div", {class:"man-stati"}, pill("p-attesa", "In attesa"), freccia(), pill("p-prep", "In preparazione"), freccia(),
+    pill("p-pronto", "Pronto da caricare"), freccia(), pill("p-caricato", "In viaggio"), freccia(), pill("p-consegnato", "Consegnato")));
+}
+function disegnoFerma(){
+  return disegno(rigaFinta("2 casse Acqua naturale grande", [pill("p-attesa", "In attesa"), "chiesto alle 8:10", pill("p-ferma", "Ferma da 3 ore")]));
+}
+function disegnoParte(){
+  return disegno(
+    rigaFinta("3 casse Acqua naturale grande", [pill("p-caricato", "In viaggio")], "", el("p", {class:"parte-manca", text:"Solo una parte: mancano 2 casse"})),
+    rigaFinta("2 casse Acqua naturale grande", [pill("p-finito", "Non ancora in magazzino")], "e-finito"));
+}
+function disegnoArrivata(){
+  return disegno(rigaFinta("Zucchero", [pill("p-arrivata", "Arrivata in magazzino"), pill("dest dest-corso", "Corso")]));
+}
+function disegnoStriscia(){
+  return disegno(el("div", {class:"striscia-mag manca"},
+    el("div", {class:"striscia-testo"}, el("span", {class:"nomi"}, el("b", {text:"Non in magazzino: "}), "Zucchero · Mozzarella · Acqua frizzante piccola")),
+    el("span", {class:"mostra", text:"Mostra tutto"})));
+}
+function disegnoAiuto(){
+  return disegno(el("div", {class:"man-testata"}, el("span", {text:"Richieste"}), el("span", {class:"aiuto-btn", text:"?"})));
+}
 function pill(cls, t){ return el("span", {class:"pill " + cls, text:t}); }
 function secondi(k){ return testoNumero(NUMERI.find(function(n){ return n.k === k; }), num(k)); }
 function minuscolaIniziale(t){ return t.charAt(0).toLowerCase() + t.slice(1); }
@@ -3185,20 +3278,20 @@ function capitoliManuale(){
   const cap = [];
   if (negozio || tit) cap.push({ titolo:"Richieste del negozio", domande:[
     ["Come chiedo una cosa?", ["Nella pagina principale scrivi in «Cosa serve?» una cosa per riga. La quantità puoi metterla o no (per esempio «2 casse acqua naturale» oppure «Vassoi»). Poi tocca ", tasto("Controlla e invia"), ": si apre «Controlla prima di inviare»."]],
-    ["Cosa sono i tasti «Chiesti spesso»?", ["Sono le cose che il tuo negozio ha chiesto più spesso nell'ultimo mese, già con il nome giusto. Toccane uno per aggiungerlo senza scriverlo. Ne vedi 8; con «Altri…» fino a 20. Le cose che hai già chiesto e non sono ancora arrivate non ci sono."]],
+    ["Cosa sono i tasti «Chiesti spesso»?", ["Sono le cose che il tuo negozio ha chiesto più spesso negli ultimi " + num("chiestiGiorni") + " giorni, già con il nome giusto. Toccane uno per aggiungerlo senza scriverlo. Ne vedi " + num("chiestiTasti") + "; con «Altri…» fino a " + Math.max(num("chiestiTasti"), num("chiestiMax")) + ". Le cose che hai già chiesto e non sono ancora arrivate non ci sono."]],
     ["Cosa controllo prima di inviare?", ["Per ogni cosa vedi:", el("br"),
       "• il nome: se l'app è sicura mette lei il nome giusto (vedi ✓ e puoi toccare «Lascia com'era»); se ha un dubbio chiede «Quale di questi?» e tu tocchi quello giusto, oppure «Nessuno, è un'altra cosa»;", el("br"),
       "• da dove si prende: di solito dal Panificio; puoi scegliere anche l'altro negozio, «Da ritirare fuori» (scrivi dove) o «Da comprare»;", el("br"),
       "• ", tasto("Urgente"), " se serve subito, e ", tasto("+ Nota"), " per chi prepara.", el("br"),
       "Quando è tutto giusto tocca ", tasto("Sì, invia"), ". Per l'acqua l'app chiede sempre quale: naturale o frizzante, grande o piccola."]],
     ["Cosa succede quando mando una richiesta?", ["La vedono subito il panificio (se si prende lì), chi fa il giro e i titolari. Sui loro telefoni la cosa nuova è azzurra per " + secondi("nuove") + ". Chi aveva l'app chiusa, quando la riapre, vede in alto l'avviso «Mentre eri via» con quello che è arrivato.", el("br"),
-      "Nella tua lista segui a che punto è: ", pill("p-attesa", "In attesa"), " ", pill("p-prep", "In preparazione"), " ", pill("p-pronto", "Pronto da caricare"), ", poi «In viaggio» e «Consegnato»."]],
-    ["Perché una richiesta è arancione («Ferma da…»)?", ["Vuol dire che aspetta da più di " + secondi("ferma") + " senza che nessuno l'abbia preparata o caricata, oppure che cose chieste dopo sono già partite. Serve a non dimenticarla: se è importante, avvisa chi fa il giro."]],
+      "Nella tua lista segui a che punto è: ", pill("p-attesa", "In attesa"), " ", pill("p-prep", "In preparazione"), " ", pill("p-pronto", "Pronto da caricare"), ", poi «In viaggio» e «Consegnato»."], disegnoStati()],
+    ["Perché una richiesta è arancione («Ferma da…»)?", ["Vuol dire che aspetta da più di " + secondi("ferma") + " senza che nessuno l'abbia preparata o caricata, oppure che almeno " + num("scavalcate") + " cose chieste dopo sono già arrivate e lei no. Serve a non dimenticarla: se è importante, avvisa chi fa il giro."], disegnoFerma()],
     ["Come tolgo una richiesta sbagliata?", ["Tocca ", tasto("Togli"), " e poi, entro " + secondi("conferma") + ", ", tasto("Conferma"), ". Di solito ognuno toglie solo le sue (il titolare può dare a una persona anche il permesso di togliere quelle dei colleghi). Una cosa segnata «non c'è in magazzino» la toglie solo il titolare.", el("br"),
       "Se hai sbagliato a togliere: in fondo alla pagina, in «Cronologia: cose tolte», restano per " + secondi("crono") + " e c'è ", tasto("Recupera"), "."]],
     ["E se chiedo una cosa che già non c'è in magazzino?", ["L'app lo sa: la richiesta parte già segnata «non c'è» e resta barrata nella tua lista finché non arriva. Quando arriva vedi «Arrivata in magazzino» e poi viene caricata come le altre."]],
     ["Cosa vuol dire «Da comprare»?", ["È una cosa che non c'è e va comprata. La vedono i titolari e chi fa il giro, in «Non in magazzino». Quando arriva, va nelle consegne e ve la portano."]],
-    ["Cosa succede se arriva solo una parte?", ["Chi fa il giro carica quello che c'è e scrive cosa manca. La tua richiesta va «In viaggio» con la scritta «Solo una parte: mancano 2 casse». Nella tua lista compare anche una riga nuova con quello che manca, barrata perché non c'è in magazzino (e ti arriva la notifica). Quando arriva, te la portano come le altre."]],
+    ["Cosa succede se arriva solo una parte?", ["Chi fa il giro carica quello che c'è e scrive cosa manca. La tua richiesta va «In viaggio» con la scritta «Solo una parte: mancano 2 casse». Nella tua lista compare anche una riga nuova con quello che manca, barrata perché non c'è in magazzino (e ti arriva la notifica). Quando arriva, te la portano come le altre."], disegnoParte()],
     ["E se non c'è campo?", ["Scrivi e invia lo stesso: la richiesta si salva sul telefono e parte da sola appena torna il campo. In alto vedi quante cose aspettano. Non uscire dall'app finché non sono partite."]]
   ]});
   if (panif || tit) cap.push({ titolo:"Panificio e magazzino", domande:[
@@ -3211,10 +3304,10 @@ function capitoliManuale(){
   if (haSezione("consegne")) cap.push({ titolo:"Giro consegne", domande:[
     ["Come funziona il giro?", ["In alto scegli ", tasto("Carico per reparto"), " (le cose da caricare, divise per reparto) oppure ", tasto("Giro per negozio"), " (le cose caricate, divise per negozio)."]],
     ["Come segno quello che carico e consegno?", ["Tocca ", tasto("Caricato"), " quando la cosa è sul furgone: il negozio la vede «In viaggio». Al negozio tocca ", tasto("Consegnato"), ", oppure ", tasto("Tutto consegnato"), " per tutte le cose di quel negozio. «Annulla» rimette la cosa da caricare."]],
-    ["E se ne ho solo una parte?", ["Tocca ", tasto("Solo una parte"), ", scrivi cosa manca ancora (per esempio «2 casse») e tocca ", tasto("Carica la parte"), ". La richiesta diventa caricata con la scritta «Solo una parte: mancano 2 casse». Quello che manca diventa una riga nuova per lo stesso negozio, segnata «non c'è»: va nella striscia rossa e, quando arriva, torna in cima alle consegne in verde."]],
+    ["E se ne ho solo una parte?", ["Tocca ", tasto("Solo una parte"), ", scrivi cosa manca ancora (per esempio «2 casse») e tocca ", tasto("Carica la parte"), ". La richiesta diventa caricata con la scritta «Solo una parte: mancano 2 casse». Quello che manca diventa una riga nuova per lo stesso negozio, segnata «non c'è»: va nella striscia rossa e, quando arriva, torna in cima alle consegne in verde."], disegnoParte()],
     ["E se una cosa non c'è in magazzino?", ["Tocca «Non c'è» e poi «Conferma». La cosa esce dalla tua lista e va nella striscia rossa in alto, che vedono tutti. Il negozio la vede barrata."]],
     haAzione("giroSposta") ? ["Una cosa è nel reparto sbagliato: come la sposto?", ["In «Carico per reparto», sotto la cosa tocca «Sposta…» e scegli il reparto giusto (per esempio da «Altro» a «Bevande»). Da quel momento anche tutte le cose con lo stesso nome vanno in quel reparto, al panificio e nel giro."]] : null,
-    ["Cosa sono le cose verdi in cima?", ["Sono cose che mancavano e adesso sono «Arrivate in magazzino»: vanno portate al negozio che le aveva chieste. Restano verdi e in cima finché non sono consegnate."]],
+    ["Cosa sono le cose verdi in cima?", ["Sono cose che mancavano e adesso sono «Arrivate in magazzino»: vanno portate al negozio che le aveva chieste. Restano verdi e in cima finché non sono consegnate."], disegnoArrivata()],
     ["Posso aggiungere io una cosa?", ["Sì, con «+ Aggiungi tu una cosa da portare o da ricordare». Puoi scegliere un negozio, oppure «Promemoria» se è solo per te (es. «Passare a prendere le casse»): quando l'hai fatta tocca ", tasto("Fatto"), "."]]
   ]});
   if (vedePren()) cap.push({ titolo:"Prenotazioni", domande:[
@@ -3233,7 +3326,7 @@ function capitoliManuale(){
     ["Un biscotto non è nell'elenco?", ["Scrivilo in «Un biscotto che non è in elenco» e tocca Aggiungi. Un titolare poi lo conferma o lo toglie dall'elenco."]]
   ]});
   cap.push({ titolo:"Cose che non ci sono in magazzino", domande:[
-    ["Cos'è la striscia rossa in alto?", ["È l'elenco di tutto quello che manca in magazzino, uguale per tutti. Resta in alto finché la cosa non arriva. Se è lunga, tocca ", tasto("Mostra tutto"), "."]],
+    ["Cos'è la striscia rossa in alto?", ["È l'elenco di tutto quello che manca in magazzino, uguale per tutti. Resta in alto finché la cosa non arriva. Se è lunga, tocca ", tasto("Mostra tutto"), "."], disegnoStriscia()],
     ["Chi la toglie?", ["Quando la cosa arriva, chi fa il giro o un titolare (o chi ha avuto in più la sezione «Non in magazzino») tocca ", tasto("È arrivato"), " e conferma. Le cose arrivate vanno nelle consegne, in cima, per essere portate al negozio."]]
   ].concat(vedeMancanti() ? [
     ["Cosa succede se tocco la striscia rossa?", ["Si apre la sezione «Non in magazzino», dove puoi segnare ", tasto("È arrivato"), ". Anche in «Mostra tutto», in fondo, c'è «Apri Non in magazzino». (Per gli altri toccare la striscia non fa niente: hanno solo «Mostra tutto».)"]],
@@ -3261,7 +3354,7 @@ function capitoliManuale(){
     ["Tocco una notifica: dove mi porta?", ["Apre l'app nella pagina giusta (per esempio le richieste o le prenotazioni)."]]
   ]});
   cap.push({ titolo:"In tutte le pagine", domande:[
-    ["A cosa serve il «?» in alto?", ["In ogni pagina, in alto a destra, c'è ", tasto("?"), ": apre «Come funziona» con solo le domande su quella pagina. Per vederle tutte tocca «Mostra tutte le domande». ", tasto("Indietro"), " ti riporta alla pagina dove eri."]],
+    ["A cosa serve il «?» in alto?", ["In ogni pagina, in alto a destra, c'è ", tasto("?"), ": apre «Come funziona» con solo le domande su quella pagina. Per vederle tutte tocca «Mostra tutte le domande». ", tasto("Indietro"), " ti riporta alla pagina dove eri."], disegnoAiuto()],
     haAzione("vedeChi") ? ["A cosa serve il tasto «Chi?»", ["Accanto a una richiesta, tocca ", tasto("Chi?"), ": compare il nome di chi l'ha chiesta (per esempio «Ordinato da Maria»). Toccalo di nuovo per nasconderlo."]] : null
   ]});
   if (!tit) cap.push({ titolo:"Permessi", domande:[
@@ -3272,7 +3365,7 @@ function capitoliManuale(){
     ["Una persona lavora in più posti: come faccio?", ["Nei suoi permessi, in «Dove lavora», tocca ", tasto("Sì"), " accanto agli altri posti. Quando apre l'app sceglie dove è; se la riapre dopo un po' (le ore le scegli in «Impostazioni») le chiede «Sei ancora al…?». Vede le richieste e riceve le notifiche del posto dove è."]],
     ["Posso scegliere io le notifiche di una persona?", ["Sì: nei suoi permessi, in «Notifiche che può ricevere», una per riga. Puoi dare a chiunque anche notifiche che di solito non sono del suo posto (per esempio «Pronto da caricare» a una persona del Corso). «No» vuol dire che non le arriva mai; «Sì» vuol dire che la può ricevere e sul suo telefono la accende o la spegne. Sotto vedi se sul suo telefono è accesa. Nell'elenco delle persone vedi chi ha le notifiche accese 🔔 e chi no 🔕."]],
     ["Una persona cambia negozio o va in ferie?", ["In «Persone registrate» tocca il suo nome. ", tasto("Cambia ruolo"), " la sposta (per esempio dal Corso a Piazza Nenni) senza registrarsi di nuovo. ", tasto("Sospendi"), " non la fa entrare finché non tocchi ", tasto("Riattiva"), "."]],
-    ["A cosa serve «Impostazioni»?", ["Lì cambi i tempi dell'app (per esempio dopo quante ore una richiesta è «Ferma da…»). Valgono per tutti i telefoni. Usa − e +, poi «Salva»; «Rimetti come prima» torna al numero di partenza."]],
+    ["A cosa serve «Impostazioni»?", ["Lì scegli alcuni numeri dell'app, divisi a gruppi (Richieste dei negozi, Avvisi e colori, Per quanto tempo tenere le cose…): per esempio dopo quante ore una richiesta diventa arancione o quanti tasti «Chiesti spesso» si vedono. Valgono per tutti i telefoni. Sotto ogni numero c'è un esempio che cambia mentre tocchi − e +; poi «Salva». «Rimetti com'era all'inizio» torna al numero di partenza."]],
     ["A cosa serve «Database»?", ["Entrando ci sono tre tasti: Ordini, Prenotazioni, Biscotti. Il numero dice quante cose nuove ci sono da controllare. In ogni parte ci sono i nomi nuovi o corretti dall'app («Sì, è giusto», «No, era…», «È un prodotto nuovo», «Scrivi il nome giusto»), e in fondo l'elenco completo. Una correzione vale anche per quello già scritto. Quanti giorni indietro guardare lo scegli in «Impostazioni» (di partenza 7)."]],
     ["Un prodotto è scritto male: come lo correggo?", ["Nel «Database» tocca «Scrivi il nome giusto» (o «No, era…»). Scrivi il nome: sotto escono i prodotti dell'elenco che somigliano, puoi toccarne uno. Se il nome che scrivi non c'è, diventa un prodotto nuovo. Quello scritto male resta collegato al nome giusto: la volta dopo l'app lo corregge da sola."]],
     ["Un ordine non c'entra niente: come lo tolgo?", ["Nel «Database», parte Ordini, sotto l'ordine tocca «Elimina questo ordine» e conferma. Sparisce dalle richieste e dal giro. Se è stato uno sbaglio, lo ritrovi in Cronologia."]],
@@ -3287,7 +3380,7 @@ function renderManuale(){
   riempi($("man-capitoli"), capitoliManuale().map(function(c){
     return el("section", {class:"card man-cap"}, el("h3", {class:"man-titolo", text:c.titolo}),
       ...c.domande.filter(Boolean).map(function(d){
-        return el("details", {class:"man-domanda", "data-man-cap":c.titolo}, el("summary", {text:d[0]}), el("p", null, ...d[1]));
+        return el("details", {class:"man-domanda", "data-man-cap":c.titolo}, el("summary", {text:d[0]}), el("p", null, ...d[1]), d[2] || null);
       }));
   }));
   filtraManuale();
@@ -3336,7 +3429,7 @@ function filtraManuale(){
   document.querySelectorAll("#man-capitoli .man-cap").forEach(function(sez){
     let qui = 0;
     sez.querySelectorAll("details.man-domanda").forEach(function(d){
-      const t = chiave(sez.querySelector(".man-titolo").textContent + " " + d.textContent);
+      const t = chiave(sez.querySelector(".man-titolo").textContent + " " + d.querySelector("summary").textContent + " " + d.querySelector("p").textContent);
       const ok = parole.every(function(w){ return t.indexOf(w) >= 0; }) && (!soloPagina || pag(d.dataset.manCap, d.querySelector("summary").textContent));
       d.hidden = !ok;
       if (ok) qui++;
