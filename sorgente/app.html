@@ -99,6 +99,7 @@ body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area
 .oggi{flex:none;font-size:13px;color:#CFC8B8}
 @media (max-width:460px){ .oggi{display:none} }
 .testata .menu-btn{border-color:rgba(255,255,255,.3);background:transparent;color:#FFFFFF}
+.aiuto-btn{appearance:none;flex:none;width:44px;height:44px;border:1.5px solid rgba(255,255,255,.3);border-radius:999px;background:transparent;color:#FFFFFF;font:inherit;font-size:22px;font-weight:700;line-height:1;cursor:pointer}
 .indietro{appearance:none;flex:none;display:inline-flex;align-items:center;gap:4px;height:44px;padding:0 14px 0 8px;border:1.5px solid var(--oro);border-radius:12px;background:transparent;color:#FFFFFF;font-weight:700;font-size:16px;cursor:pointer}
 .testata :focus-visible{outline-color:var(--oro)}
 .menu-btn{appearance:none;flex:none;width:44px;height:44px;display:flex;align-items:center;justify-content:center;border:1.5px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);cursor:pointer}
@@ -580,6 +581,7 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
 .parte-form .row{display:flex;gap:8px;flex-wrap:wrap}
 .man-capitoli{display:flex;flex-direction:column;gap:10px}
 .man-cerca{flex:none;margin-bottom:12px}
+.man-pagina{flex:none;margin-bottom:12px;padding:12px 14px;font-weight:700}
 .man-titolo{margin:0 0 4px;font-size:18px}
 .man-domanda{border-top:1px solid var(--line-2)}
 .man-domanda summary{cursor:pointer;font-weight:700;padding:10px 0;min-height:24px}
@@ -688,6 +690,7 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
       <p class="app-nome" id="app-nome">Rifornimenti</p>
     </div>
     <p class="oggi" id="oggi"></p>
+    <button type="button" class="aiuto-btn" id="aiuto-pagina" aria-label="Come funziona questa pagina" title="Come funziona questa pagina">?</button>
   </div>
 </header>
 <section class="fascia giro" id="fascia" aria-labelledby="titolo">
@@ -875,6 +878,7 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
       <p class="hint">Tocca una domanda per leggere la risposta. Vedi solo le parti che servono a te.</p>
       <label class="field man-cerca" for="man-cerca"><span class="label-sm">Cerca una domanda</span><input id="man-cerca" type="search" autocomplete="off" placeholder="Es. notifiche, striscia, Solo una parte"></label>
       <p class="vuoto" id="man-vuoto" hidden></p>
+      <div class="card man-pagina" id="man-pagina" hidden><span id="man-pagina-testo"></span> <button type="button" class="link" id="man-tutte">Mostra tutte le domande</button></div>
       <div class="blocco man-capitoli" id="man-capitoli"></div>
     </div>
 
@@ -1370,7 +1374,7 @@ function esito(id, msg){
 const ESEMPI = "esempi";
 /* panificazione: in preparazione, pronto, finito. Magazzino: manca (non ancora arrivato) */
 const STATI_PREP = ["preparazione","pronto","finito","manca"];
-const NOMI_PREP = {preparazione:"In preparazione", pronto:"Pronto da caricare", finito:"Finito al panificio", manca:"Non ancora in magazzino"};
+const NOMI_PREP = {preparazione:"In preparazione", pronto:"Pronto da caricare", finito:"Finito scorte", manca:"Non ancora in magazzino"};
 const CLASSI_PREP = {preparazione:"p-prep", pronto:"p-pronto", finito:"p-finito", manca:"p-finito"};
 const REPARTO_FORNO = "Pane e forno";
 function nonDisponibile(r){ return r.prep === "finito" || r.prep === "manca"; }
@@ -1995,11 +1999,27 @@ function armaManca(id){
   impostaPrep(id, "manca");
 }
 /* ---------- biscotti ---------- */
+/* biscotti con il nome cambiato da un titolare nel «Database» (impostazioni condivise "biscotti", nomi: { chiave vecchia: "Nome nuovo" }) */
+S.biscNomi = {};
+function nomeBiscGiusto(n){
+  let x = n;
+  for (let i = 0; i < 5; i++){
+    const t = S.biscNomi[chiave(x)];
+    if (!t || chiave(t) === chiave(x)) break;
+    x = t;
+  }
+  return x;
+}
+function nomiBiscPuliti(d){
+  const out = {};
+  if (d && typeof d === "object") for (const k in d){ if (typeof d[k] === "string" && d[k].trim() && chiave(k)) out[chiave(k)] = d[k].trim().slice(0, 60); }
+  return out;
+}
 function idBisc(negozio, nome){ return (CHIAVE_NEG[negozio] || "altro") + "~" + (chiave(nome).replace(/ /g, "-").slice(0, 80) || "x"); }
 function normaBisc(id, d){
   return {
     id: id,
-    nome: String(d.nome || "").slice(0, 60) || "Senza nome",
+    nome: nomeBiscGiusto(String(d.nome || "").slice(0, 60) || "Senza nome"),
     negozio: String(d.negozio || ""),
     livello: d.livello === "finiti" ? "finiti" : "pochi",
     /* manca = da produrre, fatto = prodotto (il vecchio "mandati" vale come fatto), tolto = nella cronologia del negozio */
@@ -2048,6 +2068,7 @@ function catalogoBisc(){
   BISCOTTI_BASE.forEach(function(n){ tolti.delete(chiave(n)); });
   const visti = new Set(tolti), out = [];
   BISCOTTI_BASE.concat(S.aggiunteBisc, S.biscotti.map(function(b){ return b.nome; })).forEach(function(n){
+    n = nomeBiscGiusto(n);
     const k = chiave(n);
     if (!k || visti.has(k)) return;
     visti.add(k); out.push(n);
@@ -3182,7 +3203,7 @@ function capitoliManuale(){
   ]});
   if (panif || tit) cap.push({ titolo:"Panificio e magazzino", domande:[
     ["Cosa vedo nella mia pagina?", ["Le richieste dei negozi che si prendono al Panificio, divise per reparto (Pane e forno, Frigo, Bevande…), con il colore del negozio che le ha chieste. Le urgenti sono in cima."]],
-    ["Come segno a che punto sono?", ["Su ogni cosa ci sono i tasti ", tasto("In preparazione"), " ", tasto("Pronto da caricare"), " ", tasto("Finito al panificio"), " e «Non c'è in magazzino». «Pronto da caricare» avvisa chi fa il giro. Toccare di nuovo lo stesso tasto lo toglie."]],
+    ["Come segno a che punto sono?", ["Su ogni cosa ci sono i tasti ", tasto("In preparazione"), " ", tasto("Pronto da caricare"), " ", tasto("Finito scorte"), " e «Non c'è in magazzino». «Pronto da caricare» avvisa chi fa il giro. Toccare di nuovo lo stesso tasto lo toglie."]],
     ["E se una cosa non c'è in magazzino?", ["Segnala «Non c'è in magazzino»: la vedono tutti nella striscia rossa in alto. Poi non la puoi togliere tu: quando arriva la segna «È arrivato» chi fa il giro o un titolare."]],
     haAzione("panSposta") ? ["Una cosa è nel reparto sbagliato: come la sposto?", ["Sotto la cosa tocca «Sposta…» e scegli il reparto giusto (per esempio da «Altro» a «Frigo»). Da quel momento anche tutte le cose con lo stesso nome vanno in quel reparto, al panificio e nel giro."]] : null,
     ["Posso chiedere anche io delle cose?", ["Sì, come i negozi: scrivi in «Cosa serve?» e invia. Vale tutto quello che c'è nel capitolo delle richieste."]]
@@ -3219,12 +3240,10 @@ function capitoliManuale(){
     ["Come segno una cosa che manca in magazzino?", ["Nella sezione «Non in magazzino» tocca ", tasto("+ Segna cosa manca"), ", scrivi il nome e Salva. Si vede solo in quella sezione (non nella striscia rossa). Quando arriva, ", tasto("È arrivato"), "."]],
     ["Cosa c'è nella sezione «Non in magazzino»?", ["Tre parti: le richieste dei negozi segnate «non c'è», le cose segnate con «+ Segna cosa manca», e quelle «Da comprare». Su ognuna c'è «È arrivato». Quando arriva una cosa, arrivano insieme tutte quelle con lo stesso nome."]]
   ] : [])});
-  const notif = {
-    "corso": "Una vostra richiesta non c'è in magazzino; l'altro negozio chiede qualcosa a voi; le prenotazioni che i clienti ritirano da voi; le prenotazioni disdette da qualcun altro.",
-    "piazza-nenni": "Una vostra richiesta non c'è in magazzino; l'altro negozio chiede qualcosa a voi; le prenotazioni che i clienti ritirano da voi; le prenotazioni disdette da qualcun altro.",
-    "panificio": "Nuove richieste per il panificio; nuove prenotazioni; prenotazioni disdette che si ritirano al panificio; comande di biscotti.",
-    "consegne": "Ogni nuova richiesta (le urgenti sempre); pronto da caricare dal panificio; cose arrivate in magazzino da portare.",
-    "titolare": "Con «Ricevi tutto»: nuove richieste, prenotazioni e disdette, cose che mancano e che arrivano in magazzino, cose finite, pronti da caricare, biscotti."
+  /* le notifiche di solito di ogni posto: lette dall'elenco vero (NOTIFICHE_PERMESSI), così restano giuste */
+  const diSolito = function(posto){
+    const l = NOTIFICHE_PERMESSI.filter(function(n){ return n.base.indexOf(posto) >= 0; }).map(function(n){ return minuscolaIniziale(n.nome); });
+    return l.length ? l.join("; ") + "." : "nessuna.";
   };
   /* le notifiche che può ricevere chi legge (quelle del suo posto, più o meno quelle scelte dal titolare) */
   const mieNotifiche = tit ? "" : NOTIFICHE_PERMESSI.filter(function(n){ return notificaPer(idPermessi(), ruoloAdesso(), n.k); }).map(function(n){ return minuscolaIniziale(n.nome); }).join("; ");
@@ -3235,12 +3254,15 @@ function capitoliManuale(){
   cap.push({ titolo:"Notifiche", domande:[
     ["Come accendo le notifiche?", ["Dal menu ☰ apri «Notifiche» e tocca ", tasto("Attiva le notifiche"), ": il telefono chiede il permesso. Sull'iPhone funzionano solo se apri l'app dall'icona sulla schermata Home."]],
     ["Quali notifiche ricevo?", tit ? ["Ognuno sceglie le sue nella sezione Notifiche.", el("br"),
-      "• Corso e Piazza Nenni: " + notif.corso, el("br"), "• Panificio: " + notif.panificio, el("br"), "• Giro: " + notif.consegne, el("br"), "• Titolari: " + notif.titolare]
+      "• Corso e Piazza Nenni: " + diSolito("negozio"), el("br"), "• Panificio: " + diSolito("panificio"), el("br"), "• Giro: " + diSolito("consegne"), el("br"),
+      "• Titolari, con «Ricevi tutto»: " + minuscolaIniziale(SCELTA_TUTTO[2]), el("br"),
+      "Questo è come è di solito. Se a una persona hai dato o tolto una notifica nei suoi permessi, vale la tua scelta."]
       : [(mieNotifiche ? "Puoi ricevere: " + mieNotifiche + "." : "Il titolare non ti ha dato notifiche da ricevere.") + " Puoi spegnere quelle che non vuoi nella sezione Notifiche."]],
     ["Tocco una notifica: dove mi porta?", ["Apre l'app nella pagina giusta (per esempio le richieste o le prenotazioni)."]]
   ]});
-  if (haAzione("vedeChi")) cap.push({ titolo:"In tutte le pagine", domande:[
-    ["A cosa serve il tasto «Chi?»", ["Accanto a una richiesta, tocca ", tasto("Chi?"), ": compare il nome di chi l'ha chiesta (per esempio «Ordinato da Maria»). Toccalo di nuovo per nasconderlo."]]
+  cap.push({ titolo:"In tutte le pagine", domande:[
+    ["A cosa serve il «?» in alto?", ["In ogni pagina, in alto a destra, c'è ", tasto("?"), ": apre «Come funziona» con solo le domande su quella pagina. Per vederle tutte tocca «Mostra tutte le domande». ", tasto("Indietro"), " ti riporta alla pagina dove eri."]],
+    haAzione("vedeChi") ? ["A cosa serve il tasto «Chi?»", ["Accanto a una richiesta, tocca ", tasto("Chi?"), ": compare il nome di chi l'ha chiesta (per esempio «Ordinato da Maria»). Toccalo di nuovo per nasconderlo."]] : null
   ]});
   if (!tit) cap.push({ titolo:"Permessi", domande:[
     ["Un collega ha un tasto che io non ho: perché?", ["Il titolare può dare o togliere a ognuno le singole cose (per esempio segnare «Urgente», disdire una prenotazione, vedere il telefono del cliente) e anche le singole notifiche. Se ti manca qualcosa che ti serve, chiedi al titolare."]]
@@ -3254,7 +3276,7 @@ function capitoliManuale(){
     ["A cosa serve «Database»?", ["Entrando ci sono tre tasti: Ordini, Prenotazioni, Biscotti. Il numero dice quante cose nuove ci sono da controllare. In ogni parte ci sono i nomi nuovi o corretti dall'app («Sì, è giusto», «No, era…», «È un prodotto nuovo», «Scrivi il nome giusto»), e in fondo l'elenco completo. Una correzione vale anche per quello già scritto. Quanti giorni indietro guardare lo scegli in «Impostazioni» (di partenza 7)."]],
     ["Un prodotto è scritto male: come lo correggo?", ["Nel «Database» tocca «Scrivi il nome giusto» (o «No, era…»). Scrivi il nome: sotto escono i prodotti dell'elenco che somigliano, puoi toccarne uno. Se il nome che scrivi non c'è, diventa un prodotto nuovo. Quello scritto male resta collegato al nome giusto: la volta dopo l'app lo corregge da sola."]],
     ["Un ordine non c'entra niente: come lo tolgo?", ["Nel «Database», parte Ordini, sotto l'ordine tocca «Elimina questo ordine» e conferma. Sparisce dalle richieste e dal giro. Se è stato uno sbaglio, lo ritrovi in Cronologia."]],
-    ["Come cambio l'elenco dei prodotti?", ["Nel «Database», in fondo a Ordini o Prenotazioni, apri «Tutti i prodotti». In cima puoi aggiungere un prodotto. Accanto a ogni prodotto c'è «Modifica»: puoi cambiare il nome (se il nome nuovo c'è già, i due prodotti si uniscono), aggiungere un altro modo di scriverlo, togliere un modo di scriverlo o togliere il prodotto dall'elenco. Nei Biscotti puoi togliere quelli aggiunti dai negozi e rimettere quelli tolti."]],
+    ["Come cambio l'elenco dei prodotti?", ["Nel «Database», in fondo a Ordini o Prenotazioni, apri «Tutti i prodotti». In cima puoi aggiungere un prodotto. Accanto a ogni prodotto c'è «Modifica»: puoi cambiare il nome (se il nome nuovo c'è già, i due prodotti si uniscono), aggiungere un altro modo di scriverlo, togliere un modo di scriverlo o togliere il prodotto dall'elenco. Nei Biscotti, in cima puoi aggiungere un biscotto; con «Modifica» cambi il nome (vale anche per le comande già fatte; se il nome c'è già, i due diventano uno) o togli un biscotto aggiunto dai negozi. In fondo puoi rimettere quelli tolti."]],
     puoStat() ? ["Cosa trovo nelle «Statistiche»?", ["Quante richieste, cosa si chiede di più, cosa manca più spesso (anche le volte portate solo in parte), quanto si aspetta in magazzino prima che una cosa arrivi, quando si chiede, quanto ci mette ad arrivare al negozio, i biscotti, le prenotazioni e le disdette con il loro motivo. Scegli il periodo in alto. I tasti per scaricare danno un file che si apre con Excel."]] : null,
     ["Se qualcuno dimentica il PIN o se ne va?", ["In «Persone registrate» tocca il suo nome, poi in fondo apri «Togliere l'accesso» e conferma due volte: non può più entrare, le sue richieste restano. Se serve, si registra di nuovo con il codice del negozio."]]
   ]});
@@ -3270,17 +3292,52 @@ function renderManuale(){
   }));
   filtraManuale();
 }
+/* il «?» in alto: quali capitoli (e, per i titolari, quali domande) parlano della pagina dove si è */
+function domandePagina(sez){
+  const tit = "Solo per i titolari";
+  const regole = {
+    richieste: (S.punto === "Panificio" ? [["Panificio e magazzino"]] : [["Richieste del negozio"]]).concat([["Cose che non ci sono in magazzino", /striscia/i], ["In tutte le pagine"], ["Lavoro in più posti"]]),
+    giro: [["Giro consegne"], ["Cose che non ci sono in magazzino", /striscia|toglie/i], ["In tutte le pagine"]],
+    prenotazioni: [["Prenotazioni"], [tit, /prodotto/i]],
+    biscotti: [["Biscotti"]],
+    mancanti: [["Cose che non ci sono in magazzino"]],
+    notifiche: [["Notifiche"], [tit, /notifiche/i]],
+    persone: [[tit, /permess|posti|notifiche|ferie|PIN/i], ["Permessi"]],
+    database: [[tit, /Database|prodott|ordine/i]],
+    impostazioni: [[tit, /Impostazioni/i]],
+    statistiche: [[tit, /Statistiche/i]]
+  }[sez];
+  if (!regole) return null;
+  return function(cap, domanda){
+    return regole.some(function(r){ return r[0] === cap && (!r[1] || r[1].test(domanda)); });
+  };
+}
+function apriAiutoPagina(){
+  const sez = sezioneAttuale();
+  const nomi = { giro:"Giro consegne", prenotazioni:"Prenotazioni", biscotti:"Biscotti", mancanti:"Non in magazzino", notifiche:"Notifiche",
+    persone:"Persone registrate", database:"Database", impostazioni:"Impostazioni", statistiche:"Statistiche" };
+  S.manPagina = { sez: sez, nome: nomi[sez] || nomeSezione(sez), scheda: S.dbScheda || "" };
+  registra("manuale: aperto dal ?", { pagina: sez });
+  $("man-cerca").value = "";
+  S.manPaginaNuova = true;
+  vaiSezione("manuale");
+}
 /* cerca nel manuale: tiene le domande che hanno tutte le parole scritte (nella domanda o nella risposta), anche a metà */
 let manVuotaSegnata = false;
 function filtraManuale(){
   const testo = $("man-cerca").value.trim();
   const parole = chiave(testo).split(" ").filter(Boolean);
+  /* aperto dal «?» di una pagina: solo le domande di quella pagina (se ce ne sono) */
+  const pag = S.manPagina ? domandePagina(S.manPagina.sez) : null;
+  const soloPagina = !!pag && Array.from(document.querySelectorAll("#man-capitoli details.man-domanda")).some(function(d){ return pag(d.dataset.manCap, d.querySelector("summary").textContent); });
+  $("man-pagina").hidden = !soloPagina;
+  if (soloPagina) $("man-pagina-testo").textContent = "Domande sulla pagina «" + S.manPagina.nome + "».";
   let trovate = 0;
   document.querySelectorAll("#man-capitoli .man-cap").forEach(function(sez){
     let qui = 0;
     sez.querySelectorAll("details.man-domanda").forEach(function(d){
       const t = chiave(sez.querySelector(".man-titolo").textContent + " " + d.textContent);
-      const ok = parole.every(function(w){ return t.indexOf(w) >= 0; });
+      const ok = parole.every(function(w){ return t.indexOf(w) >= 0; }) && (!soloPagina || pag(d.dataset.manCap, d.querySelector("summary").textContent));
       d.hidden = !ok;
       if (ok) qui++;
     });
@@ -3359,6 +3416,7 @@ function renderMenu(){
   /* dentro Biscotti: freccia Indietro al posto del menu */
   $("apri-menu").hidden = bisc;
   $("torna").hidden = !bisc;
+  $("aiuto-pagina").hidden = inManuale();
   $("switch-viste").hidden = !puoSwitch() || bisc;
   $("tab-negozio").textContent = t === "titolare" ? "Negozio" : S.punto;
   $("punti").hidden = t !== "titolare" || inStat() || inPren() || inNotif() || inPersone() || inMancanti() || inDatabase() || inImpostazioni() || inManuale();
@@ -3437,6 +3495,9 @@ function vaiSezione(id, forza, scheda){
     apriRiepilogo();
     return;
   }
+  /* il manuale aperto dal menu mostra tutte le domande; dal «?» solo quelle della pagina */
+  if (!(id === "manuale" && S.manPaginaNuova)) S.manPagina = null;
+  S.manPaginaNuova = false;
   chiudiMenu();
   if ((id === "biscotti" && vedeBiscotti()) || (id === "mancanti" && vedeMancanti()) || (id === "prenotazioni" && vedePren()) || id === "notifiche" || (id === "statistiche" && puoStat()) || (id === "persone" && puoPersone()) || (id === "database" && puoDatabase()) || (id === "impostazioni" && puoImpostazioni()) || id === "manuale"){
     if (!inSezioneExtra()) S.vistaPrima = S.vista;
@@ -4064,7 +4125,7 @@ S.biscConfermati = []; S.biscTolti = [];
 function biscNuovi(){
   const no = new Set(BISCOTTI_BASE.concat(S.biscConfermati, S.biscTolti).map(chiave));
   const visti = new Set();
-  return S.aggiunteBisc.filter(function(n){ const k = chiave(n); if (!k || no.has(k) || visti.has(k)) return false; visti.add(k); return true; });
+  return S.aggiunteBisc.filter(function(n){ const k = chiave(n); if (!k || no.has(k) || visti.has(k) || S.biscNomi[k]) return false; visti.add(k); return true; });
 }
 function contaDatabase(){
   if (!puoDatabase()) return { ordini: 0, prenotazioni: 0, biscotti: 0, tutti: 0 };
@@ -4243,11 +4304,26 @@ function renderDbBisc(){
   const base = new Set(BISCOTTI_BASE.map(chiave));
   const tolti = S.biscTolti.filter(function(n){ return !base.has(chiave(n)); });
   $("db-elenco-titolo").textContent = "Tutti i biscotti";
-  $("db-elenco-spiega").textContent = "L'elenco dei biscotti che i negozi possono chiedere. Quelli aggiunti dai negozi si possono togliere; quelli tolti si possono rimettere.";
+  $("db-elenco-spiega").textContent = "L'elenco dei biscotti che i negozi possono chiedere. Tocca «Modifica» per cambiare il nome (vale anche per le comande già fatte) o togliere un biscotto aggiunto dai negozi. Quelli tolti si possono rimettere.";
   $("db-n").textContent = String(elenco.length);
-  const out = [el("div", null, ...elenco.map(function(n){
-    const riga = el("div", {class:"corr-prod"}, el("span", {class:"nome", text:n}));
-    if (!base.has(chiave(n))) riga.append(el("button", {type:"button", class:"link", "data-db-bisc-no":n, disabled:off, "aria-label":"Togli dall'elenco: " + n, text:"Togli"}));
+  const out = [el("div", {class:"db-nuovo"},
+    el("label", {class:"label-sm", for:"db-nuovo-prod", text:"Aggiungi un biscotto all'elenco"}),
+    el("div", {class:"row"},
+      el("input", {id:"db-nuovo-prod", type:"text", maxlength:"60", autocomplete:"off", autocapitalize:"sentences", placeholder:"Nome del biscotto", "data-invio":"db-aggiungi"}),
+      el("button", {type:"button", class:"mini", id:"db-aggiungi", disabled:off, text:"Aggiungi"}))),
+    el("div", null, ...elenco.map(function(n){
+    const aperta = S.dbMod === chiave(n);
+    const riga = el("div", {class:"corr-prod"}, el("span", {class:"nome", text:n}),
+      el("button", {type:"button", class:"link", "data-db-mod": aperta ? "" : chiave(n), "aria-expanded":String(aperta), "aria-label":(aperta ? "Chiudi: " : "Modifica: ") + n, text: aperta ? "Chiudi" : "Modifica"}));
+    if (aperta){
+      riga.append(el("div", {class:"db-mod"},
+        el("label", {class:"label-sm", for:"db-mod-nome", text:"Nome giusto"}),
+        el("div", {class:"row"},
+          el("input", {id:"db-mod-nome", type:"text", maxlength:"60", autocomplete:"off", value:n, "data-invio":"db-rinomina"}),
+          el("button", {type:"button", class:"mini", id:"db-rinomina", "data-db-rinomina":n, disabled:off, text:"Cambia nome"})),
+        base.has(chiave(n)) ? el("p", {class:"hint", text:"È un biscotto dell'elenco di partenza: si può cambiare il nome ma non toglierlo."})
+          : el("div", {class:"row"}, el("button", {type:"button", class:"mini pericolo", "data-db-bisc-no":n, disabled:off, text:"Togli dall'elenco"}))));
+    }
     return riga;
   }))];
   if (tolti.length) out.push(el("section", {class:"corr-rep"}, el("p", {class:"label-sm", text:"Tolti dall'elenco"}),
@@ -4372,6 +4448,7 @@ async function corrElimina(id){
 }
 /* ---------- cambiare l'elenco dei prodotti (ordini o prenotazioni) ---------- */
 async function dbAggiungi(){
+  if (S.dbScheda === "biscotti") return biscAggiungi();
   const parte = parteProd(S.dbScheda), inp = $("db-nuovo-prod");
   const t = inp ? inp.value.trim() : "";
   if (!t){ if (inp) inp.focus(); return; }
@@ -4384,6 +4461,7 @@ async function dbAggiungi(){
 /* cambiare nome: il nome vecchio e tutti i suoi modi di scriverlo portano al nome nuovo,
    anche nelle richieste e prenotazioni già mandate. Se il nome nuovo c'è già, i due prodotti si uniscono. */
 async function dbRinomina(vecchio){
+  if (S.dbScheda === "biscotti") return biscRinomina(vecchio);
   const parte = parteProd(S.dbScheda), inp = $("db-mod-nome");
   const t = inp ? inp.value.trim() : "";
   if (!t){ if (inp) inp.focus(); return; }
@@ -4462,6 +4540,46 @@ async function biscTogliNuovo(nome){
       aggiunte: (Array.isArray(d.aggiunte) ? d.aggiunte : []).filter(function(x){ return chiave(x) !== chiave(nome); }) };
   });
   if (ok) avviso("Tolto dall'elenco: " + nome + ".");
+}
+/* il titolare aggiunge un biscotto all'elenco: è già confermato */
+async function biscAggiungi(){
+  const inp = $("db-nuovo-prod");
+  const t = inp ? inp.value.trim() : "";
+  if (!t){ if (inp) inp.focus(); return; }
+  const nome = maiuscola(t).slice(0, 60);
+  const c = catalogoBisc().find(function(x){ return chiave(x) === chiave(nome); });
+  if (c){ avviso("«" + c + "» c'è già nell'elenco."); return; }
+  const ok = await salvaBiscImp(function(d){
+    const nomi = Object.assign({}, d.nomi); delete nomi[chiave(nome)];
+    return { tolti: senzaTolto(d, nome), confermati: conNome(d.confermati, nome), aggiunte: conNome(d.aggiunte, nome).slice(-60), nomi: nomi };
+  });
+  if (ok){ if ($("db-nuovo-prod")) $("db-nuovo-prod").value = ""; avviso("«" + nome + "» è nell'elenco dei biscotti."); registra("biscotto aggiunto", {}); }
+}
+/* cambiare il nome di un biscotto: il nome vecchio porta al nuovo, anche nelle comande già fatte.
+   Se il nome nuovo c'è già, i due biscotti diventano uno. */
+async function biscRinomina(vecchio){
+  const inp = $("db-mod-nome");
+  const t = inp ? inp.value.trim() : "";
+  if (!t){ if (inp) inp.focus(); return; }
+  let nuovo = maiuscola(t).slice(0, 60);
+  if (nuovo === vecchio){ S.dbMod = ""; return renderTutto(); }
+  const c = catalogoBisc().find(function(x){ return chiave(x) === chiave(nuovo) && chiave(x) !== chiave(vecchio); });
+  if (c){
+    const si = await chiedi("«" + c + "» c'è già.", "I due biscotti diventano uno solo: «" + vecchio + "» si chiamerà «" + c + "», anche nelle comande già fatte.", "Sì, uniscili", "No");
+    if (!si) return;
+    nuovo = c;
+  }
+  const ok = await salvaBiscImp(function(d){
+    const nomi = Object.assign({}, d.nomi);
+    /* tutti i nomi che portavano al vecchio ora portano al nuovo */
+    for (const k in nomi){ if (chiave(nomi[k]) === chiave(vecchio)) nomi[k] = nuovo; }
+    nomi[chiave(vecchio)] = nuovo;
+    delete nomi[chiave(nuovo)];
+    const base = BISCOTTI_BASE.some(function(x){ return chiave(x) === chiave(nuovo); });
+    const agg = (Array.isArray(d.aggiunte) ? d.aggiunte : []).filter(function(x){ return chiave(x) !== chiave(vecchio); });
+    return { nomi: nomi, tolti: senzaTolto(d, nuovo), confermati: conNome(d.confermati, nuovo), aggiunte: (base ? agg : conNome(agg, nuovo)).slice(-60) };
+  });
+  if (ok){ S.dbMod = ""; avviso("Fatto: «" + vecchio + "» ora si chiama «" + nuovo + "»."); registra("biscotto rinominato", {}); renderTutto(); }
 }
 async function biscRimetti(nome){
   const ok = await salvaBiscImp(function(d){
@@ -5181,7 +5299,7 @@ function renderStatistiche(){
   const manc = prod.filter(function(g){ return g.mancato || g.finito || g.parte; }).sort(function(a, b){ return (b.mancato + b.finito + b.parte) - (a.mancato + a.finito + a.parte); }).slice(0, 10);
   carte.push(cartaStat("Cosa manca più spesso", "Quante volte una cosa chiesta non c'era in magazzino, era finita al panificio o è stata portata solo in parte. Aiuta a riordinare prima.",
     manc.length ? barre(manc.map(function(g){
-      const sotto = [g.mancato ? volte(g.mancato) + " non c'era in magazzino" : "", g.finito ? volte(g.finito) + " finito al panificio" : "", g.parte ? volte(g.parte) + " portato solo in parte" : ""].filter(Boolean).join(" · ");
+      const sotto = [g.mancato ? volte(g.mancato) + " non c'era in magazzino" : "", g.finito ? volte(g.finito) + " finito scorte" : "", g.parte ? volte(g.parte) + " portato solo in parte" : ""].filter(Boolean).join(" · ");
       return { nome: g.nome, n: g.mancato + g.finito + g.parte, sotto: sotto };
     })) : el("p", {class:"vuoto", text:"Niente è mancato in questo periodo."})));
 
@@ -5397,7 +5515,14 @@ function collega(){
     if (b.id === "apri-menu") return apriMenu();
     /* dentro una parte del Database, «Indietro» torna al sotto menù */
     if (b.id === "torna" && inDatabase() && S.dbScheda){ S.dbScheda = ""; S.dbMod = ""; S.corrApri = ""; S.prenCorreggi = ""; renderTutto(); return; }
+    if (b.id === "torna" && inManuale() && S.manPagina){
+      const da = S.manPagina; S.manPagina = null;
+      if (da.sez === "giro" || da.sez === "richieste") return vaiSezione("richieste");
+      return vaiSezione(da.sez, false, da.scheda);
+    }
     if (b.id === "torna") return vaiSezione("richieste");
+    if (b.id === "aiuto-pagina") return apriAiutoPagina();
+    if (b.id === "man-tutte"){ S.manPagina = null; return filtraManuale(); }
     if (b.id === "chiudi-menu") return chiudiMenu(true);
     if (b.dataset.vai) return vaiSezione(b.dataset.vai);
     if (b.dataset.urg) return scegliUrgenza(b.dataset.urg);
@@ -5739,7 +5864,8 @@ function usaLocale(){
     },
     aggiunteBisc: async function(arr){ S.aggiunteBisc = arr.slice(); emetti(); },
     biscImp: async function(cambia){
-      const d = cambia({ aggiunte: S.aggiunteBisc.slice(), confermati: S.biscConfermati.slice(), tolti: S.biscTolti.slice() });
+      const d = cambia({ aggiunte: S.aggiunteBisc.slice(), confermati: S.biscConfermati.slice(), tolti: S.biscTolti.slice(), nomi: Object.assign({}, S.biscNomi) });
+      if (d.nomi){ S.biscNomi = nomiBiscPuliti(d.nomi); bisc.forEach(function(v){ v.nome = nomeBiscGiusto(v.nome); }); }
       if (d.aggiunte) S.aggiunteBisc = d.aggiunte.slice();
       if (d.confermati) S.biscConfermati = d.confermati.slice();
       if (d.tolti) S.biscTolti = d.tolti.slice();
@@ -5826,6 +5952,8 @@ function applicaImpostazioni(){
   S.aggiunteBisc = bis ? testi(bis.aggiunte, 60, -60) : [];
   S.biscConfermati = bis ? testi(bis.confermati, 60, 0) : [];
   S.biscTolti = bis ? testi(bis.tolti, 60, 0) : [];
+  S.biscNomi = nomiBiscPuliti(bis && bis.nomi);
+  S.biscotti.forEach(function(b){ b.nome = nomeBiscGiusto(b.nome); });
   S.prodImp = prodottiCondivisi(RAW.imp.prodotti);
   S.prodRich = prodottiRichCondivisi(RAW.imp["prodotti-richieste"]);
   impostaNumeri(RAW.imp.numeri);
@@ -7116,6 +7244,7 @@ async function avvia(){
         S.biscGrezzo = dati;
         S.biscConfermati = testi(dati.confermati, 60, 0);
         S.biscTolti = testi(dati.tolti, 60, 0);
+        S.biscNomi = nomiBiscPuliti(dati.nomi);
       }
       if (d.id === "biscotti" && Array.isArray(dati.aggiunte)){
         aggiunte = dati.aggiunte.filter(function(x){ return typeof x === "string" && x.trim(); }).map(function(x){ return x.trim().slice(0, 60); }).slice(-60);
