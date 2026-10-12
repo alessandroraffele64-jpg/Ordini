@@ -569,6 +569,30 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
 .codici-lista{display:flex;flex-direction:column;gap:8px}
 .codici-lista li{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 10px}
 .codici-lista code{font-size:16px;font-weight:700;letter-spacing:.04em}
+.man-capitoli{display:flex;flex-direction:column;gap:10px}
+.man-titolo{margin:0 0 4px;font-size:18px}
+.man-domanda{border-top:1px solid var(--line-2)}
+.man-domanda summary{cursor:pointer;font-weight:700;padding:10px 0;min-height:24px}
+.man-domanda p{margin:0 0 12px;line-height:1.55}
+.man-tasto{display:inline-block;border:1.5px solid var(--line);background:var(--surface);border-radius:8px;padding:0 7px;font-weight:700;font-size:14px;line-height:1.6;white-space:nowrap}
+.imp-lista{display:flex;flex-direction:column;gap:10px}
+.imp-voce{display:flex;flex-direction:column;gap:6px}
+.imp-voce .hint{margin:0}
+.imp-nome{font-weight:700;margin:0}
+.imp-numero{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.imp-piu{min-width:48px;min-height:44px;font-size:20px}
+.imp-valore{min-width:110px;text-align:center;font-weight:700;font-size:18px}
+.imp-valore.cambiato{color:var(--accent,inherit);text-decoration:underline;text-underline-offset:4px}
+.imp-salva{min-height:44px;padding:0 18px}
+.imp-base{margin:0}
+.permessi{flex-basis:100%;display:flex;flex-direction:column;gap:2px;padding:6px 0 4px;border-bottom:1px dashed var(--line)}
+.perm-riga{display:flex;align-items:center;gap:8px;margin:0;min-height:40px}
+.perm-nome{flex:1;min-width:0}
+.perm-stato{font-size:13px;color:var(--muted)}
+.perm-stato.cambiata{color:var(--ink);font-weight:700}
+.perm-tasto{appearance:none;border:1.5px solid var(--line);background:var(--surface);color:var(--muted);border-radius:999px;min-width:58px;min-height:36px;font-weight:700;font-size:14px;cursor:pointer}
+.perm-tasto[aria-checked="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.codici-lista li:has(.permessi){padding-bottom:6px}
 @media (prefers-reduced-motion: no-preference){
   .switch button,.chip span,.azione,.mini{transition:background-color .15s,color .15s,border-color .15s}
 }
@@ -719,9 +743,9 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
       <details class="crono" id="crono-negozio" hidden>
         <summary><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 4v4h4"></path><path d="M12 8v4l3 2"></path></svg>Cronologia: cose tolte <span class="crono-n" id="n-crono-negozio"></span></summary>
         <div class="blocco">
-          <p class="hint">Quello che è stato tolto negli ultimi 7 giorni. Recupera lo rimette in lista; può farlo solo chi l'aveva chiesto.</p>
+          <p class="hint">Quello che è stato tolto negli ultimi <span class="giorni-crono">7 giorni</span>. Recupera lo rimette in lista; può farlo solo chi l'aveva chiesto.</p>
           <ul class="lista" id="lista-crono-negozio"></ul>
-          <p class="vuoto" id="vuoto-crono-negozio">Niente tolto negli ultimi 7 giorni.</p>
+          <p class="vuoto" id="vuoto-crono-negozio">Niente tolto negli ultimi <span class="giorni-crono">7 giorni</span>.</p>
         </div>
       </details>
     </div>
@@ -737,7 +761,7 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
       </form>
       <div class="blocco" id="mag-segnate-box" hidden>
         <p class="label-sm">Finite in magazzino</p>
-        <p class="hint">Le avete segnate voi: le vedono solo i titolari e chi fa il giro.</p>
+        <p class="hint">Le avete segnate voi: le vede solo chi ha questa sezione (titolari, chi fa il giro e chi l'ha avuta in più).</p>
         <ul class="lista" id="mag-segnate"></ul>
       </div>
       <p class="hint" id="mancanti-spiega"></p>
@@ -788,8 +812,21 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
     <div class="view" id="pannello-persone" hidden>
       <div class="card blocco">
         <p class="hint">Se qualcuno dimentica il PIN o non lavora più da voi, tocca Azzera: non può più entrare, le sue richieste restano. Se serve, si registra di nuovo con lo stesso nome e il codice del negozio.</p>
+        <p class="hint">Sotto ogni nome ci sono le sezioni che vede. Di partenza sono quelle del suo ruolo; tocca «Sì» o «No» per dare o togliere una sezione solo a quella persona. Sul suo telefono cambia appena l'app si aggiorna.</p>
         <ul class="codici-lista" id="persone-lista"></ul>
       </div>
+    </div>
+
+    <!-- Impostazioni: solo titolari. I numeri dell'app, uguali per tutti i telefoni -->
+    <div class="view" id="pannello-impostazioni" hidden>
+      <p class="hint">Qui cambi i tempi dell'app. Valgono per tutti i telefoni. Usa − e +, poi «Salva». «Rimetti come prima» torna al numero di partenza.</p>
+      <div class="blocco imp-lista" id="imp-lista"></div>
+    </div>
+
+    <!-- Come funziona: per tutti, ognuno vede le sue parti -->
+    <div class="view" id="pannello-manuale" hidden>
+      <p class="hint">Tocca una domanda per leggere la risposta. Vedi solo le parti che servono a te.</p>
+      <div class="blocco man-capitoli" id="man-capitoli"></div>
     </div>
 
     <!-- Database: solo titolari. Ordini, Prenotazioni, Biscotti: cose nuove da controllare ed elenco completo -->
@@ -860,9 +897,9 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
         <details class="crono" id="crono-bisc" hidden>
           <summary><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 4v4h4"></path><path d="M12 8v4l3 2"></path></svg>Cronologia: biscotti tolti <span class="crono-n" id="n-crono-bisc"></span></summary>
           <div class="blocco">
-            <p class="hint">Biscotti tolti negli ultimi 7 giorni. Recupera li rimette tra quelli chiesti al panificio; può farlo solo chi li aveva chiesti.</p>
+            <p class="hint">Biscotti tolti negli ultimi <span class="giorni-crono">7 giorni</span>. Recupera li rimette tra quelli chiesti al panificio; può farlo solo chi li aveva chiesti.</p>
             <ul class="lista" id="lista-crono-bisc"></ul>
-            <p class="vuoto" id="vuoto-crono-bisc">Niente tolto negli ultimi 7 giorni.</p>
+            <p class="vuoto" id="vuoto-crono-bisc">Niente tolto negli ultimi <span class="giorni-crono">7 giorni</span>.</p>
           </div>
         </details>
       </div>
@@ -875,9 +912,9 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
         <details class="crono" id="crono-fatti" hidden>
           <summary><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 4v4h4"></path><path d="M12 8v4l3 2"></path></svg> Cronologia: biscotti fatti <span class="crono-n" id="n-crono-fatti"></span></summary>
           <div class="blocco">
-            <p class="hint">Biscotti segnati come fatti negli ultimi 7 giorni. Se è stato uno sbaglio, Rimetti da fare li riporta in lista come prima.</p>
+            <p class="hint">Biscotti segnati come fatti negli ultimi <span class="giorni-crono">7 giorni</span>. Se è stato uno sbaglio, Rimetti da fare li riporta in lista come prima.</p>
             <ul class="lista" id="lista-crono-fatti"></ul>
-            <p class="vuoto" id="vuoto-crono-fatti">Niente segnato come fatto negli ultimi 7 giorni.</p>
+            <p class="vuoto" id="vuoto-crono-fatti">Niente segnato come fatto negli ultimi <span class="giorni-crono">7 giorni</span>.</p>
           </div>
         </details>
       </div>
@@ -933,9 +970,9 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
     <details class="crono" id="crono-giro" hidden>
       <summary><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 4v4h4"></path><path d="M12 8v4l3 2"></path></svg>Cronologia: cose tolte <span class="crono-n" id="n-crono-giro"></span></summary>
       <div class="blocco">
-        <p class="hint">Quello che hai tolto tu negli ultimi 7 giorni. Recupera lo rimette in lista.</p>
+        <p class="hint">Quello che hai tolto tu negli ultimi <span class="giorni-crono">7 giorni</span>. Recupera lo rimette in lista.</p>
         <ul class="lista" id="lista-crono-giro"></ul>
-        <p class="vuoto" id="vuoto-crono-giro">Niente tolto negli ultimi 7 giorni.</p>
+        <p class="vuoto" id="vuoto-crono-giro">Niente tolto negli ultimi <span class="giorni-crono">7 giorni</span>.</p>
       </div>
     </details>
     <div class="esempi" id="esempi-box" hidden>
@@ -1285,7 +1322,7 @@ function pillArrivata(){ return el("span", {class:"pill p-arrivata", text:"Arriv
 /* nelle consegne (Massimo e titolari) le cose che non ci sono in magazzino escono dalla lista */
 function mancaInMagazzino(r){ return r.prep === "manca" && r.stato === "attesa"; }
 /* "È arrivato in magazzino" lo segnano solo i titolari e chi fa il giro */
-function puoArrivato(){ return !!store && !S.sola && !!S.ruolo && (S.ruolo.tipo === "titolare" || S.ruolo.tipo === "giro"); }
+function puoArrivato(){ return !!store && !S.sola && haSezione("mancanti"); }
 /* «Da comprare»: finché non arriva in magazzino sta nella sezione «Non in magazzino» (non nella striscia rossa) */
 function daComprareAperta(r){ return r.da === "Da comprare" && !r.arrivatoAlle && r.stato === "attesa" && r.per !== PROMEMORIA; }
 function daComprare(){ return S.richieste.filter(daComprareAperta); }
@@ -1340,8 +1377,8 @@ function testoGiorno(s){
   if (s === domaniStr()) return "domani";
   return fmtGiornoLungo.format(msDelGiorno(s));
 }
-/* cose appena arrivate (da altri): azzurre e in cima per 20 secondi, poi vanno al loro posto */
-const SECONDI_NUOVE = 20;
+/* cose appena arrivate (da altri): azzurre e in cima per num("nuove") secondi, poi vanno al loro posto */
+/* quanti secondi restano azzurre le cose nuove: num("nuove") */
 S.visti = new Set(); S.nuove = new Map(); S.vistiPronti = false;
 function segnaNuove(richieste, pren){
   const ora = Date.now();
@@ -1352,11 +1389,11 @@ function segnaNuove(richieste, pren){
   });
   if (S.pronto) S.vistiPronti = true;
   let prossima = 0;
-  S.nuove.forEach(function(t, id){ if (ora - t >= SECONDI_NUOVE * 1000) S.nuove.delete(id); else prossima = Math.max(prossima, t); });
+  S.nuove.forEach(function(t, id){ if (ora - t >= num("nuove") * 1000) S.nuove.delete(id); else prossima = Math.max(prossima, t); });
   richieste.concat(pren).forEach(function(r){ r.nuova = S.nuove.has(r.id); });
   if (S.nuove.size){
     clearTimeout(S.timerNuove);
-    S.timerNuove = setTimeout(function(){ ricomponi(); renderTutto(); }, Math.max(500, prossima + SECONDI_NUOVE * 1000 - ora + 200));
+    S.timerNuove = setTimeout(function(){ ricomponi(); renderTutto(); }, Math.max(500, prossima + num("nuove") * 1000 - ora + 200));
   }
 }
 function ricomponi(){
@@ -1386,6 +1423,49 @@ function ricomponi(){
   S.programmate = programmate.sort(function(a, b){ return a.perIl.localeCompare(b.perIl) || a.creato - b.creato; });
 }
 const SETTE_GIORNI = 7 * 86400000;
+
+/* ---------- Impostazioni (solo titolari): i numeri dell'app ----------
+   Valgono per tutti i telefoni: si salvano nelle impostazioni condivise, chiave "numeri"
+   ({ viaVia: 15, ferma: 3, … }); un numero che non c'è vuol dire «come prima» (base).
+   Se in futuro si aggiunge un numero nuovo all'app, va messo anche qui. */
+const NUMERI = [
+  { k:"viaVia", nome:"Avviso «Mentre eri via»", unita:"secondi", base:15, min:5, max:120, passo:5,
+    spiega:"Quando riapri l'app, in alto compare l'elenco di quello che è arrivato mentre eri via. Quanti secondi resta prima di chiudersi da solo." },
+  { k:"avvisi", nome:"Avvisi brevi in alto", unita:"secondi", base:6, min:3, max:60, passo:1,
+    spiega:"Gli avvisi che compaiono in alto come quelli del telefono (per esempio quando arriva una richiesta nuova). Quanti secondi restano." },
+  { k:"nuove", nome:"Cose nuove in azzurro", unita:"secondi", base:20, min:5, max:300, passo:5,
+    spiega:"Le cose arrivate da poco si vedono in azzurro. Quanti secondi restano azzurre dopo che hai aperto l'app." },
+  { k:"ferma", nome:"«Ferma da…»", unita:"ore", base:2, min:1, max:24, passo:1,
+    spiega:"Dopo quante ore una richiesta non ancora fatta diventa arancione con la scritta «Ferma da…»." },
+  { k:"conferma", nome:"Tasti con doppio tocco", unita:"secondi", base:4, min:2, max:15, passo:1,
+    spiega:"Tasti come «Togli» e «Non c'è» chiedono un secondo tocco su «Conferma». Quanti secondi resta il «Conferma» prima di tornare com'era." },
+  { k:"crono", nome:"Cronologia delle cose tolte", unita:"giorni", base:7, min:1, max:30, passo:1,
+    spiega:"Quanti giorni restano in fondo alla pagina le richieste tolte (che si possono recuperare) e i biscotti tolti o fatti." },
+  { k:"giorni", nome:"Giorni di richieste caricate", unita:"giorni", base:45, min:14, max:180, passo:5,
+    spiega:"Quanti giorni indietro l'app carica le richieste quando si apre. Più giorni vuol dire app più lenta ad aprirsi. Le cose che non ci sono in magazzino e le prenotazioni si caricano sempre. Vale dalla prossima volta che si apre l'app." },
+  { k:"registroMesi", nome:"Registro di come si usa l'app", unita:"mesi", base:6, min:1, max:24, passo:1,
+    spiega:"Per quanti mesi si tengono le righe del registro, poi si cancellano da sole. Adesso il registro è spento." }
+];
+function numeriPuliti(d){
+  const out = {};
+  if (d && typeof d === "object") NUMERI.forEach(function(n){
+    const v = d[n.k];
+    if (typeof v === "number" && isFinite(v) && v >= n.min && v <= n.max) out[n.k] = Math.round(v);
+  });
+  return out;
+}
+function numeriRicordati(){ try { return numeriPuliti(JSON.parse(leggi("numeri") || "{}")); } catch(e){ return {}; } }
+/* il valore di adesso di un numero (se nessuno l'ha cambiato, quello di base) */
+function num(k){
+  const n = NUMERI.find(function(x){ return x.k === k; });
+  const m = S.numeri || (S.numeri = numeriRicordati());
+  return m[k] !== undefined ? m[k] : n.base;
+}
+function impostaNumeri(d){
+  S.numeri = numeriPuliti(d);
+  /* sul telefono: serve all'apertura, prima che arrivino i dati (es. quanti giorni caricare) */
+  ricorda("numeri", JSON.stringify(S.numeri));
+}
 let timerAvviso = 0;
 function avviso(msg){
   $("avviso").textContent = msg;
@@ -1770,7 +1850,7 @@ async function annulla(id){
   if (S.armato !== id){
     S.armato = id; renderTutto();
     clearTimeout(timerArmato);
-    timerArmato = setTimeout(function(){ S.armato = null; renderTutto(); }, 4000);
+    timerArmato = setTimeout(function(){ S.armato = null; renderTutto(); }, num("conferma") * 1000);
     return;
   }
   clearTimeout(timerArmato);
@@ -1813,7 +1893,7 @@ function armaManca(id){
   if (S.armatoManca !== id){
     S.armatoManca = id; renderTutto();
     clearTimeout(timerManca);
-    timerManca = setTimeout(function(){ S.armatoManca = null; renderTutto(); }, 4000);
+    timerManca = setTimeout(function(){ S.armatoManca = null; renderTutto(); }, num("conferma") * 1000);
     return;
   }
   clearTimeout(timerManca);
@@ -1999,7 +2079,7 @@ async function togliBiscotto(id){
   if (S.armatoBisc !== id){
     S.armatoBisc = id; renderBiscotti();
     clearTimeout(timerBisc);
-    timerBisc = setTimeout(function(){ S.armatoBisc = null; renderBiscotti(); }, 4000);
+    timerBisc = setTimeout(function(){ S.armatoBisc = null; renderBiscotti(); }, num("conferma") * 1000);
     return;
   }
   clearTimeout(timerBisc); S.armatoBisc = null;
@@ -2027,7 +2107,7 @@ async function fattoBisc(k){
   if (S.armatoFatto !== k){
     S.armatoFatto = k; renderBiscotti();
     clearTimeout(timerFatto);
-    timerFatto = setTimeout(function(){ S.armatoFatto = null; renderBiscotti(); }, 4000);
+    timerFatto = setTimeout(function(){ S.armatoFatto = null; renderBiscotti(); }, num("conferma") * 1000);
     return;
   }
   clearTimeout(timerFatto); S.armatoFatto = null;
@@ -2208,7 +2288,7 @@ function renderMancanti(){
 /* Striscia rossa, uguale per tutti: solo i nomi di quello che non c'è in magazzino,
    una volta sola anche se manca per tutti e due i negozi. Resta in alto finché la cosa non arriva.
    Alta al massimo 2 righe; se non ci sta tutto, «Mostra tutto». */
-function vedeMancanti(){ return !!S.ruolo && (S.ruolo.tipo === "titolare" || S.ruolo.tipo === "giro"); }
+function vedeMancanti(){ return haSezione("mancanti"); }
 function nomiNonInMagazzino(){
   const visti = new Set(), nomi = [];
   nonInMagazzino().sort(function(a, b){ return a.prepAlle - b.prepAlle; }).forEach(function(r){
@@ -2293,9 +2373,9 @@ function meta(parti){
 function pillDest(per){
   return el("span", {class:"pill dest " + classeDest(per), text: per === PROMEMORIA ? "Promemoria" : "per " + per});
 }
-/* Richieste ferme: in attesa da più di ORE_FERMA ore, oppure rimaste indietro
+/* Richieste ferme: in attesa da più di num("ferma") ore, oppure rimaste indietro
    (almeno SCAVALCATE_MIN cose chieste dopo, per lo stesso negozio e dallo stesso posto, sono già arrivate). */
-const ORE_FERMA = 2;
+/* dopo quante ore una richiesta è «ferma»: num("ferma") */
 /* "rimasta indietro" solo se almeno tante cose chieste dopo sono già arrivate */
 const SCAVALCATE_MIN = 3;
 function testoOre(ore){ return ore < 24 ? (ore === 1 ? "1 ora" : ore + " ore") : (ore < 48 ? "1 giorno" : Math.floor(ore / 24) + " giorni"); }
@@ -2314,7 +2394,7 @@ function infoFerma(r){
     d.setHours(Number(t[0]), Number(t[1]), 0, 0);
     if (ora < d.getTime()) return null;
   }
-  return ore >= ORE_FERMA ? "Ferma da " + testoOre(ore) : null;
+  return ore >= num("ferma") ? "Ferma da " + testoOre(ore) : null;
 }
 function pillUrgente(r){
   const pills = [
@@ -2373,7 +2453,7 @@ function rigaNegozio(r){
   if (r.stato === "attesa" && puoTogliere(r)) li.append(bottoneTogli(r, false));
   return li;
 }
-/* cronologia: le cose tolte negli ultimi 7 giorni, con Recupera */
+/* cronologia: le cose tolte negli ultimi giorni (num("crono")), con Recupera */
 function rigaTolta(r, conDest){
   const li = el("li", {class:"riga tolta"},
     el("div", {class:"riga-main"}, testoArticolo(r),
@@ -2383,7 +2463,7 @@ function rigaTolta(r, conDest){
   return li;
 }
 function renderCrono(dove, lista, conDest){
-  const da = Date.now() - SETTE_GIORNI;
+  const da = Date.now() - num("crono") * 86400000;
   const l = lista.filter(function(r){ return r.toltoAlle >= da; })
     .sort(function(a, b){ return b.toltoAlle - a.toltoAlle; }).slice(0, 40);
   $("crono-" + dove).hidden = !store;
@@ -2561,8 +2641,8 @@ function renderBiscNegozio(){
   }));
   $("bisc-chiesti-wrap").hidden = chiesti.length === 0;
 
-  /* cronologia: biscotti tolti negli ultimi 7 giorni */
-  const da = Date.now() - SETTE_GIORNI;
+  /* cronologia: biscotti tolti negli ultimi giorni (num("crono")) */
+  const da = Date.now() - num("crono") * 86400000;
   const tolti = miei.filter(function(b){ return b.stato === "tolto" && b.toltoAlle >= da; })
     .sort(function(a, b){ return b.toltoAlle - a.toltoAlle; });
   $("crono-bisc").hidden = !store;
@@ -2608,8 +2688,8 @@ function renderBiscPanificio(){
   v.hidden = righe.length > 0;
   v.textContent = S.pronto ? "Nessun biscotto da produrre." : "Carico i biscotti…";
 
-  /* cronologia: biscotti fatti negli ultimi 7 giorni, raggruppati per lotto */
-  const da = Date.now() - SETTE_GIORNI;
+  /* cronologia: biscotti fatti negli ultimi giorni (num("crono")), raggruppati per lotto */
+  const da = Date.now() - num("crono") * 86400000;
   const lotti = new Map();
   S.biscotti.forEach(function(b){
     if (b.stato !== "fatto" || b.fattoAlle < da) return;
@@ -2633,8 +2713,10 @@ function renderBiscPanificio(){
   $("vuoto-crono-fatti").hidden = fatti.length > 0;
 }
 function mostraSez(sez){
-  S.sez = ["biscotti","statistiche","prenotazioni","notifiche","persone","mancanti","database"].indexOf(sez) >= 0 ? sez : "richieste";
+  S.sez = ["biscotti","statistiche","prenotazioni","notifiche","persone","mancanti","database","impostazioni","manuale"].indexOf(sez) >= 0 ? sez : "richieste";
   $("pannello-database").hidden = S.sez !== "database";
+  $("pannello-impostazioni").hidden = S.sez !== "impostazioni";
+  $("pannello-manuale").hidden = S.sez !== "manuale";
   $("pannello-mancanti").hidden = S.sez !== "mancanti";
   $("pannello-notifiche").hidden = S.sez !== "notifiche";
   $("pannello-persone").hidden = S.sez !== "persone";
@@ -2646,20 +2728,261 @@ function mostraSez(sez){
   registraSchermata();
 }
 
+/* ---------- Permessi: chi vede quali sezioni ----------
+   Ogni ruolo ha le sue sezioni di partenza; il titolare, in «Persone registrate», può dare
+   o togliere una sezione a una sola persona. Si salva nelle impostazioni condivise, chiave
+   "permessi": { persone: { "<id della persona>": { mancanti: true, biscotti: false } } }
+   (true = data in più, false = tolta; se non c'è, vale quella del ruolo).
+   Le stesse regole sono anche nel database (supabase/aggiornamento-7-impostazioni-permessi.sql):
+   se si cambiano qui, cambiarle anche lì. Le sezioni dei titolari (Persone registrate,
+   Impostazioni, Statistiche, Database) non si possono dare agli altri. */
+const SEZIONI_PERMESSI = [
+  { id:"consegne", nome:"Giro consegne", spiega:"le cose da caricare e consegnare" },
+  { id:"prenotazioni", nome:"Prenotazioni", spiega:"le prenotazioni dei clienti" },
+  { id:"biscotti", nome:"Biscotti", spiega:"le comande dei biscotti" },
+  { id:"mancanti", nome:"Non in magazzino", spiega:"segnare cosa manca e «È arrivato»" }
+];
+/* ruolo come nel database: corso, piazza-nenni, panificio, consegne, titolare */
+function sezioneDelRuolo(ruolo, id){
+  if (ruolo === "titolare") return true;
+  if (ruolo === "consegne") return id === "consegne" || id === "mancanti";
+  return id === "prenotazioni" || id === "biscotti";
+}
+/* le sezioni che si possono cambiare per una persona di quel ruolo
+   (a chi fa il giro non si danno i Biscotti: sono legati a un negozio) */
+function sezioniCambiabili(ruolo){
+  if (ruolo === "titolare") return [];
+  if (ruolo === "consegne") return SEZIONI_PERMESSI.filter(function(x){ return x.id === "prenotazioni" || x.id === "mancanti"; });
+  return SEZIONI_PERMESSI;
+}
+function permessiPuliti(d){
+  const out = {};
+  const p = d && d.persone;
+  if (p && typeof p === "object") for (const id in p){
+    if (!p[id] || typeof p[id] !== "object") continue;
+    const e = {};
+    SEZIONI_PERMESSI.forEach(function(x){ if (typeof p[id][x.id] === "boolean") e[x.id] = p[id][x.id]; });
+    if (Object.keys(e).length) out[id] = e;
+  }
+  return out;
+}
+function ruoloDb(){ return S.ruolo.tipo === "titolare" ? "titolare" : (S.ruolo.tipo === "giro" ? "consegne" : "negozio"); }
+/* la sezione per una persona: quella del suo ruolo, salvo eccezioni */
+function sezionePer(id, ruolo, sez){
+  if (ruolo === "titolare") return true;
+  if (ruolo === "consegne" && sez === "consegne") return true;
+  if (!sezioniCambiabili(ruolo).some(function(x){ return x.id === sez; })) return sezioneDelRuolo(ruolo, sez);
+  const e = (S.permessi || {})[id];
+  return e && typeof e[sez] === "boolean" ? e[sez] : sezioneDelRuolo(ruolo, sez);
+}
+/* chi sta usando l'app vede questa sezione? (in anteprima: come il ruolo) */
+function haSezione(sez){
+  if (!S.ruolo) return false;
+  const r = ruoloDb();
+  if (S.sito && S.mioId && !S.anteprima && S.ruoloFisso) return sezionePer(S.mioId, S.ruoloFisso === "consegne" ? "consegne" : r, sez);
+  return sezioneDelRuolo(r, sez);
+}
+/* i tasti «Negozio / Consegne»: i titolari, e un negozio a cui è stato dato il giro */
+function puoSwitch(){ return !!S.ruolo && (S.ruolo.tipo === "titolare" || (S.ruolo.tipo === "negozio" && haSezione("consegne"))); }
+function puoPermessi(){ return puoPersone() && !!store && !S.sola; }
+async function cambiaPermesso(id, sez){
+  const p = (S.persone || []).find(function(x){ return x.id === id; });
+  if (!p || !puoPermessi() || S.pending.has("permessi")) return;
+  const ora = sezionePer(id, p.ruolo, sez), base = sezioneDelRuolo(p.ruolo, sez);
+  const nuovo = !ora;
+  S.pending.add("permessi"); mostraPersone();
+  const ok = await scrivi(function(){
+    return store.permessi(function(d){
+      const tutte = Object.assign({}, d.persone);
+      const e = Object.assign({}, tutte[id]);
+      /* se torna come il ruolo, l'eccezione si toglie */
+      if (nuovo === base) delete e[sez]; else e[sez] = nuovo;
+      if (Object.keys(e).length) tutte[id] = e; else delete tutte[id];
+      return { persone: tutte };
+    });
+  });
+  S.pending.delete("permessi");
+  if (ok) avviso((nuovo ? "Fatto: " + p.nome + " adesso vede «" : "Fatto: " + p.nome + " non vede più «") + SEZIONI_PERMESSI.find(function(x){ return x.id === sez; }).nome + "». Sul suo telefono cambia appena l'app si aggiorna.");
+  mostraPersone();
+}
+function righePermessi(x){
+  const cambiabili = sezioniCambiabili(x.ruolo);
+  if (!cambiabili.length) return null;
+  const off = S.pending.has("permessi") || !puoPermessi();
+  const box = el("div", {class:"permessi"});
+  if (x.ruolo === "consegne") box.append(el("p", {class:"perm-riga"}, el("span", {class:"perm-nome", text:"Giro consegne"}), el("span", {class:"perm-stato", text:"sempre: è la sua pagina"})));
+  else box.append(el("p", {class:"perm-riga"}, el("span", {class:"perm-nome", text: x.ruolo === "panificio" ? "Ordini dei negozi" : "Richieste"}), el("span", {class:"perm-stato", text:"sempre: è la sua pagina"})));
+  cambiabili.forEach(function(z){
+    const si = sezionePer(x.id, x.ruolo, z.id), base = sezioneDelRuolo(x.ruolo, z.id);
+    box.append(el("p", {class:"perm-riga"},
+      el("span", {class:"perm-nome", text:z.nome}),
+      el("span", {class:"perm-stato" + (si !== base ? " cambiata" : ""), text: si === base ? "come il suo ruolo" : "cambiata per lei"}),
+      el("button", {type:"button", role:"switch", class:"perm-tasto", "aria-checked":String(si), "data-permesso":x.id + "|" + z.id, disabled:off,
+        "aria-label":z.nome + " per " + x.nome + ": " + (si ? "sì" : "no")}, el("span", {text: si ? "Sì" : "No"}))));
+  });
+  return box;
+}
+
+/* ---------- Impostazioni (solo titolari) ---------- */
+function puoImpostazioni(){ return !!S.owner && !!S.ruolo && S.ruolo.tipo === "titolare" && !!store && !S.sola; }
+function inImpostazioni(){ return S.vista === "negozio" && S.sez === "impostazioni"; }
+function testoNumero(n, v){ return v + " " + (v === 1 ? { secondi:"secondo", ore:"ora", giorni:"giorno", mesi:"mese" }[n.unita] : n.unita); }
+function renderImpostazioni(){
+  if (!inImpostazioni()) return;
+  const off = S.pending.has("numeri");
+  S.bozzaNumeri = S.bozzaNumeri || {};
+  riempi($("imp-lista"), NUMERI.map(function(n){
+    const ora = num(n.k), bozza = S.bozzaNumeri[n.k] !== undefined ? S.bozzaNumeri[n.k] : ora;
+    const cambiato = bozza !== ora;
+    return el("div", {class:"card imp-voce"},
+      el("p", {class:"imp-nome", text:n.nome}),
+      el("p", {class:"hint", text:n.spiega}),
+      el("div", {class:"imp-numero"},
+        el("button", {type:"button", class:"mini imp-piu", "data-num-meno":n.k, disabled: off || bozza <= n.min, "aria-label":"Meno: " + n.nome, text:"−"}),
+        el("output", {class:"imp-valore" + (cambiato ? " cambiato" : ""), "aria-live":"polite", text:testoNumero(n, bozza)}),
+        el("button", {type:"button", class:"mini imp-piu", "data-num-piu":n.k, disabled: off || bozza >= n.max, "aria-label":"Più: " + n.nome, text:"+"}),
+        cambiato ? el("button", {type:"button", class:"primary imp-salva", "data-num-salva":n.k, disabled:off, text:"Salva"}) : null),
+      el("p", {class:"imp-base"},
+        ora === n.base && !cambiato ? el("span", {class:"hint", text:"Come all'inizio."})
+          : el("button", {type:"button", class:"link", "data-num-base":n.k, disabled:off, text:"Rimetti come prima (" + testoNumero(n, n.base) + ")"})));
+  }));
+}
+function cambiaBozzaNumero(k, verso){
+  const n = NUMERI.find(function(x){ return x.k === k; });
+  S.bozzaNumeri = S.bozzaNumeri || {};
+  const da = S.bozzaNumeri[k] !== undefined ? S.bozzaNumeri[k] : num(k);
+  S.bozzaNumeri[k] = Math.min(n.max, Math.max(n.min, da + verso * n.passo));
+  renderImpostazioni();
+}
+async function salvaNumero(k, valore){
+  const n = NUMERI.find(function(x){ return x.k === k; });
+  if (!n || !store || S.sola || S.pending.has("numeri")) return;
+  S.pending.add("numeri"); renderImpostazioni();
+  /* "come prima" si salva vuoto (null): così se un giorno cambia il valore di base, vale quello */
+  const ok = await scrivi(function(){ return store.numeri(function(){ const d = {}; d[k] = valore === n.base ? null : valore; return d; }); });
+  S.pending.delete("numeri");
+  if (ok){
+    delete S.bozzaNumeri[k];
+    avviso("Salvato: " + n.nome + " · " + testoNumero(n, valore) + ". Vale per tutti i telefoni.");
+  }
+  renderImpostazioni();
+}
+
+/* ---------- Manuale «Come funziona» (per tutti, dal menu) ----------
+   Ognuno vede solo i capitoli delle sezioni che ha (segue i permessi); i titolari vedono tutto.
+   OGNI VOLTA CHE SI CAMBIA L'APP, AGGIORNARE ANCHE QUI (vedi CLAUDE.md).
+   Nelle risposte: testo semplice; tasto("…") disegna un tasto come quelli dell'app. */
+function tasto(t){ return el("span", {class:"man-tasto", text:t}); }
+function pill(cls, t){ return el("span", {class:"pill " + cls, text:t}); }
+function secondi(k){ return testoNumero(NUMERI.find(function(n){ return n.k === k; }), num(k)); }
+function capitoliManuale(){
+  const tit = S.ruolo.tipo === "titolare";
+  const negozio = S.ruolo.tipo === "negozio" && S.punto !== "Panificio";
+  const panif = S.ruolo.tipo === "negozio" && S.punto === "Panificio";
+  const cap = [];
+  if (negozio || tit) cap.push({ titolo:"Richieste del negozio", domande:[
+    ["Come chiedo una cosa?", ["Nella pagina principale scrivi in «Cosa serve?» una cosa per riga. La quantità puoi metterla o no (per esempio «2 casse acqua naturale» oppure «Vassoi»). Poi tocca ", tasto("Controlla e invia"), ": si apre «Controlla prima di inviare»."]],
+    ["Cosa controllo prima di inviare?", ["Per ogni cosa vedi:", el("br"),
+      "• il nome: se l'app è sicura mette lei il nome giusto (vedi ✓ e puoi toccare «Lascia com'era»); se ha un dubbio chiede «Quale di questi?» e tu tocchi quello giusto, oppure «Nessuno, è un'altra cosa»;", el("br"),
+      "• da dove si prende: di solito dal Panificio; puoi scegliere anche l'altro negozio, «Da ritirare fuori» (scrivi dove) o «Da comprare»;", el("br"),
+      "• ", tasto("Urgente"), " se serve subito, e ", tasto("+ Nota"), " per chi prepara.", el("br"),
+      "Quando è tutto giusto tocca ", tasto("Sì, invia"), ". Per l'acqua l'app chiede sempre quale: naturale o frizzante, grande o piccola."]],
+    ["Cosa succede quando mando una richiesta?", ["La vedono subito il panificio (se si prende lì), chi fa il giro e i titolari. Sui loro telefoni la cosa nuova è azzurra per " + secondi("nuove") + ". Chi aveva l'app chiusa, quando la riapre, vede in alto l'avviso «Mentre eri via» con quello che è arrivato.", el("br"),
+      "Nella tua lista segui a che punto è: ", pill("p-attesa", "In attesa"), " ", pill("p-prep", "In preparazione"), " ", pill("p-pronto", "Pronto da caricare"), ", poi «In viaggio» e «Consegnato»."]],
+    ["Perché una richiesta è arancione («Ferma da…»)?", ["Vuol dire che aspetta da più di " + secondi("ferma") + " senza che nessuno l'abbia preparata o caricata, oppure che cose chieste dopo sono già partite. Serve a non dimenticarla: se è importante, avvisa chi fa il giro."]],
+    ["Come tolgo una richiesta sbagliata?", ["Tocca ", tasto("Togli"), " e poi, entro " + secondi("conferma") + ", ", tasto("Conferma"), ". La può togliere solo chi l'ha chiesta (o un titolare). Una cosa segnata «non c'è in magazzino» la toglie solo il titolare.", el("br"),
+      "Se hai sbagliato a togliere: in fondo alla pagina, in «Cronologia: cose tolte», restano per " + secondi("crono") + " e c'è ", tasto("Recupera"), "."]],
+    ["E se chiedo una cosa che già non c'è in magazzino?", ["L'app lo sa: la richiesta parte già segnata «non c'è» e resta barrata nella tua lista finché non arriva. Quando arriva vedi «Arrivata in magazzino» e poi viene caricata come le altre."]],
+    ["Cosa vuol dire «Da comprare»?", ["È una cosa che non c'è e va comprata. La vedono i titolari e chi fa il giro, in «Non in magazzino». Quando arriva, va nelle consegne e ve la portano."]],
+    ["Cosa succede se arriva solo una parte?", ["Chi fa il giro carica e consegna quello che c'è. Per quello che manca aggiunge una riga con la parte mancante (per esempio «2 casse Acqua») e la segna «Non c'è»: così resta nella striscia rossa finché non arriva."]],
+    ["E se non c'è campo?", ["Scrivi e invia lo stesso: la richiesta si salva sul telefono e parte da sola appena torna il campo. In alto vedi quante cose aspettano. Non uscire dall'app finché non sono partite."]]
+  ]});
+  if (panif || tit) cap.push({ titolo:"Panificio e magazzino", domande:[
+    ["Cosa vedo nella mia pagina?", ["Le richieste dei negozi che si prendono al Panificio, divise per reparto (Pane e forno, Frigo, Bevande…), con il colore del negozio che le ha chieste. Le urgenti sono in cima."]],
+    ["Come segno a che punto sono?", ["Su ogni cosa ci sono i tasti ", tasto("In preparazione"), " ", tasto("Pronto da caricare"), " ", tasto("Finito al panificio"), " e «Non c'è in magazzino». «Pronto da caricare» avvisa chi fa il giro. Toccare di nuovo lo stesso tasto lo toglie."]],
+    ["E se una cosa non c'è in magazzino?", ["Segnala «Non c'è in magazzino»: la vedono tutti nella striscia rossa in alto. Poi non la puoi togliere tu: quando arriva la segna «È arrivato» chi fa il giro o un titolare."]],
+    ["Posso chiedere anche io delle cose?", ["Sì, come i negozi: scrivi in «Cosa serve?» e invia. Vale tutto quello che c'è nel capitolo delle richieste."]]
+  ]});
+  if (haSezione("consegne")) cap.push({ titolo:"Giro consegne", domande:[
+    ["Come funziona il giro?", ["In alto scegli ", tasto("Carico per reparto"), " (le cose da caricare, divise per reparto) oppure ", tasto("Giro per negozio"), " (le cose caricate, divise per negozio)."]],
+    ["Come segno quello che carico e consegno?", ["Tocca ", tasto("Caricato"), " quando la cosa è sul furgone: il negozio la vede «In viaggio». Al negozio tocca ", tasto("Consegnato"), ", oppure ", tasto("Tutto consegnato"), " per tutte le cose di quel negozio. «Annulla» rimette la cosa da caricare."]],
+    ["E se una cosa non c'è in magazzino?", ["Tocca «Non c'è» e poi «Conferma». La cosa esce dalla tua lista e va nella striscia rossa in alto, che vedono tutti. Il negozio la vede barrata."]],
+    ["Cosa sono le cose verdi in cima?", ["Sono cose che mancavano e adesso sono «Arrivate in magazzino»: vanno portate al negozio che le aveva chieste. Restano verdi e in cima finché non sono consegnate."]],
+    ["Posso aggiungere io una cosa?", ["Sì, con «+ Aggiungi tu una cosa da portare o da ricordare». Puoi scegliere un negozio, oppure «Promemoria» se è solo per te (es. «Passare a prendere le casse»): quando l'hai fatta tocca ", tasto("Fatto"), "."]]
+  ]});
+  if (vedePren()) cap.push({ titolo:"Prenotazioni", domande:[
+    ["Come scrivo una prenotazione?", ["Tocca ", tasto("+ Nuova prenotazione"), ". Scegli il giorno, dove la ritira il cliente (Corso, Piazza Nenni o Panificio; il tuo è già scelto), il nome e, se vuoi, il telefono. Scrivi i prodotti, una riga per uno. L'ora è obbligatoria: un'ora precisa oppure «Tutta la giornata»."]],
+    ["Cosa succede quando tocco Salva?", ["L'app controlla i nomi dei prodotti: se è sicura mette il nome giusto (✓), se ha un dubbio chiede «Volevi dire…?». Se è un prodotto nuovo, lo controlla poi un titolare. La prenotazione si salva solo quando ogni dubbio ha una risposta."]],
+    ["Come vedo cosa preparare?", ["Ogni giorno ha la sua pagina con il totale «Ancora da preparare» (si sommano solo le stesse misure: kg con kg, pezzi con pezzi). Le prenotazioni «Tutta la giornata» sono in cima."]],
+    ["Cosa vuol dire «Messo da parte»?", ["Che la prenotazione è pronta e messa da parte nel posto dove il cliente la ritira. Lo può premere chiunque."]],
+    ["Come disdico una prenotazione?", ["Tocca ", tasto("Disdici"), " e scegli il motivo (è obbligatorio). Resta barrata in fondo al giorno con chi l'ha disdetta. Se è stato uno sbaglio, ", tasto("Ripristina"), ". Chi fa il giro non può disdire."]],
+    ["Come trovo una prenotazione?", ["Tocca ", tasto("🔍 Cerca"), " e scrivi il nome del cliente, un prodotto o il telefono, anche a metà. Cerca da 7 giorni fa in avanti."]]
+  ]});
+  if (vedeBiscotti()) cap.push({ titolo:"Biscotti", domande: panif && !tit ? [
+    ["Cosa vedo?", ["Le comande di biscotti dei negozi, con l'urgenza: «Finiti» (zero pacchi, urgenti) o «Pochi pacchi»."]],
+    ["Come segno che li ho fatti?", ["Tocca il tasto sul biscotto: il negozio lo vede fatto. Se è stato uno sbaglio, in fondo c'è «Rimetti da fare»."]]
+  ] : [
+    ["Come chiedo dei biscotti?", ["Tocca ", tasto("Nuova comanda"), ", scegli quanto sono urgenti («Finiti» o «Pochi pacchi») e tocca i biscotti che mancano. Non parte niente finché non premi ", tasto("Invia comanda"), ". Quando hai finito, ", tasto("Ho finito"), "."]],
+    ["Un biscotto non è nell'elenco?", ["Scrivilo in «Un biscotto che non è in elenco» e tocca Aggiungi. Un titolare poi lo conferma o lo toglie dall'elenco."]]
+  ]});
+  cap.push({ titolo:"Cose che non ci sono in magazzino", domande:[
+    ["Cos'è la striscia rossa in alto?", ["È l'elenco di tutto quello che manca in magazzino, uguale per tutti. Resta in alto finché la cosa non arriva. Se è lunga, tocca ", tasto("Mostra tutto"), "."]],
+    ["Chi la toglie?", ["Quando la cosa arriva, chi fa il giro o un titolare (o chi ha avuto in più la sezione «Non in magazzino») tocca ", tasto("È arrivato"), " e conferma. Le cose arrivate vanno nelle consegne, in cima, per essere portate al negozio."]]
+  ].concat(vedeMancanti() ? [
+    ["Come segno una cosa che manca in magazzino?", ["Nella sezione «Non in magazzino» tocca ", tasto("+ Segna cosa manca"), ", scrivi il nome e Salva. Si vede solo in quella sezione (non nella striscia rossa). Quando arriva, ", tasto("È arrivato"), "."]],
+    ["Cosa c'è nella sezione «Non in magazzino»?", ["Tre parti: le richieste dei negozi segnate «non c'è», le cose segnate con «+ Segna cosa manca», e quelle «Da comprare». Su ognuna c'è «È arrivato». Quando arriva una cosa, arrivano insieme tutte quelle con lo stesso nome."]]
+  ] : [])});
+  const notif = {
+    "corso": "Una vostra richiesta non c'è in magazzino; l'altro negozio chiede qualcosa a voi; le prenotazioni che i clienti ritirano da voi; le prenotazioni disdette da qualcun altro.",
+    "piazza-nenni": "Una vostra richiesta non c'è in magazzino; l'altro negozio chiede qualcosa a voi; le prenotazioni che i clienti ritirano da voi; le prenotazioni disdette da qualcun altro.",
+    "panificio": "Nuove richieste per il panificio; nuove prenotazioni; prenotazioni disdette che si ritirano al panificio; comande di biscotti.",
+    "consegne": "Ogni nuova richiesta (le urgenti sempre); pronto da caricare dal panificio; cose arrivate in magazzino da portare.",
+    "titolare": "Con «Ricevi tutto»: nuove richieste, prenotazioni e disdette, cose che mancano e che arrivano in magazzino, cose finite, pronti da caricare, biscotti."
+  };
+  const mio = S.ruoloSito || (S.ruolo.tipo === "giro" ? "consegne" : (S.ruolo.tipo === "titolare" ? "titolare" : CHIAVE_NEG[S.punto] || "panificio"));
+  cap.push({ titolo:"Notifiche", domande:[
+    ["Come accendo le notifiche?", ["Dal menu ☰ apri «Notifiche» e tocca ", tasto("Attiva le notifiche"), ": il telefono chiede il permesso. Sull'iPhone funzionano solo se apri l'app dall'icona sulla schermata Home."]],
+    ["Quali notifiche ricevo?", tit ? ["Ognuno sceglie le sue nella sezione Notifiche.", el("br"),
+      "• Corso e Piazza Nenni: " + notif.corso, el("br"), "• Panificio: " + notif.panificio, el("br"), "• Giro: " + notif.consegne, el("br"), "• Titolari: " + notif.titolare]
+      : [(notif[mio] || "") + " Puoi spegnere quelle che non vuoi nella sezione Notifiche."]],
+    ["Tocco una notifica: dove mi porta?", ["Apre l'app nella pagina giusta (per esempio le richieste o le prenotazioni)."]]
+  ]});
+  if (tit) cap.push({ titolo:"Solo per i titolari", domande:[
+    ["Come do una sezione in più (o in meno) a una persona?", ["Dal menu apri «Persone registrate». Sotto ogni nome ci sono le sezioni che vede: tocca ", tasto("Sì"), " o ", tasto("No"), ". Accanto vedi se è «come il suo ruolo» o «cambiata per lei». La pagina principale (Richieste o Giro consegne) non si toglie, e le sezioni dei titolari non si danno agli altri."]],
+    ["A cosa serve «Impostazioni»?", ["Lì cambi i tempi dell'app (per esempio dopo quante ore una richiesta è «Ferma da…»). Valgono per tutti i telefoni. Usa − e +, poi «Salva»; «Rimetti come prima» torna al numero di partenza."]],
+    ["A cosa serve «Database»?", ["Tre parti: Ordini, Prenotazioni, Biscotti. In ognuna ci sono i nomi nuovi o corretti dall'app da controllare («Sì, è giusto», «No, era…», «È un prodotto nuovo»), e in fondo l'elenco completo. Una correzione vale anche per quello già scritto."]],
+    ["Se qualcuno dimentica il PIN o se ne va?", ["In «Persone registrate» tocca «Azzera» e conferma: non può più entrare, le sue richieste restano. Se serve, si registra di nuovo con il codice del negozio."]]
+  ]});
+  return cap;
+}
+function renderManuale(){
+  if (!inManuale()) return;
+  riempi($("man-capitoli"), capitoliManuale().map(function(c){
+    return el("section", {class:"card man-cap"}, el("h3", {class:"man-titolo", text:c.titolo}),
+      ...c.domande.map(function(d){
+        return el("details", {class:"man-domanda"}, el("summary", {text:d[0]}), el("p", null, ...d[1]));
+      }));
+  }));
+}
+function inManuale(){ return S.vista === "negozio" && S.sez === "manuale"; }
+
 /* ---------- menu con le tre lineette ---------- */
 function vociMenu(){
   const nPren = prenVisibili().filter(function(p){ return prenAperta(p) && p.perIl >= oggiStr() && p.perIl <= domaniStr(); }).length;
   const notif = notificheDisponibili() ? [{ id:"notifiche", nome:"Notifiche", n:null }] : [];
   const mancanti = { id:"mancanti", nome:"Non in magazzino", n:nonInMagazzino().length + magAperte().length + daComprare().length };
-  if (S.ruolo.tipo === "giro") return [mancanti].concat(notif);
   const panif = S.punto === "Panificio";
   const nBisc = panif ? biscDaFare().length : S.biscotti.filter(function(b){ return b.stato === "manca" && b.negozio === S.punto; }).length;
-  const voci = [{ id:"prenotazioni", nome:"Prenotazioni", n:nPren }, { id:"biscotti", nome:"Biscotti", n:nBisc }];
+  const voci = [];
+  if (vedePren()) voci.push({ id:"prenotazioni", nome:"Prenotazioni", n:nPren });
+  if (vedeBiscotti()) voci.push({ id:"biscotti", nome:"Biscotti", n:nBisc });
   if (vedeMancanti()) voci.push(mancanti);
   if (puoStat()) voci.push({ id:"statistiche", nome:"Statistiche", n:null });
   if (puoDatabase()) voci.push({ id:"database", nome:"Database", n:contaDatabase().tutti });
   if (puoPersone()) voci.push({ id:"persone", nome:"Persone registrate", n:null });
+  if (puoImpostazioni()) voci.push({ id:"impostazioni", nome:"Impostazioni", n:null });
   voci.push.apply(voci, notif);
+  voci.push({ id:"manuale", nome:"Come funziona", n:null });
   return voci;
 }
 function inNotif(){ return S.vista === "negozio" && S.sez === "notifiche"; }
@@ -2687,8 +3010,9 @@ function renderMenu(){
   /* dentro Biscotti: freccia Indietro al posto del menu */
   $("apri-menu").hidden = bisc;
   $("torna").hidden = !bisc;
-  $("switch-viste").hidden = t !== "titolare" || bisc;
-  $("punti").hidden = t !== "titolare" || inStat() || inPren() || inNotif() || inPersone() || inMancanti() || inDatabase();
+  $("switch-viste").hidden = !puoSwitch() || bisc;
+  $("tab-negozio").textContent = t === "titolare" ? "Negozio" : S.punto;
+  $("punti").hidden = t !== "titolare" || inStat() || inPren() || inNotif() || inPersone() || inMancanti() || inDatabase() || inImpostazioni() || inManuale();
   $("link-personale").hidden = t !== "titolare" || bisc;
   $("codici-box").hidden = !S.sito || !S.owner || t !== "titolare" || bisc;
   renderTestata();
@@ -2707,6 +3031,10 @@ function renderTestata(){
     sopra = "Su questo telefono"; titolo = "Notifiche"; info = "";
   } else if (inPersone()){
     sopra = "Solo per i titolari"; titolo = "Persone registrate"; info = "";
+  } else if (inManuale()){
+    sopra = "Domande e risposte"; titolo = "Come funziona"; info = "";
+  } else if (inImpostazioni()){
+    sopra = "Solo per i titolari"; titolo = "Impostazioni"; info = "";
   } else if (inDatabase()){
     sopra = "Solo per i titolari"; titolo = "Database";
     info = contaTesto(contaDatabase().tutti, "cosa da controllare", "cose da controllare");
@@ -2736,7 +3064,7 @@ function renderTestata(){
   $("eyebrow").textContent = sopra;
   $("titolo").textContent = titolo;
   $("fascia-info").textContent = info;
-  $("app-nome").textContent = inMancanti() ? "Magazzino" : bisc ? "Biscotti" : (stat ? "Statistiche" : (pren ? "Prenotazioni" : (inNotif() ? "Notifiche" : (inPersone() ? "Persone" : (inDatabase() ? "Database" : "Rifornimenti")))));
+  $("app-nome").textContent = inMancanti() ? "Magazzino" : bisc ? "Biscotti" : (stat ? "Statistiche" : (pren ? "Prenotazioni" : (inNotif() ? "Notifiche" : (inPersone() ? "Persone" : (inDatabase() ? "Database" : (inImpostazioni() ? "Impostazioni" : (inManuale() ? "Come funziona" : "Rifornimenti")))))));
 }
 function apriMenu(){
   $("menu").hidden = false; $("menu-velo").hidden = false;
@@ -2760,18 +3088,19 @@ function vaiSezione(id, forza, scheda){
     return;
   }
   chiudiMenu();
-  if (id === "biscotti" || (id === "mancanti" && vedeMancanti()) || (id === "prenotazioni" && vedePren()) || id === "notifiche" || (id === "statistiche" && puoStat()) || (id === "persone" && puoPersone()) || (id === "database" && puoDatabase())){
+  if ((id === "biscotti" && vedeBiscotti()) || (id === "mancanti" && vedeMancanti()) || (id === "prenotazioni" && vedePren()) || id === "notifiche" || (id === "statistiche" && puoStat()) || (id === "persone" && puoPersone()) || (id === "database" && puoDatabase()) || (id === "impostazioni" && puoImpostazioni()) || id === "manuale"){
     if (!inSezioneExtra()) S.vistaPrima = S.vista;
     mostraVista("negozio");
     mostraSez(id);
     if (id === "prenotazioni"){ S.prenGiorno = oggiStr(); S.prenScegli = false; }
     if (id === "persone"){ S.armatoPersona = null; mostraPersone(); }
     if (id === "database"){ S.corrApri = ""; S.prenCorreggi = ""; if (scheda) S.dbScheda = scheda; else sceltaSchedaDb(); }
+    if (id === "impostazioni") S.bozzaNumeri = {};
     if (id === "statistiche") caricaStatistiche();
     if (id === "notifiche") renderNotifiche();
   } else {
     mostraSez("richieste");
-    mostraVista(S.ruolo.tipo === "titolare" ? (S.vistaPrima || S.vistaTitolare) : (S.ruolo.tipo === "giro" ? "consegne" : "negozio"));
+    mostraVista(S.ruolo.tipo === "titolare" ? (S.vistaPrima || S.vistaTitolare) : (S.ruolo.tipo === "giro" ? "consegne" : (puoSwitch() && S.vistaPrima) || "negozio"));
     S.vistaPrima = null;
   }
   renderTutto();
@@ -3123,7 +3452,8 @@ function mioLuogoRitiro(){ return S.ruolo && S.ruolo.tipo === "negozio" && LUOGH
 /* chi vede quali prenotazioni: ogni punto vendita quelle che si ritirano da lui e quelle che ha preso lui,
    il panificio e i titolari tutte, chi fa il giro nessuna */
 function negozioPren(){ return S.ruolo && S.ruolo.tipo === "negozio" && PUNTI_RITIRO.indexOf(S.punto) >= 0 ? S.punto : ""; }
-function vedePren(){ return !!S.ruolo && S.ruolo.tipo !== "giro"; }
+function vedePren(){ return haSezione("prenotazioni"); }
+function vedeBiscotti(){ return S.ruolo && S.ruolo.tipo !== "giro" && haSezione("biscotti"); }
 function prenVisibili(){
   if (!vedePren()) return [];
   const neg = negozioPren();
@@ -4225,7 +4555,7 @@ function renderStatistiche(){
   }
   const arrivate = rr.filter(function(r){ return r.stato === "consegnato" && r.consegnatoAlle > r.creato; });
   const tempi = arrivate.map(function(r){ return r.consegnatoAlle - r.creato; });
-  const limite = ORE_FERMA * 3600000;
+  const limite = num("ferma") * 3600000;
   const lente = arrivate.filter(function(r){ return r.consegnatoAlle - r.creato > limite; }).length +
     rr.filter(function(r){ return r.stato !== "consegnato" && Date.now() - r.creato > limite; }).length;
   const urg = rr.filter(function(r){ return r.urgente; }).length;
@@ -4233,7 +4563,7 @@ function renderStatistiche(){
     el("p", {class:"stat"}, el("b", {text:String(rr.length)}), el("span", {text:"richieste"})),
     el("p", {class:"stat"}, el("b", {text:String(urg)}), el("span", {text:"urgenti (" + Math.round(urg / rr.length * 100) + "%)"})),
     el("p", {class:"stat"}, el("b", {text: tempi.length ? durata(mediana(tempi)) : "–"}), el("span", {text:"di solito per arrivare"})),
-    el("p", {class:"stat" + (lente ? " allerta-ferma" : "")}, el("b", {text:String(lente)}), el("span", {text:"oltre " + ORE_FERMA + " ore"})));
+    el("p", {class:"stat" + (lente ? " allerta-ferma" : "")}, el("b", {text:String(lente)}), el("span", {text:"oltre " + num("ferma") + " ore"})));
   const carte = [tiles];
 
   const prod = perProdotto(rr);
@@ -4361,6 +4691,9 @@ function renderTutto(){
   renderPrenotazioni();
   renderMancanti();
   renderDatabase();
+  renderImpostazioni();
+  renderManuale();
+  document.querySelectorAll(".giorni-crono").forEach(function(x){ x.textContent = testoNumero(NUMERI.find(function(n){ return n.k === "crono"; }), num("crono")); });
 }
 
 /* ---------- interfacce ---------- */
@@ -4380,7 +4713,7 @@ function applicaRuolo(){
   S.vistaPrima = null;
   const t = S.ruolo.tipo;
   document.querySelector(".app").className = "app" + (t === "negozio" ? " dest " + classeDest(S.ruolo.punto) : "");
-  $("switch-viste").hidden = t !== "titolare";
+  $("switch-viste").hidden = !puoSwitch();
   $("punti").hidden = t !== "titolare";
   $("link-personale").hidden = t !== "titolare";
   if (t === "negozio"){
@@ -4496,6 +4829,11 @@ function collega(){
     if (b.dataset.acc) return mostraAccesso(b.dataset.acc);
     if (b.id === "esci") return esciSB();
     if (b.dataset.azzera) return azzeraPersona(b.dataset.azzera);
+    if (b.dataset.permesso){ const i = b.dataset.permesso.indexOf("|"); return cambiaPermesso(b.dataset.permesso.slice(0, i), b.dataset.permesso.slice(i + 1)); }
+    if (b.dataset.numMeno) return cambiaBozzaNumero(b.dataset.numMeno, -1);
+    if (b.dataset.numPiu) return cambiaBozzaNumero(b.dataset.numPiu, 1);
+    if (b.dataset.numSalva) return salvaNumero(b.dataset.numSalva, S.bozzaNumeri[b.dataset.numSalva]);
+    if (b.dataset.numBase){ const n = NUMERI.find(function(x){ return x.k === b.dataset.numBase; }); if (S.bozzaNumeri) delete S.bozzaNumeri[n.k]; return salvaNumero(n.k, n.base); }
     if (b.dataset.apriArrivi){ $("notifica").classList.remove("vista"); return apriDaNotifica(b.dataset.apriArrivi); }
     if (b.id === "notif-attiva") return attivaNotifiche();
     if (b.id === "pren-nuova") return apriFormPren();
@@ -4720,7 +5058,9 @@ function usaLocale(){
       emetti();
     },
     prodotti: async function(cambia){ prodGrezzo = Object.assign({}, prodGrezzo, cambia(prodGrezzo)); S.prodImp = prodottiCondivisi(prodGrezzo); emetti(); },
-    prodottiRich: async function(cambia){ prodRichGrezzo = Object.assign({}, prodRichGrezzo, cambia(prodRichGrezzo)); S.prodRich = prodottiRichCondivisi(prodRichGrezzo); emetti(); }
+    prodottiRich: async function(cambia){ prodRichGrezzo = Object.assign({}, prodRichGrezzo, cambia(prodRichGrezzo)); S.prodRich = prodottiRichCondivisi(prodRichGrezzo); emetti(); },
+    numeri: async function(cambia){ impostaNumeri(Object.assign({}, S.numeri, cambia(S.numeri || {}))); emetti(); },
+    permessi: async function(cambia){ S.permessi = permessiPuliti(Object.assign({ persone: S.permessi || {} }, cambia({ persone: S.permessi || {} }))); emetti(); }
   };
   banner("Modalità prova: le richieste restano solo su questo schermo e spariscono chiudendo la pagina.");
   emetti();
@@ -4745,7 +5085,6 @@ const SB_URL = "https://axyxyxwufnrabcpqcprb.supabase.co";
 const SB_KEY = "sb_publishable_JVR80zwzvlmNDA6nYsP2zw_tQAyXert";
 const SB_LIBRERIA = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
 const DOMINIO_STAFF = "profumodipane.it";
-const GIORNI_CARICATI = 45;
 const NOMI_RUOLI = {"corso":"Corso", "piazza-nenni":"Piazza Nenni", "panificio":"Panificio e magazzino", "consegne":"Giro consegne", "titolare":"Titolare"};
 let sb = null;
 const RAW = { voci: {}, autori: {}, bisc: {}, imp: {} };
@@ -4801,6 +5140,8 @@ function applicaImpostazioni(){
   S.biscTolti = bis ? testi(bis.tolti, 60, 0) : [];
   S.prodImp = prodottiCondivisi(RAW.imp.prodotti);
   S.prodRich = prodottiRichCondivisi(RAW.imp["prodotti-richieste"]);
+  impostaNumeri(RAW.imp.numeri);
+  S.permessi = permessiPuliti(RAW.imp.permessi);
 }
 function applicaRiga(tab, riga, via){
   if (!riga) return;
@@ -4840,7 +5181,7 @@ let caricando = null;
 function caricaTuttoSB(){
   if (caricando) return caricando;
   S.inizioCarico = Date.now();
-  const da = new Date(Date.now() - GIORNI_CARICATI * 86400000).toISOString();
+  const da = new Date(Date.now() - num("giorni") * 86400000).toISOString();
   caricando = Promise.all([
     tuttePagine(function(){ return sb.from("profili").select("id,nome").order("id"); }),
     tuttePagine(function(){ return sb.from("richieste").select("id,autore,dati").gte("creato", da).order("id"); }),
@@ -4936,7 +5277,7 @@ const VAPID_PUBLICA = "BC9TAKzQiQ-x3xtX0KWauGtV-uvIk9VFwqLjWAOzrJbe4e5w2AWyXMIej
    quale schermata, quanto tempo, errori, rete e tipo di telefono. Le persone non hanno nome ("Persona 1"…):
    lo decide il database (funzione "registra", supabase/aggiornamento-4-registro.sql). */
 const REGISTRO_ATTIVO = false;
-const VERSIONE_APP = "6af4ac04";
+const VERSIONE_APP = "f9d6fd4a";
 S.reg = [];
 S.ultimoTasto = { nome: "", alle: 0 };
 S.tocchi = { nome: "", volte: 0, alle: 0, segnato: false };
@@ -5215,9 +5556,9 @@ function notifica(titolo, testo, tipo, azioni){
   n.classList.toggle("ok", tipo === "ok");
   n.classList.add("vista");
   clearTimeout(timerNotifica);
-  timerNotifica = setTimeout(function(){ n.classList.remove("vista"); }, azioni && azioni.length ? 15000 : 6000);
+  timerNotifica = setTimeout(function(){ n.classList.remove("vista"); }, (azioni && azioni.length ? num("viaVia") : num("avvisi")) * 1000);
 }
-/* le cose arrivate dopo "dal" (non mie) diventano azzurre per 20 secondi da adesso */
+/* le cose arrivate dopo "dal" (non mie) diventano azzurre per num("nuove") secondi da adesso */
 function evidenziaDopo(dal){
   const ora = Date.now();
   let quante = 0;
@@ -5434,6 +5775,8 @@ function storeSB(){
     salvaMappa: function(k, rep){ return salvaImp("reparti", function(d){ const m = Object.assign({}, d.mappa); m[k] = rep; return { mappa: m }; }); },
     prodotti: function(cambia){ return salvaImp("prodotti", cambia); },
     prodottiRich: function(cambia){ return salvaImp("prodotti-richieste", cambia); },
+    numeri: function(cambia){ return salvaImp("numeri", cambia); },
+    permessi: function(cambia){ return salvaImp("permessi", cambia); },
     bisc: async function(id, dati){
       if (dati === null){
         await sbFai(sb.from("biscotti").delete().eq("id", id));
@@ -5621,7 +5964,8 @@ async function mostraPersone(){
     const armato = S.armatoPersona === x.id;
     return el("li", null,
       el("span", null, el("b", { text: x.nome + (io ? " (tu)" : "") }), " ", el("span", { class: "pill dest " + cl, text: NOMI_RUOLI[x.ruolo] || x.ruolo })),
-      io ? null : el("button", { type: "button", class: armato ? "mini pericolo" : "mini", "data-azzera": x.id, disabled: S.azzerando, text: armato ? "Conferma: azzera" : "Azzera", "aria-label": (armato ? "Conferma: azzera " : "Azzera ") + x.nome }));
+      io ? null : el("button", { type: "button", class: armato ? "mini pericolo" : "mini", "data-azzera": x.id, disabled: S.azzerando, text: armato ? "Conferma: azzera" : "Azzera", "aria-label": (armato ? "Conferma: azzera " : "Azzera ") + x.nome }),
+      righePermessi(x));
   }));
   if (!S.persone.length) riempi(lista, [el("li", { class: "hint", text: "Nessuno registrato." })]);
 }
@@ -5630,7 +5974,7 @@ async function azzeraPersona(id){
   if (S.armatoPersona !== id){
     S.armatoPersona = id; mostraPersone();
     clearTimeout(timerPersona);
-    timerPersona = setTimeout(function(){ S.armatoPersona = null; mostraPersone(); }, 4000);
+    timerPersona = setTimeout(function(){ S.armatoPersona = null; mostraPersone(); }, num("conferma") * 1000);
     return;
   }
   clearTimeout(timerPersona);
@@ -5752,7 +6096,9 @@ async function avvia(){
     aggiunteBisc: function(arr){ return aggiornaOCrea(db.doc("impostazioni/biscotti"), { aggiunte: arr }); },
     biscImp: function(cambia){ return aggiornaOCrea(db.doc("impostazioni/biscotti"), cambia(S.biscGrezzo || {})); },
     prodotti: function(cambia){ return aggiornaOCrea(db.doc("impostazioni/prodotti"), cambia(S.prodGrezzo || {})); },
-    prodottiRich: function(cambia){ return aggiornaOCrea(db.doc("impostazioni/prodotti-richieste"), cambia(S.prodRichGrezzo || {})); }
+    prodottiRich: function(cambia){ return aggiornaOCrea(db.doc("impostazioni/prodotti-richieste"), cambia(S.prodRichGrezzo || {})); },
+    numeri: function(cambia){ return aggiornaOCrea(db.doc("impostazioni/numeri"), cambia(S.numeri || {})); },
+    permessi: function(cambia){ return aggiornaOCrea(db.doc("impostazioni/permessi"), cambia({ persone: S.permessi || {} })); }
   };
   if (user){
     S.utente = user;
@@ -5779,6 +6125,7 @@ async function avvia(){
       const dati = d.exists ? (d.data() || {}) : {};
       if (d.id === "prodotti") S.prodGrezzo = dati;
       if (d.id === "prodotti-richieste") S.prodRichGrezzo = dati;
+      if (d.id === "numeri") impostaNumeri(dati);
       if (d.id === "reparti" && dati.mappa && typeof dati.mappa === "object"){
         for (const k in dati.mappa){ if (REPARTI.indexOf(dati.mappa[k]) >= 0) pulita[k] = dati.mappa[k]; }
       }
