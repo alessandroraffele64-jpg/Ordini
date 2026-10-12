@@ -579,6 +579,7 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
 .parte-form .row{justify-content:flex-end}
 .parte-form .row{display:flex;gap:8px;flex-wrap:wrap}
 .man-capitoli{display:flex;flex-direction:column;gap:10px}
+.man-cerca{flex:none;margin-bottom:12px}
 .man-titolo{margin:0 0 4px;font-size:18px}
 .man-domanda{border-top:1px solid var(--line-2)}
 .man-domanda summary{cursor:pointer;font-weight:700;padding:10px 0;min-height:24px}
@@ -872,6 +873,8 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
     <!-- Come funziona: per tutti, ognuno vede le sue parti -->
     <div class="view" id="pannello-manuale" hidden>
       <p class="hint">Tocca una domanda per leggere la risposta. Vedi solo le parti che servono a te.</p>
+      <label class="field man-cerca" for="man-cerca"><span class="label-sm">Cerca una domanda</span><input id="man-cerca" type="search" autocomplete="off" placeholder="Es. notifiche, striscia, Solo una parte"></label>
+      <p class="vuoto" id="man-vuoto" hidden></p>
       <div class="blocco man-capitoli" id="man-capitoli"></div>
     </div>
 
@@ -2571,7 +2574,7 @@ function renderCrono(dove, lista, conDest){
   riempi($("lista-crono-" + dove), l.map(function(r){ return rigaTolta(r, conDest); }));
   $("vuoto-crono-" + dove).hidden = l.length > 0;
 }
-/* "Chiesti spesso": prima quello che il negozio ha chiesto nell'app negli ultimi 30 giorni, poi la lista presa dai vostri gruppi.
+/* "Chiesti spesso": solo quello che il negozio ha chiesto nell'app negli ultimi 30 giorni (la lista presa dai gruppi non si usa più).
    Solo nomi giusti dell'elenco dei prodotti (con le correzioni del «Database»): un nome sconosciuto o scritto male non esce.
    Si vedono i primi 8, con «Altri…» al massimo 20. */
 function nomeFrequente(testo){
@@ -2591,12 +2594,6 @@ function renderFrequenti(mie){
     c.n++; conta.set(k, c);
   }
   const tutti = Array.from(conta.values()).sort(function(a,b){ return b.n - a.n; }).map(function(c){ return c.nome; });
-  const visti = new Set(tutti.map(chiave));
-  (S.frequenti[S.punto] || []).forEach(function(n){
-    const nome = nomeFrequente(n), k = chiave(nome);
-    if (!k || visti.has(k) || aperti.has(k) || scritti.has(k)) return;
-    visti.add(k); tutti.push(nome);
-  });
   const pochi = 8, max = 20;
   const quanti = S.tuttiFrequenti ? max : pochi;
   const chips = tutti.slice(0, quanti).map(function(nome){
@@ -3187,6 +3184,7 @@ function capitoliManuale(){
     ["Cosa vedo nella mia pagina?", ["Le richieste dei negozi che si prendono al Panificio, divise per reparto (Pane e forno, Frigo, Bevande…), con il colore del negozio che le ha chieste. Le urgenti sono in cima."]],
     ["Come segno a che punto sono?", ["Su ogni cosa ci sono i tasti ", tasto("In preparazione"), " ", tasto("Pronto da caricare"), " ", tasto("Finito al panificio"), " e «Non c'è in magazzino». «Pronto da caricare» avvisa chi fa il giro. Toccare di nuovo lo stesso tasto lo toglie."]],
     ["E se una cosa non c'è in magazzino?", ["Segnala «Non c'è in magazzino»: la vedono tutti nella striscia rossa in alto. Poi non la puoi togliere tu: quando arriva la segna «È arrivato» chi fa il giro o un titolare."]],
+    haAzione("panSposta") ? ["Una cosa è nel reparto sbagliato: come la sposto?", ["Sotto la cosa tocca «Sposta…» e scegli il reparto giusto (per esempio da «Altro» a «Frigo»). Da quel momento anche tutte le cose con lo stesso nome vanno in quel reparto, al panificio e nel giro."]] : null,
     ["Posso chiedere anche io delle cose?", ["Sì, come i negozi: scrivi in «Cosa serve?» e invia. Vale tutto quello che c'è nel capitolo delle richieste."]]
   ]});
   if (haSezione("consegne")) cap.push({ titolo:"Giro consegne", domande:[
@@ -3194,6 +3192,7 @@ function capitoliManuale(){
     ["Come segno quello che carico e consegno?", ["Tocca ", tasto("Caricato"), " quando la cosa è sul furgone: il negozio la vede «In viaggio». Al negozio tocca ", tasto("Consegnato"), ", oppure ", tasto("Tutto consegnato"), " per tutte le cose di quel negozio. «Annulla» rimette la cosa da caricare."]],
     ["E se ne ho solo una parte?", ["Tocca ", tasto("Solo una parte"), ", scrivi cosa manca ancora (per esempio «2 casse») e tocca ", tasto("Carica la parte"), ". La richiesta diventa caricata con la scritta «Solo una parte: mancano 2 casse». Quello che manca diventa una riga nuova per lo stesso negozio, segnata «non c'è»: va nella striscia rossa e, quando arriva, torna in cima alle consegne in verde."]],
     ["E se una cosa non c'è in magazzino?", ["Tocca «Non c'è» e poi «Conferma». La cosa esce dalla tua lista e va nella striscia rossa in alto, che vedono tutti. Il negozio la vede barrata."]],
+    haAzione("giroSposta") ? ["Una cosa è nel reparto sbagliato: come la sposto?", ["In «Carico per reparto», sotto la cosa tocca «Sposta…» e scegli il reparto giusto (per esempio da «Altro» a «Bevande»). Da quel momento anche tutte le cose con lo stesso nome vanno in quel reparto, al panificio e nel giro."]] : null,
     ["Cosa sono le cose verdi in cima?", ["Sono cose che mancavano e adesso sono «Arrivate in magazzino»: vanno portate al negozio che le aveva chieste. Restano verdi e in cima finché non sono consegnate."]],
     ["Posso aggiungere io una cosa?", ["Sì, con «+ Aggiungi tu una cosa da portare o da ricordare». Puoi scegliere un negozio, oppure «Promemoria» se è solo per te (es. «Passare a prendere le casse»): quando l'hai fatta tocca ", tasto("Fatto"), "."]]
   ]});
@@ -3216,6 +3215,7 @@ function capitoliManuale(){
     ["Cos'è la striscia rossa in alto?", ["È l'elenco di tutto quello che manca in magazzino, uguale per tutti. Resta in alto finché la cosa non arriva. Se è lunga, tocca ", tasto("Mostra tutto"), "."]],
     ["Chi la toglie?", ["Quando la cosa arriva, chi fa il giro o un titolare (o chi ha avuto in più la sezione «Non in magazzino») tocca ", tasto("È arrivato"), " e conferma. Le cose arrivate vanno nelle consegne, in cima, per essere portate al negozio."]]
   ].concat(vedeMancanti() ? [
+    ["Cosa succede se tocco la striscia rossa?", ["Si apre la sezione «Non in magazzino», dove puoi segnare ", tasto("È arrivato"), ". Anche in «Mostra tutto», in fondo, c'è «Apri Non in magazzino». (Per gli altri toccare la striscia non fa niente: hanno solo «Mostra tutto».)"]],
     ["Come segno una cosa che manca in magazzino?", ["Nella sezione «Non in magazzino» tocca ", tasto("+ Segna cosa manca"), ", scrivi il nome e Salva. Si vede solo in quella sezione (non nella striscia rossa). Quando arriva, ", tasto("È arrivato"), "."]],
     ["Cosa c'è nella sezione «Non in magazzino»?", ["Tre parti: le richieste dei negozi segnate «non c'è», le cose segnate con «+ Segna cosa manca», e quelle «Da comprare». Su ognuna c'è «È arrivato». Quando arriva una cosa, arrivano insieme tutte quelle con lo stesso nome."]]
   ] : [])});
@@ -3238,6 +3238,9 @@ function capitoliManuale(){
       "• Corso e Piazza Nenni: " + notif.corso, el("br"), "• Panificio: " + notif.panificio, el("br"), "• Giro: " + notif.consegne, el("br"), "• Titolari: " + notif.titolare]
       : [(mieNotifiche ? "Puoi ricevere: " + mieNotifiche + "." : "Il titolare non ti ha dato notifiche da ricevere.") + " Puoi spegnere quelle che non vuoi nella sezione Notifiche."]],
     ["Tocco una notifica: dove mi porta?", ["Apre l'app nella pagina giusta (per esempio le richieste o le prenotazioni)."]]
+  ]});
+  if (haAzione("vedeChi")) cap.push({ titolo:"In tutte le pagine", domande:[
+    ["A cosa serve il tasto «Chi?»", ["Accanto a una richiesta, tocca ", tasto("Chi?"), ": compare il nome di chi l'ha chiesta (per esempio «Ordinato da Maria»). Toccalo di nuovo per nasconderlo."]]
   ]});
   if (!tit) cap.push({ titolo:"Permessi", domande:[
     ["Un collega ha un tasto che io non ho: perché?", ["Il titolare può dare o togliere a ognuno le singole cose (per esempio segnare «Urgente», disdire una prenotazione, vedere il telefono del cliente) e anche le singole notifiche. Se ti manca qualcosa che ti serve, chiedi al titolare."]]
@@ -3265,6 +3268,30 @@ function renderManuale(){
         return el("details", {class:"man-domanda", "data-man-cap":c.titolo}, el("summary", {text:d[0]}), el("p", null, ...d[1]));
       }));
   }));
+  filtraManuale();
+}
+/* cerca nel manuale: tiene le domande che hanno tutte le parole scritte (nella domanda o nella risposta), anche a metà */
+let manVuotaSegnata = false;
+function filtraManuale(){
+  const testo = $("man-cerca").value.trim();
+  const parole = chiave(testo).split(" ").filter(Boolean);
+  let trovate = 0;
+  document.querySelectorAll("#man-capitoli .man-cap").forEach(function(sez){
+    let qui = 0;
+    sez.querySelectorAll("details.man-domanda").forEach(function(d){
+      const t = chiave(sez.querySelector(".man-titolo").textContent + " " + d.textContent);
+      const ok = parole.every(function(w){ return t.indexOf(w) >= 0; });
+      d.hidden = !ok;
+      if (ok) qui++;
+    });
+    sez.hidden = qui === 0;
+    trovate += qui;
+  });
+  const vuoto = parole.length > 0 && trovate === 0;
+  $("man-vuoto").hidden = !vuoto;
+  $("man-vuoto").textContent = vuoto ? "Nessuna domanda trovata per «" + testo + "». Prova con un'altra parola." : "";
+  if (vuoto && testo.length >= 3 && !manVuotaSegnata){ manVuotaSegnata = true; registra("manuale: ricerca senza risultati", { lettere: testo.length }); }
+  if (!vuoto) manVuotaSegnata = false;
 }
 function inManuale(){ return S.vista === "negozio" && S.sez === "manuale"; }
 
@@ -5600,6 +5627,7 @@ function collega(){
   } catch(e){}
   $("disdici-altro").addEventListener("input", renderDisdici);
   $("pren-cerca-testo").addEventListener("input", function(){ S.prenCerca.testo = this.value; renderCerca(); });
+  $("man-cerca").addEventListener("input", filtraManuale);
   $("notifica").addEventListener("click", function(){ if (Date.now() - fineTrascina > 400) chiudiNotifica(); });
   /* la notifica si toglie anche spingendola verso l'alto col dito, come quelle del telefono */
   (function(){
