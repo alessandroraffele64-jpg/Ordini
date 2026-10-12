@@ -333,7 +333,18 @@ button.striscia-testo{cursor:pointer}
 .corr-da{color:var(--muted);text-decoration:line-through;text-decoration-thickness:1px}
 .corr-freccia{color:var(--muted);margin:0 4px}
 .corr-rep{display:flex;flex-direction:column;gap:6px}
-.db-schede{margin-bottom:4px}
+.db-sotto{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.db-testa{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px}
+.db-testa h2{margin:0;font-size:20px}
+.db-nome-giusto,.db-mod{display:flex;flex-direction:column;gap:6px;width:100%}
+.db-nome-giusto input,.db-mod input,.db-nuovo input{min-height:44px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font-size:16px;padding:0 10px;min-width:0}
+.db-nome-giusto > input{flex:none;width:100%}
+.db-mod .row input,.db-nuovo .row input{flex:1 1 180px}
+.db-sugg{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.db-sugg .hint{flex-basis:100%;margin:0}
+.db-mod{padding:10px;border:1.5px solid var(--line);border-radius:12px;background:var(--surface-2);margin:4px 0 6px}
+.db-mod .row,.db-nuovo .row{gap:8px;align-items:center;flex-wrap:wrap}
+.db-nuovo{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
 .db-voce .domanda-db{font-weight:700;margin:0}
 .db-voce .riga-db{margin:0;display:flex;flex-wrap:wrap;gap:4px 8px;align-items:baseline}
 .db-voce .riga-db .label-sm{min-width:110px}
@@ -881,17 +892,21 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
 
     <!-- Database: solo titolari. Ordini, Prenotazioni, Biscotti: cose nuove da controllare ed elenco completo -->
     <div class="view" id="pannello-database" hidden>
-      <div class="chips db-schede" id="db-schede" role="tablist" aria-label="Parti del database"></div>
-      <p class="hint" id="db-spiega"></p>
-      <div class="blocco" id="db-lista"></div>
-      <p class="vuoto" id="db-vuoto">Niente da controllare.</p>
-      <details class="crono" id="db-elenco-box">
-        <summary><span id="db-elenco-titolo">Tutti i prodotti</span> <span class="crono-n" id="db-n"></span></summary>
-        <div class="blocco">
-          <p class="hint" id="db-elenco-spiega"></p>
-          <div class="blocco" id="db-elenco"></div>
-        </div>
-      </details>
+      <!-- il sotto menù: un tasto per ogni parte -->
+      <div class="blocco" id="db-menu"></div>
+      <div id="db-parte" hidden>
+        <div class="db-testa" id="db-testa"></div>
+        <p class="hint" id="db-spiega"></p>
+        <div class="blocco" id="db-lista"></div>
+        <p class="vuoto" id="db-vuoto">Niente da controllare.</p>
+        <details class="crono" id="db-elenco-box">
+          <summary><span id="db-elenco-titolo">Tutti i prodotti</span> <span class="crono-n" id="db-n"></span></summary>
+          <div class="blocco">
+            <p class="hint" id="db-elenco-spiega"></p>
+            <div class="blocco" id="db-elenco"></div>
+          </div>
+        </details>
+      </div>
     </div>
 
     <!-- Statistiche: solo titolari -->
@@ -1393,7 +1408,10 @@ function norma(k, d, st, autore, rid){
   const salvato = String(d.articolo || "").slice(0,120) || "Senza nome";
   const scritto = typeof d.scritto === "string" ? d.scritto.slice(0,120) : "";
   /* una correzione dei titolari («Sbagliato, era…») vale anche per le richieste già mandate */
-  const corretto = S.prodRich.alias[chiave(scritto || salvato)];
+  let corretto = S.prodRich.alias[chiave(scritto || salvato)];
+  /* e se poi il prodotto ha cambiato nome, prende il nome nuovo */
+  const rinominato = S.prodRich.alias[chiave(corretto || salvato)];
+  if (rinominato) corretto = rinominato;
   return {
     id: k,
     rid: rid,
@@ -2568,30 +2586,39 @@ function renderCrono(dove, lista, conDest){
   riempi($("lista-crono-" + dove), l.map(function(r){ return rigaTolta(r, conDest); }));
   $("vuoto-crono-" + dove).hidden = l.length > 0;
 }
-/* "Chiesti spesso": prima quello che il negozio chiede nell'app, poi la lista presa dai vostri gruppi */
+/* "Chiesti spesso": prima quello che il negozio ha chiesto nell'app negli ultimi 30 giorni, poi la lista presa dai vostri gruppi.
+   Solo nomi giusti dell'elenco dei prodotti (con le correzioni del «Database»): un nome sconosciuto o scritto male non esce.
+   Si vedono i primi 8, con «Altri…» al massimo 20. */
+function nomeFrequente(testo){
+  const t = trovaProdottoRich(testo);
+  return t.esito === "sicuro" && t.nome ? t.nome : "";
+}
 function renderFrequenti(mie){
-  const aperti = new Set(mie.filter(function(r){ return r.stato !== "consegnato"; }).map(function(r){ return chiave(r.articolo); }));
-  const scritti = new Set(righeDi("righe").map(function(x){ return chiave(x.articolo); }));
+  const aperti = new Set(mie.filter(function(r){ return r.stato !== "consegnato"; }).map(function(r){ return chiave(nomeFrequente(r.articolo) || r.articolo); }));
+  const scritti = new Set(righeDi("righe").map(function(x){ return chiave(nomeFrequente(x.articolo) || x.articolo); }));
+  const dal = Date.now() - 30 * 86400000;
   const conta = new Map();
   for (const r of mie){
-    const k = chiave(r.articolo);
+    if (r.creato < dal) continue;
+    const nome = nomeFrequente(r.articolo), k = chiave(nome);
     if (!k || aperti.has(k) || scritti.has(k)) continue;
-    const c = conta.get(k) || { n:0, nome:r.articolo };
+    const c = conta.get(k) || { n:0, nome:nome };
     c.n++; conta.set(k, c);
   }
   const tutti = Array.from(conta.values()).sort(function(a,b){ return b.n - a.n; }).map(function(c){ return c.nome; });
   const visti = new Set(tutti.map(chiave));
-  (S.frequenti[S.punto] || []).forEach(function(nome){
-    const k = chiave(nome);
+  (S.frequenti[S.punto] || []).forEach(function(n){
+    const nome = nomeFrequente(n), k = chiave(nome);
     if (!k || visti.has(k) || aperti.has(k) || scritti.has(k)) return;
     visti.add(k); tutti.push(nome);
   });
-  const quanti = S.tuttiFrequenti ? 40 : 12;
+  const pochi = 8, max = 20;
+  const quanti = S.tuttiFrequenti ? max : pochi;
   const chips = tutti.slice(0, quanti).map(function(nome){
     return el("button", {type:"button", class:"chip-add", "data-aggiungi":nome, text:"+ " + nome});
   });
-  if (tutti.length > 12){
-    chips.push(el("button", {type:"button", class:"link", "data-altri":"1", text: S.tuttiFrequenti ? "Mostra meno" : "Altri " + (Math.min(tutti.length, 40) - 12) + "…"}));
+  if (tutti.length > pochi){
+    chips.push(el("button", {type:"button", class:"link", "data-altri":"1", text: S.tuttiFrequenti ? "Mostra meno" : "Altri " + (Math.min(tutti.length, max) - pochi) + "…"}));
   }
   riempi($("frequenti"), chips);
   $("frequenti-wrap").hidden = tutti.length === 0;
@@ -3155,6 +3182,7 @@ function capitoliManuale(){
   const cap = [];
   if (negozio || tit) cap.push({ titolo:"Richieste del negozio", domande:[
     ["Come chiedo una cosa?", ["Nella pagina principale scrivi in «Cosa serve?» una cosa per riga. La quantità puoi metterla o no (per esempio «2 casse acqua naturale» oppure «Vassoi»). Poi tocca ", tasto("Controlla e invia"), ": si apre «Controlla prima di inviare»."]],
+    ["Cosa sono i tasti «Chiesti spesso»?", ["Sono le cose che il tuo negozio ha chiesto più spesso nell'ultimo mese, già con il nome giusto. Toccane uno per aggiungerlo senza scriverlo. Ne vedi 8; con «Altri…» fino a 20. Le cose che hai già chiesto e non sono ancora arrivate non ci sono."]],
     ["Cosa controllo prima di inviare?", ["Per ogni cosa vedi:", el("br"),
       "• il nome: se l'app è sicura mette lei il nome giusto (vedi ✓ e puoi toccare «Lascia com'era»); se ha un dubbio chiede «Quale di questi?» e tu tocchi quello giusto, oppure «Nessuno, è un'altra cosa»;", el("br"),
       "• da dove si prende: di solito dal Panificio; puoi scegliere anche l'altro negozio, «Da ritirare fuori» (scrivi dove) o «Da comprare»;", el("br"),
@@ -3235,7 +3263,10 @@ function capitoliManuale(){
     ["Posso scegliere io le notifiche di una persona?", ["Sì: nei suoi permessi, in «Notifiche che può ricevere», una per riga. Puoi dare a chiunque anche notifiche che di solito non sono del suo posto (per esempio «Pronto da caricare» a una persona del Corso). «No» vuol dire che non le arriva mai; «Sì» vuol dire che la può ricevere e sul suo telefono la accende o la spegne. Sotto vedi se sul suo telefono è accesa. Nell'elenco delle persone vedi chi ha le notifiche accese 🔔 e chi no 🔕."]],
     ["Una persona cambia negozio o va in ferie?", ["In «Persone registrate» tocca il suo nome. ", tasto("Cambia ruolo"), " la sposta (per esempio dal Corso a Piazza Nenni) senza registrarsi di nuovo. ", tasto("Sospendi"), " non la fa entrare finché non tocchi ", tasto("Riattiva"), "."]],
     ["A cosa serve «Impostazioni»?", ["Lì cambi i tempi dell'app (per esempio dopo quante ore una richiesta è «Ferma da…»). Valgono per tutti i telefoni. Usa − e +, poi «Salva»; «Rimetti come prima» torna al numero di partenza."]],
-    ["A cosa serve «Database»?", ["Tre parti: Ordini, Prenotazioni, Biscotti. In ognuna ci sono i nomi nuovi o corretti dall'app da controllare («Sì, è giusto», «No, era…», «È un prodotto nuovo»), e in fondo l'elenco completo. Una correzione vale anche per quello già scritto. Quanti giorni indietro guardare lo scegli in «Impostazioni» (di partenza 7)."]],
+    ["A cosa serve «Database»?", ["Entrando ci sono tre tasti: Ordini, Prenotazioni, Biscotti. Il numero dice quante cose nuove ci sono da controllare. In ogni parte ci sono i nomi nuovi o corretti dall'app («Sì, è giusto», «No, era…», «È un prodotto nuovo», «Scrivi il nome giusto»), e in fondo l'elenco completo. Una correzione vale anche per quello già scritto. Quanti giorni indietro guardare lo scegli in «Impostazioni» (di partenza 7)."]],
+    ["Un prodotto è scritto male: come lo correggo?", ["Nel «Database» tocca «Scrivi il nome giusto» (o «No, era…»). Scrivi il nome: sotto escono i prodotti dell'elenco che somigliano, puoi toccarne uno. Se il nome che scrivi non c'è, diventa un prodotto nuovo. Quello scritto male resta collegato al nome giusto: la volta dopo l'app lo corregge da sola."]],
+    ["Un ordine non c'entra niente: come lo tolgo?", ["Nel «Database», parte Ordini, sotto l'ordine tocca «Elimina questo ordine» e conferma. Sparisce dalle richieste e dal giro. Se è stato uno sbaglio, lo ritrovi in Cronologia."]],
+    ["Come cambio l'elenco dei prodotti?", ["Nel «Database», in fondo a Ordini o Prenotazioni, apri «Tutti i prodotti». In cima puoi aggiungere un prodotto. Accanto a ogni prodotto c'è «Modifica»: puoi cambiare il nome (se il nome nuovo c'è già, i due prodotti si uniscono), aggiungere un altro modo di scriverlo, togliere un modo di scriverlo o togliere il prodotto dall'elenco. Nei Biscotti puoi togliere quelli aggiunti dai negozi e rimettere quelli tolti."]],
     puoStat() ? ["Cosa trovo nelle «Statistiche»?", ["Quante richieste, cosa si chiede di più, cosa manca più spesso (anche le volte portate solo in parte), quanto si aspetta in magazzino prima che una cosa arrivi, quando si chiede, quanto ci mette ad arrivare al negozio, i biscotti, le prenotazioni e le disdette con il loro motivo. Scegli il periodo in alto. I tasti per scaricare danno un file che si apre con Excel."]] : null,
     ["Se qualcuno dimentica il PIN o se ne va?", ["In «Persone registrate» tocca il suo nome, poi in fondo apri «Togliere l'accesso» e conferma due volte: non può più entrare, le sue richieste restano. Se serve, si registra di nuovo con il codice del negozio."]]
   ]});
@@ -3401,7 +3432,7 @@ function vaiSezione(id, forza, scheda){
     mostraSez(id);
     if (id === "prenotazioni"){ S.prenGiorno = oggiStr(); S.prenScegli = false; }
     if (id === "persone"){ S.pv = null; mostraPersone(); }
-    if (id === "database"){ S.corrApri = ""; S.prenCorreggi = ""; if (scheda) S.dbScheda = scheda; else sceltaSchedaDb(); }
+    if (id === "database"){ S.corrApri = ""; S.prenCorreggi = ""; S.dbMod = ""; S.dbScheda = scheda || ""; }
     if (id === "impostazioni") S.bozzaNumeri = {};
     if (id === "statistiche") caricaStatistiche();
     if (id === "notifiche") renderNotifiche();
@@ -3827,22 +3858,40 @@ const ALIAS_BASE = {
   "pitta chjina": "Pitta china", "pitte chjine": "Pitta china", "pitta china": "Pitta china",
   "filoncino": "Filoncini"
 };
-S.prodImp = { elenco: [], alias: {} };
-function prodottiCondivisi(d){
+S.prodImp = { elenco: [], alias: {}, tolti: [], spenti: [] };
+function prodottiCondivisi(d){ return leggiProdotti(d, 200); }
+/* le impostazioni condivise dei prodotti ("prodotti" e "prodotti-richieste"):
+   elenco: prodotti aggiunti · alias: altri modi di scrivere ("" = correzione tolta, vale anche per quelle di partenza)
+   tolti: prodotti tolti dall'elenco (anche quelli di partenza, per esempio quando si cambia il nome) */
+function leggiProdotti(d, max){
   d = d || {};
-  const elenco = Array.isArray(d.elenco) ? d.elenco.filter(function(x){ return typeof x === "string" && x.trim(); }).map(function(x){ return x.trim().slice(0, 60); }).slice(0, 200) : [];
-  const alias = {};
+  const elenco = Array.isArray(d.elenco) ? d.elenco.filter(function(x){ return typeof x === "string" && x.trim(); }).map(function(x){ return x.trim().slice(0, 60); }).slice(0, max) : [];
+  const alias = {}, spenti = [];
   if (d.alias && typeof d.alias === "object"){
-    for (const k in d.alias){ if (typeof d.alias[k] === "string" && d.alias[k].trim()) alias[chiave(k)] = d.alias[k].trim().slice(0, 60); }
+    for (const k in d.alias){
+      if (typeof d.alias[k] === "string" && d.alias[k].trim()) alias[chiave(k)] = d.alias[k].trim().slice(0, 60);
+      else spenti.push(chiave(k));
+    }
   }
-  return { elenco: elenco, alias: alias };
+  const tolti = Array.isArray(d.tolti) ? d.tolti.filter(function(x){ return typeof x === "string" && x; }).map(chiave) : [];
+  return { elenco: elenco, alias: alias, tolti: tolti, spenti: spenti };
 }
-/* elenco completo: quelli di partenza più quelli confermati dai titolari */
-function elencoProdotti(){
-  const out = PRODOTTI_BASE.slice();
-  S.prodImp.elenco.forEach(function(n){ if (!out.some(function(x){ return chiave(x) === chiave(n); })) out.push(n); });
+/* tutti gli altri modi di scrivere: quelli di partenza (se non tolti) più quelli dei titolari */
+function aliasTutti(base, dati){
+  const spenti = new Set(dati.spenti || []), out = {};
+  for (const k in base){ if (!spenti.has(chiave(k))) out[chiave(k)] = base[k]; }
+  return Object.assign(out, dati.alias);
+}
+/* l'elenco completo: quelli di partenza più quelli aggiunti dai titolari, senza quelli tolti */
+function elencoDi(base, dati){
+  const tolti = new Set(dati.tolti || []), out = [];
+  base.concat(dati.elenco).forEach(function(n){
+    const k = chiave(n);
+    if (k && !tolti.has(k) && !out.some(function(x){ return chiave(x) === k; })) out.push(n);
+  });
   return out.sort(function(a, b){ return a.localeCompare(b, "it"); });
 }
+function elencoProdotti(){ return elencoDi(PRODOTTI_BASE, S.prodImp); }
 /* la parola senza la vocale finale: "pitte" e "pitta" diventano uguali */
 const PAROLE_VUOTE = { "di":1, "de":1, "del":1, "della":1, "dei":1, "delle":1, "al":1, "alla":1, "con":1 };
 function formaProdotto(k){
@@ -3864,7 +3913,7 @@ function distanza(a, b){
 function formeConosciute(){
   const out = [];
   elencoProdotti().forEach(function(n){ out.push([formaProdotto(n), n]); });
-  const alias = Object.assign({}, ALIAS_BASE, S.prodImp.alias);
+  const alias = aliasTutti(ALIAS_BASE, S.prodImp);
   for (const k in alias) out.push([formaProdotto(k), alias[k]]);
   return out.filter(function(x){ return x[0]; });
 }
@@ -3903,8 +3952,10 @@ function trovaProdotto(testo){ return cercaProdotto(testo, formeConosciute(), S.
 /* il nome giusto di una cosa prenotata (salvato, corretto dal titolare o riconosciuto ora) */
 function nomeProdotto(v){
   const k = chiave(v.articolo);
-  if (S.prodImp.alias[k]) return S.prodImp.alias[k];
-  if (v.prodotto) return v.prodotto;
+  /* un prodotto a cui i titolari hanno cambiato nome prende il nome nuovo */
+  function nuovoNome(n){ return S.prodImp.alias[chiave(n)] || n; }
+  if (S.prodImp.alias[k]) return nuovoNome(S.prodImp.alias[k]);
+  if (v.prodotto) return nuovoNome(v.prodotto);
   const t = trovaProdotto(v.articolo);
   return t.esito === "sicuro" ? t.nome : v.articolo;
 }
@@ -3938,26 +3989,14 @@ const PRODOTTI_RICH_BASE = ["Pane casereccio","Pitta","Pitta china","Filoncini",
 /* altri modi di scrivere già visti nelle chat */
 const ALIAS_RICH_BASE = { "icerbeg": "Iceberg", "aisberg": "Iceberg", "wrustel": "Wurstel", "speak": "Speck", "turborg": "Tuborg",
   "manaiese": "Maionese", "coca": "Coca cola", "cocacola": "Coca cola", "estate pesca": "Estathe pesca", "pomodorino": "Pomodorini" };
-S.prodRich = { elenco: [], alias: {} };
-function prodottiRichCondivisi(d){
-  d = d || {};
-  const elenco = Array.isArray(d.elenco) ? d.elenco.filter(function(x){ return typeof x === "string" && x.trim(); }).map(function(x){ return x.trim().slice(0, 60); }).slice(0, 1000) : [];
-  const alias = {};
-  if (d.alias && typeof d.alias === "object"){
-    /* una correzione tolta resta salvata vuota: non vale più */
-    for (const k in d.alias){ if (typeof d.alias[k] === "string" && d.alias[k].trim()) alias[chiave(k)] = d.alias[k].trim().slice(0, 60); }
-  }
-  return { elenco: elenco, alias: alias };
-}
-function elencoProdottiRich(){
-  const out = PRODOTTI_RICH_BASE.slice();
-  S.prodRich.elenco.forEach(function(n){ if (!out.some(function(x){ return chiave(x) === chiave(n); })) out.push(n); });
-  return out.sort(function(a, b){ return a.localeCompare(b, "it"); });
-}
+S.prodRich = { elenco: [], alias: {}, tolti: [], spenti: [] };
+/* una correzione tolta resta salvata vuota: non vale più */
+function prodottiRichCondivisi(d){ return leggiProdotti(d, 1000); }
+function elencoProdottiRich(){ return elencoDi(PRODOTTI_RICH_BASE, S.prodRich); }
 function formeRich(){
   const out = [];
   elencoProdottiRich().forEach(function(n){ out.push([formaProdotto(n), n]); });
-  const alias = Object.assign({}, ALIAS_RICH_BASE, S.prodRich.alias);
+  const alias = aliasTutti(ALIAS_RICH_BASE, S.prodRich);
   for (const k in alias) out.push([formaProdotto(k), alias[k]]);
   return out.filter(function(x){ return x[0]; });
 }
@@ -3973,14 +4012,16 @@ function riconosciVoce(v){
 }
 
 /* ---------- «Database» (solo titolari) ----------
-   Tre parti: Ordini (i nomi delle richieste), Prenotazioni, Biscotti.
-   In ognuna le cose nuove o corrette da controllare e, in fondo, l'elenco completo.
+   Entrando c'è un sotto menù con tre tasti: Ordini (i nomi delle richieste), Prenotazioni, Biscotti.
+   In ogni parte le cose nuove o corrette da controllare e, in fondo, l'elenco completo, che si può cambiare
+   (nome, altri modi di scriverlo, togliere, aggiungere).
    Ordini: per ogni nome degli ultimi giorni (num("controllo"), di partenza 7), cosa era scritto e cosa ha messo l'app
    («Sì, è giusto» / «No, era…»), oppure un nome che l'app non conosceva
-   («È un prodotto nuovo» / «È un prodotto che c'è già…»). */
+   («È un prodotto nuovo» / «Scrivi il nome giusto»). Un ordine che non c'entra niente si elimina, con conferma. */
 S.corrApri = "";
 S.corrGruppi = new Map();
-S.dbScheda = "ordini";
+S.dbScheda = "";
+S.dbMod = "";
 function puoDatabase(){ return !!S.owner && !!S.ruolo && S.ruolo.tipo === "titolare" && !!store && !S.sola; }
 function inDatabase(){ return S.vista === "negozio" && S.sez === "database"; }
 function maiuscola(t){ t = String(t || "").trim(); return t.charAt(0).toUpperCase() + t.slice(1); }
@@ -4019,30 +4060,96 @@ function contaDatabase(){
   c.tutti = c.ordini + c.prenotazioni + c.biscotti;
   return c;
 }
-/* entrando si apre la prima parte che ha qualcosa da controllare */
-function sceltaSchedaDb(){
-  const c = contaDatabase();
-  S.dbScheda = c.ordini ? "ordini" : (c.prenotazioni ? "prenotazioni" : (c.biscotti ? "biscotti" : (S.dbScheda || "ordini")));
+const SCHEDE_DB = [
+  ["ordini", "Ordini", "richieste", "I nomi delle cose chieste dai negozi"],
+  ["prenotazioni", "Prenotazioni", "prenotazioni", "I prodotti delle prenotazioni dei clienti"],
+  ["biscotti", "Biscotti", "biscotti", "I biscotti che si possono chiedere"]];
+/* i due elenchi di prodotti, per cambiarli allo stesso modo */
+function parteProd(p){
+  return p === "prenotazioni"
+    ? { id: "prenotazioni", base: PRODOTTI_BASE, aliasBase: ALIAS_BASE, dati: S.prodImp, elenco: elencoProdotti, forme: formeConosciute, salva: salvaProdotti, pending: "prodotti" }
+    : { id: "ordini", base: PRODOTTI_RICH_BASE, aliasBase: ALIAS_RICH_BASE, dati: S.prodRich, elenco: elencoProdottiRich, forme: formeRich, salva: salvaProdRich, pending: "prodotti-richieste" };
 }
-const SCHEDE_DB = [["ordini", "Ordini"], ["prenotazioni", "Prenotazioni"], ["biscotti", "Biscotti"]];
+/* il nome dell'elenco uguale a quello scritto (anche scritto in un altro modo che l'app conosce) */
+function nomeEsatto(parte, testo){
+  const k = chiave(testo);
+  if (!k) return "";
+  const n = parte.elenco().find(function(x){ return chiave(x) === k; });
+  if (n) return n;
+  const a = aliasTutti(parte.aliasBase, parte.dati)[k];
+  return a && parte.elenco().some(function(x){ return chiave(x) === chiave(a); }) ? a : "";
+}
 function rigaDb(etichetta, valore){ return el("p", {class:"riga-db"}, el("span", {class:"label-sm", text:etichetta}), valore); }
+/* le caselle scritte restano anche se la pagina si aggiorna mentre si scrive */
+S.dbCampiDi = "";
 function renderDatabase(){
   if (!inDatabase()) return;
+  const pann = $("pannello-database");
+  const di = [S.dbScheda, S.dbMod, S.corrApri, S.prenCorreggi].join("|");
+  const valori = {};
+  if (di === S.dbCampiDi) pann.querySelectorAll("input[id]").forEach(function(i){ valori[i.id] = i.value; });
+  const attivo = document.activeElement && pann.contains(document.activeElement) ? document.activeElement.id : "";
+  S.dbCampiDi = di;
+  const menu = !S.dbScheda;
+  $("db-menu").hidden = !menu;
+  $("db-parte").hidden = menu;
+  if (menu) renderDbMenu();
+  else {
+    const x = SCHEDE_DB.find(function(s){ return s[0] === S.dbScheda; }) || SCHEDE_DB[0];
+    riempi($("db-testa"), [
+      el("button", {type:"button", class:"mini", "data-db-scheda":"", text:"‹ Database"}),
+      el("h2", {text:x[1]})]);
+    if (S.dbScheda === "prenotazioni") renderDbPren();
+    else if (S.dbScheda === "biscotti") renderDbBisc();
+    else renderDbOrdini();
+  }
+  for (const id in valori){
+    const i = $(id);
+    if (i && valori[id] && i.value !== valori[id]){ i.value = valori[id]; if (i.dataset.suggParte) aggiornaSugg(i); }
+  }
+  if (attivo && $(attivo) && document.activeElement !== $(attivo)) $(attivo).focus();
+}
+/* il sotto menù: un tasto per ogni parte, con quante cose ci sono da controllare */
+function renderDbMenu(){
   const c = contaDatabase();
-  riempi($("db-schede"), SCHEDE_DB.map(function(x){
-    return el("button", {type:"button", class:"chip-add stat-per", role:"tab", "data-db-scheda":x[0], "aria-selected":String(S.dbScheda === x[0]), "aria-pressed":String(S.dbScheda === x[0])},
-      x[1], c[x[0]] ? el("span", {class:"badge", text:String(c[x[0]])}) : null);
-  }));
-  if (S.dbScheda === "prenotazioni") renderDbPren();
-  else if (S.dbScheda === "biscotti") renderDbBisc();
-  else renderDbOrdini();
+  riempi($("db-menu"), [
+    el("p", {class:"hint", text:"Scegli quale parte vuoi vedere. Il numero dice quante cose nuove ci sono da controllare."}),
+    el("ul", {class:"db-sotto"}, ...SCHEDE_DB.map(function(x){
+      return el("li", null, el("button", {type:"button", class:"menu-voce", "data-db-scheda":x[0], "aria-label":x[1] + (c[x[0]] ? ", " + c[x[0]] + " da controllare" : "")},
+        iconaMenu(x[2]),
+        el("span", {class:"menu-nome"}, x[1], el("span", {class:"hint", style:"display:block;font-weight:400;font-size:14px;margin:0", text:x[3]})),
+        el("span", {class:"badge", "data-zero": c[x[0]] ? null : "", text:String(c[x[0]])})));
+    }))]);
+}
+/* la casella per scrivere il nome giusto, con i prodotti dell'elenco che somigliano */
+function campoNomeGiusto(id, parte, bottone){
+  return el("div", {class:"db-nome-giusto"},
+    el("label", {class:"label-sm", for:id, text:"Scrivi il nome giusto (o toccane uno sotto)"}),
+    el("input", {id:id, type:"text", maxlength:"60", autocomplete:"off", autocapitalize:"sentences", "data-sugg-parte":parte, "data-invio":bottone}),
+    el("div", {class:"db-sugg", id:id + "-sugg", "aria-live":"polite"}));
+}
+function aggiornaSugg(input){
+  const box = $(input.id + "-sugg");
+  if (!box) return;
+  const parte = parteProd(input.dataset.suggParte), t = input.value.trim(), k = chiave(t);
+  if (!k){ riempi(box, []); return; }
+  const esatto = nomeEsatto(parte, t);
+  const simili = [];
+  function metti(n){ if (simili.length < 6 && !simili.some(function(x){ return chiave(x) === chiave(n); })) simili.push(n); }
+  if (esatto) metti(esatto);
+  parte.elenco().forEach(function(n){ if (chiave(n).indexOf(k) >= 0) metti(n); });
+  cercaProdotto(t, parte.forme(), {}).scelte.forEach(metti);
+  riempi(box, simili.filter(function(n){ return n !== esatto; }).map(function(n){
+    return el("button", {type:"button", class:"chip-add", "data-metti":n, "data-per":input.id, text:n});
+  }).concat([el("p", {class:"hint", text: esatto
+    ? "✓ C'è già nell'elenco: «" + esatto + "»."
+    : "Non c'è nell'elenco: diventa un prodotto nuovo, «" + maiuscola(t).slice(0, 60) + "»."})]));
 }
 function renderDbOrdini(){
   const gruppi = gruppiCorrezioni();
   S.corrGruppi = new Map(gruppi.map(function(g){ return [g.id, g]; }));
   const off = S.pending.has("prodotti-richieste");
-  const elenco = elencoProdottiRich();
-  $("db-spiega").textContent = "Le richieste dei negozi degli ultimi " + secondi("controllo") + ". Qui vedi cosa ha scritto la persona e cosa ha messo l'app. Se l'app ha sbagliato, scegli il prodotto giusto: si correggono tutte le richieste scritte così e la volta dopo l'app lo sa.";
+  $("db-spiega").textContent = "Le richieste dei negozi degli ultimi " + secondi("controllo") + ". Qui vedi cosa ha scritto la persona e cosa ha messo l'app. Se l'app ha sbagliato, scrivi il nome giusto: si correggono tutte le richieste scritte così e la volta dopo l'app lo sa. Se un ordine non c'entra niente, eliminalo.";
   riempi($("db-lista"), gruppi.map(function(g){
     const posti = Array.from(new Set(g.rich.map(function(r){ return r.per; }))).join(", ");
     const ultima = Math.max.apply(null, g.rich.map(function(r){ return r.creato; }));
@@ -4051,17 +4158,15 @@ function renderDbOrdini(){
       parti.push(rigaDb("L'app ha messo", el("strong", {text:g.nome})));
       parti.push(el("p", {class:"domanda-db", text:"È giusto?"}));
     } else {
-      parti.push(el("p", {class:"domanda-db", text:"L'app non conosce questo prodotto. È nuovo o c'è già con un altro nome?"}));
+      parti.push(el("p", {class:"domanda-db", text:"L'app non conosce questo prodotto. È nuovo o è scritto male?"}));
     }
     parti.push(el("p", {class:"hint", text:(g.rich.length === 1 ? "1 richiesta" : g.rich.length + " richieste") + " · " + posti + " · " + quando(ultima)}));
     let azioni;
     if (S.corrApri === g.id){
-      const sel = el("select", {id:"corr-scelta", "aria-label":"Il prodotto giusto per " + g.testo}, el("option", {value:"", text:"Scegli il prodotto giusto…"}));
-      if (g.tipo === "corretta") sel.append(el("option", {value:"__nuovo__", text:"Nessuno: «" + maiuscola(g.testo) + "» è un prodotto nuovo"}));
-      elenco.forEach(function(n){ if (g.tipo !== "corretta" || chiave(n) !== chiave(g.nome)) sel.append(el("option", {value:n, text:n})); });
-      azioni = el("div", {class:"row"}, sel,
-        el("button", {type:"button", class:"mini", "data-corr-salva":g.id, disabled:off, text:"Correggi"}),
-        el("button", {type:"button", class:"link", "data-corr-annulla":g.id, text:"Annulla"}));
+      azioni = el("div", {class:"db-nome-giusto"}, campoNomeGiusto("corr-testo", "ordini", "corr-salva"),
+        el("div", {class:"row"},
+          el("button", {type:"button", class:"mini", id:"corr-salva", "data-corr-salva":g.id, disabled:off, text:"Salva il nome giusto"}),
+          el("button", {type:"button", class:"link", "data-corr-annulla":g.id, text:"Annulla"})));
     } else if (g.tipo === "corretta"){
       azioni = el("div", {class:"row"},
         el("button", {type:"button", class:"mini", "data-corr-giusto":g.id, disabled:off, "aria-label":"Sì, è giusto: " + g.testo + " è " + g.nome, text:"Sì, è giusto"}),
@@ -4069,45 +4174,44 @@ function renderDbOrdini(){
     } else {
       azioni = el("div", {class:"row"},
         el("button", {type:"button", class:"mini", "data-corr-nuovo":g.id, disabled:off, "aria-label":"È un prodotto nuovo: " + g.testo, text:"È un prodotto nuovo"}),
-        el("button", {type:"button", class:"mini", "data-corr-era":g.id, disabled:off, text:"C'è già, è…"}));
+        el("button", {type:"button", class:"mini", "data-corr-era":g.id, disabled:off, text:"Scrivi il nome giusto"}));
     }
     parti.push(azioni);
+    parti.push(el("div", {class:"row"}, el("button", {type:"button", class:"link pericolo", "data-corr-elimina":g.id, disabled:g.rich.some(function(r){ return S.pending.has(r.id); }),
+      "aria-label":"Elimina l'ordine: " + g.testo, text: g.rich.length === 1 ? "Elimina questo ordine" : "Elimina questi " + g.rich.length + " ordini"})));
     return el("div", {class:"card pren-dc-voce db-voce"}, ...parti);
   }));
   $("db-vuoto").hidden = gruppi.length > 0;
   $("db-vuoto").textContent = S.pronto ? "Niente da controllare: tutti i nomi degli ordini sono a posto." : "Carico le richieste…";
   $("db-elenco-titolo").textContent = "Tutti i prodotti degli ordini";
-  $("db-elenco-spiega").textContent = "L'elenco che l'app usa per riconoscere i nomi, diviso per reparto. Sotto ogni prodotto, gli altri modi di scriverlo che conosce.";
-  renderElencoRich(elenco);
+  $("db-elenco-spiega").textContent = "L'elenco che l'app usa per riconoscere i nomi, diviso per reparto. Sotto ogni prodotto, gli altri modi di scriverlo che conosce. Tocca «Modifica» per cambiare il nome, aggiungere un modo di scriverlo o togliere il prodotto.";
+  renderElencoProd(parteProd("ordini"), true);
 }
 function renderDbPren(){
   const gruppi = gruppiDaControllare();
-  const elenco = elencoProdotti();
   const off = S.pending.has("prodotti");
-  $("db-spiega").textContent = "Le prenotazioni degli ultimi " + secondi("controllo") + " con un prodotto che l'app non conosceva. «È un prodotto nuovo»: entra nell'elenco. «C'è già, è…»: scegli il prodotto giusto e tutte le prenotazioni scritte così si correggono da sole.";
+  $("db-spiega").textContent = "Le prenotazioni degli ultimi " + secondi("controllo") + " con un prodotto che l'app non conosceva. «È un prodotto nuovo»: entra nell'elenco. «Scrivi il nome giusto»: se era scritto male, scrivi o scegli il nome giusto e tutte le prenotazioni scritte così si correggono da sole.";
   riempi($("db-lista"), Array.from(gruppi.entries()).map(function(e){
     const k = e[0], g = e[1];
     const dove = g.pren.slice(0, 3).map(function(p){ return fmtCortoGiorno(p.perIl) + (p.cliente ? ", " + p.cliente : ""); }).join(" · ") + (g.pren.length > 3 ? " e altre" : "");
     return el("div", {class:"card pren-dc-voce db-voce"},
       rigaDb("Scritto", el("strong", {text:"«" + g.testo + "»"})),
-      el("p", {class:"domanda-db", text:"L'app non conosce questo prodotto. È nuovo o c'è già con un altro nome?"}),
+      el("p", {class:"domanda-db", text:"L'app non conosce questo prodotto. È nuovo o è scritto male?"}),
       el("p", {class:"hint", text:(g.pren.length === 1 ? "1 prenotazione" : g.pren.length + " prenotazioni") + " · " + dove}),
       S.prenCorreggi === k
-        ? el("div", {class:"row"},
-            el("select", {id:"pren-dc-scelta", "aria-label":"Il prodotto giusto per " + g.testo}, el("option", {value:"", text:"Scegli il prodotto giusto…"}), ...elenco.map(function(n){ return el("option", {value:n, text:n}); })),
-            el("button", {type:"button", class:"mini", "data-pren-dc-salva":k, disabled:off, text:"Correggi"}),
-            el("button", {type:"button", class:"link", "data-pren-dc-annulla":k, text:"Annulla"}))
+        ? el("div", {class:"db-nome-giusto"}, campoNomeGiusto("pren-dc-testo", "prenotazioni", "pren-dc-salva"),
+            el("div", {class:"row"},
+              el("button", {type:"button", class:"mini", id:"pren-dc-salva", "data-pren-dc-salva":k, disabled:off, text:"Salva il nome giusto"}),
+              el("button", {type:"button", class:"link", "data-pren-dc-annulla":k, text:"Annulla"})))
         : el("div", {class:"row"},
             el("button", {type:"button", class:"mini", "data-pren-dc-conferma":k, "data-testo":g.testo, disabled:off, text:"È un prodotto nuovo"}),
-            el("button", {type:"button", class:"mini", "data-pren-dc-errore":k, disabled:off, text:"C'è già, è…"})));
+            el("button", {type:"button", class:"mini", "data-pren-dc-errore":k, disabled:off, text:"Scrivi il nome giusto"})));
   }));
   $("db-vuoto").hidden = gruppi.size > 0;
   $("db-vuoto").textContent = S.pronto ? "Niente da controllare: tutti i prodotti delle prenotazioni sono a posto." : "Carico le prenotazioni…";
   $("db-elenco-titolo").textContent = "Tutti i prodotti delle prenotazioni";
-  $("db-elenco-spiega").textContent = "L'elenco che l'app usa per riconoscere i prodotti delle prenotazioni. Sotto ogni prodotto, gli altri modi di scriverlo che conosce.";
-  $("db-n").textContent = String(elenco.length);
-  const alias = Object.assign({}, ALIAS_BASE, S.prodImp.alias);
-  riempi($("db-elenco"), [el("div", null, ...elenco.map(function(n){ return rigaElenco(n, alias); }))]);
+  $("db-elenco-spiega").textContent = "L'elenco che l'app usa per riconoscere i prodotti delle prenotazioni. Sotto ogni prodotto, gli altri modi di scriverlo che conosce. Tocca «Modifica» per cambiare il nome, aggiungere un modo di scriverlo o togliere il prodotto.";
+  renderElencoProd(parteProd("prenotazioni"), false);
 }
 function renderDbBisc(){
   const nuovi = biscNuovi();
@@ -4124,46 +4228,66 @@ function renderDbBisc(){
   $("db-vuoto").hidden = nuovi.length > 0;
   $("db-vuoto").textContent = "Niente da controllare: nessun biscotto nuovo.";
   const elenco = catalogoBisc();
+  const base = new Set(BISCOTTI_BASE.map(chiave));
+  const tolti = S.biscTolti.filter(function(n){ return !base.has(chiave(n)); });
   $("db-elenco-titolo").textContent = "Tutti i biscotti";
-  $("db-elenco-spiega").textContent = "L'elenco dei biscotti che i negozi possono chiedere.";
+  $("db-elenco-spiega").textContent = "L'elenco dei biscotti che i negozi possono chiedere. Quelli aggiunti dai negozi si possono togliere; quelli tolti si possono rimettere.";
   $("db-n").textContent = String(elenco.length);
-  riempi($("db-elenco"), [el("div", null, ...elenco.map(function(n){ return rigaElenco(n, {}); }))]);
+  const out = [el("div", null, ...elenco.map(function(n){
+    const riga = el("div", {class:"corr-prod"}, el("span", {class:"nome", text:n}));
+    if (!base.has(chiave(n))) riga.append(el("button", {type:"button", class:"link", "data-db-bisc-no":n, disabled:off, "aria-label":"Togli dall'elenco: " + n, text:"Togli"}));
+    return riga;
+  }))];
+  if (tolti.length) out.push(el("section", {class:"corr-rep"}, el("p", {class:"label-sm", text:"Tolti dall'elenco"}),
+    el("div", null, ...tolti.map(function(n){
+      return el("div", {class:"corr-prod"}, el("span", {class:"nome", text:n}),
+        el("button", {type:"button", class:"link", "data-db-bisc-rimetti":n, disabled:off, "aria-label":"Rimetti nell'elenco: " + n, text:"Rimetti"}));
+    }))));
+  riempi($("db-elenco"), out);
 }
-/* una riga dell'elenco: il nome e gli altri modi di scriverlo */
-function rigaElenco(n, alias){
-  const altri = [];
-  for (const k in alias){ if (chiave(alias[k]) === chiave(n) && k !== chiave(n)) altri.push("«" + k + "»"); }
-  const riga = el("div", {class:"corr-prod"}, el("span", {class:"nome", text:n}));
-  if (altri.length) riga.append(el("span", {class:"anche", text:"Scritto anche: " + altri.join(", ")}));
-  return riga;
-}
-/* tutti i prodotti degli ordini, per reparto, con gli altri modi di scriverli */
-function renderElencoRich(elenco){
+/* l'elenco completo dei prodotti (ordini o prenotazioni), che si può cambiare:
+   in cima «Aggiungi un prodotto»; per ogni prodotto «Modifica» apre nome, altri modi di scriverlo e «Togli dall'elenco» */
+function renderElencoProd(parte, perReparto){
+  const elenco = parte.elenco();
   $("db-n").textContent = String(elenco.length);
-  const alias = Object.assign({}, ALIAS_RICH_BASE, S.prodRich.alias);
+  const alias = aliasTutti(parte.aliasBase, parte.dati);
   const anche = {};
   for (const k in alias){ const n = chiave(alias[k]); if (k !== n) (anche[n] = anche[n] || []).push(k); }
-  const perRep = new Map(REPARTI.map(function(r){ return [r, []]; }));
-  elenco.forEach(function(n){ perRep.get(repartoDi({ articolo: n })).push(n); });
-  const off = S.pending.has("prodotti-richieste");
-  const aggiunti = new Set(S.prodRich.elenco.map(chiave));
-  const base = new Set(PRODOTTI_RICH_BASE.map(chiave));
-  const out = [];
-  perRep.forEach(function(nomi, rep){
-    if (!nomi.length) return;
-    out.push(el("section", {class:"corr-rep"}, el("p", {class:"label-sm", text:rep}),
-      el("div", null, ...nomi.map(function(n){
-        const altri = anche[chiave(n)] || [];
-        const riga = el("div", {class:"corr-prod"}, el("span", {class:"nome", text:n}));
-        if (aggiunti.has(chiave(n)) && !base.has(chiave(n))) riga.append(el("button", {type:"button", class:"link", "data-corr-togli":n, disabled:off, "aria-label":"Togli dall'elenco: " + n, text:"Togli"}));
-        if (altri.length) riga.append(el("span", {class:"anche"}, "Scritto anche: ", ...altri.map(function(k, i){
-          const tuo = !!S.prodRich.alias[k];
-          return el("span", null, i ? ", " : "", "«" + k + "»",
-            tuo ? el("button", {type:"button", class:"link", "data-corr-togli-alias":k, disabled:off, "aria-label":"Togli la correzione «" + k + "» → " + n, text:" (togli)"}) : null);
-        })));
-        return riga;
-      }))));
-  });
+  const off = S.pending.has(parte.pending);
+  function riga(n){
+    const altri = anche[chiave(n)] || [];
+    const aperta = S.dbMod === chiave(n);
+    const r = el("div", {class:"corr-prod"}, el("span", {class:"nome", text:n}),
+      el("button", {type:"button", class:"link", "data-db-mod": aperta ? "" : chiave(n), "aria-expanded":String(aperta), "aria-label":(aperta ? "Chiudi: " : "Modifica: ") + n, text: aperta ? "Chiudi" : "Modifica"}));
+    if (altri.length) r.append(el("span", {class:"anche"}, "Scritto anche: ", ...altri.map(function(k, i){
+      return el("span", null, i ? ", " : "", "«" + k + "»",
+        aperta ? el("button", {type:"button", class:"link", "data-db-togli-alias":k, disabled:off, "aria-label":"Togli «" + k + "» → " + n, text:" (togli)"}) : null);
+    })));
+    if (aperta) r.append(el("div", {class:"db-mod"},
+      el("label", {class:"label-sm", for:"db-mod-nome", text:"Nome giusto"}),
+      el("div", {class:"row"},
+        el("input", {id:"db-mod-nome", type:"text", maxlength:"60", autocomplete:"off", value:n, "data-invio":"db-rinomina"}),
+        el("button", {type:"button", class:"mini", id:"db-rinomina", "data-db-rinomina":n, disabled:off, text:"Cambia nome"})),
+      el("label", {class:"label-sm", for:"db-mod-alias", text:"Aggiungi un altro modo di scriverlo"}),
+      el("div", {class:"row"},
+        el("input", {id:"db-mod-alias", type:"text", maxlength:"60", autocomplete:"off", placeholder:"Come lo scrivono nei negozi", "data-invio":"db-alias"}),
+        el("button", {type:"button", class:"mini", id:"db-alias", "data-db-alias":n, disabled:off, text:"Aggiungi"})),
+      el("div", {class:"row"},
+        el("button", {type:"button", class:"mini pericolo", "data-db-togli-prod":n, disabled:off, text:"Togli dall'elenco"}))));
+    return r;
+  }
+  const out = [el("div", {class:"db-nuovo"},
+    el("label", {class:"label-sm", for:"db-nuovo-prod", text:"Aggiungi un prodotto all'elenco"}),
+    el("div", {class:"row"},
+      el("input", {id:"db-nuovo-prod", type:"text", maxlength:"60", autocomplete:"off", autocapitalize:"sentences", placeholder:"Nome del prodotto", "data-invio":"db-aggiungi"}),
+      el("button", {type:"button", class:"mini", id:"db-aggiungi", disabled:off, text:"Aggiungi"})))];
+  if (perReparto){
+    const perRep = new Map(REPARTI.map(function(r){ return [r, []]; }));
+    elenco.forEach(function(n){ perRep.get(repartoDi({ articolo: n })).push(n); });
+    perRep.forEach(function(nomi, rep){
+      if (nomi.length) out.push(el("section", {class:"corr-rep"}, el("p", {class:"label-sm", text:rep}), el("div", null, ...nomi.map(riga))));
+    });
+  } else out.push(el("div", null, ...elenco.map(riga)));
   riempi($("db-elenco"), out);
 }
 async function salvaProdRich(cambia){
@@ -4180,6 +4304,8 @@ function conProdotto(d, nome){
   if (!e.some(function(x){ return chiave(x) === chiave(nome); })) e.push(nome);
   return e;
 }
+/* un prodotto rimesso nell'elenco non è più tra i tolti */
+function senzaTolto(d, nome){ return (Array.isArray(d.tolti) ? d.tolti : []).filter(function(x){ return chiave(x) !== chiave(nome); }); }
 async function corrGiusto(id){
   const g = S.corrGruppi.get(id); if (!g) return;
   const ok = await salvaProdRich(function(d){ return { alias: conAlias(d, g.k, g.nome) }; });
@@ -4188,37 +4314,120 @@ async function corrGiusto(id){
 async function corrNuovo(id){
   const g = S.corrGruppi.get(id); if (!g) return;
   const nome = maiuscola(g.testo).slice(0, 60);
-  const ok = await salvaProdRich(function(d){ return { elenco: conProdotto(d, nome) }; });
+  const ok = await salvaProdRich(function(d){ return { elenco: conProdotto(d, nome), tolti: senzaTolto(d, nome) }; });
   if (ok){ avviso("«" + nome + "» è nell'elenco dei prodotti."); registra("prodotto confermato", { dove: "richieste" }); }
 }
+/* il nome giusto scritto dal titolare: se c'è già nell'elenco si collega a quello,
+   altrimenti diventa un prodotto nuovo; quello scritto male resta collegato al nome giusto */
 async function corrSalva(id){
-  const g = S.corrGruppi.get(id), sel = $("corr-scelta");
-  const scelta = sel ? sel.value : "";
-  if (!g || !scelta){ if (sel) sel.focus(); return; }
-  const nuovo = scelta === "__nuovo__";
-  const nome = nuovo ? maiuscola(g.testo).slice(0, 60) : scelta;
+  const g = S.corrGruppi.get(id), inp = $("corr-testo");
+  const t = inp ? inp.value.trim() : "";
+  if (!g || !t){ if (inp) inp.focus(); return; }
+  const parte = parteProd("ordini");
+  const esiste = nomeEsatto(parte, t);
+  const nome = esiste || maiuscola(t).slice(0, 60);
   const ok = await salvaProdRich(function(d){
     const cambia = { alias: conAlias(d, g.k, nome) };
-    if (nuovo) cambia.elenco = conProdotto(d, nome);
+    if (!esiste){ cambia.elenco = conProdotto(d, nome); cambia.tolti = senzaTolto(d, nome); }
     return cambia;
   });
-  if (ok){ S.corrApri = ""; avviso("Corretto: ora è «" + nome + "», anche nelle richieste già mandate."); registra("prodotto corretto", { dove: "richieste" }); renderTutto(); }
+  if (ok){
+    S.corrApri = "";
+    avviso((esiste ? "Corretto" : "Prodotto nuovo aggiunto") + ": ora è «" + nome + "», anche nelle richieste già mandate.");
+    registra("prodotto corretto", { dove: "richieste", nuovo: !esiste });
+    renderTutto();
+  }
 }
-async function corrTogli(nome){
-  const si = await chiedi("Togliere «" + nome + "» dall'elenco dei prodotti?", "Le richieste già mandate restano come sono.", "Sì, togli", "No");
+/* un ordine che non c'entra niente: si elimina (si può ritrovare in Cronologia) */
+async function corrElimina(id){
+  const g = S.corrGruppi.get(id); if (!g) return;
+  const rich = g.rich.filter(function(r){ return puoTogliere(r) && !S.pending.has(r.id); });
+  if (!rich.length) return;
+  const posti = Array.from(new Set(rich.map(function(r){ return r.per; }))).join(", ");
+  const si = await chiedi(rich.length === 1 ? "Eliminare questo ordine?" : "Eliminare questi " + rich.length + " ordini?",
+    "«" + g.testo + "» (" + posti + "). Sparisce dalle richieste e dal giro. Se è stato uno sbaglio, lo ritrovi in Cronologia.", "Sì, elimina", "No");
   if (!si) return;
-  const ok = await salvaProdRich(function(d){
-    return { elenco: (Array.isArray(d.elenco) ? d.elenco : []).filter(function(x){ return chiave(x) !== chiave(nome); }) };
-  });
-  if (ok) avviso("Tolto dall'elenco: " + nome + ".");
+  rich.forEach(function(r){ S.pending.add(r.id); });
+  renderTutto();
+  let tutti = true;
+  for (const r of rich){
+    const ok = await scrivi(function(){ return store.annulla(r); });
+    if (!ok) tutti = false;
+    S.pending.delete(r.id);
+  }
+  if (tutti){ avviso(rich.length === 1 ? "Ordine eliminato." : rich.length + " ordini eliminati."); registra("ordine eliminato dal database", { quante: rich.length }); }
+  renderTutto();
 }
-async function corrTogliAlias(k){
-  const nome = S.prodRich.alias[k]; if (!nome) return;
-  const si = await chiedi("Togliere la correzione «" + k + "» → " + nome + "?", "Le richieste scritte «" + k + "» tornano come erano state mandate.", "Sì, togli", "No");
+/* ---------- cambiare l'elenco dei prodotti (ordini o prenotazioni) ---------- */
+async function dbAggiungi(){
+  const parte = parteProd(S.dbScheda), inp = $("db-nuovo-prod");
+  const t = inp ? inp.value.trim() : "";
+  if (!t){ if (inp) inp.focus(); return; }
+  const nome = maiuscola(t).slice(0, 60);
+  const c = parte.elenco().find(function(x){ return chiave(x) === chiave(nome); });
+  if (c){ avviso("«" + c + "» c'è già nell'elenco."); return; }
+  const ok = await parte.salva(function(d){ return { elenco: conProdotto(d, nome), tolti: senzaTolto(d, nome) }; });
+  if (ok){ if ($("db-nuovo-prod")) $("db-nuovo-prod").value = ""; avviso("«" + nome + "» è nell'elenco dei prodotti."); registra("prodotto aggiunto", { dove: parte.id }); }
+}
+/* cambiare nome: il nome vecchio e tutti i suoi modi di scriverlo portano al nome nuovo,
+   anche nelle richieste e prenotazioni già mandate. Se il nome nuovo c'è già, i due prodotti si uniscono. */
+async function dbRinomina(vecchio){
+  const parte = parteProd(S.dbScheda), inp = $("db-mod-nome");
+  const t = inp ? inp.value.trim() : "";
+  if (!t){ if (inp) inp.focus(); return; }
+  let nuovo = maiuscola(t).slice(0, 60);
+  if (chiave(nuovo) === chiave(vecchio)){ avviso("Il nome è lo stesso."); return; }
+  const c = parte.elenco().find(function(x){ return chiave(x) === chiave(nuovo); });
+  if (c){
+    const si = await chiedi("«" + c + "» c'è già. Unire «" + vecchio + "» a «" + c + "»?", "Tutto quello scritto «" + vecchio + "» diventa «" + c + "», anche quello già mandato.", "Sì, unisci", "No");
+    if (!si) return;
+    nuovo = c;
+  }
+  const alias = aliasTutti(parte.aliasBase, parte.dati);
+  const ok = await parte.salva(function(d){
+    const a = Object.assign({}, d.alias);
+    for (const k in alias){ if (chiave(alias[k]) === chiave(vecchio)) a[k] = nuovo; }
+    a[chiave(vecchio)] = nuovo;
+    const e = conProdotto({ elenco: (Array.isArray(d.elenco) ? d.elenco : []).filter(function(x){ return chiave(x) !== chiave(vecchio); }) }, nuovo);
+    let tolti = senzaTolto(d, nuovo);
+    if (parte.base.some(function(x){ return chiave(x) === chiave(vecchio); }) && tolti.indexOf(chiave(vecchio)) < 0) tolti = tolti.concat([chiave(vecchio)]);
+    return { alias: a, elenco: e, tolti: tolti };
+  });
+  if (ok){ S.dbMod = ""; avviso("Fatto: «" + vecchio + "» ora si chiama «" + nuovo + "»."); registra("prodotto rinominato", { dove: parte.id }); renderTutto(); }
+}
+async function dbAlias(nome){
+  const parte = parteProd(S.dbScheda), inp = $("db-mod-alias");
+  const t = inp ? inp.value.trim() : "";
+  if (!t){ if (inp) inp.focus(); return; }
+  const k = chiave(t).slice(0, 60);
+  if (k === chiave(nome)){ avviso("È già il nome del prodotto."); return; }
+  const altro = parte.elenco().find(function(x){ return chiave(x) === k; });
+  if (altro){ avviso("«" + altro + "» è un altro prodotto dell'elenco: per unirli usa «Cambia nome»."); return; }
+  const ok = await parte.salva(function(d){ return { alias: conAlias(d, k, nome) }; });
+  if (ok){ if ($("db-mod-alias")) $("db-mod-alias").value = ""; avviso("Ora l'app sa che «" + t + "» è " + nome + "."); registra("modo di scrivere aggiunto", { dove: parte.id }); }
+}
+async function dbTogliProd(nome){
+  const parte = parteProd(S.dbScheda);
+  const si = await chiedi("Togliere «" + nome + "» dall'elenco dei prodotti?", "L'app non lo riconoscerà più. Le richieste e le prenotazioni già mandate restano come sono.", "Sì, togli", "No");
+  if (!si) return;
+  const alias = aliasTutti(parte.aliasBase, parte.dati);
+  const ok = await parte.salva(function(d){
+    const a = Object.assign({}, d.alias);
+    for (const k in alias){ if (chiave(alias[k]) === chiave(nome)) a[k] = ""; }
+    let tolti = Array.isArray(d.tolti) ? d.tolti.slice() : [];
+    if (parte.base.some(function(x){ return chiave(x) === chiave(nome); }) && tolti.indexOf(chiave(nome)) < 0) tolti.push(chiave(nome));
+    return { alias: a, tolti: tolti, elenco: (Array.isArray(d.elenco) ? d.elenco : []).filter(function(x){ return chiave(x) !== chiave(nome); }) };
+  });
+  if (ok){ S.dbMod = ""; avviso("Tolto dall'elenco: " + nome + "."); registra("prodotto tolto", { dove: parte.id }); renderTutto(); }
+}
+async function dbTogliAlias(k){
+  const parte = parteProd(S.dbScheda);
+  const nome = aliasTutti(parte.aliasBase, parte.dati)[k]; if (!nome) return;
+  const si = await chiedi("Togliere «" + k + "» come modo di scrivere " + nome + "?", "Quello già mandato scritto «" + k + "» torna com'era stato scritto.", "Sì, togli", "No");
   if (!si) return;
   /* resta salvata vuota: così non vale più (anche dove le modifiche si uniscono) */
-  const ok = await salvaProdRich(function(d){ return { alias: conAlias(d, k, "") }; });
-  if (ok) avviso("Correzione tolta.");
+  const ok = await parte.salva(function(d){ return { alias: conAlias(d, k, "") }; });
+  if (ok) avviso("Tolto.");
 }
 /* biscotti nuovi: si confermano o si tolgono dall'elenco (impostazioni condivise "biscotti": confermati, tolti) */
 async function salvaBiscImp(cambia){
@@ -4241,6 +4450,13 @@ async function biscTogliNuovo(nome){
       aggiunte: (Array.isArray(d.aggiunte) ? d.aggiunte : []).filter(function(x){ return chiave(x) !== chiave(nome); }) };
   });
   if (ok) avviso("Tolto dall'elenco: " + nome + ".");
+}
+async function biscRimetti(nome){
+  const ok = await salvaBiscImp(function(d){
+    return { tolti: (Array.isArray(d.tolti) ? d.tolti : []).filter(function(x){ return chiave(x) !== chiave(nome); }),
+      confermati: conNome(d.confermati, nome), aggiunte: conNome(d.aggiunte, nome) };
+  });
+  if (ok) avviso(nome + ": di nuovo nell'elenco.");
 }
 
 /* ---------- prenotazioni dei clienti ---------- */
@@ -4514,21 +4730,23 @@ async function confermaProdotto(testo){
   if (!nome) return;
   nome = nome.charAt(0).toUpperCase() + nome.slice(1);
   const ok = await salvaProdotti(function(d){
-    const elenco = (Array.isArray(d.elenco) ? d.elenco : []).slice();
-    if (!elenco.some(function(x){ return chiave(x) === chiave(nome); })) elenco.push(nome);
-    return { elenco: elenco };
+    return { elenco: conProdotto(d, nome), tolti: senzaTolto(d, nome) };
   });
   if (ok){ avviso("«" + nome + "» è nell'elenco dei prodotti."); registra("prodotto confermato", {}); }
 }
+/* il nome giusto scritto dal titolare: se c'è già si collega, altrimenti diventa un prodotto nuovo */
 async function correggiProdotto(k){
-  const sel = $("pren-dc-scelta");
-  const nome = sel ? sel.value : "";
-  if (!nome){ if (sel) sel.focus(); return; }
+  const inp = $("pren-dc-testo");
+  const t = inp ? inp.value.trim() : "";
+  if (!t){ if (inp) inp.focus(); return; }
+  const esiste = nomeEsatto(parteProd("prenotazioni"), t);
+  const nome = esiste || maiuscola(t).slice(0, 60);
   const ok = await salvaProdotti(function(d){
-    const alias = Object.assign({}, d.alias); alias[k] = nome;
-    return { alias: alias };
+    const cambia = { alias: conAlias(d, k, nome) };
+    if (!esiste){ cambia.elenco = conProdotto(d, nome); cambia.tolti = senzaTolto(d, nome); }
+    return cambia;
   });
-  if (ok){ registra("prodotto corretto", {}); S.prenCorreggi = ""; avviso("Corretto: ora è «" + nome + "»."); renderTutto(); }
+  if (ok){ registra("prodotto corretto", { nuovo: !esiste }); S.prenCorreggi = ""; avviso((esiste ? "Corretto" : "Prodotto nuovo aggiunto") + ": ora è «" + nome + "»."); renderTutto(); }
 }
 /* ---------- cerca: cliente, prodotto o telefono, da 7 giorni fa in avanti ---------- */
 function cercaPren(testo){
@@ -5165,6 +5383,8 @@ function collega(){
     if (b.dataset.prova){ S.anteprima = true; return vaiA(b.dataset.prova); }
     if (b.id === "esci-anteprima"){ S.anteprima = false; return vaiA(""); }
     if (b.id === "apri-menu") return apriMenu();
+    /* dentro una parte del Database, «Indietro» torna al sotto menù */
+    if (b.id === "torna" && inDatabase() && S.dbScheda){ S.dbScheda = ""; S.dbMod = ""; S.corrApri = ""; S.prenCorreggi = ""; renderTutto(); return; }
     if (b.id === "torna") return vaiSezione("richieste");
     if (b.id === "chiudi-menu") return chiudiMenu(true);
     if (b.dataset.vai) return vaiSezione(b.dataset.vai);
@@ -5311,21 +5531,28 @@ function collega(){
     /* correzioni dei nomi delle richieste (titolari) */
     if (b.dataset.corrGiusto) return corrGiusto(b.dataset.corrGiusto);
     if (b.dataset.corrNuovo) return corrNuovo(b.dataset.corrNuovo);
-    if (b.dataset.corrEra){ S.corrApri = b.dataset.corrEra; renderDatabase(); const sc = $("corr-scelta"); if (sc) sc.focus(); return; }
+    if (b.dataset.corrEra){ S.corrApri = b.dataset.corrEra; renderDatabase(); const sc = $("corr-testo"); if (sc) sc.focus(); return; }
     if (b.dataset.corrAnnulla){ S.corrApri = ""; return renderDatabase(); }
-    if (b.dataset.dbScheda){ S.dbScheda = b.dataset.dbScheda; S.corrApri = ""; S.prenCorreggi = ""; return renderDatabase(); }
+    if (b.dataset.dbScheda !== undefined){ S.dbScheda = b.dataset.dbScheda; S.corrApri = ""; S.prenCorreggi = ""; S.dbMod = ""; renderTutto(); try { window.scrollTo(0, 0); } catch(e){} return; }
+    if (b.dataset.corrElimina) return corrElimina(b.dataset.corrElimina);
+    if (b.dataset.metti && b.dataset.per){ const i = $(b.dataset.per); if (i){ i.value = b.dataset.metti; aggiornaSugg(i); i.focus(); } return; }
+    if (b.dataset.dbMod !== undefined){ S.dbMod = b.dataset.dbMod; renderDatabase(); const i = $("db-mod-nome"); if (i) i.focus(); return; }
+    if (b.id === "db-aggiungi") return dbAggiungi();
+    if (b.dataset.dbRinomina) return dbRinomina(b.dataset.dbRinomina);
+    if (b.dataset.dbAlias) return dbAlias(b.dataset.dbAlias);
+    if (b.dataset.dbTogliProd) return dbTogliProd(b.dataset.dbTogliProd);
+    if (b.dataset.dbTogliAlias) return dbTogliAlias(b.dataset.dbTogliAlias);
+    if (b.dataset.dbBiscRimetti) return biscRimetti(b.dataset.dbBiscRimetti);
     if (b.dataset.dbBiscSi) return biscConferma(b.dataset.dbBiscSi);
     if (b.dataset.dbBiscNo) return biscTogliNuovo(b.dataset.dbBiscNo);
     if (b.dataset.corrSalva) return corrSalva(b.dataset.corrSalva);
-    if (b.dataset.corrTogli) return corrTogli(b.dataset.corrTogli);
-    if (b.dataset.corrTogliAlias) return corrTogliAlias(b.dataset.corrTogliAlias);
     /* striscia rossa */
     if (b.dataset.apriMancanti){ if (vedeMancanti()) vaiSezione("mancanti"); return; }
     if (b.id === "mag-mostra") return apriMagTutto();
     if (b.id === "mag-tutto-chiudi") return chiudiMagTutto();
     if (b.id === "mag-tutto-apri"){ chiudiMagTutto(); if (vedeMancanti()) vaiSezione("mancanti"); return; }
     if (b.dataset.prenDcConferma) return confermaProdotto(b.dataset.testo);
-    if (b.dataset.prenDcErrore){ S.prenCorreggi = b.dataset.prenDcErrore; renderDatabase(); const sc = $("pren-dc-scelta"); if (sc) sc.focus(); return; }
+    if (b.dataset.prenDcErrore){ S.prenCorreggi = b.dataset.prenDcErrore; renderDatabase(); const sc = $("pren-dc-testo"); if (sc) sc.focus(); return; }
     if (b.dataset.prenDcAnnulla){ S.prenCorreggi = ""; return renderDatabase(); }
     if (b.dataset.prenDcSalva) return correggiProdotto(b.dataset.prenDcSalva);
     if (b.id === "notif-spegni") return spegniNotifiche(false);
@@ -5457,6 +5684,12 @@ function collega(){
   document.addEventListener("submit", function(ev){
     const f = ev.target.closest && ev.target.closest("[data-parte-form]");
     if (f){ ev.preventDefault(); confermaParte(f.dataset.parteForm); }
+  });
+  /* Database: i nomi che somigliano mentre si scrive; «Invio» preme il tasto accanto */
+  document.addEventListener("input", function(ev){ if (ev.target.dataset && ev.target.dataset.suggParte) aggiornaSugg(ev.target); });
+  document.addEventListener("keydown", function(ev){
+    const t = ev.target;
+    if (ev.key === "Enter" && t && t.dataset && t.dataset.invio && $(t.dataset.invio)){ ev.preventDefault(); $(t.dataset.invio).click(); }
   });
   document.addEventListener("input", function(ev){ if (ev.target.id === "parte-testo"){ S.parteTesto = ev.target.value; ev.target.removeAttribute("aria-invalid"); } });
   $("form-bisc").addEventListener("submit", aggiungiBiscotto);
@@ -5727,7 +5960,7 @@ const VAPID_PUBLICA = "BC9TAKzQiQ-x3xtX0KWauGtV-uvIk9VFwqLjWAOzrJbe4e5w2AWyXMIej
    quale schermata, quanto tempo, errori, rete e tipo di telefono. Le persone non hanno nome ("Persona 1"…):
    lo decide il database (funzione "registra", supabase/aggiornamento-4-registro.sql). */
 const REGISTRO_ATTIVO = false;
-const VERSIONE_APP = "7401d492";
+const VERSIONE_APP = "65119ba9";
 S.reg = [];
 S.ultimoTasto = { nome: "", alle: 0 };
 S.tocchi = { nome: "", volte: 0, alle: 0, segnato: false };

@@ -1,7 +1,7 @@
 /* Copia dell'app sul telefono: si apre anche senza campo.
    La pagina si prende sempre dalla rete se c'è (così gli aggiornamenti arrivano subito);
    senza rete si usa la copia. I dati di Supabase non passano mai di qui. */
-const VERSIONE = "5b35363652";
+const VERSIONE = "29ad5a338c";
 const CACHE = "ordini-" + VERSIONE;
 const BASE = ["./", "manifest.webmanifest", "icone/icona-180.png", "icone/icona-192.png"];
 
