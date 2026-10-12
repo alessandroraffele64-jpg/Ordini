@@ -4362,18 +4362,33 @@ function caricaTuttoSB(){
     tuttePagine(function(){ return sb.from("impostazioni").select("chiave,dati").order("chiave"); }),
     /* le prenotazioni da 7 giorni fa in avanti, anche se sono state prese molto tempo prima
        (es. una comunione prenotata due mesi prima): non devono mai sparire dalla lista */
-    tuttePagine(function(){ return sb.from("richieste").select("id,autore,dati").eq("dati->>tipo", "prenotazione").gte("dati->>perIl", dataLocale(Date.now() - 7 * 86400000)).order("id"); }).catch(function(){ return []; })
+    tuttePagine(function(){ return sb.from("richieste").select("id,autore,dati").eq("dati->>tipo", "prenotazione").gte("dati->>perIl", dataLocale(Date.now() - 7 * 86400000)).order("id"); }).catch(function(){ return []; }),
+    /* le cose che non ci sono in magazzino, anche se sono state chieste più di 45 giorni fa:
+       restano nella striscia rossa finché qualcuno non preme «È arrivato» */
+    tuttePagine(function(){ return sb.from("stati").select("id,dati").eq("dati->>prep", "manca").order("id"); }).catch(function(){ return []; }),
+    /* le cose segnate con «+ Segna cosa manca», anche vecchie (quelle già arrivate poi non si vedono) */
+    tuttePagine(function(){ return sb.from("richieste").select("id,autore,dati").eq("dati->>tipo", "magazzino").order("id"); }).catch(function(){ return []; })
   ]).then(async function(r){
-    /* i loro stati (messa da parte, disdetta…) anche se sono vecchi */
     const giaR = new Set(r[1].map(function(x){ return x.id; }));
     const giaS = new Set(r[2].map(function(x){ return x.id; }));
-    const chiavi = r[5].filter(function(x){ return !giaR.has(x.id); }).map(function(x){ return x.autore + "~" + x.id; }).filter(function(k){ return !giaS.has(k); });
+    const recenti = r[1].length;
+    r[6].forEach(function(x){ if (!giaS.has(x.id)){ giaS.add(x.id); r[2].push(x); } });
+    [r[5], r[7]].forEach(function(l){ l.forEach(function(x){ if (!giaR.has(x.id)){ giaR.add(x.id); r[1].push(x); } }); });
+    /* stati recenti di richieste vecchie (es. una cosa vecchia appena arrivata in magazzino): si carica anche la richiesta */
+    const mancanti = [];
+    r[2].forEach(function(x){ const i = x.id.indexOf("~"); const rid = i > 0 ? x.id.slice(i + 1) : ""; if (rid && !giaR.has(rid)){ giaR.add(rid); mancanti.push(rid); } });
+    for (let i = 0; i < mancanti.length; i += 100){
+      const pezzo = mancanti.slice(i, i + 100);
+      const ric = await tuttePagine(function(){ return sb.from("richieste").select("id,autore,dati").in("id", pezzo).order("id"); }).catch(function(){ return []; });
+      r[1] = r[1].concat(ric);
+    }
+    /* e gli stati (messa da parte, disdetta, arrivata…) delle richieste vecchie caricate qui sopra */
+    const chiavi = r[1].slice(recenti).map(function(x){ return x.autore + "~" + x.id; }).filter(function(k){ return !giaS.has(k); });
     for (let i = 0; i < chiavi.length; i += 100){
       const pezzo = chiavi.slice(i, i + 100);
       const st = await tuttePagine(function(){ return sb.from("stati").select("id,dati").in("id", pezzo).order("id"); }).catch(function(){ return []; });
       r[2] = r[2].concat(st);
     }
-    r[1] = r[1].concat(r[5].filter(function(x){ return !giaR.has(x.id); }));
     RAW.voci = {}; RAW.autori = {}; RAW.bisc = {}; RAW.imp = {};
     S.stati = {}; S.nomi = {};
     r[0].forEach(function(x){ applicaRiga("profili", x); });
@@ -4434,7 +4449,7 @@ const VAPID_PUBLICA = "BC9TAKzQiQ-x3xtX0KWauGtV-uvIk9VFwqLjWAOzrJbe4e5w2AWyXMIej
    quale schermata, quanto tempo, errori, rete e tipo di telefono. Le persone non hanno nome ("Persona 1"…):
    lo decide il database (funzione "registra", supabase/aggiornamento-4-registro.sql). */
 const REGISTRO_ATTIVO = false;
-const VERSIONE_APP = "137b69b8";
+const VERSIONE_APP = "f3ef7f46";
 S.reg = [];
 S.ultimoTasto = { nome: "", alle: 0 };
 S.tocchi = { nome: "", volte: 0, alle: 0, segnato: false };
