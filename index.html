@@ -2513,30 +2513,39 @@ function renderCrono(dove, lista, conDest){
   riempi($("lista-crono-" + dove), l.map(function(r){ return rigaTolta(r, conDest); }));
   $("vuoto-crono-" + dove).hidden = l.length > 0;
 }
-/* "Chiesti spesso": prima quello che il negozio chiede nell'app, poi la lista presa dai vostri gruppi */
+/* "Chiesti spesso": prima quello che il negozio ha chiesto nell'app negli ultimi 30 giorni, poi la lista presa dai vostri gruppi.
+   Solo nomi giusti dell'elenco dei prodotti (con le correzioni del «Database»): un nome sconosciuto o scritto male non esce.
+   Si vedono i primi 8, con «Altri…» al massimo 20. */
+function nomeFrequente(testo){
+  const t = trovaProdottoRich(testo);
+  return t.esito === "sicuro" && t.nome ? t.nome : "";
+}
 function renderFrequenti(mie){
-  const aperti = new Set(mie.filter(function(r){ return r.stato !== "consegnato"; }).map(function(r){ return chiave(r.articolo); }));
-  const scritti = new Set(righeDi("righe").map(function(x){ return chiave(x.articolo); }));
+  const aperti = new Set(mie.filter(function(r){ return r.stato !== "consegnato"; }).map(function(r){ return chiave(nomeFrequente(r.articolo) || r.articolo); }));
+  const scritti = new Set(righeDi("righe").map(function(x){ return chiave(nomeFrequente(x.articolo) || x.articolo); }));
+  const dal = Date.now() - 30 * 86400000;
   const conta = new Map();
   for (const r of mie){
-    const k = chiave(r.articolo);
+    if (r.creato < dal) continue;
+    const nome = nomeFrequente(r.articolo), k = chiave(nome);
     if (!k || aperti.has(k) || scritti.has(k)) continue;
-    const c = conta.get(k) || { n:0, nome:r.articolo };
+    const c = conta.get(k) || { n:0, nome:nome };
     c.n++; conta.set(k, c);
   }
   const tutti = Array.from(conta.values()).sort(function(a,b){ return b.n - a.n; }).map(function(c){ return c.nome; });
   const visti = new Set(tutti.map(chiave));
-  (S.frequenti[S.punto] || []).forEach(function(nome){
-    const k = chiave(nome);
+  (S.frequenti[S.punto] || []).forEach(function(n){
+    const nome = nomeFrequente(n), k = chiave(nome);
     if (!k || visti.has(k) || aperti.has(k) || scritti.has(k)) return;
     visti.add(k); tutti.push(nome);
   });
-  const quanti = S.tuttiFrequenti ? 40 : 12;
+  const pochi = 8, max = 20;
+  const quanti = S.tuttiFrequenti ? max : pochi;
   const chips = tutti.slice(0, quanti).map(function(nome){
     return el("button", {type:"button", class:"chip-add", "data-aggiungi":nome, text:"+ " + nome});
   });
-  if (tutti.length > 12){
-    chips.push(el("button", {type:"button", class:"link", "data-altri":"1", text: S.tuttiFrequenti ? "Mostra meno" : "Altri " + (Math.min(tutti.length, 40) - 12) + "…"}));
+  if (tutti.length > pochi){
+    chips.push(el("button", {type:"button", class:"link", "data-altri":"1", text: S.tuttiFrequenti ? "Mostra meno" : "Altri " + (Math.min(tutti.length, max) - pochi) + "…"}));
   }
   riempi($("frequenti"), chips);
   $("frequenti-wrap").hidden = tutti.length === 0;
@@ -2927,6 +2936,7 @@ function capitoliManuale(){
   const cap = [];
   if (negozio || tit) cap.push({ titolo:"Richieste del negozio", domande:[
     ["Come chiedo una cosa?", ["Nella pagina principale scrivi in «Cosa serve?» una cosa per riga. La quantità puoi metterla o no (per esempio «2 casse acqua naturale» oppure «Vassoi»). Poi tocca ", tasto("Controlla e invia"), ": si apre «Controlla prima di inviare»."]],
+    ["Cosa sono i tasti «Chiesti spesso»?", ["Sono le cose che il tuo negozio ha chiesto più spesso nell'ultimo mese, già con il nome giusto. Toccane uno per aggiungerlo senza scriverlo. Ne vedi 8; con «Altri…» fino a 20. Le cose che hai già chiesto e non sono ancora arrivate non ci sono."]],
     ["Cosa controllo prima di inviare?", ["Per ogni cosa vedi:", el("br"),
       "• il nome: se l'app è sicura mette lei il nome giusto (vedi ✓ e puoi toccare «Lascia com'era»); se ha un dubbio chiede «Quale di questi?» e tu tocchi quello giusto, oppure «Nessuno, è un'altra cosa»;", el("br"),
       "• da dove si prende: di solito dal Panificio; puoi scegliere anche l'altro negozio, «Da ritirare fuori» (scrivi dove) o «Da comprare»;", el("br"),
@@ -5665,7 +5675,7 @@ const VAPID_PUBLICA = "BC9TAKzQiQ-x3xtX0KWauGtV-uvIk9VFwqLjWAOzrJbe4e5w2AWyXMIej
    quale schermata, quanto tempo, errori, rete e tipo di telefono. Le persone non hanno nome ("Persona 1"…):
    lo decide il database (funzione "registra", supabase/aggiornamento-4-registro.sql). */
 const REGISTRO_ATTIVO = false;
-const VERSIONE_APP = "ac605bf2";
+const VERSIONE_APP = "e4cf788e";
 S.reg = [];
 S.ultimoTasto = { nome: "", alle: 0 };
 S.tocchi = { nome: "", volte: 0, alle: 0, segnato: false };
