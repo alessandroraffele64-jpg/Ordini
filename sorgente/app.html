@@ -591,6 +591,32 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
 .perm-tasto{appearance:none;border:1.5px solid var(--line);background:var(--surface);color:var(--muted);border-radius:999px;min-width:58px;min-height:36px;font-weight:700;font-size:14px;cursor:pointer}
 .perm-tasto[aria-checked="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .codici-lista li:has(.permessi){padding-bottom:6px}
+/* Persone registrate: elenco, permessi a gruppi, scheda della persona */
+.pers-permessi{width:100%}
+.pers-riga{appearance:none;width:100%;display:flex;align-items:center;gap:10px;min-height:56px;padding:8px 12px;border:1.5px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);text-align:left;cursor:pointer;font:inherit}
+.pers-riga:hover{border-color:var(--oro)}
+.pers-riga.sospesa{opacity:.7}
+.pers-nome{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px}
+.pers-nome small{font-size:13px;color:var(--muted);font-weight:400}
+.pers-freccia{font-size:22px;color:var(--muted);line-height:1}
+.codici-lista li:has(> .pers-riga){display:block}
+.pers-indietro{align-self:flex-start}
+.pers-titolo{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0;font-size:20px}
+.perm-gruppo{display:flex;flex-direction:column;gap:2px}
+.perm-titolo{margin:0 0 4px;font-size:16px;letter-spacing:.02em}
+.perm-gruppo .hint{margin:0 0 6px}
+.perm-riga .perm-nome{display:flex;flex-direction:column}
+.perm-riga .perm-nome small{font-size:12.5px;color:var(--muted)}
+.perm-riga.sotto{padding-left:18px;border-left:3px solid var(--line);margin-left:4px}
+.perm-tasto:disabled{opacity:.45;cursor:default}
+.pers-ruolo{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pers-ruolo select{min-height:44px;padding:0 10px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font:inherit;font-size:16px}
+.pers-pericolo summary{color:var(--urgent-txt,#B3261E)}
+/* «Sei ancora al…?» e «Cambia posto» */
+.luogo-scelte{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+.luogo-tasto{appearance:none;display:flex;align-items:center;gap:12px;min-height:54px;padding:0 16px;border:1.5px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);font:inherit;font-size:17px;font-weight:700;cursor:pointer;text-align:left}
+.luogo-tasto .pallino{width:14px;height:14px;border-radius:50%;background:var(--c,var(--muted))}
+.fascia-cambia{appearance:none;border:1.5px solid rgba(255,255,255,.45);background:transparent;color:inherit;border-radius:999px;min-height:36px;padding:0 14px;font:inherit;font-size:14px;font-weight:700;cursor:pointer}
 @media (prefers-reduced-motion: no-preference){
   .switch button,.chip span,.azione,.mini{transition:background-color .15s,color .15s,border-color .15s}
 }
@@ -649,6 +675,7 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
       <h1 id="titolo">Rifornimenti</h1>
     </div>
     <p class="fascia-info" id="fascia-info"></p>
+    <button type="button" class="fascia-cambia" id="cambia-luogo" hidden>Cambia posto</button>
   </div>
 </section>
 <main class="app">
@@ -807,11 +834,12 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
 
     <!-- Persone registrate: solo il titolare, dal menu -->
     <div class="view" id="pannello-persone" hidden>
-      <div class="card blocco">
-        <p class="hint">Se qualcuno dimentica il PIN o non lavora più da voi, tocca Azzera: non può più entrare, le sue richieste restano. Se serve, si registra di nuovo con lo stesso nome e il codice del negozio.</p>
-        <p class="hint">Sotto ogni nome ci sono le sezioni che vede. Di partenza sono quelle del suo ruolo; tocca «Sì» o «No» per dare o togliere una sezione solo a quella persona. Sul suo telefono cambia appena l'app si aggiorna.</p>
-        <ul class="codici-lista" id="persone-lista"></ul>
+      <div class="blocco" id="persone-elenco-box">
+        <button type="button" class="primary pers-permessi" data-pers-scegli="1">Permessi di ogni persona</button>
+        <p class="hint">Con «Permessi» scegli cosa vede e cosa può fare ognuno. Qui sotto tocca un nome per cambiargli il ruolo, sospenderlo o togliergli l'accesso.</p>
+        <div class="card blocco"><ul class="codici-lista" id="persone-lista"></ul></div>
       </div>
+      <div class="blocco" id="persone-dettaglio" hidden></div>
     </div>
 
     <!-- Impostazioni: solo titolari. I numeri dell'app, uguali per tutti i telefoni -->
@@ -1096,6 +1124,14 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
     <div class="riep-azioni"><button type="button" class="mini" id="domanda-no">No</button><button type="button" class="primary" id="domanda-si">Sì</button></div>
   </div>
 </div>
+<!-- chi lavora in più posti: «Sei ancora al…?» -->
+<div class="domanda-velo" id="luogo" role="dialog" aria-modal="true" aria-labelledby="luogo-testo" hidden>
+  <div class="card domanda-box">
+    <p class="domanda-testo" id="luogo-testo"></p>
+    <p class="hint" id="luogo-sotto"></p>
+    <div class="luogo-scelte" id="luogo-scelte"></div>
+  </div>
+</div>
 <!-- «Mostra tutto» della striscia rossa: tutte le cose che non ci sono in magazzino -->
 <div class="domanda-velo mag-velo" id="mag-tutto" role="dialog" aria-modal="true" aria-labelledby="mag-tutto-titolo" hidden>
   <div class="card domanda-box mag-tutto-box">
@@ -1157,7 +1193,8 @@ const RUOLI = {
 };
 function leggiRuolo(){
   /* sul sito il ruolo lo decide il codice con cui ci si è registrati, non il link */
-  if (S.ruoloFisso) return RUOLI[S.ruoloFisso] || {tipo:"titolare"};
+  /* chi lavora in più posti: quello dove è adesso */
+  if (S.ruoloFisso) return RUOLI[luogoAttuale()] || RUOLI[S.ruoloFisso] || {tipo:"titolare"};
   let h = "";
   try { h = (location.hash || "").replace(/^#/, "").toLowerCase(); } catch(e){}
   return RUOLI[h] || {tipo:"titolare"};
@@ -1319,7 +1356,7 @@ function pillArrivata(){ return el("span", {class:"pill p-arrivata", text:"Arriv
 /* nelle consegne (Massimo e titolari) le cose che non ci sono in magazzino escono dalla lista */
 function mancaInMagazzino(r){ return r.prep === "manca" && r.stato === "attesa"; }
 /* "È arrivato in magazzino" lo segnano solo i titolari e chi fa il giro */
-function puoArrivato(){ return !!store && !S.sola && haSezione("mancanti"); }
+function puoArrivato(){ return !!store && !S.sola && haAzione("arrivato"); }
 /* «Da comprare»: finché non arriva in magazzino sta nella sezione «Non in magazzino» (non nella striscia rossa) */
 function daComprareAperta(r){ return r.da === "Da comprare" && !r.arrivatoAlle && r.stato === "attesa" && r.per !== PROMEMORIA; }
 function daComprare(){ return S.richieste.filter(daComprareAperta); }
@@ -1447,6 +1484,8 @@ const NUMERI = [
     spiega:"Quanti giorni indietro l'app carica le richieste quando si apre. Più giorni vuol dire app più lenta ad aprirsi. Le cose che non ci sono in magazzino e le prenotazioni si caricano sempre. Vale dalla prossima volta che si apre l'app." },
   { k:"controllo", nome:"Giorni nel «Database» da controllare", unita:"giorni", base:7, min:1, max:45, passo:1,
     spiega:"Nel «Database» (Ordini e Prenotazioni) le cose nuove o corrette da controllare sono quelle degli ultimi giorni. Quanti giorni indietro guardare." },
+  { k:"chiediLuogo", nome:"«Sei ancora al…?»", unita:"ore", base:1, min:1, max:12, passo:1,
+    spiega:"Per chi lavora in più posti: se riapre l'app dopo queste ore, gli chiede se è ancora nello stesso posto." },
   { k:"registroMesi", nome:"Registro di come si usa l'app", unita:"mesi", base:6, min:1, max:24, passo:1,
     spiega:"Per quanti mesi si tengono le righe del registro, poi si cancellano da sole. Adesso il registro è spento." }
 ];
@@ -1477,8 +1516,9 @@ function avviso(msg){
   timerAvviso = setTimeout(function(){ $("avviso").textContent = ""; }, 5000);
 }
 function nuovoId(){ return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
-/* una cosa segnata "non c'è in magazzino" resta finché non arriva: la può togliere solo il titolare */
-function puoTogliere(r){ return !!store && !S.sola && (r.mio || S.owner) && (r.prep !== "manca" || S.owner); }
+/* una cosa segnata "non c'è in magazzino" resta finché non arriva: la può togliere solo il titolare
+   (o chi ha avuto il permesso «Togliere una sua richiesta non c'è») */
+function puoTogliere(r){ return !!store && !S.sola && (r.mio || S.owner) && (r.prep !== "manca" || S.owner || haAzione("togliNonCe")); }
 function nomeDi(id){
   if (S.mioId && id === S.mioId) return "te";
   if (!(id in S.nomi)) return "…";
@@ -2203,7 +2243,7 @@ function normaMag(k, d, st, autore){
     creato: Number(d.creato) || 0, arrivatoAlle: Number(st.arrivatoAlle) || 0 };
 }
 function magAperte(){ return S.magazzino.filter(function(m){ return !m.arrivatoAlle; }).sort(function(a, b){ return a.creato - b.creato; }); }
-function puoSegnareMag(){ return vedeMancanti() && !!store && !S.sola && !!S.mioId; }
+function puoSegnareMag(){ return vedeMancanti() && haAzione("segnaManca") && !!store && !S.sola && !!S.mioId; }
 async function salvaMag(){
   const f = S.magForm, inp = $("mag-nuovo");
   let nome = inp.value.replace(/\s+/g, " ").trim().slice(0, 80);
@@ -2737,20 +2777,36 @@ function mostraSez(sez){
   registraSchermata();
 }
 
-/* ---------- Permessi: chi vede quali sezioni ----------
-   Ogni ruolo ha le sue sezioni di partenza; il titolare, in «Persone registrate», può dare
-   o togliere una sezione a una sola persona. Si salva nelle impostazioni condivise, chiave
-   "permessi": { persone: { "<id della persona>": { mancanti: true, biscotti: false } } }
-   (true = data in più, false = tolta; se non c'è, vale quella del ruolo).
-   Le stesse regole sono anche nel database (supabase/aggiornamento-7-impostazioni-permessi.sql):
+/* ---------- Permessi: chi vede quali sezioni e chi può fare cosa ----------
+   Ogni ruolo ha le sue sezioni e azioni di partenza; il titolare, in «Persone registrate» → «Permessi»,
+   può dare o togliere una sezione o un'azione a una sola persona, scegliere in quali posti lavora
+   e quali notifiche può ricevere. Si salva nelle impostazioni condivise, chiave "permessi":
+   { persone: { "<id della persona>": {
+       mancanti: true, biscotti: false,          sezioni (true = data in più, false = tolta)
+       disdire: false, arrivato: true, …         azioni (come sopra)
+       luoghi: ["corso", "piazza-nenni"],        posti in più dove lavora (negozi e panificio)
+       notifiche: { nuove: false }               notifiche che il titolare ha spento per lei
+   } } }
+   Se una chiave non c'è, vale quella del ruolo.
+   Le stesse regole sono anche nel database (supabase/aggiornamento-7-impostazioni-permessi.sql e
+   supabase/aggiornamento-8-persone-e-permessi.sql) e nella funzione delle notifiche:
    se si cambiano qui, cambiarle anche lì. Le sezioni dei titolari (Persone registrate,
    Impostazioni, Statistiche, Database) non si possono dare agli altri. */
 const SEZIONI_PERMESSI = [
   { id:"consegne", nome:"Giro consegne", spiega:"le cose da caricare e consegnare" },
   { id:"prenotazioni", nome:"Prenotazioni", spiega:"le prenotazioni dei clienti" },
   { id:"biscotti", nome:"Biscotti", spiega:"le comande dei biscotti" },
-  { id:"mancanti", nome:"Non in magazzino", spiega:"segnare cosa manca e «È arrivato»" }
+  { id:"mancanti", nome:"Non in magazzino", spiega:"le cose che mancano in magazzino" }
 ];
+/* azioni più precise, ognuna sotto la sua sezione ("richieste" = la pagina principale) */
+const AZIONI_PERMESSI = [
+  { id:"togliNonCe", sez:"richieste", nome:"Togliere una sua richiesta «non c'è»", spiega:"di partenza solo i titolari" },
+  { id:"disdire", sez:"prenotazioni", nome:"Disdire le prenotazioni", spiega:"di partenza tutti tranne chi fa il giro" },
+  { id:"arrivato", sez:"mancanti", nome:"Segnare «È arrivato»", spiega:"" },
+  { id:"segnaManca", sez:"mancanti", nome:"Segnare cosa manca («+ Segna cosa manca»)", spiega:"" }
+];
+/* i posti dove lavora chi è di un negozio o del panificio */
+const LUOGHI_LAVORO = ["corso", "piazza-nenni", "panificio"];
 /* ruolo come nel database: corso, piazza-nenni, panificio, consegne, titolare */
 function sezioneDelRuolo(ruolo, id){
   if (ruolo === "titolare") return true;
@@ -2764,13 +2820,33 @@ function sezioniCambiabili(ruolo){
   if (ruolo === "consegne") return SEZIONI_PERMESSI.filter(function(x){ return x.id === "prenotazioni" || x.id === "mancanti"; });
   return SEZIONI_PERMESSI;
 }
+function azioneDelRuolo(ruolo, az){
+  if (ruolo === "titolare") return true;
+  if (az === "disdire") return ruolo !== "consegne";
+  if (az === "togliNonCe") return false;
+  return true;
+}
+/* le azioni che si possono cambiare: «togliere un non c'è» vale solo per chi fa richieste */
+function azioniCambiabili(ruolo){
+  if (ruolo === "titolare") return [];
+  return AZIONI_PERMESSI.filter(function(a){ return !(ruolo === "consegne" && a.sez === "richieste"); });
+}
 function permessiPuliti(d){
   const out = {};
   const p = d && d.persone;
   if (p && typeof p === "object") for (const id in p){
     if (!p[id] || typeof p[id] !== "object") continue;
     const e = {};
-    SEZIONI_PERMESSI.forEach(function(x){ if (typeof p[id][x.id] === "boolean") e[x.id] = p[id][x.id]; });
+    SEZIONI_PERMESSI.concat(AZIONI_PERMESSI).forEach(function(x){ if (typeof p[id][x.id] === "boolean") e[x.id] = p[id][x.id]; });
+    if (Array.isArray(p[id].luoghi)){
+      const l = LUOGHI_LAVORO.filter(function(x){ return p[id].luoghi.indexOf(x) >= 0; });
+      if (l.length) e.luoghi = l;
+    }
+    if (p[id].notifiche && typeof p[id].notifiche === "object"){
+      const n = {};
+      for (const k in p[id].notifiche) if (p[id].notifiche[k] === false && /^[a-zA-Z]{2,20}$/.test(k)) n[k] = false;
+      if (Object.keys(n).length) e.notifiche = n;
+    }
     if (Object.keys(e).length) out[id] = e;
   }
   return out;
@@ -2779,10 +2855,44 @@ function ruoloDb(){ return S.ruolo.tipo === "titolare" ? "titolare" : (S.ruolo.t
 /* la sezione per una persona: quella del suo ruolo, salvo eccezioni */
 function sezionePer(id, ruolo, sez){
   if (ruolo === "titolare") return true;
+  if (sez === "richieste") return ruolo !== "consegne";
   if (ruolo === "consegne" && sez === "consegne") return true;
   if (!sezioniCambiabili(ruolo).some(function(x){ return x.id === sez; })) return sezioneDelRuolo(ruolo, sez);
   const e = (S.permessi || {})[id];
   return e && typeof e[sez] === "boolean" ? e[sez] : sezioneDelRuolo(ruolo, sez);
+}
+/* l'azione per una persona: serve anche la sua sezione */
+function azionePer(id, ruolo, az){
+  if (ruolo === "titolare") return true;
+  const a = AZIONI_PERMESSI.find(function(x){ return x.id === az; });
+  if (!a || !azioniCambiabili(ruolo).some(function(x){ return x.id === az; })) return false;
+  if (!sezionePer(id, ruolo, a.sez)) return false;
+  const e = (S.permessi || {})[id];
+  return e && typeof e[az] === "boolean" ? e[az] : azioneDelRuolo(ruolo, az);
+}
+/* i posti dove lavora una persona: il suo, più quelli dati dal titolare */
+function luoghiPer(id, ruolo){
+  if (LUOGHI_LAVORO.indexOf(ruolo) < 0) return [ruolo];
+  const e = (S.permessi || {})[id];
+  const extra = e && Array.isArray(e.luoghi) ? e.luoghi : [];
+  return LUOGHI_LAVORO.filter(function(l){ return l === ruolo || extra.indexOf(l) >= 0; });
+}
+/* una notifica: il titolare non l'ha spenta per questa persona */
+function notificaPermessa(id, k){
+  const e = (S.permessi || {})[id];
+  return !(e && e.notifiche && e.notifiche[k] === false);
+}
+/* quante cose sono cambiate per una persona rispetto al suo ruolo */
+function contaEccezioni(id){
+  const e = (S.permessi || {})[id];
+  if (!e) return 0;
+  let n = 0;
+  for (const k in e){
+    if (k === "luoghi") n += e.luoghi.length;
+    else if (k === "notifiche") n += Object.keys(e.notifiche).length;
+    else n++;
+  }
+  return n;
 }
 /* chi sta usando l'app vede questa sezione? (in anteprima: come il ruolo) */
 function haSezione(sez){
@@ -2791,46 +2901,79 @@ function haSezione(sez){
   if (S.sito && S.mioId && !S.anteprima && S.ruoloFisso) return sezionePer(S.mioId, S.ruoloFisso === "consegne" ? "consegne" : r, sez);
   return sezioneDelRuolo(r, sez);
 }
+/* chi sta usando l'app può fare questa azione? */
+function haAzione(az){
+  if (!S.ruolo) return false;
+  const r = ruoloDb();
+  if (S.sito && S.mioId && !S.anteprima && S.ruoloFisso) return azionePer(S.mioId, S.ruoloFisso, az);
+  if (r === "titolare") return true;
+  const a = AZIONI_PERMESSI.find(function(x){ return x.id === az; });
+  if (a && a.sez !== "richieste" && !sezioneDelRuolo(r, a.sez)) return false;
+  return azioneDelRuolo(r, az);
+}
 /* i tasti «Negozio / Consegne»: i titolari, e un negozio a cui è stato dato il giro */
 function puoSwitch(){ return !!S.ruolo && (S.ruolo.tipo === "titolare" || (S.ruolo.tipo === "negozio" && haSezione("consegne"))); }
 function puoPermessi(){ return puoPersone() && !!store && !S.sola; }
-async function cambiaPermesso(id, sez){
-  const p = (S.persone || []).find(function(x){ return x.id === id; });
-  if (!p || !puoPermessi() || S.pending.has("permessi")) return;
-  const ora = sezionePer(id, p.ruolo, sez), base = sezioneDelRuolo(p.ruolo, sez);
-  const nuovo = !ora;
-  S.pending.add("permessi"); mostraPersone();
-  const ok = await scrivi(function(){
-    return store.permessi(function(d){
-      const tutte = Object.assign({}, d.persone);
-      const e = Object.assign({}, tutte[id]);
-      /* se torna come il ruolo, l'eccezione si toglie */
-      if (nuovo === base) delete e[sez]; else e[sez] = nuovo;
-      if (Object.keys(e).length) tutte[id] = e; else delete tutte[id];
-      return { persone: tutte };
-    });
-  });
-  S.pending.delete("permessi");
-  if (ok) registra("permesso cambiato", { sezione: sez, ruolo: p.ruolo, dato: nuovo });
-  if (ok) avviso((nuovo ? "Fatto: " + p.nome + " adesso vede «" : "Fatto: " + p.nome + " non vede più «") + SEZIONI_PERMESSI.find(function(x){ return x.id === sez; }).nome + "». Sul suo telefono cambia appena l'app si aggiorna.");
-  mostraPersone();
+
+/* ---------- Chi lavora in più posti: «Sei ancora al…?» ----------
+   Il posto scelto si ricorda su questo telefono (per questa persona), con l'ora dell'ultima volta
+   che l'app è stata usata. Se la si riapre dopo num("chiediLuogo") ore, chiede se è ancora lì. */
+S.luogo = (function(){ try { return JSON.parse(localStorage.getItem("pdp-luogo") || "null") || {}; } catch(e){ return {}; } })();
+function salvaLuogo(){ try { localStorage.setItem("pdp-luogo", JSON.stringify(S.luogo)); } catch(e){} }
+function mieiLuoghi(){
+  if (!S.sito || !S.mioId || !S.ruoloFisso || S.anteprima) return [];
+  return luoghiPer(S.mioId, S.ruoloFisso);
 }
-function righePermessi(x){
-  const cambiabili = sezioniCambiabili(x.ruolo);
-  if (!cambiabili.length) return null;
-  const off = S.pending.has("permessi") || !puoPermessi();
-  const box = el("div", {class:"permessi"});
-  if (x.ruolo === "consegne") box.append(el("p", {class:"perm-riga"}, el("span", {class:"perm-nome", text:"Giro consegne"}), el("span", {class:"perm-stato", text:"sempre: è la sua pagina"})));
-  else box.append(el("p", {class:"perm-riga"}, el("span", {class:"perm-nome", text: x.ruolo === "panificio" ? "Ordini dei negozi" : "Richieste"}), el("span", {class:"perm-stato", text:"sempre: è la sua pagina"})));
-  cambiabili.forEach(function(z){
-    const si = sezionePer(x.id, x.ruolo, z.id), base = sezioneDelRuolo(x.ruolo, z.id);
-    box.append(el("p", {class:"perm-riga"},
-      el("span", {class:"perm-nome", text:z.nome}),
-      el("span", {class:"perm-stato" + (si !== base ? " cambiata" : ""), text: si === base ? "come il suo ruolo" : "cambiata per lei"}),
-      el("button", {type:"button", role:"switch", class:"perm-tasto", "aria-checked":String(si), "data-permesso":x.id + "|" + z.id, disabled:off,
-        "aria-label":z.nome + " per " + x.nome + ": " + (si ? "sì" : "no")}, el("span", {text: si ? "Sì" : "No"}))));
-  });
-  return box;
+function piuLuoghi(){ return mieiLuoghi().length > 1; }
+/* il ruolo del posto dove si lavora adesso (per chi ne ha uno solo: il suo) */
+function luogoAttuale(){
+  const l = mieiLuoghi();
+  if (l.length < 2) return S.ruoloFisso;
+  return S.luogo.id === S.mioId && l.indexOf(S.luogo.luogo) >= 0 ? S.luogo.luogo : S.ruoloFisso;
+}
+function nomeLuogo(l){ return (RUOLI[l] && RUOLI[l].punto) || NOMI_RUOLI[l] || l; }
+/* il posto è cambiato (o il titolare ha tolto quello scelto): si rifà la pagina */
+function controllaLuogo(){
+  if (!S.ruoloFisso || !S.ruolo) return;
+  const r = RUOLI[luogoAttuale()];
+  if (r && r.punto && S.ruolo.punto !== r.punto) applicaRuolo();
+  if (inPersone()) renderPersone();
+}
+function chiediLuogoSeServe(){
+  if (!piuLuoghi() || !$("luogo").hidden || !$("accesso").hidden) return;
+  const l = mieiLuoghi();
+  if (S.luogo.id !== S.mioId || l.indexOf(S.luogo.luogo) < 0) return apriLuogo("scegli");
+  if (Date.now() - (S.luogo.visto || 0) > num("chiediLuogo") * 3600000) apriLuogo("conferma");
+}
+function apriLuogo(modo){
+  const ora = luogoAttuale();
+  const scegli = modo === "scegli";
+  $("luogo-testo").textContent = scegli ? "Dove lavori adesso?" : "Sei ancora " + (PREP[nomeLuogo(ora)] || "al " + nomeLuogo(ora)) + "?";
+  $("luogo-sotto").textContent = scegli ? "Lavori in più posti: scegli dove sei, così vedi le richieste e le notifiche giuste." : "È passato un po' dall'ultima volta che hai aperto l'app.";
+  riempi($("luogo-scelte"), scegli
+    ? mieiLuoghi().map(function(l){ return el("button", {type:"button", class:"luogo-tasto " + classeDest(nomeLuogo(l)), "data-luogo":l}, el("span", {class:"pallino", "aria-hidden":"true"}), el("span", {text:nomeLuogo(l)})); })
+    : [el("button", {type:"button", class:"mini", "data-luogo-cambia":"1", text:"Cambia"}), el("button", {type:"button", class:"primary", "data-luogo":ora, text:"Sì, sono " + (PREP[nomeLuogo(ora)] || nomeLuogo(ora))})]);
+  $("luogo-scelte").className = scegli ? "luogo-scelte" : "riep-azioni";
+  $("luogo").hidden = false;
+  const primo = $("luogo-scelte").querySelector(scegli ? "button" : ".primary");
+  if (primo) try { primo.focus(); } catch(e){}
+}
+function scegliLuogo(l){
+  if (mieiLuoghi().indexOf(l) < 0) return;
+  const prima = luogoAttuale();
+  S.luogo = { id: S.mioId, luogo: l, visto: Date.now() };
+  salvaLuogo();
+  $("luogo").hidden = true;
+  if (l !== prima){
+    applicaRuolo();
+    avviso("Adesso sei " + (PREP[nomeLuogo(l)] || nomeLuogo(l)) + ".");
+    registra("posto cambiato", {});
+    iscrizioneAttuale().then(function(sub){ if (sub) return salvaIscrizione(sub); }).catch(function(){});
+  }
+}
+function segnaUsoLuogo(){
+  if (!piuLuoghi() || S.luogo.id !== S.mioId) return;
+  S.luogo.visto = Date.now(); salvaLuogo();
 }
 
 /* ---------- Impostazioni (solo titolari) ---------- */
@@ -2928,7 +3071,7 @@ function capitoliManuale(){
     ["Cosa succede quando tocco Salva?", ["L'app controlla i nomi dei prodotti: se è sicura mette il nome giusto (✓), se ha un dubbio chiede «Volevi dire…?». Se è un prodotto nuovo, lo controlla poi un titolare. La prenotazione si salva solo quando ogni dubbio ha una risposta."]],
     ["Come vedo cosa preparare?", ["Ogni giorno ha la sua pagina con il totale «Ancora da preparare» (si sommano solo le stesse misure: kg con kg, pezzi con pezzi). Le prenotazioni «Tutta la giornata» sono in cima."]],
     ["Cosa vuol dire «Messo da parte»?", ["Che la prenotazione è pronta e messa da parte nel posto dove il cliente la ritira. Lo può premere chiunque."]],
-    ["Come disdico una prenotazione?", ["Tocca ", tasto("Disdici"), " e scegli il motivo (è obbligatorio). Resta barrata in fondo al giorno con chi l'ha disdetta. Se è stato uno sbaglio, ", tasto("Ripristina"), ". Chi fa il giro non può disdire."]],
+    ["Come disdico una prenotazione?", ["Tocca ", tasto("Disdici"), " e scegli il motivo (è obbligatorio). Resta barrata in fondo al giorno con chi l'ha disdetta. Se è stato uno sbaglio, ", tasto("Ripristina"), ". Chi fa il giro non può disdire (salvo che il titolare gli dia il permesso); se non vedi il tasto, il titolare te l'ha tolto."]],
     ["Come trovo una prenotazione?", ["Tocca ", tasto("🔍 Cerca"), " e scrivi il nome del cliente, un prodotto o il telefono, anche a metà. Cerca da 7 giorni fa in avanti."]]
   ]});
   if (vedeBiscotti()) cap.push({ titolo:"Biscotti", domande: panif && !tit ? [
@@ -2953,6 +3096,10 @@ function capitoliManuale(){
     "titolare": "Con «Ricevi tutto»: nuove richieste, prenotazioni e disdette, cose che mancano e che arrivano in magazzino, cose finite, pronti da caricare, biscotti."
   };
   const mio = S.ruoloSito || (S.ruolo.tipo === "giro" ? "consegne" : (S.ruolo.tipo === "titolare" ? "titolare" : CHIAVE_NEG[S.punto] || "panificio"));
+  if (piuLuoghi()) cap.push({ titolo:"Lavoro in più posti", domande:[
+    ["Perché l'app mi chiede «Sei ancora al…?»", ["Il titolare ti ha dato più posti dove lavori. Quando apri l'app dopo " + testoNumero(NUMERI.find(function(n){ return n.k === "chiediLuogo"; }), num("chiediLuogo")) + " ti chiede se sei ancora lì: tocca ", tasto("Sì"), " oppure ", tasto("Cambia"), " e scegli dove sei."]],
+    ["Come cambio posto mentre lavoro?", ["In alto, sotto il nome del posto, tocca ", tasto("Cambia posto"), ". Vedi le richieste e ricevi le notifiche del posto dove sei."]]
+  ]});
   cap.push({ titolo:"Notifiche", domande:[
     ["Come accendo le notifiche?", ["Dal menu ☰ apri «Notifiche» e tocca ", tasto("Attiva le notifiche"), ": il telefono chiede il permesso. Sull'iPhone funzionano solo se apri l'app dall'icona sulla schermata Home."]],
     ["Quali notifiche ricevo?", tit ? ["Ognuno sceglie le sue nella sezione Notifiche.", el("br"),
@@ -2961,11 +3108,14 @@ function capitoliManuale(){
     ["Tocco una notifica: dove mi porta?", ["Apre l'app nella pagina giusta (per esempio le richieste o le prenotazioni)."]]
   ]});
   if (tit) cap.push({ titolo:"Solo per i titolari", domande:[
-    ["Come do una sezione in più (o in meno) a una persona?", ["Dal menu apri «Persone registrate». Sotto ogni nome ci sono le sezioni che vede: tocca ", tasto("Sì"), " o ", tasto("No"), ". Accanto vedi se è «come il suo ruolo» o «cambiata per lei». La pagina principale (Richieste o Giro consegne) non si toglie, e le sezioni dei titolari non si danno agli altri."]],
+    ["Come do una sezione o un permesso in più (o in meno) a una persona?", ["Dal menu apri «Persone registrate» e tocca ", tasto("Permessi di ogni persona"), ", poi la persona. I permessi sono a gruppi: ogni sezione (Prenotazioni, Non in magazzino…) e sotto le sue azioni (per esempio Disdire, «È arrivato»). Tocca ", tasto("Sì"), " o ", tasto("No"), ": accanto vedi se è «come il suo ruolo» o «cambiata per lei». Un'azione vale solo se la persona ha anche la sua sezione. ", tasto("Rimetti tutto come il suo ruolo"), " toglie tutti i cambiamenti. La pagina principale non si toglie, e le sezioni dei titolari non si danno agli altri."]],
+    ["Una persona lavora in più posti: come faccio?", ["Nei suoi permessi, in «Dove lavora», tocca ", tasto("Sì"), " accanto agli altri posti. Quando apre l'app sceglie dove è; se la riapre dopo un po' (le ore le scegli in «Impostazioni») le chiede «Sei ancora al…?». Vede le richieste e riceve le notifiche del posto dove è."]],
+    ["Posso scegliere io le notifiche di una persona?", ["Sì: nei suoi permessi, in «Notifiche che può ricevere». «No» vuol dire che non le arriva e non la può accendere; «Sì» vuol dire che la sceglie lei sul suo telefono. Accanto vedi se sul suo telefono è accesa. Nell'elenco delle persone vedi chi ha le notifiche accese 🔔 e chi no 🔕."]],
+    ["Una persona cambia negozio o va in ferie?", ["In «Persone registrate» tocca il suo nome. ", tasto("Cambia ruolo"), " la sposta (per esempio dal Corso a Piazza Nenni) senza registrarsi di nuovo. ", tasto("Sospendi"), " non la fa entrare finché non tocchi ", tasto("Riattiva"), "."]],
     ["A cosa serve «Impostazioni»?", ["Lì cambi i tempi dell'app (per esempio dopo quante ore una richiesta è «Ferma da…»). Valgono per tutti i telefoni. Usa − e +, poi «Salva»; «Rimetti come prima» torna al numero di partenza."]],
     ["A cosa serve «Database»?", ["Tre parti: Ordini, Prenotazioni, Biscotti. In ognuna ci sono i nomi nuovi o corretti dall'app da controllare («Sì, è giusto», «No, era…», «È un prodotto nuovo»), e in fondo l'elenco completo. Una correzione vale anche per quello già scritto. Quanti giorni indietro guardare lo scegli in «Impostazioni» (di partenza 7)."]],
     puoStat() ? ["Cosa trovo nelle «Statistiche»?", ["Quante richieste, cosa si chiede di più, cosa manca più spesso (anche le volte portate solo in parte), quanto si aspetta in magazzino prima che una cosa arrivi, quando si chiede, quanto ci mette ad arrivare al negozio, i biscotti, le prenotazioni e le disdette con il loro motivo. Scegli il periodo in alto. I tasti per scaricare danno un file che si apre con Excel."]] : null,
-    ["Se qualcuno dimentica il PIN o se ne va?", ["In «Persone registrate» tocca «Azzera» e conferma: non può più entrare, le sue richieste restano. Se serve, si registra di nuovo con il codice del negozio."]]
+    ["Se qualcuno dimentica il PIN o se ne va?", ["In «Persone registrate» tocca il suo nome, poi in fondo apri «Togliere l'accesso» e conferma due volte: non può più entrare, le sue richieste restano. Se serve, si registra di nuovo con il codice del negozio."]]
   ]});
   return cap;
 }
@@ -3098,6 +3248,7 @@ function renderTestata(){
   $("eyebrow").textContent = sopra;
   $("titolo").textContent = titolo;
   $("fascia-info").textContent = info;
+  $("cambia-luogo").hidden = !piuLuoghi() || S.vista !== "negozio" || (S.sez !== "richieste" && S.sez !== "biscotti" && S.sez !== "prenotazioni");
   $("app-nome").textContent = inMancanti() ? "Magazzino" : bisc ? "Biscotti" : (stat ? "Statistiche" : (pren ? "Prenotazioni" : (inNotif() ? "Notifiche" : (inPersone() ? "Persone" : (inDatabase() ? "Database" : (inImpostazioni() ? "Impostazioni" : (inManuale() ? "Come funziona" : "Rifornimenti")))))));
 }
 function apriMenu(){
@@ -3127,7 +3278,7 @@ function vaiSezione(id, forza, scheda){
     mostraVista("negozio");
     mostraSez(id);
     if (id === "prenotazioni"){ S.prenGiorno = oggiStr(); S.prenScegli = false; }
-    if (id === "persone"){ S.armatoPersona = null; mostraPersone(); }
+    if (id === "persone"){ S.pv = null; mostraPersone(); }
     if (id === "database"){ S.corrApri = ""; S.prenCorreggi = ""; if (scheda) S.dbScheda = scheda; else sceltaSchedaDb(); }
     if (id === "impostazioni") S.bozzaNumeri = {};
     if (id === "statistiche") caricaStatistiche();
@@ -4043,7 +4194,7 @@ function rigaPren(p){
       const mioNegozio = true;
       if (mioNegozio && !parte) azioni.append(el("button", {type:"button", class:"azione b-consegna", "data-pren-stato":"parte", "data-id":p.id, disabled:off, text:"Messo da parte"}));
       if (mioNegozio && parte) azioni.append(el("button", {type:"button", class:"link", "data-pren-stato":"attesa", "data-id":p.id, disabled:off, "aria-label":"Annulla messo da parte", text:"Annulla"}));
-      azioni.append(el("button", {type:"button", class:"link pericolo", "data-pren-disdici":p.id, disabled:off, text:"Disdici"}));
+      if (haAzione("disdire")) azioni.append(el("button", {type:"button", class:"link pericolo", "data-pren-disdici":p.id, disabled:off, text:"Disdici"}));
     }
   }
   const tel = p.telefono ? el("button", {type:"button", class:"pren-tel", "data-copia-tel":p.telefono, "aria-label":"Copia il numero " + p.telefono, text:"☎ " + p.telefono}) : null;
@@ -4456,7 +4607,7 @@ async function statoPren(id, stato){
   await scrivi(function(){ return store.stato(id, { stato: stato, statoAlle: Date.now() }); });
   S.pending.delete(id); renderTutto();
 }
-/* ---------- disdici: tutti tranne chi fa il giro, con il motivo obbligatorio ---------- */
+/* ---------- disdici: tutti tranne chi fa il giro (salvo permesso), con il motivo obbligatorio ---------- */
 const MOTIVI_DISDETTA = ["Il cliente ha disdetto", "Prenotazione sbagliata", "Doppia"];
 S.disdici = null;
 function motivoDisdetta(){
@@ -4474,7 +4625,7 @@ function renderDisdici(){
 }
 function apriDisdici(id){
   const p = S.prenotazioni.find(function(x){ return x.id === id; });
-  if (!p || p.disdetta || !puoPrenotare() || !vedePren()) return;
+  if (!p || p.disdetta || !puoPrenotare() || !vedePren() || !haAzione("disdire")) return;
   S.disdici = { id: id, scelta: "" };
   $("disdici-altro").value = "";
   $("disdici-cosa").textContent = nomeGiornoTitolo(p.perIl) + (testoOraPren(p) ? " " + testoOraPren(p) : "") + " · " + (p.cliente ? p.cliente + ": " : "") + p.voci.map(testoVocePren).join(", ");
@@ -4963,7 +5114,17 @@ function collega(){
     if (b.dataset.acc) return mostraAccesso(b.dataset.acc);
     if (b.id === "esci") return esciSB();
     if (b.dataset.azzera) return azzeraPersona(b.dataset.azzera);
-    if (b.dataset.permesso){ const i = b.dataset.permesso.indexOf("|"); return cambiaPermesso(b.dataset.permesso.slice(0, i), b.dataset.permesso.slice(i + 1)); }
+    if (b.dataset.perm){ const x = b.dataset.perm.split("|"); return cambiaPermessoPersona(x[0], x[1], x[2]); }
+    if (b.dataset.persScegli) return vaiPersone({ modo: "scegli" });
+    if (b.dataset.persPermessi) return vaiPersone({ modo: "permessi", id: b.dataset.persPermessi });
+    if (b.dataset.persScheda) return vaiPersone({ modo: "scheda", id: b.dataset.persScheda });
+    if (b.dataset.persIndietro) return vaiPersone(S.pv && S.pv.modo === "permessi" && S.pvDa === "scheda" ? { modo: "scheda", id: S.pv.id } : (S.pv && S.pv.modo === "permessi" ? { modo: "scegli" } : null));
+    if (b.dataset.persRimetti) return rimettiComeRuolo(b.dataset.persRimetti);
+    if (b.dataset.persRuolo) return cambiaRuoloPersona(b.dataset.persRuolo);
+    if (b.dataset.persSospendi) return sospendiPersona(b.dataset.persSospendi);
+    if (b.dataset.luogo) return scegliLuogo(b.dataset.luogo);
+    if (b.dataset.luogoCambia) return apriLuogo("scegli");
+    if (b.id === "cambia-luogo") return apriLuogo("scegli");
     if (b.dataset.numMeno) return cambiaBozzaNumero(b.dataset.numMeno, -1);
     if (b.dataset.numPiu) return cambiaBozzaNumero(b.dataset.numPiu, 1);
     if (b.dataset.numSalva) return salvaNumero(b.dataset.numSalva, S.bozzaNumeri[b.dataset.numSalva]);
@@ -5081,6 +5242,9 @@ function collega(){
   ["input","change"].forEach(function(t){ $("pren-data").addEventListener(t, renderFormPren); });
   $("pren-schermo").addEventListener("keydown", function(ev){ if (ev.key === "Escape" && $("domanda").hidden) chiudiFormPren(); });
   $("domanda").addEventListener("keydown", function(ev){ if (ev.key === "Escape" && rispostaDomanda) rispostaDomanda(false); });
+  /* «Sei ancora al…?»: chiudendo resta dove si è */
+  $("luogo").addEventListener("keydown", function(ev){ if (ev.key === "Escape") scegliLuogo(luogoAttuale()); });
+  $("luogo").addEventListener("click", function(ev){ if (ev.target === $("luogo")) scegliLuogo(luogoAttuale()); });
   $("disdici").addEventListener("keydown", function(ev){ if (ev.key === "Escape") chiudiDisdici(true); });
   /* «Mostra tutto»: si chiude con «Chiudi», toccando fuori o con Esc */
   $("mag-tutto").addEventListener("click", function(ev){ if (ev.target === this) chiudiMagTutto(); });
@@ -5291,6 +5455,8 @@ function applicaImpostazioni(){
   S.prodRich = prodottiRichCondivisi(RAW.imp["prodotti-richieste"]);
   impostaNumeri(RAW.imp.numeri);
   S.permessi = permessiPuliti(RAW.imp.permessi);
+  /* i permessi sono cambiati: il posto di chi lavora in più posti può essere da rifare */
+  if (S.ruoloFisso) setTimeout(function(){ controllaLuogo(); chiediLuogoSeServe(); }, 0);
 }
 function applicaRiga(tab, riga, via){
   if (!riga) return;
@@ -5305,6 +5471,11 @@ function applicaRiga(tab, riga, via){
     if (via) delete RAW.imp[riga.chiave]; else RAW.imp[riga.chiave] = riga.dati || {};
   } else if (tab === "profili" && riga.id){
     if (via) delete S.nomi[riga.id]; else S.nomi[riga.id] = riga.nome || "";
+    /* il titolare ha cambiato il mio ruolo o mi ha sospeso: si riapre l'app */
+    if (!via && riga.id === S.mioId && S.ruoloSito && (("ruolo" in riga && riga.ruolo !== S.ruoloSito) || riga.sospeso === true || riga.attivo === false)){
+      setTimeout(function(){ location.reload(); }, 300);
+    }
+    if (puoPersone() && inPersone()){ clearTimeout(S.timerPersone); S.timerPersone = setTimeout(mostraPersone, 400); }
   }
 }
 let timerEmetti = 0;
@@ -5605,14 +5776,17 @@ async function renderNotifiche(){
     btn.textContent = S.attivandoNotifiche ? "Attivo…" : "Attiva le notifiche";
     return;
   }
-  stato.textContent = "Notifiche attive su questo telefono. Scegli cosa ricevere:";
-  const ruolo = S.ruoloSito || "titolare";
+  stato.textContent = "Notifiche attive su questo telefono. Scegli cosa ricevere:" + (piuLuoghi() ? " (sono quelle " + (PREP[nomeLuogo(luogoAttuale())] || nomeLuogo(luogoAttuale())) + ", dove sei adesso)" : "");
+  /* chi lavora in più posti: le notifiche del posto dove è adesso */
+  const ruolo = (piuLuoghi() ? luogoAttuale() : S.ruoloSito) || "titolare";
   const pref = S.preferenzeNotifiche || {};
   riempi(scelte, (SCELTE_NOTIFICHE[ruolo] || []).map(function(o){
-    const acceso = pref[o[0]] === undefined ? sceltaNormale(o[0]) : pref[o[0]] === true;
+    /* il titolare può aver spento una notifica per questa persona */
+    const permessa = !S.mioId || notificaPermessa(S.mioId, o[0]);
+    const acceso = permessa && (pref[o[0]] === undefined ? sceltaNormale(o[0]) : pref[o[0]] === true);
     return el("li", null, el("label", {class:"notif-scelta"},
-      el("input", {type:"checkbox", "data-notif":o[0], checked: acceso ? true : null}),
-      el("span", null, el("b", {text:o[1]}), o[2] ? el("small", {text:o[2]}) : null)));
+      el("input", {type:"checkbox", "data-notif":o[0], checked: acceso ? true : null, disabled: !permessa}),
+      el("span", null, el("b", {text:o[1]}), !permessa ? el("small", {text:"Spenta dal titolare."}) : (o[2] ? el("small", {text:o[2]}) : null))));
   }));
   scelte.querySelectorAll("input[data-notif]").forEach(function(inp){ inp.checked = inp.hasAttribute("checked"); });
   spegni.hidden = false;
@@ -5640,7 +5814,11 @@ async function provaNotifica(){
 }
 async function salvaIscrizione(sub){
   const j = sub.toJSON();
-  await sbFai(sb.rpc("salva_iscrizione", { endpoint_tel: j.endpoint, chiave_p256dh: j.keys.p256dh, chiave_auth: j.keys.auth, scelte: S.preferenzeNotifiche || {} }));
+  /* chi lavora in più posti: si salva anche dove è adesso, così le notifiche sono quelle di quel posto */
+  const scelte = Object.assign({}, S.preferenzeNotifiche);
+  delete scelte.luogo;
+  if (piuLuoghi()) scelte.luogo = luogoAttuale();
+  await sbFai(sb.rpc("salva_iscrizione", { endpoint_tel: j.endpoint, chiave_p256dh: j.keys.p256dh, chiave_auth: j.keys.auth, scelte: scelte }));
 }
 async function attivaNotifiche(){
   if (S.attivandoNotifiche) return;
@@ -5993,6 +6171,12 @@ async function entraConSessione(sess){
     S.azzerato = true;
     return false;
   }
+  if (prof[0].sospeso === true){
+    /* il titolare ha sospeso questa persona (per esempio in ferie): rientra quando la riattiva */
+    try { await sb.auth.signOut(); } catch(e){}
+    S.sospeso = true;
+    return false;
+  }
   S.mioId = sess.user.id;
   S.ruoloSito = prof[0].ruolo;
   caricaRegistro(); registraDispositivo();
@@ -6039,6 +6223,7 @@ async function inviaAccesso(ev){
         return mostraAccesso("entra", "Nome o PIN sbagliati. Se è la prima volta che entri, tocca \"Prima volta\".");
       }
       if (!(await entraConSessione(r.data.session))){
+        if (S.sospeso) return mostraAccesso("entra", TESTO_SOSPESO);
         mostraAccesso("prima", "Manca l'ultimo passo: ripeti il PIN e scrivi il codice del negozio.");
         $("acc-nome").value = nome; $("acc-pin").value = pin;
       }
@@ -6073,6 +6258,7 @@ async function inviaAccesso(ev){
     if (!$("form-accesso").hidden){ $("acc-invia").disabled = false; $("acc-invia").textContent = prima ? "Registrati ed entra" : "Entra"; }
   }
 }
+const TESTO_SOSPESO = "Il titolare ha sospeso il tuo accesso. Quando ti riattiva, entra di nuovo con il tuo nome e il tuo PIN.";
 function profiloRicordato(){ try { return JSON.parse(localStorage.getItem("pdp-profilo") || "null"); } catch(e){ return null; } }
 async function esciSB(){
   if (S.coda.length && !confirmUscita()) return;
@@ -6097,44 +6283,277 @@ async function mostraCodici(){
     riempi(lista, [el("li", { class: "hint", text: "Non riesco a caricare i codici. Riprova." })]);
   }
 }
-/* titolare: elenco di chi si è registrato, con Azzera (due tocchi) */
-let timerPersona = 0;
+/* ---------- Persone registrate (solo titolari) ----------
+   Tre schermate: l'elenco (in alto il tasto «Permessi»), i permessi di una persona
+   (a gruppi: ogni sezione con sotto le sue azioni, poi dove lavora e le notifiche)
+   e la scheda di una persona (ruolo, sospendi, togli l'accesso). */
+S.pv = null; /* null = elenco; { modo: "scegli" } ; { modo: "permessi", id } ; { modo: "scheda", id } */
 async function mostraPersone(){
   const lista = $("persone-lista");
   if (!S.persone) riempi(lista, [el("li", { class: "hint", text: "Carico…" })]);
   try {
-    S.persone = await sbFai(sb.from("profili").select("id,nome,ruolo").eq("attivo", true).order("nome"));
+    S.persone = await sbFai(sb.from("profili").select("*").eq("attivo", true).order("nome"));
   } catch(e){
     riempi(lista, [el("li", { class: "hint", text: "Non riesco a caricare l'elenco. Se non l'hai ancora fatto, va lanciato in Supabase lo script aggiornamento-1-persone.sql." })]);
     return;
   }
   const ordine = ["titolare","corso","piazza-nenni","panificio","consegne"];
   S.persone.sort(function(a, b){ return (ordine.indexOf(a.ruolo) - ordine.indexOf(b.ruolo)) || a.nome.localeCompare(b.nome, "it"); });
+  renderPersone();
+  /* chi ha le notifiche accese (se il database è aggiornato) */
+  try {
+    const r = await sbFai(sb.rpc("notifiche_persone"));
+    S.notifPersone = {};
+    (r || []).forEach(function(x){ S.notifPersone[x.utente] = { telefoni: x.telefoni || 0, preferenze: Array.isArray(x.preferenze) ? x.preferenze : [] }; });
+  } catch(e){ S.notifPersone = null; }
+  renderPersone();
+}
+function classeRuolo(r){ return r === "corso" ? "dest-corso" : r === "piazza-nenni" ? "dest-nenni" : r === "panificio" ? "dest-panif" : "dest-altro"; }
+function pillRuolo(x){ return el("span", { class: "pill dest " + classeRuolo(x.ruolo), text: NOMI_RUOLI[x.ruolo] || x.ruolo }); }
+function testoNotifPersona(id){
+  if (!S.notifPersone) return "";
+  const n = S.notifPersone[id];
+  if (!n || !n.telefoni) return "🔕 Notifiche spente";
+  return "🔔 Notifiche accese" + (n.telefoni > 1 ? " su " + n.telefoni + " telefoni" : "");
+}
+function personaDa(id){ return (S.persone || []).find(function(x){ return x.id === id; }); }
+function tastoIndietro(){ return el("button", { type: "button", class: "link pers-indietro", "data-pers-indietro": "1", text: "‹ Indietro" }); }
+function renderPersone(){
+  if (!inPersone()) return;
+  const pv = S.pv;
+  $("persone-elenco-box").hidden = !!pv;
+  $("persone-dettaglio").hidden = !pv;
+  if (!pv) return renderElencoPersone();
+  const p = pv.id ? personaDa(pv.id) : null;
+  if (pv.id && !p){ S.pv = null; return renderPersone(); }
+  if (pv.modo === "scegli") return riempi($("persone-dettaglio"), schermataScegli());
+  if (pv.modo === "permessi") return riempi($("persone-dettaglio"), schermataPermessi(p));
+  return riempi($("persone-dettaglio"), schermataScheda(p));
+}
+function renderElencoPersone(){
+  const lista = $("persone-lista");
+  if (!S.persone) return;
+  if (!S.persone.length) return riempi(lista, [el("li", { class: "hint", text: "Nessuno registrato." })]);
   riempi(lista, S.persone.map(function(x){
-    const cl = x.ruolo === "corso" ? "dest-corso" : x.ruolo === "piazza-nenni" ? "dest-nenni" : x.ruolo === "panificio" ? "dest-panif" : "dest-altro";
     const io = x.id === S.mioId;
-    const armato = S.armatoPersona === x.id;
-    return el("li", null,
-      el("span", null, el("b", { text: x.nome + (io ? " (tu)" : "") }), " ", el("span", { class: "pill dest " + cl, text: NOMI_RUOLI[x.ruolo] || x.ruolo })),
-      io ? null : el("button", { type: "button", class: armato ? "mini pericolo" : "mini", "data-azzera": x.id, disabled: S.azzerando, text: armato ? "Conferma: azzera" : "Azzera", "aria-label": (armato ? "Conferma: azzera " : "Azzera ") + x.nome }),
-      righePermessi(x));
+    const cambi = contaEccezioni(x.id);
+    const sotto = [x.sospeso ? "Accesso sospeso" : "", cambi ? "Permessi cambiati" : "", piuPosti(x) ? "Lavora in più posti" : "", testoNotifPersona(x.id)].filter(Boolean).join(" · ");
+    return el("li", null, el("button", { type: "button", class: "pers-riga" + (x.sospeso ? " sospesa" : ""), "data-pers-scheda": x.id },
+      el("span", { class: "pers-nome" }, el("b", { text: x.nome + (io ? " (tu)" : "") }), sotto ? el("small", { text: sotto }) : null),
+      pillRuolo(x), el("span", { class: "pers-freccia", "aria-hidden": "true", text: "›" })));
   }));
-  if (!S.persone.length) riempi(lista, [el("li", { class: "hint", text: "Nessuno registrato." })]);
+}
+function piuPosti(x){ return luoghiPer(x.id, x.ruolo).length > 1; }
+function schermataScegli(){
+  const altri = (S.persone || []).filter(function(x){ return x.ruolo !== "titolare"; });
+  return [tastoIndietro(),
+    el("h3", { class: "pers-titolo", text: "Permessi: scegli una persona" }),
+    el("p", { class: "hint", text: "Per ogni persona scegli cosa vede, cosa può fare, dove lavora e quali notifiche può ricevere. I titolari vedono e fanno tutto." }),
+    el("div", { class: "card blocco" }, el("ul", { class: "codici-lista" }, ...(altri.length ? altri.map(function(x){
+      const n = contaEccezioni(x.id);
+      return el("li", null, el("button", { type: "button", class: "pers-riga", "data-pers-permessi": x.id },
+        el("span", { class: "pers-nome" }, el("b", { text: x.nome }), el("small", { text: n ? (n === 1 ? "1 cosa cambiata" : n + " cose cambiate") + " rispetto al suo ruolo" : "Come il suo ruolo" })),
+        pillRuolo(x), el("span", { class: "pers-freccia", "aria-hidden": "true", text: "›" })));
+    }) : [el("li", { class: "hint", text: "Nessuno oltre ai titolari." })])))];
+}
+/* una riga Sì/No dei permessi */
+function rigaPerm(id, tipo, k, nome, si, base, opz){
+  opz = opz || {};
+  const off = S.pending.has("permessi") || !puoPermessi() || opz.bloccata;
+  const stato = opz.stato || (si === base ? "come il suo ruolo" : "cambiata per lei");
+  return el("div", { class: "perm-riga" + (opz.sotto ? " sotto" : "") },
+    el("span", { class: "perm-nome" }, el("span", { text: nome }), opz.spiega ? el("small", { text: opz.spiega }) : null),
+    el("span", { class: "perm-stato" + (!opz.stato && si !== base ? " cambiata" : ""), text: stato }),
+    opz.fissa ? null : el("button", { type: "button", role: "switch", class: "perm-tasto", "aria-checked": String(si), "data-perm": id + "|" + tipo + "|" + k, disabled: off,
+      "aria-label": nome + ": " + (si ? "sì" : "no") }, el("span", { text: si ? "Sì" : "No" })));
+}
+function gruppoPerm(titolo, righe, spiega){
+  return el("section", { class: "card perm-gruppo" }, el("h4", { class: "perm-titolo", text: titolo }), spiega ? el("p", { class: "hint", text: spiega }) : null, ...righe.filter(Boolean));
+}
+function schermataPermessi(p){
+  const r = p.ruolo, id = p.id;
+  const out = [tastoIndietro(), el("h3", { class: "pers-titolo" }, el("span", { text: "Permessi di " + p.nome + " " }), pillRuolo(p))];
+  if (r === "titolare"){
+    out.push(el("p", { class: "hint", text: "I titolari vedono e fanno tutto: non ci sono permessi da scegliere." }));
+    return out;
+  }
+  out.push(el("p", { class: "hint", text: "Tocca «Sì» o «No». Accanto vedi se è «come il suo ruolo» o «cambiata per lei». Sul suo telefono cambia appena l'app si aggiorna." }));
+  /* le sezioni, ognuna con sotto le sue azioni */
+  const azioni = azioniCambiabili(r);
+  const sottoDi = function(sez){
+    const attiva = sezionePer(id, r, sez);
+    return azioni.filter(function(a){ return a.sez === sez; }).map(function(a){
+      return rigaPerm(id, "az", a.id, a.nome, azionePer(id, r, a.id), azioneDelRuolo(r, a.id),
+        { sotto: true, bloccata: !attiva, stato: attiva ? null : "serve la sezione", spiega: a.spiega });
+    });
+  };
+  const principale = r === "consegne" ? "Giro consegne" : (r === "panificio" ? "Ordini dei negozi" : "Richieste");
+  const gruppi = [gruppoPerm(principale, [rigaPerm(id, "sez", "principale", "Vede la pagina", true, true, { fissa: true, stato: "sempre: è la sua pagina" })].concat(r === "consegne" ? [] : sottoDi("richieste")))];
+  sezioniCambiabili(r).forEach(function(z){
+    gruppi.push(gruppoPerm(z.nome, [rigaPerm(id, "sez", z.id, "Vede la sezione", sezionePer(id, r, z.id), sezioneDelRuolo(r, z.id), { spiega: z.spiega })].concat(sottoDi(z.id))));
+  });
+  out.push(...gruppi);
+  /* dove lavora */
+  if (LUOGHI_LAVORO.indexOf(r) >= 0){
+    const miei = luoghiPer(id, r);
+    out.push(gruppoPerm("Dove lavora", LUOGHI_LAVORO.map(function(l){
+      if (l === r) return rigaPerm(id, "luogo", l, nomeLuogo(l), true, true, { fissa: true, stato: "il suo posto" });
+      return rigaPerm(id, "luogo", l, nomeLuogo(l), miei.indexOf(l) >= 0, false);
+    }), "Se lavora in più posti, sceglie dove è quando apre l'app; se la riapre dopo " + testoNumero(NUMERI.find(function(n){ return n.k === "chiediLuogo"; }), num("chiediLuogo")) + " le chiede «Sei ancora al…?». Vede le richieste e riceve le notifiche del posto dove è."));
+  }
+  /* notifiche che può ricevere */
+  const chiavi = [];
+  luoghiPer(id, r).forEach(function(l){ (SCELTE_NOTIFICHE[l] || []).forEach(function(o){ if (!chiavi.some(function(c){ return c[0] === o[0]; })) chiavi.push(o); }); });
+  const np = S.notifPersone && S.notifPersone[id];
+  const sulTel = function(k){
+    if (!S.notifPersone) return null;
+    if (!np || !np.telefoni) return "non ha le notifiche accese";
+    return np.preferenze.some(function(pr){ return !pr || pr[k] === undefined ? sceltaNormale(k) : pr[k] === true; }) ? "accesa sul suo telefono" : "spenta sul suo telefono";
+  };
+  out.push(gruppoPerm("Notifiche che può ricevere", chiavi.map(function(o){
+    const si = notificaPermessa(id, o[0]);
+    return rigaPerm(id, "notif", o[0], o[1], si, true, { stato: si ? (sulTel(o[0]) || "può riceverla") : "spenta da te" });
+  }), "«Sì»: la riceve se l'ha accesa sul suo telefono. «No»: non le arriva e sul suo telefono non si può accendere." + (S.notifPersone ? " " + testoNotifPersona(id) + "." : "")));
+  if (contaEccezioni(id)) out.push(el("button", { type: "button", class: "mini", "data-pers-rimetti": id, disabled: S.pending.has("permessi"), text: "Rimetti tutto come il suo ruolo" }));
+  return out;
+}
+function schermataScheda(p){
+  const io = p.id === S.mioId, tit = p.ruolo === "titolare";
+  const out = [tastoIndietro(), el("h3", { class: "pers-titolo" }, el("span", { text: p.nome + (io ? " (tu) " : " ") }), pillRuolo(p))];
+  const stato = [p.sospeso ? "Accesso sospeso: non può entrare finché non lo riattivi." : "", testoNotifPersona(p.id)].filter(Boolean);
+  if (stato.length) out.push(el("p", { class: "hint", text: stato.join(" · ") }));
+  if (!tit) out.push(el("button", { type: "button", class: "primary", "data-pers-permessi": p.id, text: "Permessi di " + p.nome }));
+  if (!tit && !io){
+    const off = S.pending.has("persona-" + p.id);
+    const sel = el("select", { id: "pers-ruolo", "aria-label": "Nuovo ruolo di " + p.nome },
+      ...["corso", "piazza-nenni", "panificio", "consegne"].map(function(r){ return el("option", { value: r, selected: r === p.ruolo ? true : null, text: NOMI_RUOLI[r] }); }));
+    out.push(gruppoPerm("Ruolo", [el("div", { class: "pers-ruolo" }, sel, el("button", { type: "button", class: "mini", "data-pers-ruolo": p.id, disabled: off, text: "Cambia ruolo" }))],
+      "Per esempio se passa dal Corso a Piazza Nenni. Non deve registrarsi di nuovo; le sue richieste restano."));
+    out.push(gruppoPerm(p.sospeso ? "Riattiva" : "Sospendi", [el("button", { type: "button", class: "mini", "data-pers-sospendi": p.id, disabled: off, text: p.sospeso ? "Riattiva " + p.nome : "Sospendi " + p.nome })],
+      p.sospeso ? "Potrà entrare di nuovo con il suo nome e il suo PIN." : "Per esempio durante le ferie: non può entrare finché non riattivi il suo accesso, e non deve registrarsi di nuovo."));
+  }
+  if (!io){
+    out.push(el("details", { class: "crono pers-pericolo" }, el("summary", { text: "Togliere l'accesso" }),
+      el("div", { class: "blocco" },
+        el("p", { class: "hint", text: "Se dimentica il PIN o non lavora più da voi. Non può più entrare, le sue richieste restano. Per rientrare deve registrarsi di nuovo con il codice del negozio." }),
+        el("button", { type: "button", class: "mini pericolo", "data-azzera": p.id, disabled: S.azzerando, text: "Togli l'accesso a " + p.nome }))));
+  }
+  return out;
+}
+function vaiPersone(pv){
+  /* «Indietro» dai permessi torna da dove si è venuti (scheda della persona o elenco per scegliere) */
+  if (pv && pv.modo === "permessi") S.pvDa = S.pv && S.pv.modo === "scheda" ? "scheda" : "scegli";
+  S.pv = pv;
+  renderPersone();
+  try { window.scrollTo(0, 0); } catch(e){}
+}
+async function cambiaPermessoPersona(id, tipo, k){
+  const p = personaDa(id);
+  if (!p || p.ruolo === "titolare" || !puoPermessi() || S.pending.has("permessi")) return;
+  let nuovo, base, testo;
+  if (tipo === "sez"){
+    if (!sezioniCambiabili(p.ruolo).some(function(x){ return x.id === k; })) return;
+    nuovo = !sezionePer(id, p.ruolo, k); base = sezioneDelRuolo(p.ruolo, k);
+    testo = (nuovo ? p.nome + " adesso vede «" : p.nome + " non vede più «") + SEZIONI_PERMESSI.find(function(x){ return x.id === k; }).nome + "»";
+  } else if (tipo === "az"){
+    const a = AZIONI_PERMESSI.find(function(x){ return x.id === k; });
+    if (!a || !azioniCambiabili(p.ruolo).some(function(x){ return x.id === k; }) || !sezionePer(id, p.ruolo, a.sez)) return;
+    nuovo = !azionePer(id, p.ruolo, k); base = azioneDelRuolo(p.ruolo, k);
+    testo = p.nome + (nuovo ? " adesso può: " : " non può più: ") + a.nome;
+  } else if (tipo === "luogo"){
+    if (LUOGHI_LAVORO.indexOf(k) < 0 || LUOGHI_LAVORO.indexOf(p.ruolo) < 0 || k === p.ruolo) return;
+    nuovo = luoghiPer(id, p.ruolo).indexOf(k) < 0;
+    testo = p.nome + (nuovo ? " adesso lavora anche " : " non lavora più ") + (PREP[nomeLuogo(k)] || nomeLuogo(k));
+  } else if (tipo === "notif"){
+    nuovo = !notificaPermessa(id, k);
+    testo = nuovo ? "Fatto: " + p.nome + " può ricevere di nuovo questa notifica" : "Fatto: questa notifica non arriva più a " + p.nome;
+  } else return;
+  S.pending.add("permessi"); renderPersone();
+  const ok = await scrivi(function(){
+    return store.permessi(function(d){
+      const tutte = Object.assign({}, d.persone);
+      const e = Object.assign({}, tutte[id]);
+      if (tipo === "sez" || tipo === "az"){
+        /* se torna come il ruolo, l'eccezione si toglie */
+        if (nuovo === base) delete e[k]; else e[k] = nuovo;
+      } else if (tipo === "luogo"){
+        const l = (Array.isArray(e.luoghi) ? e.luoghi : []).filter(function(x){ return x !== k; });
+        if (nuovo) l.push(k);
+        if (l.length) e.luoghi = l; else delete e.luoghi;
+      } else {
+        const n = Object.assign({}, e.notifiche);
+        if (nuovo) delete n[k]; else n[k] = false;
+        if (Object.keys(n).length) e.notifiche = n; else delete e.notifiche;
+      }
+      if (Object.keys(e).length) tutte[id] = e; else delete tutte[id];
+      return { persone: tutte };
+    });
+  });
+  S.pending.delete("permessi");
+  if (ok) registra("permesso cambiato", { tipo: tipo, chiave: k, ruolo: p.ruolo, dato: nuovo });
+  if (ok) avviso((testo.indexOf("Fatto") === 0 ? "" : "Fatto: ") + testo + ". Sul suo telefono cambia appena l'app si aggiorna.");
+  renderPersone();
+}
+async function rimettiComeRuolo(id){
+  const p = personaDa(id);
+  if (!p || !puoPermessi() || S.pending.has("permessi")) return;
+  const si = await chiedi("Rimettere tutto come il suo ruolo?", "Per " + p.nome + " si tolgono tutte le sezioni, le azioni, i posti e le notifiche cambiati: torna come " + (NOMI_RUOLI[p.ruolo] || p.ruolo) + ".", "Sì, rimetti", "No");
+  if (!si) return;
+  S.pending.add("permessi"); renderPersone();
+  const ok = await scrivi(function(){
+    return store.permessi(function(d){ const tutte = Object.assign({}, d.persone); delete tutte[id]; return { persone: tutte }; });
+  });
+  S.pending.delete("permessi");
+  if (ok){ avviso("Fatto: i permessi di " + p.nome + " sono di nuovo come il suo ruolo."); registra("permessi rimessi come il ruolo", { ruolo: p.ruolo }); }
+  renderPersone();
+}
+async function cambiaRuoloPersona(id){
+  const p = personaDa(id), sel = $("pers-ruolo");
+  if (!p || !sel || p.ruolo === "titolare" || id === S.mioId) return;
+  const nuovo = sel.value;
+  if (nuovo === p.ruolo) return avviso("È già " + (NOMI_RUOLI[nuovo] || nuovo) + ".");
+  const si = await chiedi("Cambiare il ruolo di " + p.nome + "?", "Da " + NOMI_RUOLI[p.ruolo] + " a " + NOMI_RUOLI[nuovo] + ". Vedrà le sezioni del nuovo ruolo (più quelle che le hai dato tu). Le sue richieste restano.", "Sì, cambia", "No");
+  if (!si) return;
+  await azionePersona(p, "cambia_ruolo", { persona: id, ruolo: nuovo }, "Fatto: " + p.nome + " adesso è " + NOMI_RUOLI[nuovo] + ".", "ruolo cambiato");
+}
+async function sospendiPersona(id){
+  const p = personaDa(id);
+  if (!p || p.ruolo === "titolare" || id === S.mioId) return;
+  const sosp = !p.sospeso;
+  const si = sosp
+    ? await chiedi("Sospendere " + p.nome + "?", "Non può entrare finché non riattivi il suo accesso. Non perde niente e non deve registrarsi di nuovo.", "Sì, sospendi", "No")
+    : await chiedi("Riattivare " + p.nome + "?", "Potrà entrare di nuovo con il suo nome e il suo PIN.", "Sì, riattiva", "No");
+  if (!si) return;
+  await azionePersona(p, "sospendi_persona", { persona: id, sospendi: sosp }, sosp ? "Fatto: accesso di " + p.nome + " sospeso." : "Fatto: " + p.nome + " può entrare di nuovo.", sosp ? "persona sospesa" : "persona riattivata");
+}
+async function azionePersona(p, funz, arg, fatto, evento){
+  const k = "persona-" + p.id;
+  if (S.pending.has(k)) return;
+  S.pending.add(k); renderPersone();
+  try {
+    await sbFai(sb.rpc(funz, arg));
+    avviso(fatto);
+    registra(evento, { ruolo: p.ruolo });
+  } catch(e){
+    const m = (e && e.message) || "";
+    avviso(e && e.code === "unavailable" ? "Non riesco a collegarmi. Riprova." : (/function|funzione|schema cache|does not exist/i.test(m) ? "Prima va lanciato in Supabase l'aggiornamento 8 (aggiornamento-8-persone-e-permessi.sql)." : "Non riuscito: " + (m || "riprova.")));
+  }
+  S.pending.delete(k);
+  await mostraPersone();
 }
 async function azzeraPersona(id){
   if (S.azzerando) return;
-  if (S.armatoPersona !== id){
-    S.armatoPersona = id; mostraPersone();
-    clearTimeout(timerPersona);
-    timerPersona = setTimeout(function(){ S.armatoPersona = null; mostraPersone(); }, num("conferma") * 1000);
-    return;
-  }
-  clearTimeout(timerPersona);
-  const p = (S.persone || []).find(function(x){ return x.id === id; });
-  S.azzerando = true; S.armatoPersona = null;
+  const p = personaDa(id);
+  if (!p || id === S.mioId) return;
+  const uno = await chiedi("Togliere l'accesso a " + p.nome + "?", "Non potrà più entrare. Le sue richieste restano.", "Sì, continua", "No");
+  if (!uno) return;
+  const due = await chiedi("Sei proprio sicuro?", "Non si può annullare: per rientrare " + p.nome + " dovrà registrarsi di nuovo con il codice del negozio. Se è solo in ferie, usa «Sospendi».", "Sì, togli l'accesso", "No");
+  if (!due) return;
+  S.azzerando = true; renderPersone();
   try {
     await sbFai(sb.rpc("azzera_persona", { persona: id }));
-    avviso("Fatto: " + (p ? p.nome : "questa persona") + " non può più entrare. Se serve, si registra di nuovo con il codice del negozio.");
+    avviso("Fatto: " + p.nome + " non può più entrare. Se serve, si registra di nuovo con il codice del negozio.");
+    S.pv = null;
   } catch(e){
     avviso(e && e.code === "unavailable" ? "Non riesco a collegarmi. Riprova." : "Non riuscito: " + ((e && e.message) || "riprova."));
   }
@@ -6190,8 +6609,8 @@ async function avviaSupabase(){
   sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, autoRefreshToken: true, storageKey: "pdp-ordini-accesso" } });
   try { sb.auth.onAuthStateChange(function(_e, sess){ if (sess && sess.access_token) S.token = sess.access_token; }); } catch(e){}
   document.addEventListener("visibilitychange", function(){
-    if (document.visibilityState === "visible" && store){ S.daRiepilogare = true; caricaTuttoSB(); }
-    if (document.visibilityState === "hidden") segnaVisita();
+    if (document.visibilityState === "visible" && store){ S.daRiepilogare = true; chiediLuogoSeServe(); caricaTuttoSB(); }
+    if (document.visibilityState === "hidden"){ segnaVisita(); segnaUsoLuogo(); }
   });
   try {
     const r = await sb.auth.getSession();
@@ -6206,7 +6625,7 @@ async function avviaSupabase(){
       try { if (await entraConSessione({ user: { id: ric.id } })){ S.senzaSessione = true; return; } } catch(e2){}
     }
   }
-  mostraAccesso(S.azzerato ? "prima" : "entra", S.azzerato ? "Il tuo accesso è stato azzerato dal titolare: registrati di nuovo con il codice del negozio." : "");
+  mostraAccesso(S.azzerato ? "prima" : "entra", S.azzerato ? "Il tuo accesso è stato azzerato dal titolare: registrati di nuovo con il codice del negozio." : (S.sospeso ? TESTO_SOSPESO : ""));
 }
 
 async function avvia(){

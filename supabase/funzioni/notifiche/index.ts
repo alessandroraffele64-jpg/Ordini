@@ -23,9 +23,22 @@ function elenco(nomi) {
   if (nomi.length <= 3) return nomi.join(", ");
   return nomi.slice(0, 3).join(", ") + " e altre " + (nomi.length - 3);
 }
+// il titolare può spegnere una notifica per una persona (impostazioni "permessi" → notifiche)
+function bloccata(isc, chiave) {
+  return !!(isc.bloccate && isc.bloccate[chiave] === false);
+}
 function vuole(isc, chiave, normale) {
+  if (bloccata(isc, chiave)) return false;
   const p = isc.preferenze || {};
   return p[chiave] === undefined ? normale : p[chiave] === true;
+}
+// chi lavora in più posti: le notifiche del posto dove è adesso (se il titolare gliel'ha dato)
+const LUOGHI_LAVORO = ["corso", "piazza-nenni", "panificio"];
+export function ruoloDiIscrizione(isc, ruolo, permessi) {
+  const luogo = isc.preferenze && isc.preferenze.luogo;
+  if (!luogo || luogo === ruolo || LUOGHI_LAVORO.indexOf(ruolo) < 0 || LUOGHI_LAVORO.indexOf(luogo) < 0) return ruolo;
+  const e = permessi && permessi[isc.utente];
+  return e && Array.isArray(e.luoghi) && e.luoghi.indexOf(luogo) >= 0 ? luogo : ruolo;
 }
 function perGruppo(voci, chiave) {
   const m = new Map();
@@ -58,7 +71,7 @@ export function componi(eventi, iscrizioni, mittente, ruoloMittente) {
         const scelte = ev.voci.filter((v) => {
           const d = v.dati;
           if (d.per === "Promemoria" || d.tipo === "prenotazione" || d.tipo === "magazzino") return false;
-          if (r === "consegne") return d.urgente === true || vuole(isc, "nuove", true); // gli urgenti arrivano sempre
+          if (r === "consegne") return (d.urgente === true && !bloccata(isc, "nuove")) || vuole(isc, "nuove", true); // gli urgenti arrivano sempre (se il titolare non le ha spente)
           if (r === "panificio") return d.da === "Panificio" && vuole(isc, "nuove", true);
           return tutto;
         });
@@ -129,7 +142,7 @@ export function componi(eventi, iscrizioni, mittente, ruoloMittente) {
         }
       } else if (ev.tipo === "manca") {
         const scelte = ev.voci.filter((v) =>
-          (NEGOZIO_DI_RUOLO[r] === v.dati.per && vuole(isc, "manca", true)) || v.autore === isc.utente || tutto);
+          (NEGOZIO_DI_RUOLO[r] === v.dati.per && vuole(isc, "manca", true)) || (v.autore === isc.utente && !bloccata(isc, "manca")) || tutto);
         for (const [neg, vv] of perGruppo(scelte, (v) => v.dati.per)) {
           out.push({ isc, titolo: "Non c'è in magazzino – per " + neg, testo: elenco(vv.map((v) => nomeCosa(v.dati))), tag: "manca-" + neg + "-" + ev.quando });
         }
@@ -293,9 +306,9 @@ if (typeof Deno !== "undefined") {
       const chi = await chiEntra(token);
       if (!chi.id) { console.log("notifiche: non autorizzato,", chi.errore); return risposta({ errore: "Non autorizzato: " + chi.errore }, 401); }
       const mittente = chi.id;
-      const { data: io, error: eProf } = await db.from("profili").select("attivo").eq("id", mittente).maybeSingle();
+      const { data: io, error: eProf } = await db.from("profili").select("*").eq("id", mittente).maybeSingle();
       if (eProf) { console.log("notifiche: database non raggiungibile,", eProf.message); return risposta({ errore: "Database: " + eProf.message }, 500); }
-      if (!io || io.attivo === false) return risposta({ errore: "Non autorizzato: profilo non trovato" }, 401);
+      if (!io || io.attivo === false || io.sospeso === true) return risposta({ errore: "Non autorizzato: profilo non trovato" }, 401);
 
       const corpo = await req.json().catch(() => ({}));
 
@@ -318,12 +331,18 @@ if (typeof Deno !== "undefined") {
         return risposta({ inviate: 0, motivo: "nessun evento" });
       }
 
-      const [{ data: isc }, { data: prof }] = await Promise.all([
+      const [{ data: isc }, { data: prof }, { data: imp }] = await Promise.all([
         db.from("iscrizioni").select("endpoint,p256dh,auth,utente,preferenze"),
-        db.from("profili").select("id,ruolo,attivo"),
+        db.from("profili").select("*"),
+        db.from("impostazioni").select("dati").eq("chiave", "permessi"),
       ]);
-      const ruoli = new Map((prof || []).filter((p) => p.attivo !== false).map((p) => [p.id, p.ruolo]));
-      const iscrizioni = (isc || []).filter((i) => ruoli.has(i.utente)).map((i) => ({ ...i, ruolo: ruoli.get(i.utente) }));
+      // chi è azzerato o sospeso non riceve niente
+      const ruoli = new Map((prof || []).filter((p) => p.attivo !== false && p.sospeso !== true).map((p) => [p.id, p.ruolo]));
+      const permessi = (imp && imp[0] && imp[0].dati && imp[0].dati.persone) || {};
+      const iscrizioni = (isc || []).filter((i) => ruoli.has(i.utente)).map((i) => {
+        const e = permessi[i.utente];
+        return { ...i, ruolo: ruoloDiIscrizione(i, ruoli.get(i.utente), permessi), bloccate: (e && e.notifiche) || null };
+      });
       const messaggi = componi(eventi, iscrizioni, mittente, ruoli.get(mittente) || "");
 
       const esiti = await Promise.all(messaggi.map(manda));
