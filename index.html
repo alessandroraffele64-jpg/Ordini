@@ -265,7 +265,10 @@ body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area
 .domanda-box{width:100%;max-width:420px;box-shadow:0 12px 32px rgba(0,0,0,.3)}
 .domanda-testo{font-size:18px;font-weight:700;line-height:1.3}
 /* non in magazzino: striscia sottile al negozio, riquadro piccolo in fondo */
-.strisce-mag{position:sticky;top:calc(env(safe-area-inset-top,0px) + 6px);z-index:5;display:flex;flex-direction:column;gap:6px}
+.strisce-mag{position:sticky;top:calc(env(safe-area-inset-top,0px) + 6px);z-index:4;display:flex;flex-direction:column;gap:6px;background:var(--bg);box-shadow:0 0 0 6px var(--bg)}
+/* titolari: la striscia si ferma subito sotto i tasti «Negozio / Consegne», senza coprirli
+   (--alto-switch è l'altezza vera dei tasti, la misura lo script) */
+.switch:not([hidden]) ~ .strisce-mag{top:calc(env(safe-area-inset-top,0px) + var(--alto-switch,52px) + 6px)}
 .striscia-mag{display:flex;align-items:center;gap:8px;padding:7px 8px 7px 12px;border-radius:10px;font-size:14px;line-height:1.3;background:var(--urgent-bg);color:var(--urgent-txt);box-shadow:inset 4px 0 0 var(--urgent),0 4px 12px rgba(0,0,0,.14)}
 .striscia-testo{appearance:none;flex:1 1 auto;min-width:0;padding:0;border:0;background:none;color:inherit;font:inherit;text-align:left;cursor:default}
 button.striscia-testo{cursor:pointer}
@@ -4145,6 +4148,13 @@ function collega(){
   $("mag-tutto").addEventListener("keydown", function(ev){ if (ev.key === "Escape") chiudiMagTutto(); });
   $("dc-schermo").addEventListener("keydown", function(ev){ if (ev.key === "Escape") chiudiDaControllare(); });
   window.addEventListener("resize", controllaStriscia);
+  /* altezza dei tasti «Negozio / Consegne», per mettere la striscia rossa subito sotto */
+  try {
+    new ResizeObserver(function(){
+      const h = $("switch-viste").offsetHeight;
+      if (h) document.documentElement.style.setProperty("--alto-switch", h + "px");
+    }).observe($("switch-viste"));
+  } catch(e){}
   $("disdici-altro").addEventListener("input", renderDisdici);
   $("pren-cerca-testo").addEventListener("input", function(){ S.prenCerca.testo = this.value; renderCerca(); });
   $("notifica").addEventListener("click", function(){ if (Date.now() - fineTrascina > 400) chiudiNotifica(); });
@@ -4449,7 +4459,7 @@ const VAPID_PUBLICA = "BC9TAKzQiQ-x3xtX0KWauGtV-uvIk9VFwqLjWAOzrJbe4e5w2AWyXMIej
    quale schermata, quanto tempo, errori, rete e tipo di telefono. Le persone non hanno nome ("Persona 1"…):
    lo decide il database (funzione "registra", supabase/aggiornamento-4-registro.sql). */
 const REGISTRO_ATTIVO = false;
-const VERSIONE_APP = "f3ef7f46";
+const VERSIONE_APP = "dc45e170";
 S.reg = [];
 S.ultimoTasto = { nome: "", alle: 0 };
 S.tocchi = { nome: "", volte: 0, alle: 0, segnato: false };
