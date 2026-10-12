@@ -569,6 +569,12 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
 .codici-lista{display:flex;flex-direction:column;gap:8px}
 .codici-lista li{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 10px}
 .codici-lista code{font-size:16px;font-weight:700;letter-spacing:.04em}
+.parte-manca{margin:2px 0 0;font-size:14px;font-weight:700;color:var(--urgent)}
+.riga:has(.parte-form){flex-wrap:wrap}
+.azioni:has(.parte-form){flex:1 1 100%;flex-direction:row;flex-wrap:wrap;justify-content:flex-end}
+.parte-form{flex:1 1 100%;display:flex;flex-direction:column;gap:8px;padding:8px 0 2px;align-items:stretch}
+.parte-form .row{justify-content:flex-end}
+.parte-form .row{display:flex;gap:8px;flex-wrap:wrap}
 .man-capitoli{display:flex;flex-direction:column;gap:10px}
 .man-titolo{margin:0 0 4px;font-size:18px}
 .man-domanda{border-top:1px solid var(--line-2)}
@@ -1363,7 +1369,11 @@ function norma(k, d, st, autore, rid){
     prep: STATI_PREP.indexOf(st.prep) >= 0 ? st.prep : "",
     prepAlle: Number(st.prepAlle) || 0,
     /* "È arrivato in magazzino": da portare subito */
-    arrivatoAlle: Number(st.arrivatoAlle) || 0
+    arrivatoAlle: Number(st.arrivatoAlle) || 0,
+    /* «Solo una parte»: chi fa il giro ha caricato una parte, qui c'è cosa mancava */
+    parteManca: String(st.parteManca || "").slice(0, 40),
+    /* questa riga è la parte che mancava di un'altra richiesta */
+    restoDi: typeof d.restoDi === "string" ? d.restoDi.slice(0, 80) : ""
   };
 }
 /* richieste per un giorno preciso: compaiono a tutti dal giorno prima */
@@ -2343,9 +2353,11 @@ async function spostaReparto(id, rep){
 /* ---------- render: pezzi comuni ---------- */
 function testoArticolo(r){
   const t = el("p", {class:"articolo"}, r.quantita ? el("span", {class:"qta", text:r.quantita}) : null, r.articolo);
-  if (!r.nota) return t;
+  if (!r.nota && !r.parteManca) return t;
   const f = document.createDocumentFragment();
-  f.append(t, el("p", {class:"nota", text:"“" + r.nota + "”"}));
+  f.append(t);
+  if (r.parteManca) f.append(el("p", {class:"parte-manca", text:"Solo una parte: mancano " + r.parteManca}));
+  if (r.nota) f.append(el("p", {class:"nota", text:"“" + r.nota + "”"}));
   return f;
 }
 function pillOrigine(r){
@@ -2418,6 +2430,7 @@ function pillPrep(r){
 }
 function tag(r, perChi){
   if (r.esempio) return el("span", {class:"tag", text:"esempio"});
+  if (r.restoDi) return el("span", {class:"tag", text:"il resto di una richiesta"});
   if (r.daGiro) return el("span", {class:"tag", text: r.mio ? "aggiunta da te" : "aggiunta dal giro"});
   return null;
 }
@@ -2894,7 +2907,7 @@ function capitoliManuale(){
       "Se hai sbagliato a togliere: in fondo alla pagina, in «Cronologia: cose tolte», restano per " + secondi("crono") + " e c'è ", tasto("Recupera"), "."]],
     ["E se chiedo una cosa che già non c'è in magazzino?", ["L'app lo sa: la richiesta parte già segnata «non c'è» e resta barrata nella tua lista finché non arriva. Quando arriva vedi «Arrivata in magazzino» e poi viene caricata come le altre."]],
     ["Cosa vuol dire «Da comprare»?", ["È una cosa che non c'è e va comprata. La vedono i titolari e chi fa il giro, in «Non in magazzino». Quando arriva, va nelle consegne e ve la portano."]],
-    ["Cosa succede se arriva solo una parte?", ["Chi fa il giro carica e consegna quello che c'è. Per quello che manca aggiunge una riga con la parte mancante (per esempio «2 casse Acqua») e la segna «Non c'è»: così resta nella striscia rossa finché non arriva."]],
+    ["Cosa succede se arriva solo una parte?", ["Chi fa il giro carica quello che c'è e scrive cosa manca. La tua richiesta va «In viaggio» con la scritta «Solo una parte: mancano 2 casse». Nella tua lista compare anche una riga nuova con quello che manca, barrata perché non c'è in magazzino (e ti arriva la notifica). Quando arriva, te la portano come le altre."]],
     ["E se non c'è campo?", ["Scrivi e invia lo stesso: la richiesta si salva sul telefono e parte da sola appena torna il campo. In alto vedi quante cose aspettano. Non uscire dall'app finché non sono partite."]]
   ]});
   if (panif || tit) cap.push({ titolo:"Panificio e magazzino", domande:[
@@ -2906,6 +2919,7 @@ function capitoliManuale(){
   if (haSezione("consegne")) cap.push({ titolo:"Giro consegne", domande:[
     ["Come funziona il giro?", ["In alto scegli ", tasto("Carico per reparto"), " (le cose da caricare, divise per reparto) oppure ", tasto("Giro per negozio"), " (le cose caricate, divise per negozio)."]],
     ["Come segno quello che carico e consegno?", ["Tocca ", tasto("Caricato"), " quando la cosa è sul furgone: il negozio la vede «In viaggio». Al negozio tocca ", tasto("Consegnato"), ", oppure ", tasto("Tutto consegnato"), " per tutte le cose di quel negozio. «Annulla» rimette la cosa da caricare."]],
+    ["E se ne ho solo una parte?", ["Tocca ", tasto("Solo una parte"), ", scrivi cosa manca ancora (per esempio «2 casse») e tocca ", tasto("Carica la parte"), ". La richiesta diventa caricata con la scritta «Solo una parte: mancano 2 casse». Quello che manca diventa una riga nuova per lo stesso negozio, segnata «non c'è»: va nella striscia rossa e, quando arriva, torna in cima alle consegne in verde."]],
     ["E se una cosa non c'è in magazzino?", ["Tocca «Non c'è» e poi «Conferma». La cosa esce dalla tua lista e va nella striscia rossa in alto, che vedono tutti. Il negozio la vede barrata."]],
     ["Cosa sono le cose verdi in cima?", ["Sono cose che mancavano e adesso sono «Arrivate in magazzino»: vanno portate al negozio che le aveva chieste. Restano verdi e in cima finché non sono consegnate."]],
     ["Posso aggiungere io una cosa?", ["Sì, con «+ Aggiungi tu una cosa da portare o da ricordare». Puoi scegliere un negozio, oppure «Promemoria» se è solo per te (es. «Passare a prendere le casse»): quando l'hai fatta tocca ", tasto("Fatto"), "."]]
@@ -3186,7 +3200,9 @@ function azioniGiro(r){
     if (r.mio) box.append(bottoneTogli(r, true));
   } else if (r.stato === "attesa"){
     box.append(el("button", {type:"button", class:"azione b-carica", "data-id":r.id, "data-stato":"caricato", disabled:off, "aria-label":"Caricato: " + r.articolo, text:"Caricato"}));
+    if (dalMagazzino(r) && r.prep !== "manca") box.append(el("button", {type:"button", class:"link", "data-parte":r.id, disabled:off, "aria-expanded":String(S.parteApri === r.id), "aria-label":"Solo una parte di " + r.articolo, text:"Solo una parte"}));
     if (dalMagazzino(r)){ const bm = bottoneManca(r); if (bm) box.append(bm); }
+    if (S.parteApri === r.id) box.append(formParte(r));
     if (r.mio) box.append(bottoneTogli(r, true));
   } else {
     box.append(
@@ -3195,6 +3211,46 @@ function azioniGiro(r){
     );
   }
   return box;
+}
+/* «Solo una parte»: chi fa il giro carica quello che c'è e scrive cosa manca (es. «2 casse»).
+   La richiesta va «In viaggio» con la scritta «Solo una parte: mancano 2 casse»; nasce una
+   riga nuova con quello che manca, per lo stesso negozio, già segnata «non c'è» (striscia rossa,
+   notifica al negozio); quando arriva, «È arrivato» la manda nelle consegne come le altre. */
+function formParte(r){
+  return el("form", {class:"parte-form", "data-parte-form":r.id, novalidate:""},
+    el("label", {class:"field"}, el("span", {class:"label-sm", text:"Cosa manca ancora? (si carica il resto)"}),
+      el("input", {type:"text", id:"parte-testo", maxlength:"24", autocomplete:"off", placeholder:"Es. 2 casse", value:S.parteTesto || "", disabled:S.pending.has(r.id)})),
+    el("div", {class:"row"},
+      el("button", {type:"button", class:"mini", "data-parte-annulla":r.id, text:"Annulla"}),
+      el("button", {type:"submit", class:"mini b-conferma-parte", disabled:S.pending.has(r.id), text:"Carica la parte"})));
+}
+function apriParte(id){
+  S.parteApri = S.parteApri === id ? null : id;
+  S.parteTesto = "";
+  renderTutto();
+  const i = $("parte-testo"); if (i) i.focus();
+}
+async function confermaParte(id){
+  const r = S.richieste.find(function(x){ return x.id === id; });
+  const inp = $("parte-testo");
+  const manca = inp ? String(inp.value || "").replace(/\s+/g, " ").trim().slice(0, 24) : "";
+  if (!r || !store || S.sola || S.pending.has(id)) return;
+  if (!manca){ if (inp){ inp.setAttribute("aria-invalid", "true"); inp.focus(); } return; }
+  S.pending.add(id); renderTutto();
+  const ora = Date.now();
+  const voce = { esempio: false, daGiro: false, articolo: r.articolo, quantita: manca, creato: ora, da: r.da, urgente: r.urgente, per: r.per, restoDi: r.id };
+  if (r.reparto) voce.reparto = r.reparto;
+  let nuova = "";
+  let ok = await scrivi(async function(){ nuova = await store.aggiungi(voce); }, true);
+  if (ok && nuova) ok = await scrivi(function(){ return store.stato(nuova, { prep: "manca", prepAlle: ora, mancato: true }); });
+  if (ok) ok = await scrivi(function(){ return store.stato(id, { stato: "caricato", aggiornato: ora, consegnatoAlle: 0, parteManca: manca, parteAlle: ora }); });
+  S.pending.delete(id);
+  if (ok){
+    S.parteApri = null; S.parteTesto = "";
+    registra("solo una parte", {});
+    avviso("Caricata una parte di " + r.articolo + ". Quello che manca (" + manca + ") è segnato «non c'è» e torna quando arriva.");
+  }
+  renderTutto();
 }
 /* riga nel carico: striscia del colore del negozio, per sapere subito dove va */
 function rigaCarico(r, conSposta, conAzioni, conDove, conOra){
@@ -4682,6 +4738,8 @@ function scaricaBiscotti(){
   scaricaCsv("ordini-biscotti-" + oggiFile() + ".csv", righe);
 }
 function renderTutto(){
+  /* la casella di «Solo una parte» si ridisegna: resta il cursore dentro */
+  const inParte = document.activeElement && document.activeElement.id === "parte-testo";
   const g = fmtOggi.format(new Date());
   $("oggi").textContent = g.charAt(0).toUpperCase() + g.slice(1);
   renderNegozio();
@@ -4693,6 +4751,7 @@ function renderTutto(){
   renderDatabase();
   renderImpostazioni();
   renderManuale();
+  if (inParte && $("parte-testo")){ const i = $("parte-testo"); i.focus(); try { i.setSelectionRange(i.value.length, i.value.length); } catch(e){} }
   document.querySelectorAll(".giorni-crono").forEach(function(x){ x.textContent = testoNumero(NUMERI.find(function(n){ return n.k === "crono"; }), num("crono")); });
 }
 
@@ -4808,6 +4867,8 @@ function collega(){
     if (b.dataset.biscFatto) return fattoBisc(b.dataset.biscFatto);
     if (b.dataset.biscRimetti) return rimettiBisc(b.dataset.biscRimetti);
     if (b.dataset.manca) return armaManca(b.dataset.manca);
+    if (b.dataset.parte) return apriParte(b.dataset.parte);
+    if (b.dataset.parteAnnulla){ S.parteApri = null; return renderTutto(); }
     if (b.dataset.arrivato) return segnaArrivato(b.dataset.arrivato);
     if (b.dataset.prep) return impostaPrep(b.dataset.id, b.dataset.prep);
     if (b.dataset.stato) return cambiaStato(b.dataset.id, b.dataset.stato);
@@ -5017,6 +5078,11 @@ function collega(){
   $("per-giro").addEventListener("change", aggiornaFormGiro);
   $("form-richiesta").addEventListener("submit", invia);
   $("form-giro").addEventListener("submit", inviaGiro);
+  document.addEventListener("submit", function(ev){
+    const f = ev.target.closest && ev.target.closest("[data-parte-form]");
+    if (f){ ev.preventDefault(); confermaParte(f.dataset.parteForm); }
+  });
+  document.addEventListener("input", function(ev){ if (ev.target.id === "parte-testo"){ S.parteTesto = ev.target.value; ev.target.removeAttribute("aria-invalid"); } });
   $("form-bisc").addEventListener("submit", aggiungiBiscotto);
   $("menu-velo").addEventListener("click", function(){ chiudiMenu(true); });
   $("menu").addEventListener("keydown", function(ev){ if (ev.key === "Escape") chiudiMenu(true); });
@@ -5277,7 +5343,7 @@ const VAPID_PUBLICA = "BC9TAKzQiQ-x3xtX0KWauGtV-uvIk9VFwqLjWAOzrJbe4e5w2AWyXMIej
    quale schermata, quanto tempo, errori, rete e tipo di telefono. Le persone non hanno nome ("Persona 1"…):
    lo decide il database (funzione "registra", supabase/aggiornamento-4-registro.sql). */
 const REGISTRO_ATTIVO = false;
-const VERSIONE_APP = "f9d6fd4a";
+const VERSIONE_APP = "128bd70c";
 S.reg = [];
 S.ultimoTasto = { nome: "", alle: 0 };
 S.tocchi = { nome: "", volte: 0, alle: 0, segnato: false };
@@ -5760,7 +5826,7 @@ function storeSB(){
   return {
     aggiungi: async function(voce){
       const id = nuovoId();
-      await scriviOp({ tab: "richieste", tipo: "insert", id: id, riga: { id: id, autore: S.mioId, dati: voce } }, { tipo: voce.tipo === "prenotazione" ? "prenotazioni" : (voce.tipo === "magazzino" ? "magazzino" : "nuove"), id: id });
+      await scriviOp({ tab: "richieste", tipo: "insert", id: id, riga: { id: id, autore: S.mioId, dati: voce } }, voce.restoDi ? null : { tipo: voce.tipo === "prenotazione" ? "prenotazioni" : (voce.tipo === "magazzino" ? "magazzino" : "nuove"), id: id });
       applicaRiga("richieste", { id: id, autore: S.mioId, dati: voce }); emettiSB(true);
       return S.mioId + "~" + id;
     },
