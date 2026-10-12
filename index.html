@@ -557,6 +557,40 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
 @media (prefers-reduced-motion: no-preference){
   .switch button,.chip span,.azione,.mini{transition:background-color .15s,color .15s,border-color .15s}
 }
+/* computer: con lo schermo largo il menu resta aperto a sinistra e le liste vanno in colonne.
+   Sul telefono non cambia niente. */
+.menu-casa{display:none}
+@media (min-width:1000px){
+  body.con-menu{padding-left:272px}
+  body.con-menu .menu[hidden]{display:flex!important}
+  body.con-menu .menu{width:272px;z-index:35;box-shadow:none;border-right:1px solid var(--line-2)}
+  body.con-menu .menu-velo{display:none!important}
+  body.con-menu #apri-menu,body.con-menu #chiudi-menu,body.con-menu #torna,body.con-menu .testata .logo{display:none}
+  body.con-menu .menu-casa{display:block}
+  .app,.testata-in,.fascia-in{max-width:1240px;padding-inline:32px}
+  .app{padding-block:24px 64px}
+  .fascia h1{font-size:38px}
+  .switch:not(.sotto),.punti,.riepilogo{max-width:640px;width:100%}
+  .switch.sotto{max-width:480px}
+  /* negozio: a sinistra cosa serve, a destra quello che arriva */
+  #pannello-richieste:has(> #form-richiesta:not([hidden])){display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);align-items:start;gap:28px}
+  #pannello-richieste > :not(#form-richiesta){grid-column:2}
+  /* gruppi di richieste e cose che mancano: uno accanto all'altro */
+  #gruppi,#gruppi-nuove-panif,#gruppi-panif,#gruppi-magazzino,#mancanti-gruppi{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));align-items:start;gap:16px}
+  #gruppi > :not(.gruppo),#gruppi-nuove-panif > :not(.gruppo),#gruppi-panif > :not(.gruppo),#gruppi-magazzino > :not(.gruppo),#mancanti-gruppi > :not(.gruppo){grid-column:1/-1}
+  /* biscotti: a sinistra la comanda, a destra quelli già chiesti */
+  #bisc-negozio{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start;gap:14px 28px}
+  #bisc-negozio > *{grid-column:1/-1}
+  #bisc-negozio > #comanda{grid-column:1;grid-row:span 3}
+  #bisc-negozio > #bisc-chiesti-wrap,#bisc-negozio > #crono-bisc{grid-column:2}
+  /* schede di una sola colonna: larghe come una pagina, non come tutto lo schermo */
+  #pannello-notifiche,#pannello-persone,#pannello-statistiche,#bisc-panificio,#pren-dacontrollare,#pren-pagine,#pren-scegli,#pren-giorni,#pren-risultati,#pren-fascia,#mag-form,#mag-segnate-box,#giro-wrap,#codici-box,#link-personale{max-width:760px;width:100%}
+  #pren-nuova,#mag-segna{align-self:flex-start;min-width:280px}
+  .menu-voce{min-height:46px;font-size:16px}
+  /* «Controlla» e «Conferma»: una finestra in mezzo allo schermo, non tutta la pagina */
+  .conferma-velo:not(.pren-velo){align-items:center;padding:40px;background:rgba(10,14,18,.55)}
+  .riep-box{height:auto;max-height:100%;max-width:640px;padding:24px;border-radius:var(--r-lg);background:var(--bg);box-shadow:0 12px 32px rgba(0,0,0,.3)}
+}
 </style>
 </head>
 <body>
@@ -2533,11 +2567,15 @@ function nomeSezione(id){
 }
 function renderMenu(){
   const bisc = inSezioneExtra();
-  riempi($("menu-voci"), vociMenu().map(function(v){
+  const t = S.ruolo.tipo;
+  /* sul computer il menu resta aperto: in cima c'è anche la pagina principale (sul telefono non si vede) */
+  document.body.classList.add("con-menu");
+  const casa = el("li", {class:"menu-casa"}, el("button", {type:"button", class:"menu-voce", "data-vai":"richieste", "aria-current": bisc ? null : "page"},
+    el("span", {text: t === "giro" ? "Giro consegne" : (S.punto === "Panificio" && t !== "titolare" ? "Ordini dei negozi" : "Richieste")})));
+  riempi($("menu-voci"), [casa].concat(vociMenu().map(function(v){
     const badge = v.n === null ? null : el("span", {class:"badge", "data-zero": v.n ? null : "", text:String(v.n)});
     return el("li", null, el("button", {type:"button", class:"menu-voce", "data-vai":v.id, "aria-current": (v.id === S.sez && bisc) ? "page" : null}, el("span", {text:v.nome}), badge));
-  }));
-  const t = S.ruolo.tipo;
+  })));
   /* dentro Biscotti: freccia Indietro al posto del menu */
   $("apri-menu").hidden = bisc;
   $("torna").hidden = !bisc;
@@ -4459,7 +4497,7 @@ const VAPID_PUBLICA = "BC9TAKzQiQ-x3xtX0KWauGtV-uvIk9VFwqLjWAOzrJbe4e5w2AWyXMIej
    quale schermata, quanto tempo, errori, rete e tipo di telefono. Le persone non hanno nome ("Persona 1"…):
    lo decide il database (funzione "registra", supabase/aggiornamento-4-registro.sql). */
 const REGISTRO_ATTIVO = false;
-const VERSIONE_APP = "dc45e170";
+const VERSIONE_APP = "2a1cf371";
 S.reg = [];
 S.ultimoTasto = { nome: "", alle: 0 };
 S.tocchi = { nome: "", volte: 0, alle: 0, segnato: false };
