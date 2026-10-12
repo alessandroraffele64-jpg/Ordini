@@ -1368,6 +1368,8 @@ function norma(k, d, st, autore, rid){
     /* a che punto è il panificio: "", "preparazione", "pronto", "finito" */
     prep: STATI_PREP.indexOf(st.prep) >= 0 ? st.prep : "",
     prepAlle: Number(st.prepAlle) || 0,
+    /* da quando non c'è in magazzino (per le statistiche; resta anche dopo che arriva) */
+    mancaAlle: Number(st.mancaAlle) || 0,
     /* "È arrivato in magazzino": da portare subito */
     arrivatoAlle: Number(st.arrivatoAlle) || 0,
     /* «Solo una parte»: chi fa il giro ha caricato una parte, qui c'è cosa mancava */
@@ -1432,7 +1434,6 @@ function ricomponi(){
   segnaNuove(out, pren);
   S.programmate = programmate.sort(function(a, b){ return a.perIl.localeCompare(b.perIl) || a.creato - b.creato; });
 }
-const SETTE_GIORNI = 7 * 86400000;
 
 /* ---------- Impostazioni (solo titolari): i numeri dell'app ----------
    Valgono per tutti i telefoni: si salvano nelle impostazioni condivise, chiave "numeri"
@@ -1453,6 +1454,8 @@ const NUMERI = [
     spiega:"Quanti giorni restano in fondo alla pagina le richieste tolte (che si possono recuperare) e i biscotti tolti o fatti." },
   { k:"giorni", nome:"Giorni di richieste caricate", unita:"giorni", base:45, min:14, max:180, passo:5,
     spiega:"Quanti giorni indietro l'app carica le richieste quando si apre. Più giorni vuol dire app più lenta ad aprirsi. Le cose che non ci sono in magazzino e le prenotazioni si caricano sempre. Vale dalla prossima volta che si apre l'app." },
+  { k:"controllo", nome:"Giorni nel «Database» da controllare", unita:"giorni", base:7, min:1, max:45, passo:1,
+    spiega:"Nel «Database» (Ordini e Prenotazioni) le cose nuove o corrette da controllare sono quelle degli ultimi giorni. Quanti giorni indietro guardare." },
   { k:"registroMesi", nome:"Registro di come si usa l'app", unita:"mesi", base:6, min:1, max:24, passo:1,
     spiega:"Per quanti mesi si tengono le righe del registro, poi si cancellano da sole. Adesso il registro è spento." }
 ];
@@ -1650,7 +1653,7 @@ async function aggiungi(voci, comuni){
     /* chiesta una cosa che già non c'è in magazzino: parte già segnata «non c'è»,
        così aspetta con le altre e torna in lista con «È arrivato» */
     if (x.giaManca && voce.da === "Panificio" && nuova){
-      await scrivi(function(){ return store.stato(nuova, { prep: "manca", prepAlle: Date.now(), mancato: true, giaMancava: true }); });
+      await scrivi(function(){ return store.stato(nuova, { prep: "manca", prepAlle: Date.now(), mancaAlle: Date.now(), mancato: true, giaMancava: true }); });
     }
   }
   return ok;
@@ -2156,6 +2159,8 @@ async function impostaPrep(id, valore){
   const patch = { prep: nuovo, prepAlle: Date.now() };
   /* per le statistiche: resta segnato che è mancato, anche quando poi arriva */
   if (nuovo === "manca") patch.mancato = true;
+  /* da quando manca: la prima volta sola (prepAlle cambia quando arriva) */
+  if (nuovo === "manca" && !(S.stati[id] || {}).mancaAlle) patch.mancaAlle = patch.prepAlle;
   if (nuovo === "finito") patch.finito = true;
   await scrivi(function(){ return store.stato(id, patch); });
   S.pending.delete(id); renderTutto();
@@ -2815,6 +2820,7 @@ async function cambiaPermesso(id, sez){
     });
   });
   S.pending.delete("permessi");
+  if (ok) registra("permesso cambiato", { sezione: sez, ruolo: p.ruolo, dato: nuovo });
   if (ok) avviso((nuovo ? "Fatto: " + p.nome + " adesso vede «" : "Fatto: " + p.nome + " non vede più «") + SEZIONI_PERMESSI.find(function(x){ return x.id === sez; }).nome + "». Sul suo telefono cambia appena l'app si aggiorna.");
   mostraPersone();
 }
@@ -2870,11 +2876,13 @@ function cambiaBozzaNumero(k, verso){
 async function salvaNumero(k, valore){
   const n = NUMERI.find(function(x){ return x.k === k; });
   if (!n || !store || S.sola || S.pending.has("numeri")) return;
+  const prima = num(k);
   S.pending.add("numeri"); renderImpostazioni();
   /* "come prima" si salva vuoto (null): così se un giorno cambia il valore di base, vale quello */
   const ok = await scrivi(function(){ return store.numeri(function(){ const d = {}; d[k] = valore === n.base ? null : valore; return d; }); });
   S.pending.delete("numeri");
   if (ok){
+    registra("impostazione cambiata", { numero: k, prima: prima, dopo: valore });
     delete S.bozzaNumeri[k];
     avviso("Salvato: " + n.nome + " · " + testoNumero(n, valore) + ". Vale per tutti i telefoni.");
   }
@@ -2964,7 +2972,8 @@ function capitoliManuale(){
   if (tit) cap.push({ titolo:"Solo per i titolari", domande:[
     ["Come do una sezione in più (o in meno) a una persona?", ["Dal menu apri «Persone registrate». Sotto ogni nome ci sono le sezioni che vede: tocca ", tasto("Sì"), " o ", tasto("No"), ". Accanto vedi se è «come il suo ruolo» o «cambiata per lei». La pagina principale (Richieste o Giro consegne) non si toglie, e le sezioni dei titolari non si danno agli altri."]],
     ["A cosa serve «Impostazioni»?", ["Lì cambi i tempi dell'app (per esempio dopo quante ore una richiesta è «Ferma da…»). Valgono per tutti i telefoni. Usa − e +, poi «Salva»; «Rimetti come prima» torna al numero di partenza."]],
-    ["A cosa serve «Database»?", ["Tre parti: Ordini, Prenotazioni, Biscotti. In ognuna ci sono i nomi nuovi o corretti dall'app da controllare («Sì, è giusto», «No, era…», «È un prodotto nuovo»), e in fondo l'elenco completo. Una correzione vale anche per quello già scritto."]],
+    ["A cosa serve «Database»?", ["Tre parti: Ordini, Prenotazioni, Biscotti. In ognuna ci sono i nomi nuovi o corretti dall'app da controllare («Sì, è giusto», «No, era…», «È un prodotto nuovo»), e in fondo l'elenco completo. Una correzione vale anche per quello già scritto. Quanti giorni indietro guardare lo scegli in «Impostazioni» (di partenza 7)."]],
+    puoStat() ? ["Cosa trovo nelle «Statistiche»?", ["Quante richieste, cosa si chiede di più, cosa manca più spesso (anche le volte portate solo in parte), quanto si aspetta in magazzino prima che una cosa arrivi, quando si chiede, quanto ci mette ad arrivare al negozio, i biscotti, le prenotazioni e le disdette con il loro motivo. Scegli il periodo in alto. I tasti per scaricare danno un file che si apre con Excel."]] : null,
     ["Se qualcuno dimentica il PIN o se ne va?", ["In «Persone registrate» tocca «Azzera» e conferma: non può più entrare, le sue richieste restano. Se serve, si registra di nuovo con il codice del negozio."]]
   ]});
   return cap;
@@ -2973,8 +2982,8 @@ function renderManuale(){
   if (!inManuale()) return;
   riempi($("man-capitoli"), capitoliManuale().map(function(c){
     return el("section", {class:"card man-cap"}, el("h3", {class:"man-titolo", text:c.titolo}),
-      ...c.domande.map(function(d){
-        return el("details", {class:"man-domanda"}, el("summary", {text:d[0]}), el("p", null, ...d[1]));
+      ...c.domande.filter(Boolean).map(function(d){
+        return el("details", {class:"man-domanda", "data-man-cap":c.titolo}, el("summary", {text:d[0]}), el("p", null, ...d[1]));
       }));
   }));
 }
@@ -3242,7 +3251,7 @@ async function confermaParte(id){
   if (r.reparto) voce.reparto = r.reparto;
   let nuova = "";
   let ok = await scrivi(async function(){ nuova = await store.aggiungi(voce); }, true);
-  if (ok && nuova) ok = await scrivi(function(){ return store.stato(nuova, { prep: "manca", prepAlle: ora, mancato: true }); });
+  if (ok && nuova) ok = await scrivi(function(){ return store.stato(nuova, { prep: "manca", prepAlle: ora, mancaAlle: ora, mancato: true }); });
   if (ok) ok = await scrivi(function(){ return store.stato(id, { stato: "caricato", aggiornato: ora, consegnatoAlle: 0, parteManca: manca, parteAlle: ora }); });
   S.pending.delete(id);
   if (ok){
@@ -3681,7 +3690,7 @@ function riconosciVoce(v){
 /* ---------- «Database» (solo titolari) ----------
    Tre parti: Ordini (i nomi delle richieste), Prenotazioni, Biscotti.
    In ognuna le cose nuove o corrette da controllare e, in fondo, l'elenco completo.
-   Ordini: per ogni nome degli ultimi 7 giorni, cosa era scritto e cosa ha messo l'app
+   Ordini: per ogni nome degli ultimi giorni (num("controllo"), di partenza 7), cosa era scritto e cosa ha messo l'app
    («Sì, è giusto» / «No, era…»), oppure un nome che l'app non conosceva
    («È un prodotto nuovo» / «È un prodotto che c'è già…»). */
 S.corrApri = "";
@@ -3692,7 +3701,7 @@ function inDatabase(){ return S.vista === "negozio" && S.sez === "database"; }
 function maiuscola(t){ t = String(t || "").trim(); return t.charAt(0).toUpperCase() + t.slice(1); }
 function gruppiCorrezioni(){
   if (!puoDatabase()) return [];
-  const dal = Date.now() - SETTE_GIORNI;
+  const dal = Date.now() - num("controllo") * 86400000;
   const gruppi = new Map();
   S.richieste.concat(S.programmate || []).forEach(function(r){
     if (r.esempio || r.per === PROMEMORIA || r.creato < dal) return;
@@ -3748,7 +3757,7 @@ function renderDbOrdini(){
   S.corrGruppi = new Map(gruppi.map(function(g){ return [g.id, g]; }));
   const off = S.pending.has("prodotti-richieste");
   const elenco = elencoProdottiRich();
-  $("db-spiega").textContent = "Le richieste dei negozi degli ultimi 7 giorni. Qui vedi cosa ha scritto la persona e cosa ha messo l'app. Se l'app ha sbagliato, scegli il prodotto giusto: si correggono tutte le richieste scritte così e la volta dopo l'app lo sa.";
+  $("db-spiega").textContent = "Le richieste dei negozi degli ultimi " + secondi("controllo") + ". Qui vedi cosa ha scritto la persona e cosa ha messo l'app. Se l'app ha sbagliato, scegli il prodotto giusto: si correggono tutte le richieste scritte così e la volta dopo l'app lo sa.";
   riempi($("db-lista"), gruppi.map(function(g){
     const posti = Array.from(new Set(g.rich.map(function(r){ return r.per; }))).join(", ");
     const ultima = Math.max.apply(null, g.rich.map(function(r){ return r.creato; }));
@@ -3790,7 +3799,7 @@ function renderDbPren(){
   const gruppi = gruppiDaControllare();
   const elenco = elencoProdotti();
   const off = S.pending.has("prodotti");
-  $("db-spiega").textContent = "Le prenotazioni degli ultimi 7 giorni con un prodotto che l'app non conosceva. «È un prodotto nuovo»: entra nell'elenco. «C'è già, è…»: scegli il prodotto giusto e tutte le prenotazioni scritte così si correggono da sole.";
+  $("db-spiega").textContent = "Le prenotazioni degli ultimi " + secondi("controllo") + " con un prodotto che l'app non conosceva. «È un prodotto nuovo»: entra nell'elenco. «C'è già, è…»: scegli il prodotto giusto e tutte le prenotazioni scritte così si correggono da sole.";
   riempi($("db-lista"), Array.from(gruppi.entries()).map(function(e){
     const k = e[0], g = e[1];
     const dove = g.pren.slice(0, 3).map(function(p){ return fmtCortoGiorno(p.perIl) + (p.cliente ? ", " + p.cliente : ""); }).join(" · ") + (g.pren.length > 3 ? " e altre" : "");
@@ -4180,7 +4189,7 @@ function chiedi(testo, sotto, si, no){
 /* prodotti nuovi da confermare o correggere (solo titolari):
    in Prenotazioni un tasto, che apre una schermata a parte con tutti i prodotti da accettare */
 function gruppiDaControllare(){
-  const limite = dataLocale(Date.now() - 7 * 86400000);
+  const limite = dataLocale(Date.now() - num("controllo") * 86400000);
   const gruppi = new Map();
   S.prenotazioni.forEach(function(p){
     if (p.disdetta || p.perIl < limite) return;
@@ -4261,6 +4270,8 @@ function renderCerca(){
   const testo = c.testo.trim();
   if (!testo){ riempi(box, [el("p", {class:"hint", text:"Scrivi il nome del cliente, un prodotto o il numero di telefono. Cerca da 7 giorni fa in avanti."})]); return; }
   const trovate = cercaPren(testo);
+  if (!trovate.length && testo.length >= 3 && !c.vuotaSegnata){ c.vuotaSegnata = true; registra("ricerca senza risultati", { lettere: testo.length }); }
+  if (trovate.length) c.vuotaSegnata = false;
   if (!trovate.length){ riempi(box, [el("p", {class:"vuoto", text:"Nessuna prenotazione trovata per «" + testo + "»."})]); return; }
   const perGiorno = new Map();
   trovate.forEach(function(p){ if (!perGiorno.has(p.perIl)) perGiorno.set(p.perIl, []); perGiorno.get(p.perIl).push(p); });
@@ -4549,26 +4560,47 @@ async function caricaStatistiche(giorni){
   S.statCarico = false;
   renderStatistiche();
 }
+/* da quando contare: il periodo scelto, ma mai prima della partenza vera (STAT_DAL) */
+function limiteStat(){ return S.stat ? Math.max(Date.now() - S.stat.giorni * 86400000, STAT_DAL ? new Date(STAT_DAL + "T00:00:00").getTime() : 0) : 0; }
 function righeStat(){
   if (!S.stat) return [];
-  const lim = Math.max(Date.now() - S.stat.giorni * 86400000, STAT_DAL ? new Date(STAT_DAL + "T00:00:00").getTime() : 0);
+  const lim = limiteStat();
   return S.stat.righe.filter(function(x){ return x.v.tipo !== "prenotazione" && x.v.tipo !== "magazzino"; }).map(function(x){
     const r = norma(x.autore + "~" + x.rid, x.v, x.st, x.autore, x.rid);
     r.tolta = !!x.v.annullato;
     r.mancato = !!(x.st.mancato || x.st.prep === "manca");
     r.finitoPanif = !!(x.st.finito || x.st.prep === "finito");
+    /* «Solo una parte»: la riga del resto non è una richiesta in più (non si conta due volte) */
+    r.resto = !!r.restoDi;
+    r.parte = !!r.parteManca;
     return r;
   }).filter(function(r){ return !r.esempio && r.creato >= lim && r.per !== PROMEMORIA; });
+}
+/* cose segnate con «+ Segna cosa manca» nel periodo */
+function magStat(){
+  if (!S.stat) return [];
+  const lim = limiteStat();
+  return S.stat.righe.filter(function(x){ return x.v.tipo === "magazzino" && !x.v.annullato; })
+    .map(function(x){ return normaMag(x.autore + "~" + x.rid, x.v, x.st, x.autore); })
+    .filter(function(m){ return m.creato >= lim; });
+}
+/* prenotazioni del periodo (anche quelle disdette) */
+function prenStat(){
+  if (!S.stat) return [];
+  const lim = limiteStat();
+  return S.stat.righe.filter(function(x){ return x.v.tipo === "prenotazione" && !x.v.annullato; })
+    .map(function(x){ return normaPren(x.autore + "~" + x.rid, x.v, x.st, x.autore, x.rid); })
+    .filter(function(p){ return p.creato >= lim; });
 }
 /* raggruppa per nome (maiuscole, accenti e spazi non contano); il nome mostrato è quello scritto più spesso */
 function perProdotto(lista){
   const m = new Map();
   lista.forEach(function(r){
     const k = chiave(r.articolo); if (!k) return;
-    if (!m.has(k)) m.set(k, { n: 0, nomi: {}, per: {}, mancato: 0, finito: 0 });
+    if (!m.has(k)) m.set(k, { n: 0, nomi: {}, per: {}, mancato: 0, finito: 0, parte: 0 });
     const g = m.get(k);
     g.n++; g.nomi[r.articolo] = (g.nomi[r.articolo] || 0) + 1; g.per[r.per] = (g.per[r.per] || 0) + 1;
-    if (r.mancato) g.mancato++; if (r.finitoPanif) g.finito++;
+    if (r.mancato) g.mancato++; if (r.finitoPanif) g.finito++; if (r.parte) g.parte++;
   });
   return Array.from(m.values()).map(function(g){
     const nome = Object.keys(g.nomi).sort(function(a, b){ return g.nomi[b] - g.nomi[a]; })[0];
@@ -4603,9 +4635,10 @@ function renderStatistiche(){
   const corpo = $("stat-corpo");
   $("stat-stato").textContent = S.statCarico ? "Calcolo…" : (S.statErrore || (S.stat ? "Aggiornate alle " + fmtOra.format(S.stat.quando) + "." : ""));
   if (!S.stat){ riempi(corpo, []); return; }
-  const tutte = righeStat();
+  const tutte = righeStat().filter(function(r){ return !r.resto; });
   const rr = tutte.filter(function(r){ return !r.tolta; });
-  if (!rr.length){
+  const magS = magStat(), prenTutte = prenStat();
+  if (!rr.length && !magS.length && !prenTutte.length){
     riempi(corpo, [el("p", {class:"vuoto", text:"Nessuna richiesta in questo periodo. Le statistiche si riempiono man mano che si usa l'app."})]);
     return;
   }
@@ -4617,18 +4650,41 @@ function renderStatistiche(){
   const urg = rr.filter(function(r){ return r.urgente; }).length;
   const tiles = el("div", {class:"riepilogo"},
     el("p", {class:"stat"}, el("b", {text:String(rr.length)}), el("span", {text:"richieste"})),
-    el("p", {class:"stat"}, el("b", {text:String(urg)}), el("span", {text:"urgenti (" + Math.round(urg / rr.length * 100) + "%)"})),
+    el("p", {class:"stat"}, el("b", {text:String(urg)}), el("span", {text:"urgenti" + (rr.length ? " (" + Math.round(urg / rr.length * 100) + "%)" : "")})),
     el("p", {class:"stat"}, el("b", {text: tempi.length ? durata(mediana(tempi)) : "–"}), el("span", {text:"di solito per arrivare"})),
     el("p", {class:"stat" + (lente ? " allerta-ferma" : "")}, el("b", {text:String(lente)}), el("span", {text:"oltre " + num("ferma") + " ore"})));
   const carte = [tiles];
 
   const prod = perProdotto(rr);
-  const manc = prod.filter(function(g){ return g.mancato || g.finito; }).sort(function(a, b){ return (b.mancato + b.finito) - (a.mancato + a.finito); }).slice(0, 10);
-  carte.push(cartaStat("Cosa manca più spesso", "Quante volte una cosa chiesta non c'era in magazzino o era finita al panificio. Aiuta a riordinare prima.",
+  const volte = function(n){ return n === 1 ? "1 volta" : n + " volte"; };
+  const manc = prod.filter(function(g){ return g.mancato || g.finito || g.parte; }).sort(function(a, b){ return (b.mancato + b.finito + b.parte) - (a.mancato + a.finito + a.parte); }).slice(0, 10);
+  carte.push(cartaStat("Cosa manca più spesso", "Quante volte una cosa chiesta non c'era in magazzino, era finita al panificio o è stata portata solo in parte. Aiuta a riordinare prima.",
     manc.length ? barre(manc.map(function(g){
-      const sotto = [g.mancato ? (g.mancato === 1 ? "1 volta" : g.mancato + " volte") + " non c'era in magazzino" : "", g.finito ? (g.finito === 1 ? "1 volta" : g.finito + " volte") + " finito al panificio" : ""].filter(Boolean).join(" · ");
-      return { nome: g.nome, n: g.mancato + g.finito, sotto: sotto };
+      const sotto = [g.mancato ? volte(g.mancato) + " non c'era in magazzino" : "", g.finito ? volte(g.finito) + " finito al panificio" : "", g.parte ? volte(g.parte) + " portato solo in parte" : ""].filter(Boolean).join(" · ");
+      return { nome: g.nome, n: g.mancato + g.finito + g.parte, sotto: sotto };
     })) : el("p", {class:"vuoto", text:"Niente è mancato in questo periodo."})));
+
+  /* quanto resta mancante una cosa prima di arrivare in magazzino */
+  const attese = [], conResti = righeStat().filter(function(r){ return !r.tolta; });
+  conResti.forEach(function(r){ if (r.mancaAlle && r.arrivatoAlle > r.mancaAlle) attese.push({ nome: r.articolo, ms: r.arrivatoAlle - r.mancaAlle }); });
+  magS.forEach(function(m){ if (m.arrivatoAlle > m.creato) attese.push({ nome: m.articolo, ms: m.arrivatoAlle - m.creato }); });
+  const ancoraManca = conResti.filter(function(r){ return r.prep === "manca"; }).length + magS.filter(function(m){ return !m.arrivatoAlle; }).length;
+  const daComprareS = rr.filter(function(r){ return r.da === "Da comprare"; });
+  if (attese.length || ancoraManca || magS.length || daComprareS.length){
+    const perNomeAtt = {};
+    attese.forEach(function(a){ const k = chiave(a.nome); (perNomeAtt[k] = perNomeAtt[k] || { nome: maiuscola(a.nome), t: [] }).t.push(a.ms); });
+    const lenti = Object.values(perNomeAtt).map(function(g){ const m = mediana(g.t); return { nome: g.nome, n: m, testo: durata(m), sotto: g.t.length === 1 ? "1 volta" : g.t.length + " volte" }; })
+      .sort(function(a, b){ return b.n - a.n; }).slice(0, 10);
+    const tempiCompra = daComprareS.filter(function(r){ return r.arrivatoAlle > r.creato; }).map(function(r){ return r.arrivatoAlle - r.creato; });
+    carte.push(cartaStat("Magazzino: quanto si aspetta", "Da quando una cosa è segnata «non c'è» a quando qualcuno preme «È arrivato».",
+      el("div", {class:"riepilogo"},
+        el("p", {class:"stat"}, el("b", {text: attese.length ? durata(mediana(attese.map(function(a){ return a.ms; }))) : "–"}), el("span", {text:"di solito per arrivare"})),
+        el("p", {class:"stat" + (ancoraManca ? " allerta-ferma" : "")}, el("b", {text:String(ancoraManca)}), el("span", {text:"mancano ancora"})),
+        el("p", {class:"stat"}, el("b", {text:String(magS.length)}), el("span", {text:"segnate con «+ Segna cosa manca»"})),
+        el("p", {class:"stat"}, el("b", {text:String(daComprareS.length)}), el("span", {text:"da comprare" + (tempiCompra.length ? " (di solito " + durata(mediana(tempiCompra)) + ")" : "")}))),
+      lenti.length ? el("p", {class:"label-sm", text:"Le cose che ci mettono di più"}) : null,
+      lenti.length ? barre(lenti) : null));
+  }
 
   const top = prod.slice().sort(function(a, b){ return b.n - a.n; }).slice(0, 10);
   carte.push(cartaStat("Cosa si chiede di più", null,
@@ -4674,10 +4730,14 @@ function renderStatistiche(){
     bl.length ? barre(bl.map(function(b){ return { nome: b.nome, n: b.n, sotto: b.finiti ? (b.finiti === 1 ? "1 volta finiti del tutto" : b.finiti + " volte finiti del tutto") : "" }; }))
       : el("p", {class:"vuoto", text:"Ancora nessun dato sui biscotti."})));
   /* prenotazioni del periodo */
-  const limP = Date.now() - S.stat.giorni * 86400000;
-  const prenS = S.stat.righe.filter(function(x){ return x.v.tipo === "prenotazione" && !x.v.annullato; })
-    .map(function(x){ return normaPren(x.autore + "~" + x.rid, x.v, x.st, x.autore, x.rid); })
-    .filter(function(p){ return p.creato >= limP && !p.disdetta; });
+  const prenS = prenTutte.filter(function(p){ return !p.disdetta; });
+  const disd = prenTutte.filter(function(p){ return p.disdetta; });
+  if (disd.length){
+    const motivi = {};
+    disd.forEach(function(p){ const m = p.disdettaMotivo || "Senza motivo"; motivi[m] = (motivi[m] || 0) + 1; });
+    carte.push(cartaStat("Prenotazioni disdette", (disd.length === 1 ? "1 disdetta" : disd.length + " disdette") + " su " + prenTutte.length + " prenotazioni (" + Math.round(disd.length / prenTutte.length * 100) + "%). Il perché:",
+      barre(Object.keys(motivi).sort(function(a, b){ return motivi[b] - motivi[a]; }).slice(0, 10).map(function(m){ return { nome: m, n: motivi[m] }; }))));
+  }
   if (prenS.length){
     const perRitiro = {};
     prenS.forEach(function(p){ perRitiro[p.ritiro] = (perRitiro[p.ritiro] || 0) + 1; });
@@ -4687,6 +4747,8 @@ function renderStatistiche(){
       el("p", {class:"label-sm", text:"Cosa si prenota di più"}), barre(tot.map(function(t){ return { nome: t.articolo, n: t.n, testo: testoTotale(t).replace(" " + t.articolo, "") }; }))));
   }
   const tolte = tutte.length - rr.length;
+  const resti = righeStat().filter(function(r){ return r.resto && !r.tolta; }).length;
+  if (resti) carte.push(el("p", {class:"hint", text:(resti === 1 ? "1 volta" : resti + " volte") + " è stata portata solo una parte: quello che mancava non è contato come richiesta in più."}));
   if (tolte) carte.push(el("p", {class:"hint", text:(tolte === 1 ? "1 richiesta tolta" : tolte + " richieste tolte") + " in questo periodo non sono contate."}));
   riempi(corpo, carte);
 }
@@ -4706,12 +4768,14 @@ function oggiFile(){ const d = new Date(); return d.getFullYear() + "-" + String
 function scaricaRichieste(){
   if (!S.stat) return;
   const STATI = {attesa:"In attesa", caricato:"In viaggio", consegnato:"Consegnato"};
-  const righe = [["Data","Ora","Per","Articolo","Quantità","Reparto","Da dove","Ritiro fuori: dove","Ritiro fuori: entro le","Urgente","Stato","Consegnato il","Consegnato alle","Minuti per arrivare","Non c'era in magazzino","Finito al panificio","Chiesto da","Nota"]];
+  const righe = [["Data","Ora","Per","Articolo","Quantità","Reparto","Da dove","Ritiro fuori: dove","Ritiro fuori: entro le","Urgente","Stato","Consegnato il","Consegnato alle","Minuti per arrivare","Non c'era in magazzino","Segnato «non c'è» il","Arrivato in magazzino il","Finito al panificio","Solo una parte: mancava","Il resto di un'altra richiesta","Scritto come","Chiesto da","Nota"]];
   righeStat().sort(function(a, b){ return a.creato - b.creato; }).forEach(function(r){
     const cons = r.stato === "consegnato" && r.consegnatoAlle;
     righe.push([fmtData.format(r.creato), fmtOra.format(r.creato), r.per, r.articolo, r.quantita, repartoDi(r), nomeOrigine(r.da), r.ritiroDove, r.ritiroOra,
       r.urgente ? "sì" : "no", r.tolta ? "Tolta" : (STATI[r.stato] || r.stato), cons ? fmtData.format(r.consegnatoAlle) : "", cons ? fmtOra.format(r.consegnatoAlle) : "",
-      cons && r.consegnatoAlle > r.creato ? Math.round((r.consegnatoAlle - r.creato) / 60000) : "", r.mancato ? "sì" : "", r.finitoPanif ? "sì" : "",
+      cons && r.consegnatoAlle > r.creato ? Math.round((r.consegnatoAlle - r.creato) / 60000) : "", r.mancato ? "sì" : "",
+      r.mancaAlle ? fmtData.format(r.mancaAlle) + " " + fmtOra.format(r.mancaAlle) : "", r.arrivatoAlle ? fmtData.format(r.arrivatoAlle) + " " + fmtOra.format(r.arrivatoAlle) : "",
+      r.finitoPanif ? "sì" : "", r.parteManca, r.resto ? "sì" : "", r.scritto && r.scritto !== r.articolo ? r.scritto : (r.salvato !== r.articolo ? r.salvato : ""),
       S.nomi[r.autore] || "", r.nota]);
   });
   scaricaCsv("ordini-richieste-ultimi-" + S.stat.giorni + "-giorni-" + oggiFile() + ".csv", righe);
@@ -4720,9 +4784,7 @@ function scaricaPren(){
   if (!S.stat) return;
   const ST = {attesa:"Da preparare", parte:"Messa da parte"};
   const righe = [["Per il giorno","Ora","Ritiro","Cliente","Telefono","Prodotto","Scritto","Quantità","Nota","Stato","Presa da","Presa il"]];
-  S.stat.righe.filter(function(x){ return x.v.tipo === "prenotazione" && !x.v.annullato; })
-    .map(function(x){ return normaPren(x.autore + "~" + x.rid, x.v, x.st, x.autore, x.rid); })
-    .sort(function(a, b){ return a.perIl.localeCompare(b.perIl); })
+  prenStat().sort(function(a, b){ return a.perIl.localeCompare(b.perIl); })
     .forEach(function(p){ p.voci.forEach(function(v){
       righe.push([fmtData.format(msDelGiorno(p.perIl)), p.tuttoGiorno ? "Tutta la giornata" : p.ora, p.ritiro, p.cliente, p.telefono, nomeProdotto(v), v.articolo, v.quantita, p.nota, p.disdetta ? "Disdetta: " + p.disdettaMotivo : ST[p.stato], S.nomi[p.autore] || "", fmtData.format(p.creato) + " " + fmtOra.format(p.creato)]);
     }); });
@@ -5044,9 +5106,19 @@ function collega(){
     n.addEventListener("touchcancel", fine);
   })();
   $("codici-box").addEventListener("toggle", function(){ if ($("codici-box").open) mostraCodici(); });
+  /* registro: quali domande del manuale si aprono (il testo è quello dell'app, non quello scritto dalle persone) */
+  document.addEventListener("toggle", function(ev){
+    const d = ev.target;
+    if (d && d.matches && d.matches("details.man-domanda") && d.open){
+      const q = d.querySelector("summary");
+      registra("manuale: domanda aperta", { capitolo: String(d.dataset.manCap || "").slice(0, 60), domanda: q ? q.textContent.slice(0, 120) : "" });
+    }
+    /* gli altri riquadri che si aprono (cronologia, codici…): solo quale */
+    else if (d && d.tagName === "DETAILS" && d.id && d.open) registra("riquadro aperto", { riquadro: d.id });
+  }, true);
   document.addEventListener("change", function(ev){
     const nt = ev.target.closest && ev.target.closest("input[data-notif]");
-    if (nt) cambiaSceltaNotifica(nt.dataset.notif, nt.checked);
+    if (nt){ registra("scelta notifica", { tipo: nt.dataset.notif, acceso: nt.checked }); cambiaSceltaNotifica(nt.dataset.notif, nt.checked); }
     const s = ev.target.closest && ev.target.closest("select[data-sposta]");
     if (s && s.value) spostaReparto(s.dataset.sposta, s.value);
     const pc = ev.target.closest && ev.target.closest("select[data-pren-ctrl-scegli]");
@@ -5301,7 +5373,8 @@ function caricaTuttoSB(){
     if (S.coda.length) svuotaCoda();
     if (S.daRiepilogare){ S.daRiepilogare = false; riepilogoArrivi(); }
     if (S.vaiDopo){ const v = S.vaiDopo; S.vaiDopo = null; apriDaNotifica(v); }
-  }).catch(function(){
+  }).catch(function(e){
+    registra("caricamento non riuscito", { messaggio: String(e && e.message || "").slice(0, 120), rete: navigator.onLine !== false, giaCaricato: !!S.ultimoCarico });
     S.pronto = true;
     if (!S.ultimoCarico && !S.fotoQuando){ S.fotoQuando = caricaFoto() || 0; riapplicaCoda(); emettiSB(true); }
     if (S.ultimoCarico || S.fotoQuando) bannerSenzaRete();
@@ -5343,7 +5416,7 @@ const VAPID_PUBLICA = "BC9TAKzQiQ-x3xtX0KWauGtV-uvIk9VFwqLjWAOzrJbe4e5w2AWyXMIej
    quale schermata, quanto tempo, errori, rete e tipo di telefono. Le persone non hanno nome ("Persona 1"…):
    lo decide il database (funzione "registra", supabase/aggiornamento-4-registro.sql). */
 const REGISTRO_ATTIVO = false;
-const VERSIONE_APP = "128bd70c";
+const VERSIONE_APP = "2e0f2023";
 S.reg = [];
 S.ultimoTasto = { nome: "", alle: 0 };
 S.tocchi = { nome: "", volte: 0, alle: 0, segnato: false };
@@ -5570,7 +5643,9 @@ async function attivaNotifiche(){
     S.preferenzeNotifiche = S.preferenzeNotifiche || {};
     await salvaIscrizione(sub);
     notifica("Notifiche attive", "Da ora ricevi gli avvisi anche con l'app chiusa.", "ok");
+    registra("notifiche attivate", {});
   } catch(e){
+    registra("notifiche non attivate", { motivo: e && e.utente ? "permesso negato" : String(e && e.message || "errore").slice(0, 80) });
     if (e && e.utente) avviso("Senza il permesso del telefono le notifiche non possono arrivare.");
     else avviso("Non sono riuscito ad attivare le notifiche. Riprova tra poco.");
   }
