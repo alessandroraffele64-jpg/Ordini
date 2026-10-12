@@ -180,6 +180,7 @@ body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area
 .ctrl-nome{margin:0}
 .ctrl-volevi{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center}
 .ctrl-volevi .mini{min-height:40px}
+.ctrl-chiedi{flex-basis:100%;font-size:14px;font-weight:700;color:var(--muted)}
 .ctrl-quando{display:flex;flex-direction:column;gap:8px;padding:10px 12px;border-radius:var(--r-md);background:var(--surface);border:1.5px solid var(--line)}
 .ctrl-quando .field{flex:none}
 .ctrl-quando input{min-height:44px}
@@ -326,6 +327,10 @@ button.striscia-testo{cursor:pointer}
 .corr-da{color:var(--muted);text-decoration:line-through;text-decoration-thickness:1px}
 .corr-freccia{color:var(--muted);margin:0 4px}
 .corr-rep{display:flex;flex-direction:column;gap:6px}
+.db-schede{margin-bottom:4px}
+.db-voce .domanda-db{font-weight:700;margin:0}
+.db-voce .riga-db{margin:0;display:flex;flex-wrap:wrap;gap:4px 8px;align-items:baseline}
+.db-voce .riga-db .label-sm{min-width:110px}
 .corr-prod{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;padding:6px 0;border-bottom:1px dashed var(--line)}
 .corr-prod:last-child{border-bottom:0}
 .corr-prod .nome{font-weight:700}
@@ -787,16 +792,17 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
       </div>
     </div>
 
-    <!-- Correzioni da controllare: solo titolari. Cosa ha fatto l'app con i nomi delle richieste -->
-    <div class="view" id="pannello-correzioni" hidden>
-      <p class="hint">I nomi delle richieste degli ultimi 7 giorni che l'app ha corretto o non conosceva. «Giusto»: l'app se lo ricorda. «Sbagliato, era…»: scegli il prodotto giusto e tutte le richieste scritte così si correggono da sole.</p>
-      <div class="blocco" id="corr-lista"></div>
-      <p class="vuoto" id="corr-vuoto">Niente da controllare.</p>
-      <details class="crono" id="corr-elenco-box">
-        <summary>Tutti i prodotti delle richieste <span class="crono-n" id="corr-n"></span></summary>
+    <!-- Database: solo titolari. Ordini, Prenotazioni, Biscotti: cose nuove da controllare ed elenco completo -->
+    <div class="view" id="pannello-database" hidden>
+      <div class="chips db-schede" id="db-schede" role="tablist" aria-label="Parti del database"></div>
+      <p class="hint" id="db-spiega"></p>
+      <div class="blocco" id="db-lista"></div>
+      <p class="vuoto" id="db-vuoto">Niente da controllare.</p>
+      <details class="crono" id="db-elenco-box">
+        <summary><span id="db-elenco-titolo">Tutti i prodotti</span> <span class="crono-n" id="db-n"></span></summary>
         <div class="blocco">
-          <p class="hint">L'elenco che l'app usa per riconoscere i nomi, diviso per reparto. Sotto ogni prodotto, gli altri modi di scriverlo che conosce.</p>
-          <div class="blocco" id="corr-elenco"></div>
+          <p class="hint" id="db-elenco-spiega"></p>
+          <div class="blocco" id="db-elenco"></div>
         </div>
       </details>
     </div>
@@ -1062,18 +1068,6 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
     <p class="domanda-testo" id="mag-tutto-titolo">Non in magazzino</p>
     <ul class="mag-tutto-lista" id="mag-tutto-lista"></ul>
     <div class="riep-azioni"><button type="button" class="mini" id="mag-tutto-chiudi">Chiudi</button><button type="button" class="primary" id="mag-tutto-apri" hidden>Apri Non in magazzino</button></div>
-  </div>
-</div>
-<!-- Prodotti nuovi delle prenotazioni da controllare (solo titolari): schermata a parte -->
-<div class="conferma-velo pren-velo" id="dc-schermo" role="dialog" aria-modal="true" aria-labelledby="dc-titolo" hidden>
-  <div class="pren-box">
-    <div class="pren-testa">
-      <button type="button" class="pren-chiudi" id="dc-chiudi" aria-label="Chiudi i prodotti da controllare">✕ Chiudi</button>
-      <h2 class="comanda-titolo" id="dc-titolo">Prodotti da controllare</h2>
-    </div>
-    <p class="hint">«Conferma»: il prodotto entra nell'elenco. «È un errore, era…»: scegli il prodotto giusto e tutte le prenotazioni scritte così si correggono da sole.</p>
-    <div class="blocco" id="dc-lista"></div>
-    <p class="vuoto" id="dc-vuoto" hidden>Nessun prodotto da controllare.</p>
   </div>
 </div>
 <!-- Disdici una prenotazione: il motivo è obbligatorio -->
@@ -1662,12 +1656,12 @@ function renderControllo(){
       (!promem && mancaGia(v)) ? el("span", {class:"pill p-finito", text:"Non c'è in magazzino: aspetta che arrivi"}) : null);
     /* nome cambiato dall'app: si vede cosa era scritto e si può lasciare com'era */
     const nome = v.scritto
-      ? el("p", {class:"hint ctrl-nome"}, "Hai scritto «" + v.scritto + "» ",
+      ? el("p", {class:"hint ctrl-nome"}, "✓ Hai scritto «" + v.scritto + "»: l'app ha messo il nome giusto. ",
           el("button", {type:"button", class:"link", "data-ctrl-com-era":String(i), disabled:c.inviando, "aria-label":"Lascia com'era scritto: " + v.scritto, text:"Lascia com'era"}))
       : (v.scelte && v.scelte.length
-        ? el("div", {class:"ctrl-nome ctrl-volevi"}, el("span", {class:"label-sm", text:"Volevi dire?"}),
+        ? el("div", {class:"ctrl-nome ctrl-volevi"}, el("span", {class:"ctrl-chiedi", text:(v.scelte.length === 1 ? "È questo?" : "Quale di questi?") + " Toccalo per scriverlo giusto."}),
             ...v.scelte.map(function(n, j){ return el("button", {type:"button", class:"mini", "data-ctrl-sugg":i + "|" + j, disabled:c.inviando, text:n}); }),
-            el("button", {type:"button", class:"link", "data-ctrl-cosi":String(i), disabled:c.inviando, text:"Va bene così"}))
+            el("button", {type:"button", class:"link", "data-ctrl-cosi":String(i), disabled:c.inviando, text: v.scelte.length === 1 ? "No, è un'altra cosa" : "Nessuno, è un'altra cosa"}))
         : null);
     const scelte = el("div", {class:"ctrl-scelte"});
     if (!promem){
@@ -1875,7 +1869,10 @@ function daQuanto(ms){
 function puoTogliereBisc(b){ return !!store && !S.sola && !!b && (b.segnatoDa === S.mioId || S.owner); }
 function puoRecuperareBisc(b){ return puoTogliereBisc(b) || (!!store && !S.sola && !!b && !!S.mioId && b.toltoDa === S.mioId); }
 function catalogoBisc(){
-  const visti = new Set(), out = [];
+  /* i biscotti tolti dai titolari nel Database non si scelgono più (quelli di partenza restano) */
+  const tolti = new Set(S.biscTolti.map(chiave));
+  BISCOTTI_BASE.forEach(function(n){ tolti.delete(chiave(n)); });
+  const visti = new Set(tolti), out = [];
   BISCOTTI_BASE.concat(S.aggiunteBisc, S.biscotti.map(function(b){ return b.nome; })).forEach(function(n){
     const k = chiave(n);
     if (!k || visti.has(k)) return;
@@ -1981,6 +1978,10 @@ async function aggiungiBiscotto(ev){
   if (!esistente){
     S.inviandoBisc = true; renderBiscotti();
     await scrivi(function(){ return store.aggiunteBisc(S.aggiunteBisc.concat([nome]).slice(-60)); });
+    /* se era stato tolto e qualcuno lo aggiunge di nuovo, torna da controllare */
+    if (S.biscTolti.some(function(x){ return chiave(x) === chiave(nome); }) && store.biscImp){
+      await scrivi(function(){ return store.biscImp(function(d){ return { tolti: (Array.isArray(d.tolti) ? d.tolti : []).filter(function(x){ return chiave(x) !== chiave(nome); }) }; }); });
+    }
     S.inviandoBisc = false;
   }
   const finale = esistente || nome;
@@ -2632,8 +2633,8 @@ function renderBiscPanificio(){
   $("vuoto-crono-fatti").hidden = fatti.length > 0;
 }
 function mostraSez(sez){
-  S.sez = ["biscotti","statistiche","prenotazioni","notifiche","persone","mancanti","correzioni"].indexOf(sez) >= 0 ? sez : "richieste";
-  $("pannello-correzioni").hidden = S.sez !== "correzioni";
+  S.sez = ["biscotti","statistiche","prenotazioni","notifiche","persone","mancanti","database"].indexOf(sez) >= 0 ? sez : "richieste";
+  $("pannello-database").hidden = S.sez !== "database";
   $("pannello-mancanti").hidden = S.sez !== "mancanti";
   $("pannello-notifiche").hidden = S.sez !== "notifiche";
   $("pannello-persone").hidden = S.sez !== "persone";
@@ -2656,7 +2657,7 @@ function vociMenu(){
   const voci = [{ id:"prenotazioni", nome:"Prenotazioni", n:nPren }, { id:"biscotti", nome:"Biscotti", n:nBisc }];
   if (vedeMancanti()) voci.push(mancanti);
   if (puoStat()) voci.push({ id:"statistiche", nome:"Statistiche", n:null });
-  if (puoCorrezioni()) voci.push({ id:"correzioni", nome:"Correzioni da controllare", n:gruppiCorrezioni().length });
+  if (puoDatabase()) voci.push({ id:"database", nome:"Database", n:contaDatabase().tutti });
   if (puoPersone()) voci.push({ id:"persone", nome:"Persone registrate", n:null });
   voci.push.apply(voci, notif);
   return voci;
@@ -2687,7 +2688,7 @@ function renderMenu(){
   $("apri-menu").hidden = bisc;
   $("torna").hidden = !bisc;
   $("switch-viste").hidden = t !== "titolare" || bisc;
-  $("punti").hidden = t !== "titolare" || inStat() || inPren() || inNotif() || inPersone() || inMancanti() || inCorrezioni();
+  $("punti").hidden = t !== "titolare" || inStat() || inPren() || inNotif() || inPersone() || inMancanti() || inDatabase();
   $("link-personale").hidden = t !== "titolare" || bisc;
   $("codici-box").hidden = !S.sito || !S.owner || t !== "titolare" || bisc;
   renderTestata();
@@ -2706,9 +2707,9 @@ function renderTestata(){
     sopra = "Su questo telefono"; titolo = "Notifiche"; info = "";
   } else if (inPersone()){
     sopra = "Solo per i titolari"; titolo = "Persone registrate"; info = "";
-  } else if (inCorrezioni()){
-    sopra = "Solo per i titolari"; titolo = "Correzioni da controllare";
-    info = contaTesto(gruppiCorrezioni().length, "da controllare", "da controllare");
+  } else if (inDatabase()){
+    sopra = "Solo per i titolari"; titolo = "Database";
+    info = contaTesto(contaDatabase().tutti, "cosa da controllare", "cose da controllare");
   } else if (pren){
     sopra = "Prenotazioni dei clienti"; titolo = "Prenotazioni";
     info = contaTesto(prenVisibili().filter(function(p){ return prenAperta(p) && p.perIl >= oggiStr(); }).length, "da preparare", "da preparare");
@@ -2735,7 +2736,7 @@ function renderTestata(){
   $("eyebrow").textContent = sopra;
   $("titolo").textContent = titolo;
   $("fascia-info").textContent = info;
-  $("app-nome").textContent = inMancanti() ? "Magazzino" : bisc ? "Biscotti" : (stat ? "Statistiche" : (pren ? "Prenotazioni" : (inNotif() ? "Notifiche" : (inPersone() ? "Persone" : (inCorrezioni() ? "Prodotti" : "Rifornimenti")))));
+  $("app-nome").textContent = inMancanti() ? "Magazzino" : bisc ? "Biscotti" : (stat ? "Statistiche" : (pren ? "Prenotazioni" : (inNotif() ? "Notifiche" : (inPersone() ? "Persone" : (inDatabase() ? "Database" : "Rifornimenti")))));
 }
 function apriMenu(){
   $("menu").hidden = false; $("menu-velo").hidden = false;
@@ -2750,7 +2751,7 @@ function chiudiMenu(rimetti){
   $("apri-menu").setAttribute("aria-expanded", "false");
   if (rimetti) $("apri-menu").focus();
 }
-function vaiSezione(id, forza){
+function vaiSezione(id, forza, scheda){
   /* uscendo dai biscotti con una comanda in corso, prima si conferma */
   if (!forza && inBiscotti() && id !== "biscotti" && biscDaConfermare()){
     S.dopoConferma = id;
@@ -2759,13 +2760,13 @@ function vaiSezione(id, forza){
     return;
   }
   chiudiMenu();
-  if (id === "biscotti" || (id === "mancanti" && vedeMancanti()) || (id === "prenotazioni" && vedePren()) || id === "notifiche" || (id === "statistiche" && puoStat()) || (id === "persone" && puoPersone()) || (id === "correzioni" && puoCorrezioni())){
+  if (id === "biscotti" || (id === "mancanti" && vedeMancanti()) || (id === "prenotazioni" && vedePren()) || id === "notifiche" || (id === "statistiche" && puoStat()) || (id === "persone" && puoPersone()) || (id === "database" && puoDatabase())){
     if (!inSezioneExtra()) S.vistaPrima = S.vista;
     mostraVista("negozio");
     mostraSez(id);
     if (id === "prenotazioni"){ S.prenGiorno = oggiStr(); S.prenScegli = false; }
     if (id === "persone"){ S.armatoPersona = null; mostraPersone(); }
-    if (id === "correzioni") S.corrApri = "";
+    if (id === "database"){ S.corrApri = ""; S.prenCorreggi = ""; if (scheda) S.dbScheda = scheda; else sceltaSchedaDb(); }
     if (id === "statistiche") caricaStatistiche();
     if (id === "notifiche") renderNotifiche();
   } else {
@@ -3189,7 +3190,7 @@ function formeConosciute(){
 }
 /* Riconosce il prodotto scritto.
    sicuro: è proprio quello · dubbio: forse è quello (si chiede) · nuovo: non somiglia a niente
-   scelte: i prodotti più simili (al massimo 3), il primo è il più probabile */
+   scelte: i prodotti più simili (al massimo 4), il primo è il più probabile */
 function cercaProdotto(testo, forme, correzioni){
   const k = chiave(testo);
   /* una correzione del titolare vale sempre */
@@ -3214,7 +3215,7 @@ function cercaProdotto(testo, forme, correzioni){
   /* a parità di punti resta il primo trovato (sort stabile) */
   trovati.sort(function(a, b){ return a[0] - b[0]; });
   const scelte = [];
-  trovati.forEach(function(t){ if (scelte.length < 3 && !scelte.some(function(n){ return chiave(n) === chiave(t[1]); })) scelte.push(t[1]); });
+  trovati.forEach(function(t){ if (scelte.length < 4 && !scelte.some(function(n){ return chiave(n) === chiave(t[1]); })) scelte.push(t[1]); });
   if (scelte.length) return { esito: "dubbio", nome: scelte[0], scelte: scelte };
   return { esito: "nuovo", nome: "", scelte: [] };
 }
@@ -3249,11 +3250,11 @@ function quantitaPren(q){
 
 /* ---------- prodotti delle richieste dei negozi: un elenco a parte ----------
    Si scrive veloce come in chat; quando l'app è sicura mette da sola il nome giusto
-   (e lo segna, così i titolari lo vedono in «Correzioni da controllare»); se ha un dubbio
+   (e lo segna, così i titolari lo vedono nel «Database», parte Ordini); se ha un dubbio
    chiede una volta, con «Va bene così». La quantità non è obbligatoria.
    Elenco di partenza qui; prodotti confermati e correzioni dei titolari nelle impostazioni
    condivise, chiave "prodotti-richieste" ({ elenco: [...], alias: { "testo scritto": "Nome giusto" } }). */
-const PRODOTTI_RICH_BASE = ["Pane casereccio","Pitta","Pitta china","Filoncini","Ciabatte","Ciabatte arabe","Panini","Pan hamburger grandi","Pan hamburger piccoli","Pizza","Pizza rotonda","Focaccia","Cornetti","Brioche","Pangrattato","Friselle","Taralli","Grissini","Mozzarella","Provola","Ricotta","Parmigiano","Scamorza","Burrata","Prosciutto cotto","Prosciutto crudo","Fesa di tacchino","Salame","Mortadella","Speck","Wurstel","Pancetta","Nduja","Salsiccia","Capocollo","Porchetta","Bresaola","Hamburger","Petti di pollo","Latte","Panna","Burro","Uova","Lievito","Insalata di mare","Tentacoli","Patatine","Crocchette","Arancini","Cotolette","Ghiaccio","Insalata","Iceberg","Rucola","Pomodori","Pomodoro fresco","Pomodorini","Cipolle","Patate","Melanzane","Peperoni","Zucchine","Funghi","Spinaci","Friarielli","Limoni","Basilico","Prezzemolo","Acqua naturale","Acqua frizzante","Acqua naturale piccola","Acqua frizzante piccola","Coca cola","Coca zero","Fanta","Sprite","Estathe limone","Estathe pesca","Succhi di frutta","Tuborg","Peroni","Nastro azzurro","Heineken","Moretti","Red bull","Farina","Semola","Olio","Olio di semi","Olio per friggitrice","Sale","Zucchero","Caffè","Ketchup","Maionese","Senape","Passata di pomodoro","Polpa di pomodoro","Pelati","Tonno","Olive","Capperi","Acciughe","Mais","Nutella","Pesto","Origano","Tovaglioli","Piatti","Bicchieri","Forchette","Coltelli","Cucchiaini","Vassoi","Cannucce","Stuzzicadenti","Pirottini","Cartoni pizza","Buste","Shopper","Carta forno","Alluminio","Pellicola","Vaschette","Etichette","Detersivo piatti","Sgrassatore","Candeggina","Spugne","Guanti","Sacchi spazzatura","Carta igienica","Carta mani","Rotoloni","Detersivo pavimenti","Rotoli cassa"];
+const PRODOTTI_RICH_BASE = ["Pane casereccio","Pitta","Pitta china","Filoncini","Ciabatte","Ciabatte arabe","Panini","Pan hamburger grandi","Pan hamburger piccoli","Pizza","Pizza rotonda","Focaccia","Cornetti","Brioche","Pangrattato","Friselle","Taralli","Grissini","Mozzarella","Provola","Ricotta","Parmigiano","Scamorza","Burrata","Prosciutto cotto","Prosciutto crudo","Fesa di tacchino","Salame","Mortadella","Speck","Wurstel","Pancetta","Nduja","Salsiccia","Capocollo","Porchetta","Bresaola","Hamburger","Petti di pollo","Latte","Panna","Burro","Uova","Lievito","Insalata di mare","Tentacoli","Patatine","Crocchette","Arancini","Cotolette","Ghiaccio","Insalata","Iceberg","Rucola","Pomodori","Pomodoro fresco","Pomodorini","Cipolle","Patate","Melanzane","Peperoni","Zucchine","Funghi","Spinaci","Friarielli","Limoni","Basilico","Prezzemolo","Acqua naturale grande","Acqua naturale piccola","Acqua frizzante grande","Acqua frizzante piccola","Coca cola","Coca zero","Fanta","Sprite","Estathe limone","Estathe pesca","Succhi di frutta","Tuborg","Peroni","Nastro azzurro","Heineken","Moretti","Red bull","Farina","Semola","Olio","Olio di semi","Olio per friggitrice","Sale","Zucchero","Caffè","Ketchup","Maionese","Senape","Passata di pomodoro","Polpa di pomodoro","Pelati","Tonno","Olive","Capperi","Acciughe","Mais","Nutella","Pesto","Origano","Tovaglioli","Piatti","Bicchieri","Forchette","Coltelli","Cucchiaini","Vassoi","Cannucce","Stuzzicadenti","Pirottini","Cartoni pizza","Buste","Shopper","Carta forno","Alluminio","Pellicola","Vaschette","Etichette","Detersivo piatti","Sgrassatore","Candeggina","Spugne","Guanti","Sacchi spazzatura","Carta igienica","Carta mani","Rotoloni","Detersivo pavimenti","Rotoli cassa"];
 /* altri modi di scrivere già visti nelle chat */
 const ALIAS_RICH_BASE = { "icerbeg": "Iceberg", "aisberg": "Iceberg", "wrustel": "Wurstel", "speak": "Speck", "turborg": "Tuborg",
   "manaiese": "Maionese", "coca": "Coca cola", "cocacola": "Coca cola", "estate pesca": "Estathe pesca", "pomodorino": "Pomodorini" };
@@ -3291,16 +3292,20 @@ function riconosciVoce(v){
   return v;
 }
 
-/* ---------- «Correzioni da controllare» (solo titolari) ----------
-   Per ogni nome delle richieste degli ultimi 7 giorni: cosa era scritto e con cosa l'app l'ha corretto
-   («Giusto» / «Sbagliato, era…»), oppure un nome che l'app non conosceva («Nuovo prodotto» / «Era…»). */
+/* ---------- «Database» (solo titolari) ----------
+   Tre parti: Ordini (i nomi delle richieste), Prenotazioni, Biscotti.
+   In ognuna le cose nuove o corrette da controllare e, in fondo, l'elenco completo.
+   Ordini: per ogni nome degli ultimi 7 giorni, cosa era scritto e cosa ha messo l'app
+   («Sì, è giusto» / «No, era…»), oppure un nome che l'app non conosceva
+   («È un prodotto nuovo» / «È un prodotto che c'è già…»). */
 S.corrApri = "";
 S.corrGruppi = new Map();
-function puoCorrezioni(){ return !!S.owner && !!S.ruolo && S.ruolo.tipo === "titolare" && !!store && !S.sola; }
-function inCorrezioni(){ return S.vista === "negozio" && S.sez === "correzioni"; }
+S.dbScheda = "ordini";
+function puoDatabase(){ return !!S.owner && !!S.ruolo && S.ruolo.tipo === "titolare" && !!store && !S.sola; }
+function inDatabase(){ return S.vista === "negozio" && S.sez === "database"; }
 function maiuscola(t){ t = String(t || "").trim(); return t.charAt(0).toUpperCase() + t.slice(1); }
 function gruppiCorrezioni(){
-  if (!puoCorrezioni()) return [];
+  if (!puoDatabase()) return [];
   const dal = Date.now() - SETTE_GIORNI;
   const gruppi = new Map();
   S.richieste.concat(S.programmate || []).forEach(function(r){
@@ -3321,22 +3326,57 @@ function gruppiCorrezioni(){
     return Math.max.apply(null, b.rich.map(function(r){ return r.creato; })) - Math.max.apply(null, a.rich.map(function(r){ return r.creato; }));
   });
 }
-function renderCorrezioni(){
-  if (!inCorrezioni()) return;
+/* biscotti aggiunti dai negozi, non ancora confermati né tolti da un titolare */
+S.biscConfermati = []; S.biscTolti = [];
+function biscNuovi(){
+  const no = new Set(BISCOTTI_BASE.concat(S.biscConfermati, S.biscTolti).map(chiave));
+  const visti = new Set();
+  return S.aggiunteBisc.filter(function(n){ const k = chiave(n); if (!k || no.has(k) || visti.has(k)) return false; visti.add(k); return true; });
+}
+function contaDatabase(){
+  if (!puoDatabase()) return { ordini: 0, prenotazioni: 0, biscotti: 0, tutti: 0 };
+  const c = { ordini: gruppiCorrezioni().length, prenotazioni: gruppiDaControllare().size, biscotti: biscNuovi().length };
+  c.tutti = c.ordini + c.prenotazioni + c.biscotti;
+  return c;
+}
+/* entrando si apre la prima parte che ha qualcosa da controllare */
+function sceltaSchedaDb(){
+  const c = contaDatabase();
+  S.dbScheda = c.ordini ? "ordini" : (c.prenotazioni ? "prenotazioni" : (c.biscotti ? "biscotti" : (S.dbScheda || "ordini")));
+}
+const SCHEDE_DB = [["ordini", "Ordini"], ["prenotazioni", "Prenotazioni"], ["biscotti", "Biscotti"]];
+function rigaDb(etichetta, valore){ return el("p", {class:"riga-db"}, el("span", {class:"label-sm", text:etichetta}), valore); }
+function renderDatabase(){
+  if (!inDatabase()) return;
+  const c = contaDatabase();
+  riempi($("db-schede"), SCHEDE_DB.map(function(x){
+    return el("button", {type:"button", class:"chip-add stat-per", role:"tab", "data-db-scheda":x[0], "aria-selected":String(S.dbScheda === x[0]), "aria-pressed":String(S.dbScheda === x[0])},
+      x[1], c[x[0]] ? el("span", {class:"badge", text:String(c[x[0]])}) : null);
+  }));
+  if (S.dbScheda === "prenotazioni") renderDbPren();
+  else if (S.dbScheda === "biscotti") renderDbBisc();
+  else renderDbOrdini();
+}
+function renderDbOrdini(){
   const gruppi = gruppiCorrezioni();
   S.corrGruppi = new Map(gruppi.map(function(g){ return [g.id, g]; }));
   const off = S.pending.has("prodotti-richieste");
   const elenco = elencoProdottiRich();
-  riempi($("corr-lista"), gruppi.map(function(g){
+  $("db-spiega").textContent = "Le richieste dei negozi degli ultimi 7 giorni. Qui vedi cosa ha scritto la persona e cosa ha messo l'app. Se l'app ha sbagliato, scegli il prodotto giusto: si correggono tutte le richieste scritte così e la volta dopo l'app lo sa.";
+  riempi($("db-lista"), gruppi.map(function(g){
     const posti = Array.from(new Set(g.rich.map(function(r){ return r.per; }))).join(", ");
     const ultima = Math.max.apply(null, g.rich.map(function(r){ return r.creato; }));
-    const titolo = g.tipo === "corretta"
-      ? el("p", {class:"articolo"}, el("span", {class:"corr-da", text:"«" + g.testo + "»"}), el("span", {class:"corr-freccia", "aria-hidden":"true", text:"→"}), el("strong", {text:g.nome}))
-      : el("p", {class:"articolo"}, el("strong", {text:"«" + g.testo + "»"}), el("span", {class:"pill p-attesa", text:"Non lo conosceva"}));
-    const info = el("p", {class:"hint", text:(g.rich.length === 1 ? "1 richiesta" : g.rich.length + " richieste") + " · " + posti + " · " + quando(ultima)});
+    const parti = [rigaDb("Scritto", el("strong", {text:"«" + g.testo + "»"}))];
+    if (g.tipo === "corretta"){
+      parti.push(rigaDb("L'app ha messo", el("strong", {text:g.nome})));
+      parti.push(el("p", {class:"domanda-db", text:"È giusto?"}));
+    } else {
+      parti.push(el("p", {class:"domanda-db", text:"L'app non conosce questo prodotto. È nuovo o c'è già con un altro nome?"}));
+    }
+    parti.push(el("p", {class:"hint", text:(g.rich.length === 1 ? "1 richiesta" : g.rich.length + " richieste") + " · " + posti + " · " + quando(ultima)}));
     let azioni;
     if (S.corrApri === g.id){
-      const sel = el("select", {id:"corr-scelta", "aria-label":"Il prodotto giusto per " + g.testo}, el("option", {value:"", text:"Era…"}));
+      const sel = el("select", {id:"corr-scelta", "aria-label":"Il prodotto giusto per " + g.testo}, el("option", {value:"", text:"Scegli il prodotto giusto…"}));
       if (g.tipo === "corretta") sel.append(el("option", {value:"__nuovo__", text:"Nessuno: «" + maiuscola(g.testo) + "» è un prodotto nuovo"}));
       elenco.forEach(function(n){ if (g.tipo !== "corretta" || chiave(n) !== chiave(g.nome)) sel.append(el("option", {value:n, text:n})); });
       azioni = el("div", {class:"row"}, sel,
@@ -3344,22 +3384,82 @@ function renderCorrezioni(){
         el("button", {type:"button", class:"link", "data-corr-annulla":g.id, text:"Annulla"}));
     } else if (g.tipo === "corretta"){
       azioni = el("div", {class:"row"},
-        el("button", {type:"button", class:"mini", "data-corr-giusto":g.id, disabled:off, "aria-label":"Giusto: " + g.testo + " è " + g.nome, text:"Giusto"}),
-        el("button", {type:"button", class:"mini", "data-corr-era":g.id, disabled:off, text:"Sbagliato, era…"}));
+        el("button", {type:"button", class:"mini", "data-corr-giusto":g.id, disabled:off, "aria-label":"Sì, è giusto: " + g.testo + " è " + g.nome, text:"Sì, è giusto"}),
+        el("button", {type:"button", class:"mini", "data-corr-era":g.id, disabled:off, text:"No, era…"}));
     } else {
       azioni = el("div", {class:"row"},
-        el("button", {type:"button", class:"mini", "data-corr-nuovo":g.id, disabled:off, "aria-label":"Nuovo prodotto: " + g.testo, text:"Nuovo prodotto"}),
-        el("button", {type:"button", class:"mini", "data-corr-era":g.id, disabled:off, text:"Era…"}));
+        el("button", {type:"button", class:"mini", "data-corr-nuovo":g.id, disabled:off, "aria-label":"È un prodotto nuovo: " + g.testo, text:"È un prodotto nuovo"}),
+        el("button", {type:"button", class:"mini", "data-corr-era":g.id, disabled:off, text:"C'è già, è…"}));
     }
-    return el("div", {class:"card pren-dc-voce"}, titolo, info, azioni);
+    parti.push(azioni);
+    return el("div", {class:"card pren-dc-voce db-voce"}, ...parti);
   }));
-  $("corr-vuoto").hidden = gruppi.length > 0;
-  $("corr-vuoto").textContent = S.pronto ? "Niente da controllare: tutti i nomi sono a posto." : "Carico le richieste…";
+  $("db-vuoto").hidden = gruppi.length > 0;
+  $("db-vuoto").textContent = S.pronto ? "Niente da controllare: tutti i nomi degli ordini sono a posto." : "Carico le richieste…";
+  $("db-elenco-titolo").textContent = "Tutti i prodotti degli ordini";
+  $("db-elenco-spiega").textContent = "L'elenco che l'app usa per riconoscere i nomi, diviso per reparto. Sotto ogni prodotto, gli altri modi di scriverlo che conosce.";
   renderElencoRich(elenco);
 }
-/* tutti i prodotti, per reparto, con gli altri modi di scriverli */
+function renderDbPren(){
+  const gruppi = gruppiDaControllare();
+  const elenco = elencoProdotti();
+  const off = S.pending.has("prodotti");
+  $("db-spiega").textContent = "Le prenotazioni degli ultimi 7 giorni con un prodotto che l'app non conosceva. «È un prodotto nuovo»: entra nell'elenco. «C'è già, è…»: scegli il prodotto giusto e tutte le prenotazioni scritte così si correggono da sole.";
+  riempi($("db-lista"), Array.from(gruppi.entries()).map(function(e){
+    const k = e[0], g = e[1];
+    const dove = g.pren.slice(0, 3).map(function(p){ return fmtCortoGiorno(p.perIl) + (p.cliente ? ", " + p.cliente : ""); }).join(" · ") + (g.pren.length > 3 ? " e altre" : "");
+    return el("div", {class:"card pren-dc-voce db-voce"},
+      rigaDb("Scritto", el("strong", {text:"«" + g.testo + "»"})),
+      el("p", {class:"domanda-db", text:"L'app non conosce questo prodotto. È nuovo o c'è già con un altro nome?"}),
+      el("p", {class:"hint", text:(g.pren.length === 1 ? "1 prenotazione" : g.pren.length + " prenotazioni") + " · " + dove}),
+      S.prenCorreggi === k
+        ? el("div", {class:"row"},
+            el("select", {id:"pren-dc-scelta", "aria-label":"Il prodotto giusto per " + g.testo}, el("option", {value:"", text:"Scegli il prodotto giusto…"}), ...elenco.map(function(n){ return el("option", {value:n, text:n}); })),
+            el("button", {type:"button", class:"mini", "data-pren-dc-salva":k, disabled:off, text:"Correggi"}),
+            el("button", {type:"button", class:"link", "data-pren-dc-annulla":k, text:"Annulla"}))
+        : el("div", {class:"row"},
+            el("button", {type:"button", class:"mini", "data-pren-dc-conferma":k, "data-testo":g.testo, disabled:off, text:"È un prodotto nuovo"}),
+            el("button", {type:"button", class:"mini", "data-pren-dc-errore":k, disabled:off, text:"C'è già, è…"})));
+  }));
+  $("db-vuoto").hidden = gruppi.size > 0;
+  $("db-vuoto").textContent = S.pronto ? "Niente da controllare: tutti i prodotti delle prenotazioni sono a posto." : "Carico le prenotazioni…";
+  $("db-elenco-titolo").textContent = "Tutti i prodotti delle prenotazioni";
+  $("db-elenco-spiega").textContent = "L'elenco che l'app usa per riconoscere i prodotti delle prenotazioni. Sotto ogni prodotto, gli altri modi di scriverlo che conosce.";
+  $("db-n").textContent = String(elenco.length);
+  const alias = Object.assign({}, ALIAS_BASE, S.prodImp.alias);
+  riempi($("db-elenco"), [el("div", null, ...elenco.map(function(n){ return rigaElenco(n, alias); }))]);
+}
+function renderDbBisc(){
+  const nuovi = biscNuovi();
+  const off = S.pending.has("biscotti-imp");
+  $("db-spiega").textContent = "I biscotti aggiunti dai negozi che non erano nell'elenco. «Conferma»: il biscotto resta nell'elenco. «Togli dall'elenco»: non si può più scegliere (le comande già fatte restano).";
+  riempi($("db-lista"), nuovi.map(function(n){
+    return el("div", {class:"card pren-dc-voce db-voce"},
+      rigaDb("Aggiunto", el("strong", {text:n})),
+      el("p", {class:"domanda-db", text:"Esiste davvero questo biscotto?"}),
+      el("div", {class:"row"},
+        el("button", {type:"button", class:"mini", "data-db-bisc-si":n, disabled:off, text:"Sì, conferma"}),
+        el("button", {type:"button", class:"mini", "data-db-bisc-no":n, disabled:off, text:"No, togli dall'elenco"})));
+  }));
+  $("db-vuoto").hidden = nuovi.length > 0;
+  $("db-vuoto").textContent = "Niente da controllare: nessun biscotto nuovo.";
+  const elenco = catalogoBisc();
+  $("db-elenco-titolo").textContent = "Tutti i biscotti";
+  $("db-elenco-spiega").textContent = "L'elenco dei biscotti che i negozi possono chiedere.";
+  $("db-n").textContent = String(elenco.length);
+  riempi($("db-elenco"), [el("div", null, ...elenco.map(function(n){ return rigaElenco(n, {}); }))]);
+}
+/* una riga dell'elenco: il nome e gli altri modi di scriverlo */
+function rigaElenco(n, alias){
+  const altri = [];
+  for (const k in alias){ if (chiave(alias[k]) === chiave(n) && k !== chiave(n)) altri.push("«" + k + "»"); }
+  const riga = el("div", {class:"corr-prod"}, el("span", {class:"nome", text:n}));
+  if (altri.length) riga.append(el("span", {class:"anche", text:"Scritto anche: " + altri.join(", ")}));
+  return riga;
+}
+/* tutti i prodotti degli ordini, per reparto, con gli altri modi di scriverli */
 function renderElencoRich(elenco){
-  $("corr-n").textContent = String(elenco.length);
+  $("db-n").textContent = String(elenco.length);
   const alias = Object.assign({}, ALIAS_RICH_BASE, S.prodRich.alias);
   const anche = {};
   for (const k in alias){ const n = chiave(alias[k]); if (k !== n) (anche[n] = anche[n] || []).push(k); }
@@ -3384,10 +3484,10 @@ function renderElencoRich(elenco){
         return riga;
       }))));
   });
-  riempi($("corr-elenco"), out);
+  riempi($("db-elenco"), out);
 }
 async function salvaProdRich(cambia){
-  if (!store || !store.prodottiRich || !puoCorrezioni() || S.pending.has("prodotti-richieste")) return false;
+  if (!store || !store.prodottiRich || !puoDatabase() || S.pending.has("prodotti-richieste")) return false;
   S.pending.add("prodotti-richieste"); renderTutto();
   const ok = await scrivi(function(){ return store.prodottiRich(cambia); });
   S.pending.delete("prodotti-richieste");
@@ -3439,6 +3539,28 @@ async function corrTogliAlias(k){
   /* resta salvata vuota: così non vale più (anche dove le modifiche si uniscono) */
   const ok = await salvaProdRich(function(d){ return { alias: conAlias(d, k, "") }; });
   if (ok) avviso("Correzione tolta.");
+}
+/* biscotti nuovi: si confermano o si tolgono dall'elenco (impostazioni condivise "biscotti": confermati, tolti) */
+async function salvaBiscImp(cambia){
+  if (!store || !store.biscImp || !puoDatabase() || S.pending.has("biscotti-imp")) return false;
+  S.pending.add("biscotti-imp"); renderTutto();
+  const ok = await scrivi(function(){ return store.biscImp(cambia); });
+  S.pending.delete("biscotti-imp"); renderTutto();
+  return ok;
+}
+function conNome(l, nome){ l = (Array.isArray(l) ? l : []).slice(); if (!l.some(function(x){ return chiave(x) === chiave(nome); })) l.push(nome); return l; }
+async function biscConferma(nome){
+  const ok = await salvaBiscImp(function(d){ return { confermati: conNome(d.confermati, nome) }; });
+  if (ok) avviso(nome + ": confermato.");
+}
+async function biscTogliNuovo(nome){
+  const si = await chiedi("Togliere «" + nome + "» dall'elenco dei biscotti?", "Non si potrà più scegliere. Le comande già fatte restano.", "Sì, togli", "No");
+  if (!si) return;
+  const ok = await salvaBiscImp(function(d){
+    return { tolti: conNome(d.tolti, nome),
+      aggiunte: (Array.isArray(d.aggiunte) ? d.aggiunte : []).filter(function(x){ return chiave(x) !== chiave(nome); }) };
+  });
+  if (ok) avviso("Tolto dall'elenco: " + nome + ".");
 }
 
 /* ---------- prenotazioni dei clienti ---------- */
@@ -3671,7 +3793,6 @@ function chiedi(testo, sotto, si, no){
 }
 /* prodotti nuovi da confermare o correggere (solo titolari):
    in Prenotazioni un tasto, che apre una schermata a parte con tutti i prodotti da accettare */
-S.dcAperto = false;
 function gruppiDaControllare(){
   const limite = dataLocale(Date.now() - 7 * 86400000);
   const gruppi = new Map();
@@ -3687,43 +3808,14 @@ function gruppiDaControllare(){
   });
   return gruppi;
 }
+/* in Prenotazioni un tasto (solo titolari) che porta al Database, parte Prenotazioni */
 function renderDaControllare(){
   const box = $("pren-dacontrollare");
-  const titolare = !!S.owner && puoPrenotare() && inPren();
-  const gruppi = titolare ? gruppiDaControllare() : new Map();
-  box.hidden = !gruppi.size;
-  riempi(box, gruppi.size ? [el("button", {type:"button", class:"primary dc-apri", id:"dc-apri"},
-    "Prodotti da controllare ", el("span", {class:"badge", text:String(gruppi.size)}))] : []);
-  /* la schermata a parte */
-  const aperto = S.dcAperto && titolare;
-  $("dc-schermo").hidden = !aperto;
-  if (!aperto) return;
-  document.body.style.overflow = "hidden";
-  $("dc-vuoto").hidden = gruppi.size > 0;
-  const elenco = elencoProdotti();
-  riempi($("dc-lista"), Array.from(gruppi.entries()).map(function(e){
-    const k = e[0], g = e[1];
-    const dove = g.pren.slice(0, 3).map(function(p){ return fmtCortoGiorno(p.perIl) + (p.cliente ? ", " + p.cliente : ""); }).join(" · ") + (g.pren.length > 3 ? " e altre" : "");
-    const correggi = S.prenCorreggi === k;
-    const off = S.pending.has("prodotti");
-    return el("div", {class:"card pren-dc-voce"},
-      el("p", {class:"articolo"}, el("strong", {text:"«" + g.testo + "»"}), " · " + (g.pren.length === 1 ? "1 prenotazione" : g.pren.length + " prenotazioni")),
-      el("p", {class:"hint", text:dove}),
-      correggi
-        ? el("div", {class:"row"},
-            el("select", {id:"pren-dc-scelta", "aria-label":"Il prodotto giusto per " + g.testo}, el("option", {value:"", text:"Era…"}), ...elenco.map(function(n){ return el("option", {value:n, text:n}); })),
-            el("button", {type:"button", class:"mini", "data-pren-dc-salva":k, disabled:off, text:"Correggi"}),
-            el("button", {type:"button", class:"link", "data-pren-dc-annulla":k, text:"Annulla"}))
-        : el("div", {class:"row"},
-            el("button", {type:"button", class:"mini", "data-pren-dc-conferma":k, "data-testo":g.testo, disabled:off, text:"Conferma"}),
-            el("button", {type:"button", class:"mini", "data-pren-dc-errore":k, disabled:off, text:"È un errore, era…"})));
-  }));
-}
-function chiudiDaControllare(){
-  S.dcAperto = false; S.prenCorreggi = "";
-  $("dc-schermo").hidden = true;
-  document.body.style.overflow = "";
-  renderPrenotazioni();
+  const titolare = puoDatabase() && puoPrenotare() && inPren();
+  const n = titolare ? gruppiDaControllare().size : 0;
+  box.hidden = !n;
+  riempi(box, n ? [el("button", {type:"button", class:"primary dc-apri", id:"dc-apri"},
+    "Prodotti nuovi da controllare ", el("span", {class:"badge", text:String(n)}))] : []);
 }
 async function salvaProdotti(cambia){
   if (!store || !store.prodotti || S.pending.has("prodotti")) return false;
@@ -4268,7 +4360,7 @@ function renderTutto(){
   renderStatistiche();
   renderPrenotazioni();
   renderMancanti();
-  renderCorrezioni();
+  renderDatabase();
 }
 
 /* ---------- interfacce ---------- */
@@ -4453,13 +4545,15 @@ function collega(){
       return;
     }
     /* prodotti da controllare (titolari) */
-    if (b.id === "dc-apri"){ S.dcAperto = true; renderPrenotazioni(); try { $("dc-schermo").scrollTop = 0; $("dc-chiudi").focus(); } catch(e){} return; }
-    if (b.id === "dc-chiudi") return chiudiDaControllare();
+    if (b.id === "dc-apri") return vaiSezione("database", false, "prenotazioni");
     /* correzioni dei nomi delle richieste (titolari) */
     if (b.dataset.corrGiusto) return corrGiusto(b.dataset.corrGiusto);
     if (b.dataset.corrNuovo) return corrNuovo(b.dataset.corrNuovo);
-    if (b.dataset.corrEra){ S.corrApri = b.dataset.corrEra; renderCorrezioni(); const sc = $("corr-scelta"); if (sc) sc.focus(); return; }
-    if (b.dataset.corrAnnulla){ S.corrApri = ""; return renderCorrezioni(); }
+    if (b.dataset.corrEra){ S.corrApri = b.dataset.corrEra; renderDatabase(); const sc = $("corr-scelta"); if (sc) sc.focus(); return; }
+    if (b.dataset.corrAnnulla){ S.corrApri = ""; return renderDatabase(); }
+    if (b.dataset.dbScheda){ S.dbScheda = b.dataset.dbScheda; S.corrApri = ""; S.prenCorreggi = ""; return renderDatabase(); }
+    if (b.dataset.dbBiscSi) return biscConferma(b.dataset.dbBiscSi);
+    if (b.dataset.dbBiscNo) return biscTogliNuovo(b.dataset.dbBiscNo);
     if (b.dataset.corrSalva) return corrSalva(b.dataset.corrSalva);
     if (b.dataset.corrTogli) return corrTogli(b.dataset.corrTogli);
     if (b.dataset.corrTogliAlias) return corrTogliAlias(b.dataset.corrTogliAlias);
@@ -4469,8 +4563,8 @@ function collega(){
     if (b.id === "mag-tutto-chiudi") return chiudiMagTutto();
     if (b.id === "mag-tutto-apri"){ chiudiMagTutto(); if (vedeMancanti()) vaiSezione("mancanti"); return; }
     if (b.dataset.prenDcConferma) return confermaProdotto(b.dataset.testo);
-    if (b.dataset.prenDcErrore){ S.prenCorreggi = b.dataset.prenDcErrore; renderPrenotazioni(); const sc = $("pren-dc-scelta"); if (sc) sc.focus(); return; }
-    if (b.dataset.prenDcAnnulla){ S.prenCorreggi = ""; return renderPrenotazioni(); }
+    if (b.dataset.prenDcErrore){ S.prenCorreggi = b.dataset.prenDcErrore; renderDatabase(); const sc = $("pren-dc-scelta"); if (sc) sc.focus(); return; }
+    if (b.dataset.prenDcAnnulla){ S.prenCorreggi = ""; return renderDatabase(); }
     if (b.dataset.prenDcSalva) return correggiProdotto(b.dataset.prenDcSalva);
     if (b.id === "notif-spegni") return spegniNotifiche(false);
     if (b.id === "notif-prova") return provaNotifica();
@@ -4519,7 +4613,6 @@ function collega(){
   /* «Mostra tutto»: si chiude con «Chiudi», toccando fuori o con Esc */
   $("mag-tutto").addEventListener("click", function(ev){ if (ev.target === this) chiudiMagTutto(); });
   $("mag-tutto").addEventListener("keydown", function(ev){ if (ev.key === "Escape") chiudiMagTutto(); });
-  $("dc-schermo").addEventListener("keydown", function(ev){ if (ev.key === "Escape") chiudiDaControllare(); });
   window.addEventListener("resize", controllaStriscia);
   /* altezza dei tasti «Negozio / Consegne», per mettere la striscia rossa subito sotto */
   try {
@@ -4619,6 +4712,13 @@ function usaLocale(){
       emetti();
     },
     aggiunteBisc: async function(arr){ S.aggiunteBisc = arr.slice(); emetti(); },
+    biscImp: async function(cambia){
+      const d = cambia({ aggiunte: S.aggiunteBisc.slice(), confermati: S.biscConfermati.slice(), tolti: S.biscTolti.slice() });
+      if (d.aggiunte) S.aggiunteBisc = d.aggiunte.slice();
+      if (d.confermati) S.biscConfermati = d.confermati.slice();
+      if (d.tolti) S.biscTolti = d.tolti.slice();
+      emetti();
+    },
     prodotti: async function(cambia){ prodGrezzo = Object.assign({}, prodGrezzo, cambia(prodGrezzo)); S.prodImp = prodottiCondivisi(prodGrezzo); emetti(); },
     prodottiRich: async function(cambia){ prodRichGrezzo = Object.assign({}, prodRichGrezzo, cambia(prodRichGrezzo)); S.prodRich = prodottiRichCondivisi(prodRichGrezzo); emetti(); }
   };
@@ -4697,6 +4797,8 @@ function applicaImpostazioni(){
   }
   S.mappa = pulita; S.frequenti = freq;
   S.aggiunteBisc = bis ? testi(bis.aggiunte, 60, -60) : [];
+  S.biscConfermati = bis ? testi(bis.confermati, 60, 0) : [];
+  S.biscTolti = bis ? testi(bis.tolti, 60, 0) : [];
   S.prodImp = prodottiCondivisi(RAW.imp.prodotti);
   S.prodRich = prodottiRichCondivisi(RAW.imp["prodotti-richieste"]);
 }
@@ -4834,7 +4936,7 @@ const VAPID_PUBLICA = "BC9TAKzQiQ-x3xtX0KWauGtV-uvIk9VFwqLjWAOzrJbe4e5w2AWyXMIej
    quale schermata, quanto tempo, errori, rete e tipo di telefono. Le persone non hanno nome ("Persona 1"…):
    lo decide il database (funzione "registra", supabase/aggiornamento-4-registro.sql). */
 const REGISTRO_ATTIVO = false;
-const VERSIONE_APP = "6bca8f30";
+const VERSIONE_APP = "6af4ac04";
 S.reg = [];
 S.ultimoTasto = { nome: "", alle: 0 };
 S.tocchi = { nome: "", volte: 0, alle: 0, segnato: false };
@@ -5345,7 +5447,8 @@ function storeSB(){
       }
       emettiSB(true);
     },
-    aggiunteBisc: function(arr){ return salvaImp("biscotti", function(){ return { aggiunte: arr.slice() }; }); }
+    aggiunteBisc: function(arr){ return salvaImp("biscotti", function(){ return { aggiunte: arr.slice() }; }); },
+    biscImp: function(cambia){ return salvaImp("biscotti", cambia); }
   };
 }
 
@@ -5647,6 +5750,7 @@ async function avvia(){
       return dati === null ? ref.delete() : aggiornaOCrea(ref, dati);
     },
     aggiunteBisc: function(arr){ return aggiornaOCrea(db.doc("impostazioni/biscotti"), { aggiunte: arr }); },
+    biscImp: function(cambia){ return aggiornaOCrea(db.doc("impostazioni/biscotti"), cambia(S.biscGrezzo || {})); },
     prodotti: function(cambia){ return aggiornaOCrea(db.doc("impostazioni/prodotti"), cambia(S.prodGrezzo || {})); },
     prodottiRich: function(cambia){ return aggiornaOCrea(db.doc("impostazioni/prodotti-richieste"), cambia(S.prodRichGrezzo || {})); }
   };
@@ -5677,6 +5781,11 @@ async function avvia(){
       if (d.id === "prodotti-richieste") S.prodRichGrezzo = dati;
       if (d.id === "reparti" && dati.mappa && typeof dati.mappa === "object"){
         for (const k in dati.mappa){ if (REPARTI.indexOf(dati.mappa[k]) >= 0) pulita[k] = dati.mappa[k]; }
+      }
+      if (d.id === "biscotti"){
+        S.biscGrezzo = dati;
+        S.biscConfermati = testi(dati.confermati, 60, 0);
+        S.biscTolti = testi(dati.tolti, 60, 0);
       }
       if (d.id === "biscotti" && Array.isArray(dati.aggiunte)){
         aggiunte = dati.aggiunte.filter(function(x){ return typeof x === "string" && x.trim(); }).map(function(x){ return x.trim().slice(0, 60); }).slice(-60);
