@@ -32,7 +32,7 @@
   --nuova:#0B5A8C; --nuova-bg:#DDEFFC; --nuova-bordo:#3C8DD0;
   --pronto:#0B5563; --pronto-bg:#DDF1F4; --pronto-solid:#0B7285; --pronto-solid-ink:#FFFFFF;
   --arrivo-bg:#DDF2E1; --arrivo-txt:#1B6A33;
-  --carico:#1F5FA8; --carico-ink:#FFFFFF; --giro:#3B7D23; --giro-ink:#FFFFFF;
+  --carico:#1F5FA8; --carico-ink:#FFFFFF; --giro:#B85600; --giro-ink:#FFFFFF;
   --corso:#7A4A24; --corso-ink:#FFFFFF; --corso-bg:#F3E8DD; --corso-txt:#7A4A24;
   --nenni:#1E5B36; --nenni-ink:#FFFFFF; --nenni-bg:#E1EFE5; --nenni-txt:#1E5B36;
   --panif:#E5B20A; --panif-ink:#2A2922; --panif-bg:#FBF1CF; --panif-txt:#7F6000;
@@ -51,7 +51,7 @@
     --prep:#C3AEEA; --prep-bg:#2A2140; --altrog:#6C4FB0; --altrog-ink:#FFFFFF; --altrog-bg:#2A2140; --giorno-bg:#4A2D0E; --giorno-bordo:#F0A04B; --giorno-ink:#FFD6A6;
     --ferma:#F5BC6A; --ferma-bg:#3A2A12; --ferma-bordo:#D99A3D; --nuova:#8CC8F5; --nuova-bg:#123248; --nuova-bordo:#4D9BD6; --pronto:#7DD3DF; --pronto-bg:#12343A; --pronto-solid:#5CC4D2; --pronto-solid-ink:#062328;
     --arrivo-bg:#163322; --arrivo-txt:#86D69C;
-    --carico:#7EB2EE; --carico-ink:#0B1626; --giro:#9AD27A; --giro-ink:#10200A;
+    --carico:#7EB2EE; --carico-ink:#0B1626; --giro:#F5A55A; --giro-ink:#2A1400;
     --corso:#C9925F; --corso-ink:#1F1206; --corso-bg:#33241A; --corso-txt:#D9A574;
     --nenni:#5DB884; --nenni-ink:#06200F; --nenni-bg:#15301F; --nenni-txt:#6FC995;
     --panif:#F2C640; --panif-ink:#241B00; --panif-bg:#362C0D; --panif-txt:#F2C640;
@@ -67,7 +67,7 @@
   --prep:#C3AEEA; --prep-bg:#2A2140; --altrog:#6C4FB0; --altrog-ink:#FFFFFF; --altrog-bg:#2A2140; --giorno-bg:#4A2D0E; --giorno-bordo:#F0A04B; --giorno-ink:#FFD6A6;
   --ferma:#F5BC6A; --ferma-bg:#3A2A12; --ferma-bordo:#D99A3D; --nuova:#8CC8F5; --nuova-bg:#123248; --nuova-bordo:#4D9BD6; --pronto:#7DD3DF; --pronto-bg:#12343A; --pronto-solid:#5CC4D2; --pronto-solid-ink:#062328;
   --arrivo-bg:#163322; --arrivo-txt:#86D69C;
-  --carico:#7EB2EE; --carico-ink:#0B1626; --giro:#9AD27A; --giro-ink:#10200A;
+  --carico:#7EB2EE; --carico-ink:#0B1626; --giro:#F5A55A; --giro-ink:#2A1400;
   --corso:#C9925F; --corso-ink:#1F1206; --corso-bg:#33241A; --corso-txt:#D9A574;
   --nenni:#5DB884; --nenni-ink:#06200F; --nenni-bg:#15301F; --nenni-txt:#6FC995;
   --panif:#F2C640; --panif-ink:#241B00; --panif-bg:#362C0D; --panif-txt:#F2C640;
@@ -532,12 +532,14 @@ details.crono[open] > summary{background:var(--surface-2);border-color:var(--sur
 .tasti-discreti:not(:has(> details:not([hidden]))){display:none}
 details.card.discreto:not([open]){background:none;border:0;padding:0}
 details.card.discreto:not([open]) > summary{font-size:13px;font-weight:400;color:var(--muted);min-height:36px}
-/* Consegne: «Carico per reparto» blu, «Giro per negozio» verde; fermi in alto, sotto la striscia rossa
-   (--alto-modo la misura lo script), con una fascia sottile del colore scelto */
-.modo-barra{position:sticky;top:var(--alto-modo,calc(env(safe-area-inset-top,0px) + 6px));z-index:4;background:var(--bg);box-shadow:0 0 0 6px var(--bg);padding-bottom:6px;border-bottom:4px solid var(--modo-c,var(--carico))}
-.modo-barra[data-modo-scelto="carico"]{--modo-c:var(--carico);--modo-ink:var(--carico-ink)}
-.modo-barra[data-modo-scelto="consegna"]{--modo-c:var(--giro);--modo-ink:var(--giro-ink)}
+/* Consegne: «Carico per reparto» blu, «Giro per negozio» arancione; fermi in alto, sotto la striscia rossa
+   (--alto-modo la misura lo script), e una fascia grossa del colore scelto lungo il lato sinistro dello schermo */
+.modo-barra{position:sticky;top:var(--alto-modo,calc(env(safe-area-inset-top,0px) + 6px));z-index:4;background:var(--bg);box-shadow:0 0 0 6px var(--bg)}
+#view-consegne[data-modo-scelto="carico"]{--modo-c:var(--carico);--modo-ink:var(--carico-ink)}
+#view-consegne[data-modo-scelto="consegna"]{--modo-c:var(--giro);--modo-ink:var(--giro-ink)}
 .modo-barra .switch button[aria-selected="true"]{background:var(--modo-c);color:var(--modo-ink)}
+#view-consegne::before{content:"";position:fixed;top:0;bottom:0;left:0;width:10px;background:var(--modo-c,var(--carico));z-index:6;pointer-events:none}
+@media (min-width:1000px){ body.con-menu #view-consegne::before{left:272px} }
 .crono-n{font-variant-numeric:tabular-nums;color:var(--muted)}
 .crono-n:empty{display:none}
 .riga.tolta .articolo{color:var(--muted)}
@@ -1025,7 +1027,7 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
   </section>
 
   <!-- Consegne: chi fa il giro vede tutto -->
-  <section class="view" id="view-consegne" role="tabpanel" aria-labelledby="tab-consegne" hidden>
+  <section class="view" id="view-consegne" role="tabpanel" aria-labelledby="tab-consegne" data-modo-scelto="carico" hidden>
     <div class="riepilogo">
       <p class="stat"><b id="n-attesa">0</b><span id="l-attesa">da caricare</span></p>
       <p class="stat"><b id="n-viaggio">0</b><span>caricate</span></p>
@@ -1055,8 +1057,8 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
       </form>
     </details>
 
-    <!-- «Carico per reparto» (blu) e «Giro per negozio» (verde): fermi in alto, con una fascia del colore scelto -->
-    <div class="modo-barra" id="modo-barra" data-modo-scelto="carico">
+    <!-- «Carico per reparto» (blu) e «Giro per negozio» (arancione): fermi in alto; a sinistra una fascia del colore scelto -->
+    <div class="modo-barra" id="modo-barra">
       <div class="switch sotto" role="tablist" aria-label="Organizza le richieste">
         <button type="button" role="tab" id="modo-carico" aria-selected="true" data-modo="carico">Carico per reparto</button>
         <button type="button" role="tab" id="modo-consegna" aria-selected="false" data-modo="consegna">Giro per negozio</button>
@@ -3398,7 +3400,7 @@ function capitoliManuale(){
     ["Posso chiedere anche io delle cose?", ["Sì, come i negozi: scrivi in «Cosa serve?» e invia. Vale tutto quello che c'è nel capitolo delle richieste."]]
   ]});
   if (haSezione("consegne")) cap.push({ titolo:"Giro consegne", domande:[
-    ["Come funziona il giro?", ["In alto scegli ", tasto("Carico per reparto"), " (le cose da caricare, divise per reparto) oppure ", tasto("Giro per negozio"), " (le cose caricate, divise per negozio). Quello scelto è colorato: blu per il carico, verde per il giro, con una riga dello stesso colore sotto. I due tasti restano fermi in alto anche quando scorri la lista, così passi dall'uno all'altro quando vuoi."]],
+    ["Come funziona il giro?", ["In alto scegli ", tasto("Carico per reparto"), " (le cose da caricare, divise per reparto) oppure ", tasto("Giro per negozio"), " (le cose caricate, divise per negozio). Quello scelto è colorato: blu per il carico, arancione per il giro, con una fascia dello stesso colore lungo il lato sinistro dello schermo. I due tasti restano fermi in alto anche quando scorri la lista, così passi dall'uno all'altro quando vuoi."]],
     ["Dove vedo quello che ho consegnato oggi?", ["In fondo alla pagina tocca ", tasto("Consegnato oggi"), ": si apre un riquadro con l'elenco. Accanto c'è ", tasto("Cronologia: cose tolte"), " (le cose tolte, da recuperare se è stato uno sbaglio). Si apre uno alla volta; si chiude toccando di nuovo il tasto o da solo quando torni in cima."]],
     ["Come segno quello che carico e consegno?", ["Tocca ", tasto("Caricato"), " quando la cosa è sul furgone: il negozio la vede «In viaggio». Al negozio tocca ", tasto("Consegnato"), ", oppure ", tasto("Tutto consegnato"), " per tutte le cose di quel negozio. «Annulla» rimette la cosa da caricare."]],
     ["E se ne ho solo una parte?", ["Tocca ", tasto("Solo una parte"), ", scrivi cosa manca ancora (per esempio «2 casse») e tocca ", tasto("Carica la parte"), ". La richiesta diventa caricata con la scritta «Solo una parte: mancano 2 casse». Quello che manca diventa una riga nuova per lo stesso negozio, segnata «non c'è»: va nella striscia rossa e, quando arriva, torna in cima alle consegne in verde."], disegnoParte()],
@@ -4049,7 +4051,7 @@ function renderConsegne(){
   document.querySelectorAll('[data-modo][role="tab"]').forEach(function(b){
     b.setAttribute("aria-selected", String(b.dataset.modo === S.modo));
   });
-  $("modo-barra").dataset.modoScelto = S.modo;
+  $("view-consegne").dataset.modoScelto = S.modo;
   $("hint-modo").textContent = S.modo === "carico"
     ? "In magazzino: prendi tutto reparto per reparto. Il colore dice a quale negozio va."
     : "Per strada: scarica negozio per negozio quello che hai caricato.";
