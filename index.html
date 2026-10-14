@@ -347,6 +347,9 @@ button.striscia-testo{cursor:pointer}
 .db-mod .row,.db-nuovo .row{gap:8px;align-items:center;flex-wrap:wrap}
 .db-nuovo{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
 .db-voce .domanda-db{font-weight:700;margin:0}
+#mag-form .field{flex:none}
+.db-sotto-parte{margin-top:18px;padding-top:12px;border-top:2px solid var(--line)}
+.db-sotto-parte h3{margin:0 0 4px;font-size:17px}
 .db-voce .riga-db{margin:0;display:flex;flex-wrap:wrap;gap:4px 8px;align-items:baseline}
 .db-voce .riga-db .label-sm{min-width:110px}
 .corr-prod{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;padding:6px 0;border-bottom:1px dashed var(--line)}
@@ -834,6 +837,7 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
       <button type="button" class="primary" id="mag-segna" hidden>+ Segna cosa manca</button>
       <form class="card" id="mag-form" hidden novalidate>
         <label class="field" for="mag-nuovo"><span class="label-sm">Cosa manca in magazzino?</span><input id="mag-nuovo" type="text" maxlength="80" autocomplete="off" placeholder="Es. Acqua naturale"></label>
+        <div class="ctrl-nome ctrl-volevi" id="mag-ctrl" hidden></div>
         <div class="riep-azioni"><button type="button" class="mini" id="mag-annulla">Annulla</button><button type="submit" class="primary" id="mag-salva" disabled>Salva</button></div>
         <p class="esito" id="mag-esito" role="status"></p>
       </form>
@@ -2379,25 +2383,63 @@ S.magazzino = [];
 S.magForm = { aperto: false, inviando: false };
 function normaMag(k, d, st, autore){
   st = st || {};
-  return { id: k, autore: autore, mio: !!S.mioId && autore === S.mioId, articolo: String(d.articolo || "").slice(0, 80) || "?",
+  const salvato = String(d.articolo || "").slice(0, 80) || "?";
+  const scritto = typeof d.scritto === "string" ? d.scritto.slice(0, 80) : "";
+  /* le correzioni del «Database» valgono anche qui, come per le richieste dei negozi */
+  let corretto = S.prodRich.alias[chiave(scritto || salvato)];
+  const rinominato = S.prodRich.alias[chiave(corretto || salvato)];
+  if (rinominato) corretto = rinominato;
+  return { id: k, rid: String(k).split("~")[1] || "", autore: autore, mio: !!S.mioId && autore === S.mioId,
+    articolo: corretto || salvato, scritto: scritto, salvato: salvato, mag: true,
     creato: Number(d.creato) || 0, arrivatoAlle: Number(st.arrivatoAlle) || 0 };
 }
 function magAperte(){ return S.magazzino.filter(function(m){ return !m.arrivatoAlle; }).sort(function(a, b){ return a.creato - b.creato; }); }
 function puoSegnareMag(){ return vedeMancanti() && haAzione("segnaManca") && !!store && !S.sola && !!S.mioId; }
-async function salvaMag(){
+/* Salva: prima l'app controlla il nome, come nel «Controlla prima di inviare» delle richieste.
+   Se è sicura mette il nome giusto (si può lasciare com'era scritto); se ha un dubbio chiede «Quale di questi?»
+   (per l'acqua sempre: naturale o frizzante, grande o piccola); se non lo conosce salva com'è scritto
+   e il titolare lo controlla nel «Database». */
+async function salvaMag(scelta){
   const f = S.magForm, inp = $("mag-nuovo");
-  let nome = inp.value.replace(/\s+/g, " ").trim().slice(0, 80);
-  if (!nome || f.inviando || !puoSegnareMag()) return;
-  /* stesso nome delle richieste, se l'app lo riconosce con sicurezza */
-  const t = trovaProdottoRich(nome);
-  if (t.esito === "sicuro" && t.nome) nome = t.nome;
+  const scritto = inp.value.replace(/\s+/g, " ").trim().slice(0, 80);
+  if (!scritto || f.inviando || !puoSegnareMag()) return;
+  let nome = scritto;
+  if (scelta && scelta.nome) nome = scelta.nome;
+  else if (!scelta){
+    const t = trovaProdottoRich(scritto);
+    if (t.esito === "dubbio"){ f.ctrl = { scritto: scritto, scelte: t.scelte }; return renderMancanti(); }
+    if (t.esito === "sicuro" && t.nome && chiave(t.nome) !== chiave(scritto) && !(f.ctrl && f.ctrl.nome === t.nome)){
+      f.ctrl = { scritto: scritto, nome: t.nome }; return renderMancanti();
+    }
+    if (t.esito === "sicuro" && t.nome) nome = t.nome;
+  }
+  nome = maiuscola(nome).slice(0, 80);
   const k = chiave(nome);
-  if (magAperte().some(function(m){ return chiave(m.articolo) === k; })){ esito("mag-esito", "«" + nome + "» è già segnato."); return; }
+  if (magAperte().some(function(m){ return chiave(m.articolo) === k; })){ f.ctrl = null; renderMancanti(); esito("mag-esito", "«" + nome + "» è già segnato."); return; }
   f.inviando = true; renderMancanti();
-  const ok = await scrivi(function(){ return store.aggiungi({ tipo: "magazzino", articolo: nome.charAt(0).toUpperCase() + nome.slice(1), creato: Date.now() }); }, true);
+  const voce = { tipo: "magazzino", articolo: nome, creato: Date.now() };
+  /* com'era scritto, se l'app ha messo il nome giusto: lo controllano i titolari nel «Database» */
+  if (chiave(scritto) !== k) voce.scritto = scritto;
+  const ok = await scrivi(function(){ return store.aggiungi(voce); }, true);
   f.inviando = false;
-  if (ok){ inp.value = ""; f.aperto = false; avviso("Segnato: " + nome + " manca in magazzino."); }
+  if (ok){ inp.value = ""; f.aperto = false; f.ctrl = null; avviso("Segnato: " + nome + " manca in magazzino."); }
   renderTutto();
+}
+/* la parte del modulo con il controllo del nome */
+function renderMagCtrl(){
+  const c = S.magForm.ctrl, box = $("mag-ctrl"), off = S.magForm.inviando;
+  box.hidden = !c;
+  $("mag-salva").hidden = !!(c && c.scelte);
+  if (!c){ riempi(box, []); $("mag-salva").textContent = S.magForm.inviando ? "Salvo…" : "Salva"; return; }
+  if (c.scelte){
+    riempi(box, [el("span", {class:"ctrl-chiedi", text:"Hai scritto «" + c.scritto + "». " + (c.scelte.length === 1 ? "È questo?" : "Quale di questi?") + " Toccalo per salvarlo con il nome giusto."}),
+      ...c.scelte.map(function(n, j){ return el("button", {type:"button", class:"mini", "data-mag-scelta":String(j), disabled:off, text:n}); }),
+      el("button", {type:"button", class:"link", "data-mag-cosi":"1", disabled:off, text:(c.scelte.length === 1 ? "No, è un'altra cosa" : "Nessuno, è un'altra cosa") + ": salva «" + c.scritto + "»"})]);
+  } else {
+    riempi(box, [el("span", {class:"ctrl-chiedi", text:"✓ Hai scritto «" + c.scritto + "»: l'app ha messo il nome giusto, «" + c.nome + "»."}),
+      el("button", {type:"button", class:"link", "data-mag-cosi":"1", disabled:off, text:"Lascia com'era: salva «" + c.scritto + "»"})]);
+    $("mag-salva").textContent = S.magForm.inviando ? "Salvo…" : "Salva «" + c.nome + "»";
+  }
 }
 async function magArrivato(id){
   const m = S.magazzino.find(function(x){ return x.id === id; });
@@ -2421,7 +2463,7 @@ function renderMagSegnate(){
   $("mag-segna").hidden = !puo || f.aperto;
   $("mag-form").hidden = !puo || !f.aperto;
   $("mag-salva").disabled = f.inviando || !$("mag-nuovo").value.trim();
-  $("mag-salva").textContent = f.inviando ? "Salvo…" : "Salva";
+  renderMagCtrl();
   const lista = magAperte();
   $("mag-segnate-box").hidden = !lista.length;
   riempi($("mag-segnate"), lista.map(function(m){
@@ -3346,6 +3388,7 @@ function capitoliManuale(){
   ].concat(vedeMancanti() ? [
     ["Cosa succede se tocco la striscia rossa?", ["Si apre la sezione «Non in magazzino», dove puoi segnare ", tasto("È arrivato"), ". Anche in «Mostra tutto», in fondo, c'è «Apri Non in magazzino». (Per gli altri toccare la striscia non fa niente: hanno solo «Mostra tutto».)"]],
     ["Come segno una cosa che manca in magazzino?", ["Nella sezione «Non in magazzino» tocca ", tasto("+ Segna cosa manca"), ", scrivi il nome e Salva. Si vede solo in quella sezione (non nella striscia rossa). Quando arriva, ", tasto("È arrivato"), "."]],
+    ["Perché dopo «Salva» l'app mi chiede il nome?", ["Controlla il nome come nelle richieste dei negozi, così la cosa si collega a quelle chieste con lo stesso nome. Se è sicura mette lei il nome giusto (scrivi «zuchero», salva «Zucchero»; se vuoi tocca «Lascia com'era»). Se ha un dubbio chiede «Quale di questi?»: per l'acqua sempre, per esempio «acqua nat» → Acqua naturale grande o piccola. Se non è nessuno, tocca «Nessuno, è un'altra cosa»: si salva com'è scritto e lo controlla il titolare."]],
     ["Cosa c'è nella sezione «Non in magazzino»?", ["Tre parti: le richieste dei negozi segnate «non c'è», le cose segnate con «+ Segna cosa manca», e quelle «Da comprare». Su ognuna c'è «È arrivato». Quando arriva una cosa, arrivano insieme tutte quelle con lo stesso nome."]]
   ] : [])});
   /* le notifiche di solito di ogni posto: lette dall'elenco vero (NOTIFICHE_PERMESSI), così restano giuste */
@@ -3381,11 +3424,12 @@ function capitoliManuale(){
     ["Posso scegliere io le notifiche di una persona?", ["Sì: nei suoi permessi, in «Notifiche che può ricevere», una per riga. Puoi dare a chiunque anche notifiche che di solito non sono del suo posto (per esempio «Pronto da caricare» a una persona del Corso). «No» vuol dire che non le arriva mai; «Sì» vuol dire che la può ricevere e sul suo telefono la accende o la spegne. Sotto vedi se sul suo telefono è accesa. Nell'elenco delle persone vedi chi ha le notifiche accese 🔔 e chi no 🔕."]],
     ["Una persona cambia negozio o va in ferie?", ["In «Persone registrate» tocca il suo nome. ", tasto("Cambia ruolo"), " la sposta (per esempio dal Corso a Piazza Nenni) senza registrarsi di nuovo. ", tasto("Sospendi"), " non la fa entrare finché non tocchi ", tasto("Riattiva"), "."]],
     ["A cosa serve «Impostazioni»?", ["Lì scegli alcuni numeri dell'app, divisi a gruppi (Richieste dei negozi, Avvisi e colori, Per quanto tempo tenere le cose…): per esempio dopo quante ore una richiesta diventa arancione o quanti tasti «Chiesti spesso» si vedono. Valgono per tutti i telefoni. Sotto ogni numero c'è un esempio che cambia mentre tocchi − e +; poi «Salva». «Rimetti com'era all'inizio» torna al numero di partenza."]],
-    ["A cosa serve «Database»?", ["Entrando ci sono tre tasti: Ordini, Prenotazioni, Biscotti. Il numero dice quante cose nuove ci sono da controllare. In ogni parte ci sono i nomi nuovi o corretti dall'app («Sì, è giusto», «No, era…», «È un prodotto nuovo», «Scrivi il nome giusto»), e in fondo l'elenco completo. Una correzione vale anche per quello già scritto. Quanti giorni indietro guardare lo scegli in «Impostazioni» (di partenza 7)."]],
+    ["A cosa serve «Database»?", ["Entrando ci sono tre tasti: Ordini, Prenotazioni, Biscotti. Il numero dice quante cose nuove ci sono da controllare. In ogni parte ci sono i nomi nuovi o corretti dall'app («Sì, è giusto», «No, era…», «È un prodotto nuovo», «Scrivi il nome giusto»), e in fondo l'elenco completo. In Ordini, più sotto, c'è una parte a sé per le cose segnate con «+ Segna cosa manca». Una correzione vale anche per quello già scritto. Quanti giorni indietro guardare lo scegli in «Impostazioni» (di partenza 7)."]],
     ["Un prodotto è scritto male: come lo correggo?", ["Nel «Database» tocca «Scrivi il nome giusto» (o «No, era…»). Scrivi il nome: sotto escono i prodotti dell'elenco che somigliano, puoi toccarne uno. Se il nome che scrivi non c'è, diventa un prodotto nuovo. Quello scritto male resta collegato al nome giusto: la volta dopo l'app lo corregge da sola."]],
+    ["Come controllo le cose segnate con «+ Segna cosa manca»?", ["Nel «Database», parte Ordini, sotto le richieste dei negozi c'è «Segnate con «+ Segna cosa manca»». Funziona come per le richieste: «Sì, è giusto», «No, era…», «È un prodotto nuovo». Esempio: Massimo ha segnato «acqua nat» e tu scegli «Acqua naturale grande»: da quel momento è collegata all'acqua chiesta dai negozi, e con «È arrivato» arrivano insieme. Se è stata segnata per sbaglio, «Elimina, è stato uno sbaglio»."]],
     ["Un ordine non c'entra niente: come lo tolgo?", ["Nel «Database», parte Ordini, sotto l'ordine tocca «Elimina questo ordine» e conferma. Sparisce dalle richieste e dal giro. Se è stato uno sbaglio, lo ritrovi in Cronologia."]],
     ["Come cambio l'elenco dei prodotti?", ["Nel «Database», in fondo a Ordini o Prenotazioni, apri «Tutti i prodotti». In cima puoi aggiungere un prodotto. Accanto a ogni prodotto c'è «Modifica»: puoi cambiare il nome (se il nome nuovo c'è già, i due prodotti si uniscono), aggiungere un altro modo di scriverlo, togliere un modo di scriverlo o togliere il prodotto dall'elenco. Nei Biscotti, in cima puoi aggiungere un biscotto; con «Modifica» cambi il nome (vale anche per le comande già fatte; se il nome c'è già, i due diventano uno) o togli un biscotto aggiunto dai negozi. In fondo puoi rimettere quelli tolti."]],
-    puoStat() ? ["Cosa trovo nelle «Statistiche»?", ["Quante richieste, cosa si chiede di più, cosa manca più spesso (anche le volte portate solo in parte), quanto si aspetta in magazzino prima che una cosa arrivi, quando si chiede, quanto ci mette ad arrivare al negozio, i biscotti, le prenotazioni e le disdette con il loro motivo. Scegli il periodo in alto. I tasti per scaricare danno un file che si apre con Excel."]] : null,
+    puoStat() ? ["Cosa trovo nelle «Statistiche»?", ["Quante richieste, cosa si chiede di più, cosa manca più spesso (anche le volte portate solo in parte e quelle segnate con «+ Segna cosa manca»), quanto si aspetta in magazzino prima che una cosa arrivi, quando si chiede, quanto ci mette ad arrivare al negozio, i biscotti, le prenotazioni e le disdette con il loro motivo. Scegli il periodo in alto. I tasti per scaricare danno un file che si apre con Excel."]] : null,
     ["Se qualcuno dimentica il PIN o se ne va?", ["In «Persone registrate» tocca il suo nome, poi in fondo apri «Togliere l'accesso» e conferma due volte: non può più entrare, le sue richieste restano. Se serve, si registra di nuovo con il codice del negozio."]]
   ]});
   return cap;
@@ -4223,6 +4267,20 @@ function gruppiCorrezioni(){
     if (!gruppi.has(id)) gruppi.set(id, { id: id, k: k, tipo: tipo, testo: testo, nome: r.salvato, rich: [] });
     gruppi.get(id).rich.push(r);
   });
+  /* le cose segnate con «+ Segna cosa manca»: una parte a parte (mag: true).
+     Quelle che mancano ancora si controllano anche se sono più vecchie dei giorni scelti. */
+  S.magazzino.forEach(function(m){
+    if (m.creato < dal && m.arrivatoAlle) return;
+    const testo = m.scritto || m.salvato, k = chiave(testo);
+    if (!k || S.prodRich.alias[k]) return;
+    let tipo;
+    if (m.scritto && chiave(m.scritto) !== chiave(m.salvato)) tipo = "corretta";
+    else if (trovaProdottoRich(m.salvato).esito !== "sicuro") tipo = "nuova";
+    else return;
+    const id = "mag:" + (tipo === "corretta" ? k + ">" + chiave(m.salvato) : k);
+    if (!gruppi.has(id)) gruppi.set(id, { id: id, k: k, tipo: tipo, testo: testo, nome: m.salvato, rich: [], mag: true });
+    gruppi.get(id).rich.push(m);
+  });
   /* prima i più recenti */
   return Array.from(gruppi.values()).sort(function(a, b){
     return Math.max.apply(null, b.rich.map(function(r){ return r.creato; })) - Math.max.apply(null, a.rich.map(function(r){ return r.creato; }));
@@ -4242,7 +4300,7 @@ function contaDatabase(){
   return c;
 }
 const SCHEDE_DB = [
-  ["ordini", "Ordini", "richieste", "I nomi delle cose chieste dai negozi"],
+  ["ordini", "Ordini", "richieste", "I nomi delle cose chieste dai negozi e di quelle segnate che mancano in magazzino"],
   ["prenotazioni", "Prenotazioni", "prenotazioni", "I prodotti delle prenotazioni dei clienti"],
   ["biscotti", "Biscotti", "biscotti", "I biscotti che si possono chiedere"]];
 /* i due elenchi di prodotti, per cambiarli allo stesso modo */
@@ -4330,9 +4388,11 @@ function renderDbOrdini(){
   const gruppi = gruppiCorrezioni();
   S.corrGruppi = new Map(gruppi.map(function(g){ return [g.id, g]; }));
   const off = S.pending.has("prodotti-richieste");
-  $("db-spiega").textContent = "Le richieste dei negozi degli ultimi " + secondi("controllo") + ". Qui vedi cosa ha scritto la persona e cosa ha messo l'app. Se l'app ha sbagliato, scrivi il nome giusto: si correggono tutte le richieste scritte così e la volta dopo l'app lo sa. Se un ordine non c'entra niente, eliminalo.";
-  riempi($("db-lista"), gruppi.map(function(g){
-    const posti = Array.from(new Set(g.rich.map(function(r){ return r.per; }))).join(", ");
+  $("db-spiega").textContent = "Le richieste dei negozi degli ultimi " + secondi("controllo") + ". Qui vedi cosa ha scritto la persona e cosa ha messo l'app. Se l'app ha sbagliato, scrivi il nome giusto: si correggono tutte le richieste scritte così e la volta dopo l'app lo sa. Se un ordine non c'entra niente, eliminalo. Più sotto, a parte, le cose segnate con «+ Segna cosa manca».";
+  function voce(g){
+    const posti = g.mag
+      ? Array.from(new Set(g.rich.map(function(m){ return m.mio ? "te" : (S.nomi[m.autore] || "…"); }))).join(", ")
+      : Array.from(new Set(g.rich.map(function(r){ return r.per; }))).join(", ");
     const ultima = Math.max.apply(null, g.rich.map(function(r){ return r.creato; }));
     const parti = [rigaDb("Scritto", el("strong", {text:"«" + g.testo + "»"}))];
     if (g.tipo === "corretta"){
@@ -4341,7 +4401,10 @@ function renderDbOrdini(){
     } else {
       parti.push(el("p", {class:"domanda-db", text:"L'app non conosce questo prodotto. È nuovo o è scritto male?"}));
     }
-    parti.push(el("p", {class:"hint", text:(g.rich.length === 1 ? "1 richiesta" : g.rich.length + " richieste") + " · " + posti + " · " + quando(ultima)}));
+    parti.push(el("p", {class:"hint", text: g.mag
+      ? (g.rich.length === 1 ? "Segnata 1 volta" : "Segnata " + g.rich.length + " volte") + " da " + posti + " · " + quando(ultima) +
+        (g.rich.some(function(m){ return !m.arrivatoAlle; }) ? " · manca ancora" : " · già arrivata")
+      : (g.rich.length === 1 ? "1 richiesta" : g.rich.length + " richieste") + " · " + posti + " · " + quando(ultima)}));
     let azioni;
     if (S.corrApri === g.id){
       azioni = el("div", {class:"db-nome-giusto"}, campoNomeGiusto("corr-testo", "ordini", "corr-salva"),
@@ -4359,9 +4422,19 @@ function renderDbOrdini(){
     }
     parti.push(azioni);
     parti.push(el("div", {class:"row"}, el("button", {type:"button", class:"link pericolo", "data-corr-elimina":g.id, disabled:g.rich.some(function(r){ return S.pending.has(r.id); }),
-      "aria-label":"Elimina l'ordine: " + g.testo, text: g.rich.length === 1 ? "Elimina questo ordine" : "Elimina questi " + g.rich.length + " ordini"})));
+      "aria-label":(g.mag ? "Elimina: " : "Elimina l'ordine: ") + g.testo,
+      text: g.mag ? (g.rich.length === 1 ? "Elimina, è stato uno sbaglio" : "Elimina tutte e " + g.rich.length + ", è stato uno sbaglio")
+        : (g.rich.length === 1 ? "Elimina questo ordine" : "Elimina questi " + g.rich.length + " ordini")})));
     return el("div", {class:"card pren-dc-voce db-voce"}, ...parti);
-  }));
+  }
+  const ordini = gruppi.filter(function(g){ return !g.mag; }), mag = gruppi.filter(function(g){ return g.mag; });
+  const lista = ordini.map(voce);
+  if (mag.length) lista.push(
+    el("div", {class:"db-sotto-parte"},
+      el("h3", {text:"Segnate con «+ Segna cosa manca» (" + mag.length + ")"}),
+      el("p", {class:"hint", text:"Le cose che chi fa il giro o un titolare ha segnato come finite in magazzino. Controlla il nome: se è giusto, quando un negozio chiede la stessa cosa l'app sa già che non c'è, e con «È arrivato» arrivano insieme. Esempio: «acqua nat» segnata in magazzino va corretta in «Acqua naturale grande», così si collega all'acqua chiesta dal Corso."})),
+    ...mag.map(voce));
+  riempi($("db-lista"), lista);
   $("db-vuoto").hidden = gruppi.length > 0;
   $("db-vuoto").textContent = S.pronto ? "Niente da controllare: tutti i nomi degli ordini sono a posto." : "Carico le richieste…";
   $("db-elenco-titolo").textContent = "Tutti i prodotti degli ordini";
@@ -4537,10 +4610,12 @@ async function corrSalva(id){
 /* un ordine che non c'entra niente: si elimina (si può ritrovare in Cronologia) */
 async function corrElimina(id){
   const g = S.corrGruppi.get(id); if (!g) return;
-  const rich = g.rich.filter(function(r){ return puoTogliere(r) && !S.pending.has(r.id); });
+  const rich = g.rich.filter(function(r){ return (g.mag ? puoDatabase() : puoTogliere(r)) && !S.pending.has(r.id); });
   if (!rich.length) return;
   const posti = Array.from(new Set(rich.map(function(r){ return r.per; }))).join(", ");
-  const si = await chiedi(rich.length === 1 ? "Eliminare questo ordine?" : "Eliminare questi " + rich.length + " ordini?",
+  const si = g.mag
+    ? await chiedi("Eliminare «" + g.testo + "»?", "Era segnata con «+ Segna cosa manca». Sparisce dalla sezione «Non in magazzino» e dalle statistiche. Usalo solo se è stato uno sbaglio: se la cosa è arrivata, premi «È arrivato».", "Sì, elimina", "No")
+    : await chiedi(rich.length === 1 ? "Eliminare questo ordine?" : "Eliminare questi " + rich.length + " ordini?",
     "«" + g.testo + "» (" + posti + "). Sparisce dalle richieste e dal giro. Se è stato uno sbaglio, lo ritrovi in Cronologia.", "Sì, elimina", "No");
   if (!si) return;
   rich.forEach(function(r){ S.pending.add(r.id); });
@@ -4551,7 +4626,7 @@ async function corrElimina(id){
     if (!ok) tutti = false;
     S.pending.delete(r.id);
   }
-  if (tutti){ avviso(rich.length === 1 ? "Ordine eliminato." : rich.length + " ordini eliminati."); registra("ordine eliminato dal database", { quante: rich.length }); }
+  if (tutti){ avviso(g.mag ? "Eliminata: «" + g.testo + "»." : rich.length === 1 ? "Ordine eliminato." : rich.length + " ordini eliminati."); registra(g.mag ? "cosa segnata eliminata dal database" : "ordine eliminato dal database", { quante: rich.length }); }
   renderTutto();
 }
 /* ---------- cambiare l'elenco dei prodotti (ordini o prenotazioni) ---------- */
@@ -5404,11 +5479,20 @@ function renderStatistiche(){
 
   const prod = perProdotto(rr);
   const volte = function(n){ return n === 1 ? "1 volta" : n + " volte"; };
-  const manc = prod.filter(function(g){ return g.mancato || g.finito || g.parte; }).sort(function(a, b){ return (b.mancato + b.finito + b.parte) - (a.mancato + a.finito + a.parte); }).slice(0, 10);
-  carte.push(cartaStat("Cosa manca più spesso", "Quante volte una cosa chiesta non c'era in magazzino, era finita al panificio o è stata portata solo in parte. Aiuta a riordinare prima.",
+  /* anche le cose segnate con «+ Segna cosa manca», con lo stesso nome giusto delle richieste */
+  const perNome = new Map(prod.map(function(g){ return [chiave(g.nome), g]; }));
+  const soloSegnate = [];
+  magS.forEach(function(m){
+    const k = chiave(m.articolo); if (!k) return;
+    if (!perNome.has(k)){ const g = { n: 0, nomi: {}, per: {}, mancato: 0, finito: 0, parte: 0, nome: maiuscola(m.articolo) }; perNome.set(k, g); soloSegnate.push(g); }
+    const g = perNome.get(k); g.segnato = (g.segnato || 0) + 1;
+  });
+  const tot = function(g){ return g.mancato + g.finito + g.parte + (g.segnato || 0); };
+  const manc = prod.concat(soloSegnate).filter(function(g){ return tot(g) > 0; }).sort(function(a, b){ return tot(b) - tot(a); }).slice(0, 10);
+  carte.push(cartaStat("Cosa manca più spesso", "Quante volte una cosa chiesta non c'era in magazzino, era finita al panificio o è stata portata solo in parte, più le volte che è stata segnata con «+ Segna cosa manca». Aiuta a riordinare prima.",
     manc.length ? barre(manc.map(function(g){
-      const sotto = [g.mancato ? volte(g.mancato) + " non c'era in magazzino" : "", g.finito ? volte(g.finito) + " finito scorte" : "", g.parte ? volte(g.parte) + " portato solo in parte" : ""].filter(Boolean).join(" · ");
-      return { nome: g.nome, n: g.mancato + g.finito + g.parte, sotto: sotto };
+      const sotto = [g.mancato ? volte(g.mancato) + " non c'era in magazzino" : "", g.segnato ? volte(g.segnato) + " segnato con «+ Segna cosa manca»" : "", g.finito ? volte(g.finito) + " finito scorte" : "", g.parte ? volte(g.parte) + " portato solo in parte" : ""].filter(Boolean).join(" · ");
+      return { nome: g.nome, n: tot(g), sotto: sotto };
     })) : el("p", {class:"vuoto", text:"Niente è mancato in questo periodo."})));
 
   /* quanto resta mancante una cosa prima di arrivare in magazzino */
@@ -5740,7 +5824,9 @@ function collega(){
     if (b.dataset.prenStato) return statoPren(b.dataset.id, b.dataset.prenStato);
     if (b.id === "pren-tutto-giorno"){ const f = S.formPren; f.tuttoGiorno = !f.tuttoGiorno; if (f.tuttoGiorno) $("pren-ora").value = ""; return renderFormPren(); }
     if (b.id === "mag-segna"){ S.magForm.aperto = true; renderMancanti(); $("mag-nuovo").focus(); return; }
-    if (b.id === "mag-annulla"){ S.magForm.aperto = false; $("mag-nuovo").value = ""; return renderMancanti(); }
+    if (b.id === "mag-annulla"){ S.magForm.aperto = false; S.magForm.ctrl = null; $("mag-nuovo").value = ""; return renderMancanti(); }
+    if (b.dataset.magScelta && S.magForm.ctrl && S.magForm.ctrl.scelte) return salvaMag({ nome: S.magForm.ctrl.scelte[Number(b.dataset.magScelta)] });
+    if (b.dataset.magCosi) return salvaMag({ nome: "" , cosi: true });
     if (b.dataset.magArrivato) return magArrivato(b.dataset.magArrivato);
     if (b.dataset.prenDisdici) return apriDisdici(b.dataset.prenDisdici);
     if (b.dataset.prenRipristina) return ripristinaPren(b.dataset.prenRipristina);
@@ -5824,7 +5910,11 @@ function collega(){
   /* scrivendo un'ora precisa si toglie «Tutta la giornata» */
   ["input","change"].forEach(function(t){ $("pren-ora").addEventListener(t, function(){ if (this.value && S.formPren.tuttoGiorno){ S.formPren.tuttoGiorno = false; renderFormPren(); } }); });
   $("mag-form").addEventListener("submit", function(ev){ ev.preventDefault(); salvaMag(); });
-  $("mag-nuovo").addEventListener("input", function(){ $("mag-salva").disabled = S.magForm.inviando || !this.value.trim(); });
+  $("mag-nuovo").addEventListener("input", function(){
+    /* il nome è cambiato: il controllo si rifà con «Salva» */
+    if (S.magForm.ctrl){ S.magForm.ctrl = null; renderMagCtrl(); }
+    $("mag-salva").disabled = S.magForm.inviando || !this.value.trim();
+  });
   $("pren-righe").addEventListener("input", function(){ $("pren-salva").disabled = S.formPren.inviando || !righeDi("pren-righe").length; });
   $("pren-pagina-data").addEventListener("change", function(){ if (/^\d{4}-\d{2}-\d{2}$/.test(this.value)) vaiGiornoPren(this.value); });
   /* cambiare il negozio del ritiro: prima si chiede */
@@ -6209,7 +6299,7 @@ const VAPID_PUBLICA = "BC9TAKzQiQ-x3xtX0KWauGtV-uvIk9VFwqLjWAOzrJbe4e5w2AWyXMIej
    quale schermata, quanto tempo, errori, rete e tipo di telefono. Le persone non hanno nome ("Persona 1"…):
    lo decide il database (funzione "registra", supabase/aggiornamento-4-registro.sql). */
 const REGISTRO_ATTIVO = false;
-const VERSIONE_APP = "c6eb47f4";
+const VERSIONE_APP = "b40577fe";
 S.reg = [];
 S.ultimoTasto = { nome: "", alle: 0 };
 S.tocchi = { nome: "", volte: 0, alle: 0, segnato: false };
