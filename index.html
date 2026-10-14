@@ -46,6 +46,7 @@
   --nuova:#0B5A8C; --nuova-bg:#DDEFFC; --nuova-bordo:#3C8DD0;
   --pronto:#0B5563; --pronto-bg:#DDF1F4; --pronto-solid:#0B7285; --pronto-solid-ink:#FFFFFF;
   --arrivo-bg:#DDF2E1; --arrivo-txt:#1B6A33;
+  --carico:#1F5FA8; --carico-ink:#FFFFFF; --giro:#3B7D23; --giro-ink:#FFFFFF;
   --corso:#7A4A24; --corso-ink:#FFFFFF; --corso-bg:#F3E8DD; --corso-txt:#7A4A24;
   --nenni:#1E5B36; --nenni-ink:#FFFFFF; --nenni-bg:#E1EFE5; --nenni-txt:#1E5B36;
   --panif:#E5B20A; --panif-ink:#2A2922; --panif-bg:#FBF1CF; --panif-txt:#7F6000;
@@ -64,6 +65,7 @@
     --prep:#C3AEEA; --prep-bg:#2A2140; --altrog:#6C4FB0; --altrog-ink:#FFFFFF; --altrog-bg:#2A2140; --giorno-bg:#4A2D0E; --giorno-bordo:#F0A04B; --giorno-ink:#FFD6A6;
     --ferma:#F5BC6A; --ferma-bg:#3A2A12; --ferma-bordo:#D99A3D; --nuova:#8CC8F5; --nuova-bg:#123248; --nuova-bordo:#4D9BD6; --pronto:#7DD3DF; --pronto-bg:#12343A; --pronto-solid:#5CC4D2; --pronto-solid-ink:#062328;
     --arrivo-bg:#163322; --arrivo-txt:#86D69C;
+    --carico:#7EB2EE; --carico-ink:#0B1626; --giro:#9AD27A; --giro-ink:#10200A;
     --corso:#C9925F; --corso-ink:#1F1206; --corso-bg:#33241A; --corso-txt:#D9A574;
     --nenni:#5DB884; --nenni-ink:#06200F; --nenni-bg:#15301F; --nenni-txt:#6FC995;
     --panif:#F2C640; --panif-ink:#241B00; --panif-bg:#362C0D; --panif-txt:#F2C640;
@@ -79,6 +81,7 @@
   --prep:#C3AEEA; --prep-bg:#2A2140; --altrog:#6C4FB0; --altrog-ink:#FFFFFF; --altrog-bg:#2A2140; --giorno-bg:#4A2D0E; --giorno-bordo:#F0A04B; --giorno-ink:#FFD6A6;
   --ferma:#F5BC6A; --ferma-bg:#3A2A12; --ferma-bordo:#D99A3D; --nuova:#8CC8F5; --nuova-bg:#123248; --nuova-bordo:#4D9BD6; --pronto:#7DD3DF; --pronto-bg:#12343A; --pronto-solid:#5CC4D2; --pronto-solid-ink:#062328;
   --arrivo-bg:#163322; --arrivo-txt:#86D69C;
+  --carico:#7EB2EE; --carico-ink:#0B1626; --giro:#9AD27A; --giro-ink:#10200A;
   --corso:#C9925F; --corso-ink:#1F1206; --corso-bg:#33241A; --corso-txt:#D9A574;
   --nenni:#5DB884; --nenni-ink:#06200F; --nenni-bg:#15301F; --nenni-txt:#6FC995;
   --panif:#F2C640; --panif-ink:#241B00; --panif-bg:#362C0D; --panif-txt:#F2C640;
@@ -529,6 +532,26 @@ details.crono > summary{list-style:none;display:inline-flex;gap:8px;min-height:4
 details.crono > summary::-webkit-details-marker{display:none}
 details.crono > summary svg{flex:none;color:var(--muted)}
 details.crono[open] > summary{background:var(--surface-2);border-color:var(--surface-2)}
+/* «Consegnato oggi» e «Cronologia»: due tasti uno accanto all'altro, si apre uno alla volta in un riquadro */
+.tasti-riga{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;max-width:520px}
+.due-tasti{display:flex;flex-direction:column;gap:8px}
+.due-tasti:not(:has(.tasto-riq:not([hidden]))){display:none}
+.tasto-riq{appearance:none;display:flex;align-items:center;gap:8px;min-height:48px;padding:6px 12px;border:1.5px solid var(--line);border-radius:14px;text-align:left;line-height:1.25;background:var(--surface);color:var(--ink);font:inherit;font-size:14.5px;font-weight:700;cursor:pointer}
+.tasto-riq svg{flex:none;color:var(--muted)}
+.tasto-riq .crono-n{white-space:nowrap}
+.tasto-riq[aria-expanded="true"]{background:var(--surface-2);border-color:var(--ink)}
+.riquadro{display:flex;flex-direction:column;gap:10px;padding:12px;border:1.5px solid var(--ink);border-radius:var(--r-lg);background:var(--surface-2)}
+/* titolari: «Codici per registrarsi» e «Link per il personale» in fondo, piccoli e grigi */
+.tasti-discreti{display:flex;flex-direction:column;gap:4px;padding-top:8px;border-top:1px solid var(--line)}
+.tasti-discreti:not(:has(> details:not([hidden]))){display:none}
+details.card.discreto:not([open]){background:none;border:0;padding:0}
+details.card.discreto:not([open]) > summary{font-size:13px;font-weight:400;color:var(--muted);min-height:36px}
+/* Consegne: «Carico per reparto» blu, «Giro per negozio» verde; fermi in alto, sotto la striscia rossa
+   (--alto-modo la misura lo script), con una fascia sottile del colore scelto */
+.modo-barra{position:sticky;top:var(--alto-modo,calc(env(safe-area-inset-top,0px) + 6px));z-index:4;background:var(--bg);box-shadow:0 0 0 6px var(--bg);padding-bottom:6px;border-bottom:4px solid var(--modo-c,var(--carico))}
+.modo-barra[data-modo-scelto="carico"]{--modo-c:var(--carico);--modo-ink:var(--carico-ink)}
+.modo-barra[data-modo-scelto="consegna"]{--modo-c:var(--giro);--modo-ink:var(--giro-ink)}
+.modo-barra .switch button[aria-selected="true"]{background:var(--modo-c);color:var(--modo-ink)}
 .crono-n{font-variant-numeric:tabular-nums;color:var(--muted)}
 .crono-n:empty{display:none}
 .riga.tolta .articolo{color:var(--muted)}
@@ -812,23 +835,28 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
       <h2 id="titolo-arrivo">In arrivo al Corso</h2>
       <ul class="lista" id="lista-arrivo"></ul>
       <p class="vuoto" id="vuoto-arrivo">Carico le richieste…</p>
-      <details id="det-cons-negozio" hidden>
-        <summary>Consegnato oggi (<span id="n-cons-negozio">0</span>)</summary>
-        <ul class="lista" id="lista-cons-negozio"></ul>
-      </details>
       <div class="blocco" id="blocco-programmate" hidden>
         <p class="label-sm">Prossimi giorni <span class="tag">prova, solo titolari</span></p>
         <p class="hint">Richieste per un giorno preciso. Gli altri le vedono dal giorno prima.</p>
         <ul class="lista" id="lista-programmate"></ul>
       </div>
-      <details class="crono" id="crono-negozio" hidden>
-        <summary><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 4v4h4"></path><path d="M12 8v4l3 2"></path></svg>Cronologia: cose tolte <span class="crono-n" id="n-crono-negozio"></span></summary>
-        <div class="blocco">
+<!-- «Consegnato oggi» e «Cronologia»: due tasti, se ne apre uno alla volta in un riquadro -->
+      <div class="due-tasti">
+        <div class="tasti-riga">
+          <button type="button" class="tasto-riq" id="det-cons-negozio" aria-expanded="false" aria-controls="riq-det-cons-negozio" hidden><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>Consegnato oggi <span class="crono-n">(<span id="n-cons-negozio">0</span>)</span></button>
+          <button type="button" class="tasto-riq" id="crono-negozio" aria-expanded="false" aria-controls="riq-crono-negozio" hidden><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 4v4h4"></path><path d="M12 8v4l3 2"></path></svg>Cronologia: cose tolte <span class="crono-n" id="n-crono-negozio"></span></button>
+        </div>
+        <div class="riquadro" id="riq-det-cons-negozio" hidden>
+          <p class="label-sm">Consegnato oggi</p>
+          <ul class="lista" id="lista-cons-negozio"></ul>
+        </div>
+        <div class="riquadro" id="riq-crono-negozio" hidden>
+          <p class="label-sm">Cronologia: cose tolte</p>
           <p class="hint">Quello che è stato tolto negli ultimi <span class="giorni-crono">7 giorni</span>. Recupera lo rimette in lista; può farlo solo chi l'aveva chiesto.</p>
           <ul class="lista" id="lista-crono-negozio"></ul>
           <p class="vuoto" id="vuoto-crono-negozio">Niente tolto negli ultimi <span class="giorni-crono">7 giorni</span>.</p>
         </div>
-      </details>
+      </div>
     </div>
     </div>
 
@@ -1042,9 +1070,12 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
       </form>
     </details>
 
-    <div class="switch sotto" role="tablist" aria-label="Organizza le richieste">
-      <button type="button" role="tab" id="modo-carico" aria-selected="true" data-modo="carico">Carico per reparto</button>
-      <button type="button" role="tab" id="modo-consegna" aria-selected="false" data-modo="consegna">Giro per negozio</button>
+    <!-- «Carico per reparto» (blu) e «Giro per negozio» (verde): fermi in alto, con una fascia del colore scelto -->
+    <div class="modo-barra" id="modo-barra" data-modo-scelto="carico">
+      <div class="switch sotto" role="tablist" aria-label="Organizza le richieste">
+        <button type="button" role="tab" id="modo-carico" aria-selected="true" data-modo="carico">Carico per reparto</button>
+        <button type="button" role="tab" id="modo-consegna" aria-selected="false" data-modo="consegna">Giro per negozio</button>
+      </div>
     </div>
     <p class="hint" id="hint-modo"></p>
     <div class="blocco" id="gruppi"></div>
@@ -1053,26 +1084,32 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
       <button type="button" class="mini" data-modo="consegna">Vai al giro</button>
     </div>
     <p class="vuoto" id="vuoto-consegne">Carico le richieste…</p>
-    <details id="det-cons" hidden>
-      <summary>Consegnato oggi (<span id="n-cons">0</span>)</summary>
-      <ul class="lista" id="lista-cons"></ul>
-    </details>
-    <details class="crono" id="crono-giro" hidden>
-      <summary><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 4v4h4"></path><path d="M12 8v4l3 2"></path></svg>Cronologia: cose tolte <span class="crono-n" id="n-crono-giro"></span></summary>
-      <div class="blocco">
+    <!-- «Consegnato oggi» e «Cronologia»: due tasti, se ne apre uno alla volta in un riquadro -->
+    <div class="due-tasti">
+      <div class="tasti-riga">
+        <button type="button" class="tasto-riq" id="det-cons" aria-expanded="false" aria-controls="riq-det-cons" hidden><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>Consegnato oggi <span class="crono-n">(<span id="n-cons">0</span>)</span></button>
+        <button type="button" class="tasto-riq" id="crono-giro" aria-expanded="false" aria-controls="riq-crono-giro" hidden><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 4v4h4"></path><path d="M12 8v4l3 2"></path></svg>Cronologia: cose tolte <span class="crono-n" id="n-crono-giro"></span></button>
+      </div>
+      <div class="riquadro" id="riq-det-cons" hidden>
+        <p class="label-sm">Consegnato oggi</p>
+        <ul class="lista" id="lista-cons"></ul>
+      </div>
+      <div class="riquadro" id="riq-crono-giro" hidden>
+        <p class="label-sm">Cronologia: cose tolte</p>
         <p class="hint">Quello che hai tolto tu negli ultimi <span class="giorni-crono">7 giorni</span>. Recupera lo rimette in lista.</p>
         <ul class="lista" id="lista-crono-giro"></ul>
         <p class="vuoto" id="vuoto-crono-giro">Niente tolto negli ultimi <span class="giorni-crono">7 giorni</span>.</p>
       </div>
-    </details>
+    </div>
     <div class="esempi" id="esempi-box" hidden>
       <p>Le righe segnate "esempio" vengono dai vostri gruppi WhatsApp.</p>
       <button type="button" class="mini" id="rimuovi-esempi">Rimuovi esempi</button>
     </div>
   </section>
 
-  <!-- Sito: solo il titolare vede i codici per registrarsi -->
-  <details class="card" id="codici-box" hidden>
+  <!-- Solo titolari, in fondo e poco in vista: codici per registrarsi e link per il personale -->
+  <div class="tasti-discreti">
+  <details class="card discreto" id="codici-box" hidden>
     <summary>Codici per registrarsi</summary>
     <div class="blocco">
       <p class="hint">Dai a ogni dipendente il codice del suo posto di lavoro: lo scrive una sola volta, la prima volta che entra, e da lì vede solo la sua parte.</p>
@@ -1083,7 +1120,7 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
 
 
   <!-- Solo per il titolare: i link per ognuno -->
-  <details class="card" id="link-personale" hidden>
+  <details class="card discreto" id="link-personale" hidden>
     <summary>Link per il personale</summary>
     <div class="blocco">
       <p class="hint">Ognuno apre il link di questa pagina con un'aggiunta alla fine, così vede solo la sua parte. Tocca "Prova" per vedere com'è.</p>
@@ -1096,6 +1133,7 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
       <p class="hint" id="link-nota">È una separazione comoda, non una protezione: chi ha il link senza aggiunta vede tutto.</p>
     </div>
   </details>
+  </div>
 
 
   <p class="chi-sei" id="chi-sei" hidden><span id="chi-sei-testo"></span><button type="button" class="link" id="esci">Esci</button></p>
@@ -2701,6 +2739,21 @@ function renderCrono(dove, lista, conDest){
   $("n-crono-" + dove).textContent = l.length ? "(" + l.length + ")" : "";
   riempi($("lista-crono-" + dove), l.map(function(r){ return rigaTolta(r, conDest); }));
   $("vuoto-crono-" + dove).hidden = l.length > 0;
+  sistemaRiquadri();
+}
+/* «Consegnato oggi» e «Cronologia»: se ne apre uno alla volta; aprendo uno l'altro si chiude */
+function apriRiquadro(b, apri){
+  b.closest(".due-tasti").querySelectorAll(".tasto-riq").forEach(function(x){
+    const on = x === b && apri;
+    x.setAttribute("aria-expanded", String(on));
+    $(x.getAttribute("aria-controls")).hidden = !on;
+  });
+}
+/* un tasto sparito (niente consegnato oggi, niente tolto) non lascia aperto il suo riquadro */
+function sistemaRiquadri(){
+  document.querySelectorAll(".tasto-riq").forEach(function(x){
+    if (x.hidden && x.getAttribute("aria-expanded") === "true") apriRiquadro(x, false);
+  });
 }
 /* "Chiesti spesso": solo quello che il negozio ha chiesto nell'app negli ultimi num("chiestiGiorni") giorni (Impostazioni) (la lista presa dai gruppi non si usa più).
    Solo nomi giusti dell'elenco dei prodotti (con le correzioni del «Database»): un nome sconosciuto o scritto male non esce.
@@ -3345,7 +3398,8 @@ function capitoliManuale(){
       "Nella tua lista segui a che punto è: ", pill("p-attesa", "In attesa"), " ", pill("p-prep", "In preparazione"), " ", pill("p-pronto", "Pronto da caricare"), ", poi «In viaggio» e «Consegnato»."], disegnoStati()],
     ["Perché una richiesta è arancione («Ferma da…»)?", ["Vuol dire che aspetta da più di " + secondi("ferma") + " senza che nessuno l'abbia preparata o caricata, oppure che almeno " + num("scavalcate") + " cose chieste dopo sono già arrivate e lei no. Serve a non dimenticarla: se è importante, avvisa chi fa il giro."], disegnoFerma()],
     ["Come tolgo una richiesta sbagliata?", ["Tocca ", tasto("Togli"), " e poi, entro " + secondi("conferma") + ", ", tasto("Conferma"), ". Di solito ognuno toglie solo le sue (il titolare può dare a una persona anche il permesso di togliere quelle dei colleghi). Una cosa segnata «non c'è in magazzino» la toglie solo il titolare.", el("br"),
-      "Se hai sbagliato a togliere: in fondo alla pagina, in «Cronologia: cose tolte», restano per " + secondi("crono") + " e c'è ", tasto("Recupera"), "."]],
+      "Se hai sbagliato a togliere: in fondo alla pagina tocca ", tasto("Cronologia: cose tolte"), ". Le cose tolte restano lì per " + secondi("crono") + " e c'è ", tasto("Recupera"), "."]],
+    ["Dove vedo quello che è arrivato oggi?", ["In fondo alla pagina tocca ", tasto("Consegnato oggi"), ": si apre un riquadro con tutto quello che vi hanno portato oggi. Accanto c'è ", tasto("Cronologia: cose tolte"), ". Si apre uno alla volta: aprendo uno, l'altro si chiude. Per chiuderlo tocca di nuovo il tasto; si chiude anche da solo quando torni in cima alla pagina."]],
     ["E se chiedo una cosa che già non c'è in magazzino?", ["L'app lo sa: la richiesta parte già segnata «non c'è» e resta barrata nella tua lista finché non arriva. Quando arriva vedi «Arrivata in magazzino» e poi viene caricata come le altre."]],
     ["Cosa vuol dire «Da comprare»?", ["È una cosa che non c'è e va comprata. La vedono i titolari e chi fa il giro, in «Non in magazzino». Quando arriva, va nelle consegne e ve la portano."]],
     ["Cosa succede se arriva solo una parte?", ["Chi fa il giro carica quello che c'è e scrive cosa manca. La tua richiesta va «In viaggio» con la scritta «Solo una parte: mancano 2 casse». Nella tua lista compare anche una riga nuova con quello che manca, barrata perché non c'è in magazzino (e ti arriva la notifica). Quando arriva, te la portano come le altre."], disegnoParte()],
@@ -3359,7 +3413,8 @@ function capitoliManuale(){
     ["Posso chiedere anche io delle cose?", ["Sì, come i negozi: scrivi in «Cosa serve?» e invia. Vale tutto quello che c'è nel capitolo delle richieste."]]
   ]});
   if (haSezione("consegne")) cap.push({ titolo:"Giro consegne", domande:[
-    ["Come funziona il giro?", ["In alto scegli ", tasto("Carico per reparto"), " (le cose da caricare, divise per reparto) oppure ", tasto("Giro per negozio"), " (le cose caricate, divise per negozio)."]],
+    ["Come funziona il giro?", ["In alto scegli ", tasto("Carico per reparto"), " (le cose da caricare, divise per reparto) oppure ", tasto("Giro per negozio"), " (le cose caricate, divise per negozio). Quello scelto è colorato: blu per il carico, verde per il giro, con una riga dello stesso colore sotto. I due tasti restano fermi in alto anche quando scorri la lista, così passi dall'uno all'altro quando vuoi."]],
+    ["Dove vedo quello che ho consegnato oggi?", ["In fondo alla pagina tocca ", tasto("Consegnato oggi"), ": si apre un riquadro con l'elenco. Accanto c'è ", tasto("Cronologia: cose tolte"), " (le cose tolte, da recuperare se è stato uno sbaglio). Si apre uno alla volta; si chiude toccando di nuovo il tasto o da solo quando torni in cima."]],
     ["Come segno quello che carico e consegno?", ["Tocca ", tasto("Caricato"), " quando la cosa è sul furgone: il negozio la vede «In viaggio». Al negozio tocca ", tasto("Consegnato"), ", oppure ", tasto("Tutto consegnato"), " per tutte le cose di quel negozio. «Annulla» rimette la cosa da caricare."]],
     ["E se ne ho solo una parte?", ["Tocca ", tasto("Solo una parte"), ", scrivi cosa manca ancora (per esempio «2 casse») e tocca ", tasto("Carica la parte"), ". La richiesta diventa caricata con la scritta «Solo una parte: mancano 2 casse». Quello che manca diventa una riga nuova per lo stesso negozio, segnata «non c'è»: va nella striscia rossa e, quando arriva, torna in cima alle consegne in verde."], disegnoParte()],
     ["E se una cosa non c'è in magazzino?", ["Tocca «Non c'è» e poi «Conferma». La cosa esce dalla tua lista e va nella striscia rossa in alto, che vedono tutti. Il negozio la vede barrata."]],
@@ -3430,6 +3485,7 @@ function capitoliManuale(){
     ["Un ordine non c'entra niente: come lo tolgo?", ["Nel «Database», parte Ordini, sotto l'ordine tocca «Elimina questo ordine» e conferma. Sparisce dalle richieste e dal giro. Se è stato uno sbaglio, lo ritrovi in Cronologia."]],
     ["Come cambio l'elenco dei prodotti?", ["Nel «Database», in fondo a Ordini o Prenotazioni, apri «Tutti i prodotti». In cima puoi aggiungere un prodotto. Accanto a ogni prodotto c'è «Modifica»: puoi cambiare il nome (se il nome nuovo c'è già, i due prodotti si uniscono), aggiungere un altro modo di scriverlo, togliere un modo di scriverlo o togliere il prodotto dall'elenco. Nei Biscotti, in cima puoi aggiungere un biscotto; con «Modifica» cambi il nome (vale anche per le comande già fatte; se il nome c'è già, i due diventano uno) o togli un biscotto aggiunto dai negozi. In fondo puoi rimettere quelli tolti."]],
     puoStat() ? ["Cosa trovo nelle «Statistiche»?", ["Quante richieste, cosa si chiede di più, cosa manca più spesso (anche le volte portate solo in parte e quelle segnate con «+ Segna cosa manca»), quanto si aspetta in magazzino prima che una cosa arrivi, quando si chiede, quanto ci mette ad arrivare al negozio, i biscotti, le prenotazioni e le disdette con il loro motivo. Scegli il periodo in alto. I tasti per scaricare danno un file che si apre con Excel."]] : null,
+    ["Dove sono i codici per registrarsi e i link per il personale?", ["In fondo alla pagina, sotto una riga sottile, scritti piccoli e in grigio: ", tasto("Codici per registrarsi"), " e ", tasto("Link per il personale"), ". Li vedono solo i titolari. Toccandoli si aprono come prima."]],
     ["Se qualcuno dimentica il PIN o se ne va?", ["In «Persone registrate» tocca il suo nome, poi in fondo apri «Togliere l'accesso» e conferma due volte: non può più entrare, le sue richieste restano. Se serve, si registra di nuovo con il codice del negozio."]]
   ]});
   return cap;
@@ -3448,8 +3504,8 @@ function renderManuale(){
 function domandePagina(sez){
   const tit = "Solo per i titolari";
   const regole = {
-    richieste: (S.punto === "Panificio" ? [["Panificio e magazzino"]] : [["Richieste del negozio"]]).concat([["Cose che non ci sono in magazzino", /striscia/i], ["In tutte le pagine"], ["Lavoro in più posti"]]),
-    giro: [["Giro consegne"], ["Cose che non ci sono in magazzino", /striscia|toglie/i], ["In tutte le pagine"]],
+    richieste: (S.punto === "Panificio" ? [["Panificio e magazzino"]] : [["Richieste del negozio"]]).concat([["Cose che non ci sono in magazzino", /striscia/i], ["In tutte le pagine"], ["Lavoro in più posti"], [tit, /codici/i]]),
+    giro: [["Giro consegne"], ["Cose che non ci sono in magazzino", /striscia|toglie/i], ["In tutte le pagine"], [tit, /codici/i]],
     prenotazioni: [["Prenotazioni"], [tit, /prodotto/i]],
     biscotti: [["Biscotti"]],
     mancanti: [["Cose che non ci sono in magazzino"]],
@@ -4008,6 +4064,7 @@ function renderConsegne(){
   document.querySelectorAll('[data-modo][role="tab"]').forEach(function(b){
     b.setAttribute("aria-selected", String(b.dataset.modo === S.modo));
   });
+  $("modo-barra").dataset.modoScelto = S.modo;
   $("hint-modo").textContent = S.modo === "carico"
     ? "In magazzino: prendi tutto reparto per reparto. Il colore dice a quale negozio va."
     : "Per strada: scarica negozio per negozio quello che hai caricato.";
@@ -5702,6 +5759,7 @@ function collega(){
       return mostraVista(b.dataset.view);
     }
     if (b.dataset.modo){ S.modo = b.dataset.modo; ricorda("modo", S.modo); return renderConsegne(); }
+    if (b.classList.contains("tasto-riq")) return apriRiquadro(b, b.getAttribute("aria-expanded") !== "true");
     if (b.dataset.prova){ S.anteprima = true; return vaiA(b.dataset.prova); }
     if (b.id === "esci-anteprima"){ S.anteprima = false; return vaiA(""); }
     if (b.id === "apri-menu") return apriMenu();
@@ -5942,11 +6000,29 @@ function collega(){
   $("mag-tutto").addEventListener("keydown", function(ev){ if (ev.key === "Escape") chiudiMagTutto(); });
   window.addEventListener("resize", controllaStriscia);
   /* altezza dei tasti «Negozio / Consegne», per mettere la striscia rossa subito sotto */
+  /* e dove si fermano «Carico per reparto / Giro per negozio»: subito sotto la striscia rossa (o sotto i tasti, o in cima) */
   try {
-    new ResizeObserver(function(){
-      const h = $("switch-viste").offsetHeight;
+    const misura = function(){
+      const h = $("switch-viste").offsetHeight, hs = $("strisce-mag").offsetHeight;
       if (h) document.documentElement.style.setProperty("--alto-switch", h + "px");
-    }).observe($("switch-viste"));
+      const sopra = hs ? (h ? h + 6 : 6) + hs + 6 : (h ? h + 6 : 6);
+      document.documentElement.style.setProperty("--alto-modo", "calc(env(safe-area-inset-top,0px) + " + sopra + "px)");
+    };
+    const ro = new ResizeObserver(misura);
+    ro.observe($("switch-viste")); ro.observe($("strisce-mag"));
+  } catch(e){}
+  /* il riquadro aperto si chiude da solo quando, tornando su, i due tasti escono dallo schermo dal basso */
+  try {
+    const io = new IntersectionObserver(function(voci){
+      voci.forEach(function(v){
+        const fondo = v.rootBounds ? v.rootBounds.bottom : window.innerHeight;
+        if (!v.isIntersecting && v.boundingClientRect.height && v.boundingClientRect.top >= fondo){
+          const b = v.target.querySelector('.tasto-riq[aria-expanded="true"]');
+          if (b) apriRiquadro(b, false);
+        }
+      });
+    });
+    document.querySelectorAll(".tasti-riga").forEach(function(r){ io.observe(r); });
   } catch(e){}
   $("disdici-altro").addEventListener("input", renderDisdici);
   $("pren-cerca-testo").addEventListener("input", function(){ S.prenCerca.testo = this.value; renderCerca(); });
@@ -6299,7 +6375,7 @@ const VAPID_PUBLICA = "BC9TAKzQiQ-x3xtX0KWauGtV-uvIk9VFwqLjWAOzrJbe4e5w2AWyXMIej
    quale schermata, quanto tempo, errori, rete e tipo di telefono. Le persone non hanno nome ("Persona 1"…):
    lo decide il database (funzione "registra", supabase/aggiornamento-4-registro.sql). */
 const REGISTRO_ATTIVO = false;
-const VERSIONE_APP = "b40577fe";
+const VERSIONE_APP = "bd83f24d";
 S.reg = [];
 S.ultimoTasto = { nome: "", alle: 0 };
 S.tocchi = { nome: "", volte: 0, alle: 0, segnato: false };
