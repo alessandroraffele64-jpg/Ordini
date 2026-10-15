@@ -764,7 +764,7 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
 
   <nav class="switch" id="switch-viste" role="tablist" aria-label="Vista">
     <button type="button" role="tab" id="tab-negozio" aria-controls="view-negozio" aria-selected="true" data-view="negozio">Negozio</button>
-    <button type="button" role="tab" id="tab-consegne" aria-controls="view-consegne" aria-selected="false" data-view="consegne">Consegne <span class="badge" id="badge" data-zero>0</span></button>
+    <button type="button" role="tab" id="tab-consegne" aria-controls="view-consegne" aria-selected="false" data-view="consegne"><span id="tab-consegne-nome">Consegne</span> <span class="badge" id="badge" data-zero>0</span></button>
   </nav>
 
   <p class="banner" id="banner" hidden></p>
@@ -3011,7 +3011,7 @@ function mostraSez(sez){
    { persone: { "<id della persona>": {
        mancanti: true, biscotti: false,            «Vedere» una sezione (true = data in più, false = tolta)
        richUrgente: false, disdire: true, …        le cose che può fare (come sopra)
-       luoghi: ["corso", "piazza-nenni"],          posti in più dove lavora (negozi e panificio)
+       luoghi: ["corso", "consegne"],              posti in più dove lavora (negozi, panificio, giro consegne)
        notifiche: { nuove: false, pronto: true }   notifiche tolte (false) o date in più (true)
    } } }
    Se una chiave non c'è, vale quella «di solito» (GRUPPI_PERMESSI e NOTIFICHE_PERMESSI qui sotto).
@@ -3072,12 +3072,16 @@ const GRUPPI_PERMESSI = [
     { id:"vedeChi", nome:"Vedere chi ha chiesto una cosa (tasto «Chi?»)" }
   ]}
 ];
-/* le notifiche: base = i posti dove di solito si possono ricevere (il titolare le può dare a chiunque) */
+/* le notifiche: base = i posti dove di solito si possono ricevere (il titolare le può dare a chiunque).
+   I titolari di solito le possono ricevere tutte (tranne nuovePanif, che per loro è già in «nuove»), e scelgono
+   quali, per sé e per gli altri titolari; titNome / titSpiega: come si chiamano per loro. */
 const NOTIFICHE_PERMESSI = [
-  { k:"nuove", nome:"Ogni nuova richiesta dei negozi", spiega:"A chi fa il giro le urgenti arrivano sempre.", base:["consegne"] },
-  { k:"nuovePanif", nome:"Nuove richieste da prendere al Panificio", base:["panificio"] },
-  { k:"altroNegozio", nome:"L'altro negozio chiede qualcosa a noi", spiega:"Per esempio il Corso chiede i vassoi da prendere a Piazza Nenni.", base:["negozio"] },
-  { k:"manca", nome:"Una nostra richiesta non c'è in magazzino", base:["negozio"] },
+  { k:"nuove", nome:"Ogni nuova richiesta dei negozi", spiega:"A chi fa il giro le urgenti arrivano sempre.", base:["consegne"],
+    titNome:"Nuove richieste dei negozi al magazzino", titSpiega:"Quelle tra un negozio e l'altro sono nella riga qui sotto." },
+  { k:"nuovePanif", nome:"Nuove richieste da prendere al Panificio", base:["panificio"], noTitolari:true },
+  { k:"altroNegozio", nome:"L'altro negozio chiede qualcosa a noi", spiega:"Per esempio il Corso chiede i vassoi da prendere a Piazza Nenni.", base:["negozio"],
+    titNome:"Un negozio chiede qualcosa all'altro", titSpiega:"Per esempio Piazza Nenni chiede i vassoi al Corso." },
+  { k:"manca", nome:"Una nostra richiesta non c'è in magazzino", base:["negozio"], titNome:"Una richiesta dei negozi non c'è in magazzino" },
   { k:"pronto", nome:"Pronto da caricare dal Panificio", base:["consegne"] },
   { k:"arrivata", nome:"Cose arrivate in magazzino, da portare", base:["consegne"] },
   { k:"magazzino", nome:"Cose segnate come finite in magazzino", base:[] },
@@ -3085,8 +3089,11 @@ const NOTIFICHE_PERMESSI = [
   { k:"disdette", nome:"Prenotazioni disdette", spiega:"Quando qualcun altro disdice. In un negozio o al Panificio: quelle che si ritirano lì.", base:["negozio", "panificio"] },
   { k:"biscotti", nome:"Comande di biscotti", base:["panificio"] }
 ];
-/* i posti dove lavora chi è di un negozio o del panificio */
+/* i posti dove si lavora (non il giro): chi ne ha più di uno sceglie dove è («Sei ancora al…?») */
 const LUOGHI_LAVORO = ["corso", "piazza-nenni", "panificio"];
+/* tutti i posti di «Dove lavora». Il giro consegne con un altro posto: tutto insieme, con i tasti in alto
+   («Panificio / Giro consegne»), senza domande, e le notifiche di tutti e due i posti. */
+const POSTI_LAVORO = ["corso", "piazza-nenni", "panificio", "consegne"];
 /* trova una riga: { g, vista: true } oppure { g, v } */
 function trovaPermesso(k){
   for (const g of GRUPPI_PERMESSI){
@@ -3141,7 +3148,7 @@ function permessiPuliti(d){
     const e = {};
     chiavi.forEach(function(k){ if (typeof p[id][k] === "boolean") e[k] = p[id][k]; });
     if (Array.isArray(p[id].luoghi)){
-      const l = LUOGHI_LAVORO.filter(function(x){ return p[id].luoghi.indexOf(x) >= 0; });
+      const l = POSTI_LAVORO.filter(function(x){ return p[id].luoghi.indexOf(x) >= 0; });
       if (l.length) e.luoghi = l;
     }
     if (p[id].notifiche && typeof p[id].notifiche === "object"){
@@ -3163,20 +3170,34 @@ function ruoloAdesso(){
 }
 /* l'id di chi sta usando l'app, se i permessi valgono per lui (non in prova, non in anteprima) */
 function idPermessi(){ return S.sito && S.mioId && !S.anteprima && S.ruoloFisso ? S.mioId : null; }
-/* i posti dove lavora una persona: il suo, più quelli dati dal titolare */
+/* i posti dove lavora una persona: il suo, più quelli dati dal titolare (anche il giro consegne).
+   Prima di «Dove lavora» il giro a un negozio si dava con «Vedere il giro consegne» (consegne: true): vale come il posto. */
 function luoghiPer(id, ruolo){
-  if (LUOGHI_LAVORO.indexOf(ruolo) < 0) return [ruolo];
+  if (POSTI_LAVORO.indexOf(ruolo) < 0) return [ruolo];
   const e = (S.permessi || {})[id];
   const extra = e && Array.isArray(e.luoghi) ? e.luoghi : [];
-  return LUOGHI_LAVORO.filter(function(l){ return l === ruolo || extra.indexOf(l) >= 0; });
+  return POSTI_LAVORO.filter(function(l){ return l === ruolo || extra.indexOf(l) >= 0 || (l === "consegne" && !!e && e.consegne === true); });
+}
+/* i posti dove sta adesso chi usa l'app: quello scelto e, se lavora anche al giro, il giro (tutto insieme) */
+function postiAttivi(){
+  const a = ruoloAdesso();
+  if (!idPermessi() || a === "consegne") return [a];
+  return mieiPosti().indexOf("consegne") >= 0 ? [a, "consegne"] : [a];
 }
 /* una notifica per una persona in quel posto: quella di solito, salvo quello che ha scelto il titolare */
 function notificaDiSolito(k, ruolo){
   const n = NOTIFICHE_PERMESSI.find(function(x){ return x.k === k; });
+  if (n && ruolo === "titolare") return !n.noTitolari;
   return !!n && n.base.indexOf(tipoPosto(ruolo)) >= 0;
 }
+/* le notifiche che si vedono per quel ruolo (ai titolari non «nuovePanif»), con il nome giusto per loro */
+function notifichePerRuolo(ruolo){
+  return NOTIFICHE_PERMESSI.filter(function(n){ return !(ruolo === "titolare" && n.noTitolari); }).map(function(n){
+    return ruolo === "titolare" ? Object.assign({}, n, { nome: n.titNome || n.nome, spiega: n.titSpiega || n.spiega }) : n;
+  });
+}
 function notificaPer(id, ruolo, k){
-  if (tipoPosto(ruolo) === "titolare") return false;
+  if (ruolo === "titolare" && k === "nuovePanif") return false;
   const e = id ? (S.permessi || {})[id] : null;
   if (e && e.notifiche && typeof e.notifiche[k] === "boolean") return e.notifiche[k];
   return notificaDiSolito(k, ruolo);
@@ -3193,17 +3214,18 @@ function contaEccezioni(id){
   }
   return n;
 }
-/* chi sta usando l'app vede questa sezione? ("richieste" = la pagina dei negozi e del panificio) */
+/* chi sta usando l'app vede questa sezione? ("richieste" = la pagina dei negozi e del panificio)
+   Chi lavora anche al giro (tutto insieme): vale se c'è in uno dei due posti, come nel database. */
 function haSezione(sez){
   if (!S.ruolo) return false;
   const r = ruoloAdesso();
   if (sez === "richieste") return r !== "consegne";
-  return permessoPer(idPermessi(), r, sez);
+  return postiAttivi().some(function(p){ return permessoPer(idPermessi(), p, sez); });
 }
 /* chi sta usando l'app può fare questa cosa? */
 function haAzione(k){
   if (!S.ruolo) return false;
-  return permessoPer(idPermessi(), ruoloAdesso(), k);
+  return postiAttivi().some(function(p){ return permessoPer(idPermessi(), p, k); });
 }
 /* i tasti «Negozio / Consegne»: i titolari, e un negozio a cui è stato dato il giro */
 function puoSwitch(){ return !!S.ruolo && (S.ruolo.tipo === "titolare" || (S.ruolo.tipo === "negozio" && haSezione("consegne"))); }
@@ -3214,23 +3236,33 @@ function puoPermessi(){ return puoPersone() && !!store && !S.sola; }
    che l'app è stata usata. Se la si riapre dopo num("chiediLuogo") ore, chiede se è ancora lì. */
 S.luogo = (function(){ try { return JSON.parse(localStorage.getItem("pdp-luogo") || "null") || {}; } catch(e){ return {}; } })();
 function salvaLuogo(){ try { localStorage.setItem("pdp-luogo", JSON.stringify(S.luogo)); } catch(e){} }
-function mieiLuoghi(){
+/* tutti i posti di chi usa l'app (anche il giro) */
+function mieiPosti(){
   if (!S.sito || !S.mioId || !S.ruoloFisso || S.anteprima) return [];
   return luoghiPer(S.mioId, S.ruoloFisso);
 }
+/* i posti tra cui si sceglie dove si è (il giro no: quello sta sempre insieme, con i tasti in alto) */
+function mieiLuoghi(){ return mieiPosti().filter(function(l){ return l !== "consegne"; }); }
 function piuLuoghi(){ return mieiLuoghi().length > 1; }
-/* il ruolo del posto dove si lavora adesso (per chi ne ha uno solo: il suo) */
+/* il ruolo del posto dove si lavora adesso (per chi ne ha uno solo: quello; chi fa solo il giro: consegne) */
 function luogoAttuale(){
   const l = mieiLuoghi();
-  if (l.length < 2) return S.ruoloFisso;
-  return S.luogo.id === S.mioId && l.indexOf(S.luogo.luogo) >= 0 ? S.luogo.luogo : S.ruoloFisso;
+  if (!l.length) return S.ruoloFisso;
+  if (l.length === 1) return l[0];
+  if (S.luogo.id === S.mioId && l.indexOf(S.luogo.luogo) >= 0) return S.luogo.luogo;
+  return l.indexOf(S.ruoloFisso) >= 0 ? S.ruoloFisso : l[0];
 }
 function nomeLuogo(l){ return (RUOLI[l] && RUOLI[l].punto) || NOMI_RUOLI[l] || l; }
 /* il posto è cambiato (o il titolare ha tolto quello scelto): si rifà la pagina */
 function controllaLuogo(){
   if (!S.ruoloFisso || !S.ruolo) return;
-  const r = RUOLI[luogoAttuale()];
-  if (r && r.punto && S.ruolo.punto !== r.punto) applicaRuolo();
+  const r = leggiRuolo();
+  if (r.tipo !== S.ruolo.tipo || r.punto !== S.ruolo.punto) applicaRuolo();
+  else {
+    /* il titolare ha dato o tolto il giro: compaiono o spariscono i tasti in alto */
+    if (S.vista === "consegne" && S.ruolo.tipo === "negozio" && !puoSwitch()) mostraVista("negozio");
+    renderMenu();
+  }
   if (inPersone()) renderPersone();
 }
 function chiediLuogoSeServe(){
@@ -3439,16 +3471,18 @@ function capitoliManuale(){
     return l.length ? l.join("; ") + "." : "nessuna.";
   };
   /* le notifiche che può ricevere chi legge (quelle del suo posto, più o meno quelle scelte dal titolare) */
-  const mieNotifiche = tit ? "" : NOTIFICHE_PERMESSI.filter(function(n){ return notificaPer(idPermessi(), ruoloAdesso(), n.k); }).map(function(n){ return minuscolaIniziale(n.nome); }).join("; ");
-  if (piuLuoghi()) cap.push({ titolo:"Lavoro in più posti", domande:[
-    ["Perché l'app mi chiede «Sei ancora al…?»", ["Il titolare ti ha dato più posti dove lavori. Quando apri l'app dopo " + testoNumero(NUMERI.find(function(n){ return n.k === "chiediLuogo"; }), num("chiediLuogo")) + " ti chiede se sei ancora lì: tocca ", tasto("Sì"), " oppure ", tasto("Cambia"), " e scegli dove sei."]],
-    ["Come cambio posto mentre lavoro?", ["In alto, sotto il nome del posto, tocca ", tasto("Cambia posto"), ". Vedi le richieste e ricevi le notifiche del posto dove sei."]]
+  const mieNotifiche = tit ? "" : NOTIFICHE_PERMESSI.filter(function(n){ return postiAttivi().some(function(l){ return notificaPer(idPermessi(), l, n.k); }); }).map(function(n){ return minuscolaIniziale(n.nome); }).join("; ");
+  const conGiro = mieiPosti().length > 1 && mieiPosti().indexOf("consegne") >= 0;
+  if (piuLuoghi() || conGiro) cap.push({ titolo:"Lavoro in più posti", domande:[
+    piuLuoghi() ? ["Perché l'app mi chiede «Sei ancora al…?»", ["Il titolare ti ha dato più posti dove lavori. Quando apri l'app dopo " + testoNumero(NUMERI.find(function(n){ return n.k === "chiediLuogo"; }), num("chiediLuogo")) + " ti chiede se sei ancora lì: tocca ", tasto("Sì"), " oppure ", tasto("Cambia"), " e scegli dove sei. Le notifiche del posto dove sei ti arrivano sempre, anche se non apri l'app."]] : null,
+    piuLuoghi() ? ["Come cambio posto mentre lavoro?", ["In alto, sotto il nome del posto, tocca ", tasto("Cambia posto"), ". Vedi le richieste e ricevi le notifiche del posto dove sei."]] : null,
+    conGiro ? ["Lavoro anche al giro: come passo da una pagina all'altra?", ["In alto ci sono due tasti, ", tasto(S.punto || "Negozio"), " e ", tasto("Giro consegne"), ": tocca quello che ti serve. L'app non ti chiede niente e ti arrivano le notifiche di tutti e due."]] : null
   ]});
   cap.push({ titolo:"Notifiche", domande:[
     ["Come accendo le notifiche?", ["Dal menu ☰ apri «Notifiche» e tocca ", tasto("Attiva le notifiche"), ": il telefono chiede il permesso. Sull'iPhone funzionano solo se apri l'app dall'icona sulla schermata Home."]],
     ["Quali notifiche ricevo?", tit ? ["Ognuno sceglie le sue nella sezione Notifiche.", el("br"),
       "• Corso e Piazza Nenni: " + diSolito("negozio"), el("br"), "• Panificio: " + diSolito("panificio"), el("br"), "• Giro: " + diSolito("consegne"), el("br"),
-      "• Titolari, con «Ricevi tutto»: " + minuscolaIniziale(SCELTA_TUTTO[2]), el("br"),
+      "• Titolari: tutte, una per una (anche «Un negozio chiede qualcosa all'altro», a parte dalle richieste al magazzino). Quelle che non ti interessano le togli in «Persone registrate» → ", tasto("Permessi di ogni persona"), " → il tuo nome, oppure le spegni sul tuo telefono nella sezione Notifiche.", el("br"),
       "Questo è come è di solito. Se a una persona hai dato o tolto una notifica nei suoi permessi, vale la tua scelta."]
       : [(mieNotifiche ? "Puoi ricevere: " + mieNotifiche + "." : "Il titolare non ti ha dato notifiche da ricevere.") + " Puoi spegnere quelle che non vuoi nella sezione Notifiche."]],
     ["Tocco una notifica: dove mi porta?", ["Apre l'app nella pagina giusta (per esempio le richieste o le prenotazioni)."]]
@@ -3462,7 +3496,9 @@ function capitoliManuale(){
   ]});
   if (tit) cap.push({ titolo:"Solo per i titolari", domande:[
     ["Come do un permesso in più (o in meno) a una persona?", ["Dal menu apri «Persone registrate» e tocca ", tasto("Permessi di ogni persona"), ", poi la persona. I permessi sono a gruppi (Richieste, Giro consegne, Prenotazioni, Biscotti, Non in magazzino…): in ogni gruppo prima «Vedere…» e sotto, una per riga, le cose che può fare. Tocca il tasto per scegliere ", tasto("Sì"), " o ", tasto("No"), ". Se è diverso da come è di solito per chi lavora nel suo posto, compare «Diverso dal solito» con sotto com'è di solito. Se «Vedere» è su No, le righe sotto sono grigie («Serve prima…»). Le righe con scritto «Sempre» non si tolgono. ", tasto("Rimetti tutto come di solito"), " toglie tutti i cambiamenti. Le sezioni dei titolari non si danno agli altri."]],
-    ["Una persona lavora in più posti: come faccio?", ["Nei suoi permessi, in «Dove lavora», tocca ", tasto("Sì"), " accanto agli altri posti. Quando apre l'app sceglie dove è; se la riapre dopo un po' (le ore le scegli in «Impostazioni») le chiede «Sei ancora al…?». Vede le richieste e riceve le notifiche del posto dove è."]],
+    ["Una persona lavora in più posti: come faccio?", ["Nei suoi permessi, in alto, in «Dove lavora», tocca ", tasto("Sì"), " accanto agli altri posti (anche «Giro consegne»). Se lavora in due negozi (o in un negozio e al Panificio), quando apre l'app sceglie dove è; se la riapre dopo un po' (le ore le scegli in «Impostazioni») le chiede «Sei ancora al…?», e riceve le notifiche del posto dove è. Se lavora al giro e in un altro posto (per esempio giro e Panificio), ha in alto due tasti per passare da uno all'altro, nessuna domanda, e riceve le notifiche di tutti e due."]],
+    ["Perché alcune righe dei permessi sono grigie?", ["Ognuno vede tutte le righe, ma alcune valgono solo in un posto: per esempio «Segnare i biscotti Fatto» vale al Panificio. Se la persona non lavora lì, la riga è su No e sotto c'è scritto quale posto aggiungere prima in «Dove lavora»."]],
+    ["Posso scegliere le mie notifiche da titolare?", ["Sì: in «Persone registrate» → ", tasto("Permessi di ogni persona"), " tocca il tuo nome (o quello dell'altro titolare). Ci sono tutte le notifiche, una per riga: metti ", tasto("No"), " a quelle che non vuoi, per esempio «Un negozio chiede qualcosa all'altro» (Piazza Nenni chiede i vassoi al Corso)."]],
     ["Posso scegliere io le notifiche di una persona?", ["Sì: nei suoi permessi, in «Notifiche che può ricevere», una per riga. Puoi dare a chiunque anche notifiche che di solito non sono del suo posto (per esempio «Pronto da caricare» a una persona del Corso). «No» vuol dire che non le arriva mai; «Sì» vuol dire che la può ricevere e sul suo telefono la accende o la spegne. Sotto vedi se sul suo telefono è accesa. Nell'elenco delle persone vedi chi ha le notifiche accese 🔔 e chi no 🔕."]],
     ["Una persona cambia negozio o va in ferie?", ["In «Persone registrate» tocca il suo nome. ", tasto("Cambia ruolo"), " la sposta (per esempio dal Corso a Piazza Nenni) senza registrarsi di nuovo. ", tasto("Sospendi"), " non la fa entrare finché non tocchi ", tasto("Riattiva"), "."]],
     ["A cosa serve «Impostazioni»?", ["Lì scegli alcuni numeri dell'app, divisi a gruppi (Richieste dei negozi, Avvisi e colori, Per quanto tempo tenere le cose…): per esempio dopo quante ore una richiesta diventa arancione o quanti tasti «Chiesti spesso» si vedono. Valgono per tutti i telefoni. Sotto ogni numero c'è un esempio che cambia mentre tocchi − e +; poi «Salva». «Rimetti com'era all'inizio» torna al numero di partenza."]],
@@ -3492,7 +3528,7 @@ function domandePagina(sez){
   const tit = "Solo per i titolari";
   const regole = {
     richieste: (S.punto === "Panificio" ? [["Panificio e magazzino"]] : [["Richieste del negozio"]]).concat([["Cose che non ci sono in magazzino", /striscia/i], ["In tutte le pagine"], ["Lavoro in più posti"], [tit, /codici/i]]),
-    giro: [["Giro consegne"], ["Cose che non ci sono in magazzino", /striscia|toglie/i], ["In tutte le pagine"], [tit, /codici/i]],
+    giro: [["Giro consegne"], ["Cose che non ci sono in magazzino", /striscia|toglie/i], ["In tutte le pagine"], ["Lavoro in più posti"], [tit, /codici/i]],
     prenotazioni: [["Prenotazioni"], [tit, /prodotto/i]],
     biscotti: [["Biscotti"]],
     mancanti: [["Cose che non ci sono in magazzino"]],
@@ -3614,6 +3650,7 @@ function renderMenu(){
   $("aiuto-pagina").hidden = inManuale();
   $("switch-viste").hidden = !puoSwitch() || bisc;
   $("tab-negozio").textContent = t === "titolare" ? "Negozio" : S.punto;
+  $("tab-consegne-nome").textContent = t === "titolare" ? "Consegne" : "Giro consegne";
   $("punti").hidden = t !== "titolare" || inStat() || inPren() || inNotif() || inPersone() || inMancanti() || inDatabase() || inImpostazioni() || inManuale();
   $("link-personale").hidden = t !== "titolare" || bisc;
   $("codici-box").hidden = !S.sito || !S.owner || t !== "titolare" || bisc;
@@ -5714,7 +5751,8 @@ function applicaRuolo(){
   $("link-personale").hidden = t !== "titolare";
   if (t === "negozio"){
     S.punto = S.ruolo.punto;
-    mostraVista("negozio");
+    /* chi è del giro e lavora anche in un altro posto: si parte dal giro */
+    mostraVista(S.ruoloFisso === "consegne" && puoSwitch() ? "consegne" : "negozio");
   } else if (t === "giro"){
     mostraVista("consegne");
   } else {
@@ -6490,18 +6528,18 @@ function eventoStato(k, p){
   return null;
 }
 
-/* cosa si può ricevere su questo telefono: i titolari «Ricevi tutto»; gli altri le notifiche
-   che hanno nel loro posto (NOTIFICHE_PERMESSI, più o meno quelle scelte dal titolare) */
-const SCELTA_TUTTO = ["tutto", "Ricevi tutto", "Nuove richieste, prenotazioni e disdette, cose che mancano e che arrivano in magazzino, cose segnate come finite in magazzino, pronti da caricare, biscotti."];
-/* acceso sul telefono: se non è mai stato scelto, sì (tranne «Ricevi tutto»).
+/* cosa si può ricevere su questo telefono: le notifiche che si hanno nel proprio posto
+   (NOTIFICHE_PERMESSI, più o meno quelle scelte dal titolare); i titolari tutte, meno quelle tolte nei permessi.
+   Acceso sul telefono: se non è mai stato scelto, sì. Per i titolari prima c'era solo «Ricevi tutto» (tutto):
+   se non l'hanno mai scelta una per una, vale com'era «Ricevi tutto» (di partenza spento).
    «Nuove richieste da prendere al Panificio» prima si chiamava «nuove» per il panificio. */
 function prefNotifica(pref, k, ruolo){
   pref = pref || {};
   let v = pref[k];
   if (v === undefined && k === "nuovePanif" && ruolo === "panificio") v = pref.nuove;
-  return v === undefined ? sceltaNormale(k) : v === true;
+  if (v === undefined && ruolo === "titolare") return pref.tutto === true;
+  return v === undefined ? true : v === true;
 }
-function sceltaNormale(k){ return k !== "tutto"; }
 function chiaveB64(s){
   const p = "=".repeat((4 - s.length % 4) % 4);
   const b = atob((s + p).replace(/-/g, "+").replace(/_/g, "/"));
@@ -6543,13 +6581,17 @@ async function renderNotifiche(){
     btn.textContent = S.attivandoNotifiche ? "Attivo…" : "Attiva le notifiche";
     return;
   }
-  stato.textContent = "Notifiche attive su questo telefono. Scegli cosa ricevere:" + (piuLuoghi() ? " (sono quelle " + (PREP[nomeLuogo(luogoAttuale())] || nomeLuogo(luogoAttuale())) + ", dove sei adesso)" : "");
-  /* chi lavora in più posti: le notifiche del posto dove è adesso */
-  const ruolo = (S.owner ? "titolare" : (piuLuoghi() ? luogoAttuale() : S.ruoloSito)) || "titolare";
+  /* chi lavora in più posti: le notifiche del posto dove è adesso; chi lavora anche al giro: anche quelle del giro */
+  const posti = S.owner ? [] : postiAttivi();
+  const qui = posti.filter(function(l){ return l !== "consegne"; }).map(function(l){ return PREP[nomeLuogo(l)] || nomeLuogo(l); });
+  stato.textContent = "Notifiche attive su questo telefono. Scegli cosa ricevere:" +
+    (posti.length > 1 ? " (sono quelle " + qui.join(" e ") + " e del giro consegne, tutte e due insieme)" : (piuLuoghi() ? " (sono quelle " + qui[0] + ", dove sei adesso)" : ""));
+  const ruolo = (S.owner ? "titolare" : (posti[0] || S.ruoloSito)) || "titolare";
   const pref = S.preferenzeNotifiche || {};
-  const voci = ruolo === "titolare" ? [SCELTA_TUTTO] : NOTIFICHE_PERMESSI.filter(function(n){ return notificaPer(S.mioId, ruolo, n.k); })
-    .map(function(n){ return [n.k, n.nome, n.spiega || ""]; });
-  if (!voci.length) stato.textContent = "Notifiche attive su questo telefono, ma il titolare non te ne ha date da ricevere.";
+  const voci = ruolo === "titolare"
+    ? notifichePerRuolo("titolare").filter(function(n){ return notificaPer(S.mioId, "titolare", n.k); }).map(function(n){ return [n.k, n.nome, n.spiega || ""]; })
+    : NOTIFICHE_PERMESSI.filter(function(n){ return posti.some(function(l){ return notificaPer(S.mioId, l, n.k); }); }).map(function(n){ return [n.k, n.nome, n.spiega || ""]; });
+  if (!voci.length) stato.textContent = ruolo === "titolare" ? "Notifiche attive su questo telefono, ma nei permessi le hai tolte tutte (Persone registrate → Permessi di ogni persona → il tuo nome)." : "Notifiche attive su questo telefono, ma il titolare non te ne ha date da ricevere.";
   riempi(scelte, voci.map(function(o){
     const acceso = prefNotifica(pref, o[0], ruolo);
     return el("li", null, el("label", {class:"notif-scelta"},
@@ -6585,7 +6627,7 @@ async function salvaIscrizione(sub){
   /* chi lavora in più posti: si salva anche dove è adesso, così le notifiche sono quelle di quel posto */
   const scelte = Object.assign({}, S.preferenzeNotifiche);
   delete scelte.luogo;
-  if (piuLuoghi()) scelte.luogo = luogoAttuale();
+  if (mieiPosti().length > 1) scelte.luogo = luogoAttuale();
   await sbFai(sb.rpc("salva_iscrizione", { endpoint_tel: j.endpoint, chiave_p256dh: j.keys.p256dh, chiave_auth: j.keys.auth, scelte: scelte }));
 }
 async function attivaNotifiche(){
@@ -7113,16 +7155,16 @@ function renderElencoPersone(){
 }
 function piuPosti(x){ return luoghiPer(x.id, x.ruolo).length > 1; }
 function schermataScegli(){
-  const altri = (S.persone || []).filter(function(x){ return x.ruolo !== "titolare"; });
+  const altri = (S.persone || []).slice();
   return [tastoIndietro(),
     el("h3", { class: "pers-titolo", text: "Permessi: scegli una persona" }),
-    el("p", { class: "hint", text: "Per ogni persona scegli cosa vede, cosa può fare, dove lavora e quali notifiche può ricevere. I titolari vedono e fanno tutto." }),
+    el("p", { class: "hint", text: "Per ogni persona scegli dove lavora, cosa vede, cosa può fare e quali notifiche può ricevere. I titolari vedono e fanno tutto: per loro scegli solo le notifiche." }),
     el("div", { class: "card blocco" }, el("ul", { class: "codici-lista" }, ...(altri.length ? altri.map(function(x){
       const n = contaEccezioni(x.id);
       return el("li", null, el("button", { type: "button", class: "pers-riga", "data-pers-permessi": x.id },
         el("span", { class: "pers-nome" }, el("b", { text: x.nome }), el("small", { text: n ? (n === 1 ? "1 cosa diversa dal solito" : n + " cose diverse dal solito") : "Tutto come di solito" })),
         pillRuolo(x), el("span", { class: "pers-freccia", "aria-hidden": "true", text: "›" })));
-    }) : [el("li", { class: "hint", text: "Nessuno oltre ai titolari." })])))];
+    }) : [el("li", { class: "hint", text: "Nessuno registrato." })])))];
 }
 /* una riga dei permessi: il nome, e a destra Sì / No.
    Se è diverso da come è di solito, l'etichetta arancione «Diverso dal solito» con sotto «Di solito: …».
@@ -7136,7 +7178,7 @@ function rigaPerm(id, tipo, k, nome, si, base, opz){
       diverso && !opz.bloccata ? el("span", { class: "perm-diverso" }, el("b", { text: "Diverso dal solito" }), el("small", { text: "Di solito: " + (base ? "Sì" : "No") })) : null,
       opz.spiega ? el("small", { text: opz.spiega }) : null,
       opz.info ? el("small", { class: "perm-info", text: opz.info }) : null,
-      opz.bloccata ? el("small", { class: "perm-serve", text: "Serve prima: «" + opz.serve + "»" }) : null),
+      opz.bloccata ? el("small", { class: "perm-serve", text: opz.serveTesto || "Serve prima: «" + opz.serve + "»" }) : null),
     el("span", { class: "perm-destra" },
       el("button", { type: "button", role: "switch", class: "perm-tasto", "aria-checked": String(!opz.bloccata && si), "data-perm": id + "|" + tipo + "|" + k, disabled: off,
         "aria-label": nome + ": " + (!opz.bloccata && si ? "sì" : "no") }, el("span", { text: !opz.bloccata && si ? "Sì" : "No" }))));
@@ -7153,9 +7195,27 @@ function permScelto(id, k, ruolo){
   const e = (S.permessi || {})[id];
   return e && typeof e[k] === "boolean" ? e[k] : diSolito(k, ruolo);
 }
-/* il posto (tra i suoi) in cui una riga c'entra */
+/* il posto (tra i suoi) in cui una riga c'entra: se sono più d'uno, quello dove di solito è Sì
+   (chi lavora in più posti ha un permesso se ce l'ha in almeno uno). Il Giro consegne vale solo nel giro:
+   per averlo si aggiunge «Giro consegne» in «Dove lavora». */
 function postoPerRiga(id, ruolo, t){
-  return luoghiPer(id, ruolo).find(function(l){ return centraPerm(t, tipoPosto(l)); }) || "";
+  const posti = luoghiPer(id, ruolo).filter(function(l){ return centraPerm(t, tipoPosto(l)) && (t.g.id !== "consegne" || l === "consegne"); });
+  const k = t.vista ? t.g.vista : t.v.id;
+  return posti.find(function(l){ return diSolito(k, l); }) || posti[0] || "";
+}
+/* dove c'entra una riga, detto per chi legge: «al Corso o a Piazza Nenni», «al Panificio», «al giro consegne» */
+function doveRiga(t){
+  if (t.g.id === "consegne") return { testo: "al giro consegne", nome: "Giro consegne" };
+  const d = (t.v && t.v.dove) || t.g.dove;
+  const parti = [], nomi = [];
+  if (d.indexOf("negozio") >= 0){ parti.push("al Corso o a Piazza Nenni"); nomi.push("il negozio"); }
+  if (d.indexOf("panificio") >= 0){ parti.push("al Panificio"); nomi.push("il Panificio"); }
+  if (d.indexOf("consegne") >= 0){ parti.push("al giro consegne"); nomi.push("il Giro consegne"); }
+  return { testo: parti.join(" o "), nome: nomi.join(" o ") };
+}
+function serveDove(t){
+  const d = doveRiga(t);
+  return "Vale per chi lavora " + d.testo + ": prima aggiungi " + (t.g.id === "consegne" ? "«Giro consegne»" : d.nome) + " in «Dove lavora», qui sopra.";
 }
 /* una notifica «di solito»: sì se lo è in almeno uno dei suoi posti */
 function notificaSolitoPersona(id, ruolo, k){ return luoghiPer(id, ruolo).some(function(l){ return notificaDiSolito(k, l); }); }
@@ -7165,53 +7225,65 @@ function notificaScelta(id, ruolo, k){
 }
 function schermataPermessi(p){
   const r = p.ruolo, id = p.id;
-  const out = [tastoIndietro(), el("h3", { class: "pers-titolo" }, el("span", { text: "Permessi di " + p.nome + " " }), pillRuolo(p))];
-  if (r === "titolare"){
-    out.push(el("p", { class: "hint", text: "I titolari vedono e fanno tutto: non ci sono permessi da scegliere." }));
-    return out;
-  }
-  const posti = luoghiPer(id, r);
-  out.push(el("p", { class: "hint", text: "Ogni riga è una cosa sola. Tocca il tasto per scegliere Sì o No. Se è diverso da come è di solito per chi lavora " +
-    posti.map(function(l){ return PREP[nomeLuogo(l)] || (l === "consegne" ? "nel giro" : nomeLuogo(l)); }).join(" o ") + ", accanto compare «Diverso dal solito». Sul suo telefono cambia appena l'app si aggiorna." }));
-  GRUPPI_PERMESSI.forEach(function(g){
-    const ruoloG = postoPerRiga(id, r, { g: g });
-    if (!ruoloG) return;
-    const righe = [];
-    let vista = "";
-    if (g.fisso) righe.push(rigaFissa(g.fisso));
-    else if (g.vista){
-      if (vistaFissa(g, tipoPosto(ruoloG))) righe.push(rigaFissa(g.vistaNome));
-      else {
-        vista = g.vistaNome;
-        righe.push(rigaPerm(id, "perm", g.vista, g.vistaNome, permScelto(id, g.vista, ruoloG), diSolito(g.vista, ruoloG), { spiega: g.vistaSpiega }));
-      }
-    }
-    g.voci.forEach(function(v){
-      const t = { g: g, v: v };
-      const ruoloV = postoPerRiga(id, r, t);
-      if (!ruoloV) return;
-      let serve = "";
-      if (vista && !permessoPer(id, ruoloV, g.vista)) serve = vista;
-      else if (v.serve && !permessoPer(id, ruoloV, v.serve)) serve = trovaPermesso(v.serve).v.nome;
-      righe.push(rigaPerm(id, "perm", v.id, v.nome, permScelto(id, v.id, ruoloV), diSolito(v.id, ruoloV), { sotto: true, spiega: v.spiega, bloccata: !!serve, serve: serve }));
-    });
-    out.push(gruppoPerm(g.nome, righe));
-  });
-  /* dove lavora */
-  if (LUOGHI_LAVORO.indexOf(r) >= 0){
-    out.push(gruppoPerm("Dove lavora", LUOGHI_LAVORO.map(function(l){
+  const out = [tastoIndietro(), el("h3", { class: "pers-titolo" }, el("span", { text: (r === "titolare" ? "Notifiche di " : "Permessi di ") + p.nome + " " }), pillRuolo(p))];
+  if (r !== "titolare"){
+    const posti = luoghiPer(id, r);
+    out.push(el("p", { class: "hint", text: "Prima scegli dove lavora, poi le cose che vede e che può fare, gruppo per gruppo. Ogni riga è una cosa sola: tocca il tasto per scegliere Sì o No. Se è diverso da come è di solito per chi lavora " +
+      posti.map(function(l){ return PREP[nomeLuogo(l)] || (l === "consegne" ? "nel giro" : nomeLuogo(l)); }).join(" o ") + ", accanto compare «Diverso dal solito». Sul suo telefono cambia appena l'app si aggiorna." }));
+    /* dove lavora: prima di tutto, perché le righe dipendono da qui */
+    const conGiro = posti.indexOf("consegne") >= 0 && posti.length > 1;
+    const negozi = posti.filter(function(l){ return l !== "consegne"; });
+    const come = [];
+    if (negozi.length > 1) come.push("Tra " + negozi.map(nomeLuogo).join(" e ") + " sceglie dove è quando apre l'app, e può cambiarlo con «Cambia posto» in alto; se la riapre dopo " + testoNumero(NUMERI.find(function(n){ return n.k === "chiediLuogo"; }), num("chiediLuogo")) + " le chiede «Sei ancora al…?». Vede le richieste e riceve le notifiche del posto dove è.");
+    if (conGiro) come.push("Il giro consegne lo ha sempre insieme all'altro posto: in alto due tasti, «" + (negozi.length === 1 ? nomeLuogo(negozi[0]) : "Negozio") + "» e «Giro consegne», si passa con un tocco, senza domande, e riceve le notifiche di tutti e due.");
+    if (!come.length) come.push("Se lavora anche in un altro posto, tocca Sì accanto a quel posto. Il giro consegne con un altro posto: due tasti in alto e le notifiche di tutti e due. Due negozi: sceglie dove è quando apre l'app.");
+    out.push(gruppoPerm("Dove lavora", POSTI_LAVORO.map(function(l){
       if (l === r) return rigaFissa(nomeLuogo(l), "Il suo posto");
       return rigaPerm(id, "luogo", l, nomeLuogo(l), posti.indexOf(l) >= 0, false);
-    }), "Se lavora in più posti, sceglie dove è quando apre l'app e può cambiarlo con «Cambia posto» in alto; se la riapre dopo " + testoNumero(NUMERI.find(function(n){ return n.k === "chiediLuogo"; }), num("chiediLuogo")) + " le chiede «Sei ancora al…?». Vede le richieste e riceve le notifiche del posto dove è."));
+    }), come.join(" ")));
+    GRUPPI_PERMESSI.forEach(function(g){
+      const tv = { g: g, vista: true };
+      const ruoloG = postoPerRiga(id, r, g.vista ? tv : { g: g, v: g.voci[0] });
+      const righe = [];
+      let vista = "", vistaOff = !ruoloG;
+      if (g.fisso) righe.push(ruoloG ? rigaFissa(g.fisso) : rigaPerm(id, "perm", g.id, g.fisso, false, false, { bloccata: true, serveTesto: serveDove({ g: g }) }));
+      else if (g.vista){
+        const ruoloVista = postoPerRiga(id, r, tv);
+        if (!ruoloVista) righe.push(rigaPerm(id, "perm", g.vista, g.vistaNome, false, false, { spiega: g.vistaSpiega, bloccata: true, serveTesto: serveDove(tv) }));
+        else if (vistaFissa(g, tipoPosto(ruoloVista))) righe.push(rigaFissa(g.vistaNome));
+        else {
+          vista = g.vistaNome;
+          righe.push(rigaPerm(id, "perm", g.vista, g.vistaNome, permScelto(id, g.vista, ruoloVista), diSolito(g.vista, ruoloVista), { spiega: g.vistaSpiega }));
+        }
+        vistaOff = !ruoloVista;
+      }
+      g.voci.forEach(function(v){
+        const t = { g: g, v: v };
+        const ruoloV = postoPerRiga(id, r, t);
+        if (!ruoloV){
+          /* la riga c'è per tutti: se non c'entra con i suoi posti è No, e dice quale posto aggiungere */
+          righe.push(rigaPerm(id, "perm", v.id, v.nome, false, false, { sotto: true, spiega: v.spiega, bloccata: true,
+            serveTesto: vistaOff ? "Serve prima: «" + (g.vistaNome || g.fisso) + "»" : serveDove(t) }));
+          return;
+        }
+        let serve = "";
+        if (vista && !permessoPer(id, ruoloV, g.vista)) serve = vista;
+        else if (v.serve && !permessoPer(id, ruoloV, v.serve)) serve = trovaPermesso(v.serve).v.nome;
+        righe.push(rigaPerm(id, "perm", v.id, v.nome, permScelto(id, v.id, ruoloV), diSolito(v.id, ruoloV), { sotto: true, spiega: v.spiega, bloccata: !!serve, serve: serve }));
+      });
+      out.push(gruppoPerm(g.nome, righe));
+    });
+  } else {
+    out.push(el("p", { class: "hint", text: "I titolari vedono e fanno tutto. Qui scegli solo quali notifiche può ricevere " + (p.id === S.mioId ? "(sei tu)" : p.nome) + ": tocca il tasto per Sì o No." }));
   }
   /* notifiche: una per riga */
   const np = S.notifPersone && S.notifPersone[id];
   const sulTel = function(k){
     if (!S.notifPersone) return "";
     if (!np || !np.telefoni) return "Sul suo telefono le notifiche sono spente.";
-    return np.preferenze.some(function(pr){ return prefNotifica(pr, k, (pr && pr.luogo) || r); }) ? "Sul suo telefono è accesa." : "Sul suo telefono l'ha spenta.";
+    return np.preferenze.some(function(pr){ return prefNotifica(pr, k, r === "titolare" ? "titolare" : ((pr && pr.luogo) || r)); }) ? "Sul suo telefono è accesa." : "Sul suo telefono l'ha spenta.";
   };
-  out.push(gruppoPerm("Notifiche che può ricevere", NOTIFICHE_PERMESSI.map(function(n){
+  out.push(gruppoPerm("Notifiche che può ricevere", notifichePerRuolo(r).map(function(n){
     const si = notificaScelta(id, r, n.k);
     return rigaPerm(id, "notif", n.k, n.nome, si, notificaSolitoPersona(id, r, n.k), { spiega: n.spiega, info: si ? sulTel(n.k) : "" });
   }), "«Sì»: la può ricevere, e sul suo telefono la accende o la spegne. «No»: non le arriva mai." + (S.notifPersone ? " " + testoNotifPersona(id) + "." : "")));
@@ -7223,7 +7295,7 @@ function schermataScheda(p){
   const out = [tastoIndietro(), el("h3", { class: "pers-titolo" }, el("span", { text: p.nome + (io ? " (tu) " : " ") }), pillRuolo(p))];
   const stato = [p.sospeso ? "Accesso sospeso: non può entrare finché non lo riattivi." : "", testoNotifPersona(p.id)].filter(Boolean);
   if (stato.length) out.push(el("p", { class: "hint", text: stato.join(" · ") }));
-  if (!tit) out.push(el("button", { type: "button", class: "primary", "data-pers-permessi": p.id, text: "Permessi di " + p.nome }));
+  out.push(el("button", { type: "button", class: "primary", "data-pers-permessi": p.id, text: (tit ? "Notifiche di " : "Permessi di ") + p.nome }));
   if (!tit && !io){
     const off = S.pending.has("persona-" + p.id);
     const sel = el("select", { id: "pers-ruolo", "aria-label": "Nuovo ruolo di " + p.nome },
@@ -7250,7 +7322,7 @@ function vaiPersone(pv){
 }
 async function cambiaPermessoPersona(id, tipo, k){
   const p = personaDa(id);
-  if (!p || p.ruolo === "titolare" || !puoPermessi() || S.pending.has("permessi")) return;
+  if (!p || (p.ruolo === "titolare" && tipo !== "notif") || !puoPermessi() || S.pending.has("permessi")) return;
   const minuscola = function(t){ return t.charAt(0).toLowerCase() + t.slice(1); };
   let nuovo, base, testo;
   if (tipo === "perm"){
@@ -7260,11 +7332,11 @@ async function cambiaPermessoPersona(id, tipo, k){
     nuovo = !permScelto(id, k, ruoloK); base = diSolito(k, ruoloK);
     testo = p.nome + (nuovo ? " adesso può: " : " adesso non può: ") + minuscola(t.vista ? t.g.vistaNome : t.v.nome);
   } else if (tipo === "luogo"){
-    if (LUOGHI_LAVORO.indexOf(k) < 0 || LUOGHI_LAVORO.indexOf(p.ruolo) < 0 || k === p.ruolo) return;
+    if (POSTI_LAVORO.indexOf(k) < 0 || POSTI_LAVORO.indexOf(p.ruolo) < 0 || k === p.ruolo) return;
     nuovo = luoghiPer(id, p.ruolo).indexOf(k) < 0;
-    testo = p.nome + (nuovo ? " adesso lavora anche " : " non lavora più ") + (PREP[nomeLuogo(k)] || nomeLuogo(k));
+    testo = p.nome + (nuovo ? " adesso lavora anche " : " non lavora più ") + (k === "consegne" ? "al giro consegne" : (PREP[nomeLuogo(k)] || nomeLuogo(k)));
   } else if (tipo === "notif"){
-    const n = NOTIFICHE_PERMESSI.find(function(x){ return x.k === k; });
+    const n = notifichePerRuolo(p.ruolo).find(function(x){ return x.k === k; });
     if (!n) return;
     nuovo = !notificaScelta(id, p.ruolo, k); base = notificaSolitoPersona(id, p.ruolo, k);
     testo = (nuovo ? p.nome + " può ricevere la notifica «" : "La notifica «") + n.nome + (nuovo ? "»" : "» non arriva più a " + p.nome);
@@ -7281,6 +7353,8 @@ async function cambiaPermessoPersona(id, tipo, k){
         const l = (Array.isArray(e.luoghi) ? e.luoghi : []).filter(function(x){ return x !== k; });
         if (nuovo) l.push(k);
         if (l.length) e.luoghi = l; else delete e.luoghi;
+        /* il giro dato prima con «Vedere il giro consegne»: adesso è un posto di «Dove lavora» */
+        if (k === "consegne") delete e.consegne;
       } else {
         const n = Object.assign({}, e.notifiche);
         if (nuovo === base) delete n[k]; else n[k] = nuovo;
