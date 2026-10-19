@@ -1625,9 +1625,13 @@ const NUMERI = [
     domanda:"Quanti giorni guardare nel «Database» per le cose da controllare?",
     dove:"Nel «Database», parti Ordini e Prenotazioni.",
     esempio:function(v){ return "Nel «Database» trovi da controllare i nomi nuovi o corretti dall'app negli ultimi " + v + " giorni."; } },
-  { k:"registroMesi", gruppo:"Per quanto tempo tenere le cose", nome:"Registro di come si usa l'app", unita:"mesi", base:6, min:1, max:24, passo:1,
+  { k:"bozze", gruppo:"Per quanto tempo tenere le cose", nome:"Cose scritte e non inviate", unita:"ore", base:12, min:1, max:48, passo:1,
+    domanda:"Per quante ore l'app tiene quello che è stato scritto ma non inviato?",
+    dove:"Sul telefono di chi scrive: richieste, comanda dei biscotti, prenotazione a metà.",
+    esempio:function(v){ return "Alle 9 Maria scrive tre cose in «Cosa serve?» e per sbaglio esce dall'app. Se la riapre entro le " + ((9 + v) % 24) + ", ritrova le tre cose scritte e le può inviare. Dopo, l'app le lascia perdere."; } },
+  { k:"registroMesi", gruppo:"Per quanto tempo tenere le cose", nome:"Registro di come si usa l'app", unita:"mesi", base:6, min:3, max:24, passo:1,
     domanda:"Per quanti mesi tenere il registro di come si usa l'app?",
-    dove:"Non si vede nell'app: lo legge Claude. Adesso il registro è spento.",
+    dove:"Non si vede nell'app: lo leggono solo il proprietario (dal database) e Claude. Adesso il registro è spento: si accende alla partenza vera.",
     esempio:function(v){ return "Le righe del registro più vecchie di " + v + " mesi si cancellano da sole."; } },
   { k:"chiediLuogo", gruppo:"Chi lavora in più posti", nome:"«Sei ancora al…?»", unita:"ore", base:1, min:1, max:12, passo:1,
     domanda:"Dopo quante ore chiedere «Sei ancora al…?»",
@@ -2236,6 +2240,88 @@ async function inviaComanda(){
     bz.ultimo = { livello: liv, n: fatti.length };
   }
   renderTutto();
+}
+/* ---------- cose scritte e non inviate: restano sul telefono ----------
+   Se si esce dall'app per sbaglio (o il telefono la chiude), riaprendola si ritrova quello che si stava scrivendo:
+   le righe di «Cosa serve?», quelle del giro, la prenotazione a metà e la comanda dei biscotti
+   (anche i biscotti già mandati, così si vede il riepilogo e si continua con «Ora i biscotti finiti»).
+   Si salva solo su questo telefono, per questa persona, per num("bozze") ore; si cancella quando si invia. */
+S.bozzeLette = false;
+let timerBozze = 0;
+function chiaveBozze(){ return "pdp-bozze:" + (S.mioId || ""); }
+function salvaBozze(){
+  clearTimeout(timerBozze);
+  timerBozze = setTimeout(salvaBozzeOra, 400);
+}
+function salvaBozzeOra(){
+  clearTimeout(timerBozze);
+  /* prima si rileggono quelle salvate, poi si salva: altrimenti all'apertura si cancellerebbero */
+  if (!S.bozzeLette || !S.mioId) return;
+  const ora = Date.now(), b = {};
+  const righe = $("righe").value, giro = $("righe-giro").value;
+  if (righe.trim()) b.righe = { testo: righe, punto: S.punto, alle: ora };
+  if (giro.trim()) b.giro = { testo: giro, alle: ora };
+  const f = S.formPren;
+  if (f.aperto && formPrenScritto()){
+    const campi = {};
+    ["pren-righe","pren-cliente","pren-tel","pren-nota","pren-ora","pren-data"].forEach(function(id){ campi[id] = $(id).value; });
+    b.pren = { campi: campi, quando: f.quando, ritiro: f.ritiro, tuttoGiorno: !!f.tuttoGiorno, alle: ora };
+  }
+  const bz = S.bozza;
+  if (bz && (bz.sel.size || bz.inviati.length) && NEGOZI_BISC.indexOf(S.punto) >= 0)
+    b.bisc = { punto: S.punto, fase: bz.fase, livello: bz.livello, sel: Array.from(bz.sel), inviati: bz.inviati, ultimo: bz.ultimo || null, alle: ora };
+  try {
+    if (Object.keys(b).length) localStorage.setItem(chiaveBozze(), JSON.stringify(b));
+    else localStorage.removeItem(chiaveBozze());
+  } catch(e){}
+}
+/* all'apertura: rimette quello che era scritto e avvisa */
+function riprendiBozze(){
+  if (S.bozzeLette || !S.mioId || !S.pronto) return;
+  S.bozzeLette = true;
+  let b = null;
+  try { b = JSON.parse(localStorage.getItem(chiaveBozze()) || "null"); } catch(e){}
+  if (!b || typeof b !== "object") return;
+  const limite = Date.now() - num("bozze") * 3600000;
+  function valida(x){ return x && typeof x === "object" && Number(x.alle) >= limite; }
+  const ritrovate = [];
+  if (valida(b.righe) && typeof b.righe.testo === "string" && !$("righe").value.trim() && (!b.righe.punto || b.righe.punto === S.punto)){
+    $("righe").value = b.righe.testo.slice(0, 4000);
+    ritrovate.push("le richieste che stavi scrivendo");
+  }
+  if (valida(b.giro) && typeof b.giro.testo === "string" && !$("righe-giro").value.trim()){
+    $("righe-giro").value = b.giro.testo.slice(0, 4000);
+    ritrovate.push("le cose del giro che stavi scrivendo");
+  }
+  if (valida(b.pren) && b.pren.campi && puoPrenNuove() && !S.formPren.aperto){
+    const f = S.formPren;
+    for (const id in b.pren.campi){ if ($(id) && typeof b.pren.campi[id] === "string") $(id).value = b.pren.campi[id].slice(0, 2000); }
+    f.quando = ["oggi","domani","altro"].indexOf(b.pren.quando) >= 0 ? b.pren.quando : "domani";
+    f.ritiro = LUOGHI_RITIRO.indexOf(b.pren.ritiro) >= 0 ? b.pren.ritiro : mioLuogoRitiro();
+    f.tuttoGiorno = b.pren.tuttoGiorno === true;
+    f.ctrl = null;
+    f.aperto = true;
+    ritrovate.push("la prenotazione che stavi scrivendo (in Prenotazioni)");
+  }
+  const x = b.bisc;
+  if (valida(x) && x.punto === S.punto && puoScrivereBisc() && !biscDaConfermare()){
+    const liv = function(l){ return l === "finiti" || l === "pochi" ? l : null; };
+    const bz = bozzaNuova();
+    bz.livello = liv(x.livello);
+    bz.sel = new Set((Array.isArray(x.sel) ? x.sel : []).filter(function(n){ return typeof n === "string"; }));
+    bz.inviati = (Array.isArray(x.inviati) ? x.inviati : []).filter(function(i){ return i && typeof i.nome === "string" && liv(i.livello); })
+      .map(function(i){ return { nome: i.nome, livello: i.livello }; });
+    bz.fase = x.fase === "seleziona" && bz.livello ? "seleziona" : (x.fase === "inviata" && bz.inviati.length ? "inviata" : "scegli");
+    if (x.ultimo && liv(x.ultimo.livello)) bz.ultimo = { livello: x.ultimo.livello, n: Number(x.ultimo.n) || 0 };
+    if (bz.sel.size || bz.inviati.length){
+      S.bozza = bz;
+      ritrovate.push(bz.sel.size ? "la comanda dei biscotti non ancora inviata (in Biscotti)" : "la comanda dei biscotti da finire (in Biscotti)");
+    }
+  }
+  if (!ritrovate.length) return;
+  registra("ritrovato quello non inviato", { cosa: ritrovate.length });
+  renderTutto();
+  avviso("Hai chiuso l'app senza inviare: ho ritrovato " + ritrovate.join(", ") + ".");
 }
 function apriRiepilogo(){
   const bz = S.bozza;
@@ -2859,6 +2945,7 @@ function renderNegozio(){
 /* ---------- render: biscotti ---------- */
 function chiBisc(b){ return bottoneChi({ id: b.id, autore: b.segnatoDa, articolo: b.nome, esempio: false }); }
 function renderBiscotti(){
+  salvaBozze();
   const panif = S.punto === "Panificio";
   $("bisc-negozio").hidden = panif;
   $("bisc-panificio").hidden = !panif;
@@ -3437,6 +3524,7 @@ function capitoliManuale(){
     ["E se chiedo una cosa che già non c'è in magazzino?", ["L'app lo sa: la richiesta parte già segnata «non c'è» e resta barrata nella tua lista finché non arriva. Quando arriva vedi «Arrivata in magazzino» e poi viene caricata come le altre."]],
     ["Cosa vuol dire «Da comprare»?", ["È una cosa che non c'è e va comprata. La vedono i titolari e chi fa il giro, in «Non in magazzino». Quando arriva, va nelle consegne e ve la portano."]],
     ["Cosa succede se arriva solo una parte?", ["Chi fa il giro carica quello che c'è e scrive cosa manca. La tua richiesta va «In viaggio» con la scritta «Solo una parte: mancano 2 casse». Nella tua lista compare anche una riga nuova con quello che manca, barrata perché non c'è in magazzino (e ti arriva la notifica). Quando arriva, te la portano come le altre."], disegnoParte()],
+    ["Se esco dall'app per sbaglio, perdo quello che ho scritto?", ["No. Quello che hai scritto in «Cosa serve?» e non hai ancora inviato resta sul telefono per " + secondi("bozze") + ": quando riapri l'app lo ritrovi lì, e in alto c'è scritto «ho ritrovato le richieste che stavi scrivendo». Poi tocca ", tasto("Controlla e invia"), " come sempre."]],
     ["E se non c'è campo?", ["Scrivi e invia lo stesso: la richiesta si salva sul telefono e parte da sola appena torna il campo. In alto vedi quante cose aspettano. Non uscire dall'app finché non sono partite."]]
   ]});
   if (panif || tit) cap.push({ titolo:"Panificio e magazzino", domande:[
@@ -3458,10 +3546,12 @@ function capitoliManuale(){
   ]});
   if (vedePren()) cap.push({ titolo:"Prenotazioni", domande:[
     ["Come scrivo una prenotazione?", ["Tocca ", tasto("+ Nuova prenotazione"), ". Scegli il giorno, dove la ritira il cliente (Corso, Piazza Nenni o Panificio; il tuo è già scelto), il nome e, se vuoi, il telefono. Scrivi i prodotti, una riga per uno. L'ora è obbligatoria: un'ora precisa oppure «Tutta la giornata»."]],
-    ["Cosa succede quando tocco Salva?", ["L'app controlla i nomi dei prodotti: se è sicura mette il nome giusto (✓), se ha un dubbio chiede «Volevi dire…?». Se è un prodotto nuovo, lo controlla poi un titolare. La prenotazione si salva solo quando ogni dubbio ha una risposta."]],
+    ["Cosa succede quando tocco Salva?", ["L'app controlla i nomi dei prodotti: se è sicura mette il nome giusto (✓), se ha un dubbio chiede «Volevi dire…?». Se ha corretto un nome e non va bene, tocca «Lascia com'era»: si salva come l'hai scritto. Esempio: scrivi «pitte piene», l'app mette «Pitta china»; se il cliente voleva proprio un'altra cosa, «Lascia com'era». Le correzioni dell'app e i prodotti nuovi li controlla poi un titolare. La prenotazione si salva solo quando ogni dubbio ha una risposta."]],
+    ["Se esco dall'app per sbaglio, perdo la prenotazione che stavo scrivendo?", ["No. Quello che hai scritto resta sul telefono per " + secondi("bozze") + ": riaprendo l'app in alto compare «ho ritrovato la prenotazione che stavi scrivendo» e in Prenotazioni la ritrovi aperta. Si perde solo se tocchi «Sì, esci»."]],
     ["Come vedo cosa preparare?", ["Ogni giorno ha la sua pagina con il totale «Ancora da preparare» (si sommano solo le stesse misure: kg con kg, pezzi con pezzi). Le prenotazioni «Tutta la giornata» sono in cima."]],
     ["Cosa vuol dire «Messo da parte»?", ["Che la prenotazione è pronta e messa da parte nel posto dove il cliente la ritira. Di solito lo può premere chiunque."]],
     ["Come disdico una prenotazione?", ["Tocca ", tasto("Disdici"), " e scegli il motivo (è obbligatorio). Resta barrata in fondo al giorno con chi l'ha disdetta. Se è stato uno sbaglio, ", tasto("Ripristina"), ". Chi fa il giro non può disdire (salvo che il titolare gli dia il permesso); se non vedi il tasto, il titolare te l'ha tolto."]],
+    tit ? ["Come elimino del tutto una prenotazione?", ["Solo i titolari: sotto la prenotazione tocca ", tasto("Elimina"), " e conferma. Sparisce per tutti, anche dai totali e dalle statistiche, e dall'app non si rimette. Usalo per una prenotazione scritta per sbaglio o due volte. Se il cliente ha solo cambiato idea, meglio ", tasto("Disdici"), ": resta scritto il motivo. Se elimini per sbaglio, chiedi a Claude: nel database resta una copia e si può recuperare."]] : null,
     ["Come trovo una prenotazione?", ["Tocca ", tasto("🔍 Cerca"), " e scrivi il nome del cliente, un prodotto o il telefono, anche a metà. Cerca da 7 giorni fa in avanti."]]
   ]});
   if (vedeBiscotti()) cap.push({ titolo:"Biscotti", domande: panif && !tit ? [
@@ -3469,6 +3559,7 @@ function capitoliManuale(){
     ["Come segno che li ho fatti?", ["Tocca il tasto sul biscotto: il negozio lo vede fatto. Se è stato uno sbaglio, in fondo c'è «Rimetti da fare»."]]
   ] : [
     ["Come chiedo dei biscotti?", ["Tocca ", tasto("Nuova comanda"), ", scegli quanto sono urgenti («Finiti» o «Pochi pacchi») e tocca i biscotti che mancano. Non parte niente finché non premi ", tasto("Invia comanda"), ". Quando hai finito, ", tasto("Ho finito"), "."]],
+    ["Se esco dall'app a metà comanda, cosa succede?", ["Niente si perde. Esempio: invii i biscotti con pochi pacchi e, mentre stai per scegliere quelli finiti, esci per sbaglio. Riaprendo l'app (entro " + secondi("bozze") + ") in Biscotti ritrovi la stessa comanda: vedi quelli già inviati, tocchi ", tasto("Ora i biscotti finiti"), " e continui, senza aprire una comanda nuova. Anche i biscotti scelti ma non ancora inviati restano scelti."]],
     ["Un biscotto non è nell'elenco?", ["Scrivilo in «Un biscotto che non è in elenco» e tocca Aggiungi. Un titolare poi lo conferma o lo toglie dall'elenco."]]
   ]});
   cap.push({ titolo:"Cose che non ci sono in magazzino", domande:[
@@ -4277,13 +4368,25 @@ function nomeProdotto(v){
   function nuovoNome(n){ return S.prodImp.alias[chiave(n)] || n; }
   if (S.prodImp.alias[k]) return nuovoNome(S.prodImp.alias[k]);
   if (v.prodotto) return nuovoNome(v.prodotto);
+  /* «Lascia com'era» o prodotto nuovo: resta com'è scritto (o come nell'elenco, se confermato) */
+  if (v.nuovo) return elencoProdotti().find(function(n){ return chiave(n) === k; }) || v.articolo;
   const t = trovaProdotto(v.articolo);
   return t.esito === "sicuro" ? t.nome : v.articolo;
+}
+/* il nome messo dall'app al posto di quello scritto, se è davvero diverso (non solo singolare/plurale)
+   e un titolare non l'ha ancora controllato; altrimenti "" */
+function correttaPren(v){
+  const k = chiave(v.articolo);
+  if (!k || !v.prodotto || v.nuovo || S.prodImp.alias[k]) return "";
+  const nome = nomeProdotto(v);
+  if (!nome || chiave(nome) === k || formaProdotto(nome) === formaProdotto(v.articolo)) return "";
+  return nome;
 }
 /* da far controllare ai titolari: prodotto nuovo o mai riconosciuto */
 function daControllare(v){
   const k = chiave(v.articolo);
   if (S.prodImp.alias[k] || v.prodotto) return false;
+  if (v.nuovo) return !elencoProdotti().some(function(n){ return chiave(n) === k; });
   return trovaProdotto(v.articolo).esito !== "sicuro";
 }
 /* il testo di una riga: quantità e nome giusto */
@@ -4540,22 +4643,35 @@ function renderDbOrdini(){
 function renderDbPren(){
   const gruppi = gruppiDaControllare();
   const off = S.pending.has("prodotti");
-  $("db-spiega").textContent = "Le prenotazioni degli ultimi " + secondi("controllo") + " con un prodotto che l'app non conosceva. «È un prodotto nuovo»: entra nell'elenco. «Scrivi il nome giusto»: se era scritto male, scrivi o scegli il nome giusto e tutte le prenotazioni scritte così si correggono da sole.";
-  riempi($("db-lista"), Array.from(gruppi.entries()).map(function(e){
-    const k = e[0], g = e[1];
+  $("db-spiega").textContent = "Le prenotazioni degli ultimi " + secondi("controllo") + ". Qui vedi cosa ha scritto la persona e cosa ha messo l'app. Se l'app ha corretto bene, tocca «Sì, è giusto»; se ha sbagliato, «No, era…» e scrivi il nome giusto: tutte le prenotazioni scritte così si correggono da sole e la volta dopo l'app lo sa. Se l'app non conosce il prodotto: «È un prodotto nuovo» oppure «Scrivi il nome giusto».";
+  /* prima i più recenti */
+  const lista = Array.from(gruppi.values()).sort(function(a, b){
+    return Math.max.apply(null, b.pren.map(function(p){ return p.creato; })) - Math.max.apply(null, a.pren.map(function(p){ return p.creato; }));
+  });
+  riempi($("db-lista"), lista.map(function(g){
     const dove = g.pren.slice(0, 3).map(function(p){ return fmtCortoGiorno(p.perIl) + (p.cliente ? ", " + p.cliente : ""); }).join(" · ") + (g.pren.length > 3 ? " e altre" : "");
+    const corretta = g.tipo === "corretta";
+    let azioni;
+    if (S.prenCorreggi === g.id){
+      azioni = el("div", {class:"db-nome-giusto"}, campoNomeGiusto("pren-dc-testo", "prenotazioni", "pren-dc-salva"),
+        el("div", {class:"row"},
+          el("button", {type:"button", class:"mini", id:"pren-dc-salva", "data-pren-dc-salva":g.k, disabled:off, text:"Salva il nome giusto"}),
+          el("button", {type:"button", class:"link", "data-pren-dc-annulla":g.id, text:"Annulla"})));
+    } else if (corretta){
+      azioni = el("div", {class:"row"},
+        el("button", {type:"button", class:"mini", "data-pren-dc-giusto":g.id, disabled:off, "aria-label":"Sì, è giusto: " + g.testo + " è " + g.nome, text:"Sì, è giusto"}),
+        el("button", {type:"button", class:"mini", "data-pren-dc-errore":g.id, disabled:off, text:"No, era…"}));
+    } else {
+      azioni = el("div", {class:"row"},
+        el("button", {type:"button", class:"mini", "data-pren-dc-conferma":g.id, "data-testo":g.testo, disabled:off, text:"È un prodotto nuovo"}),
+        el("button", {type:"button", class:"mini", "data-pren-dc-errore":g.id, disabled:off, text:"Scrivi il nome giusto"}));
+    }
     return el("div", {class:"card pren-dc-voce db-voce"},
       rigaDb("Scritto", el("strong", {text:"«" + g.testo + "»"})),
-      el("p", {class:"domanda-db", text:"L'app non conosce questo prodotto. È nuovo o è scritto male?"}),
+      corretta ? rigaDb("L'app ha messo", el("strong", {text:g.nome})) : null,
+      el("p", {class:"domanda-db", text: corretta ? "È giusto?" : "L'app non conosce questo prodotto. È nuovo o è scritto male?"}),
       el("p", {class:"hint", text:(g.pren.length === 1 ? "1 prenotazione" : g.pren.length + " prenotazioni") + " · " + dove}),
-      S.prenCorreggi === k
-        ? el("div", {class:"db-nome-giusto"}, campoNomeGiusto("pren-dc-testo", "prenotazioni", "pren-dc-salva"),
-            el("div", {class:"row"},
-              el("button", {type:"button", class:"mini", id:"pren-dc-salva", "data-pren-dc-salva":k, disabled:off, text:"Salva il nome giusto"}),
-              el("button", {type:"button", class:"link", "data-pren-dc-annulla":k, text:"Annulla"})))
-        : el("div", {class:"row"},
-            el("button", {type:"button", class:"mini", "data-pren-dc-conferma":k, "data-testo":g.testo, disabled:off, text:"È un prodotto nuovo"}),
-            el("button", {type:"button", class:"mini", "data-pren-dc-errore":k, disabled:off, text:"Scrivi il nome giusto"})));
+      azioni);
   }));
   $("db-vuoto").hidden = gruppi.size > 0;
   $("db-vuoto").textContent = S.pronto ? "Niente da controllare: tutti i prodotti delle prenotazioni sono a posto." : "Carico le prenotazioni…";
@@ -4948,6 +5064,9 @@ function rigaPren(p){
       if (mioNegozio && parte) azioni.append(el("button", {type:"button", class:"link", "data-pren-stato":"attesa", "data-id":p.id, disabled:off, "aria-label":"Annulla messo da parte", text:"Annulla"}));
       if (haAzione("disdire")) azioni.append(el("button", {type:"button", class:"link pericolo", "data-pren-disdici":p.id, disabled:off, text:"Disdici"}));
     }
+    /* solo i titolari: elimina del tutto (per esempio una scritta per sbaglio o due volte) */
+    if (puoEliminarePren()) azioni.append(el("button", {type:"button", class:"link pericolo", "data-pren-elimina":p.id, disabled:off,
+      "aria-label":"Elimina del tutto la prenotazione" + (p.cliente ? " di " + p.cliente : ""), text:"Elimina"}));
   }
   const tel = p.telefono && vedeTelefono() ? el("button", {type:"button", class:"pren-tel", "data-copia-tel":p.telefono, "aria-label":"Copia il numero " + p.telefono, text:"☎ " + p.telefono}) : null;
   return el("li", {class:"riga pren " + classeDest(p.ritiro) + (parte && !disd ? " messa-parte" : "") + (disd ? " disdetta" : "") + (p.nuova ? " nuova" : ""), id:"pren-" + p.id.replace(/[^a-zA-Z0-9_-]/g, "_")},
@@ -4962,6 +5081,23 @@ function rigaPren(p){
         testoOraPren(p) ? el("span", {class:"pill p-ora", text:testoOraPren(p)}) : null,
         "presa da " + chi + (p.presaDa && p.presaDa !== p.ritiro ? " " + (PREP[p.presaDa] || p.presaDa) : "") + ", " + quando(p.creato)])),
     azioni.childNodes.length ? azioni : null);
+}
+/* Elimina (solo titolari): la prenotazione sparisce per tutti, anche dai totali e dalle statistiche.
+   Non è una disdetta: non chiede il motivo e non manda notifiche. Resta solo nello storico del database. */
+function puoEliminarePren(){ return puoPrenotare() && !!S.owner && !!S.ruolo && S.ruolo.tipo === "titolare"; }
+async function eliminaPren(id){
+  const p = S.prenotazioni.find(function(x){ return x.id === id; });
+  if (!p || !puoEliminarePren() || S.pending.has(id)) return;
+  const cosa = (p.cliente ? p.cliente + ": " : "") + p.voci.map(testoVocePren).join(", ");
+  const si = await chiedi("Eliminare del tutto questa prenotazione?",
+    "«" + cosa + "», " + testoGiorno(p.perIl) + ". Sparisce per tutti, anche dai totali da preparare e dalle statistiche, e non si può rimettere dall'app. Se il cliente ha solo cambiato idea, usa «Disdici».",
+    "Sì, elimina", "No");
+  if (!si) return;
+  S.pending.add(id); renderTutto();
+  const ok = await scrivi(function(){ return store.annulla(p); });
+  S.pending.delete(id);
+  if (ok){ avviso("Prenotazione eliminata."); registra("prenotazione eliminata", { disdetta: p.disdetta, messaDaParte: p.stato === "parte" }); }
+  renderTutto();
 }
 /* il giorno scelto nel modulo: Oggi, Domani o quello scritto nella casella */
 function giornoFormPren(){
@@ -5034,7 +5170,12 @@ function renderCtrlPren(){
     const scritto = el("p", {class:"scritto", text:"Hai scritto: «" + (v.quantita ? v.quantita + " " : "") + v.articolo + "»"});
     if (v.esito === "sicuro" || v.scelta){
       const nome = v.scelta === "nuovo" ? v.articolo : (v.scelta && v.scelta !== "nuovo" ? v.scelta : v.nome);
-      const cambia = v.esito !== "sicuro" ? el("button", {type:"button", class:"link", "data-pren-ctrl-cambia":String(i), disabled:f.inviando, text:"Cambia"}) : null;
+      /* l'app ha corretto da sola: si può lasciare com'era scritto (poi lo controlla il titolare) */
+      const corretto = v.esito === "sicuro" && !v.scelta && chiave(v.nome) !== chiave(v.articolo) && formaProdotto(v.nome) !== formaProdotto(v.articolo);
+      const cambia = corretto
+        ? el("button", {type:"button", class:"link", "data-pren-ctrl-nuovo":String(i), disabled:f.inviando, "aria-label":"Lascia com'era scritto: " + v.articolo, text:"Lascia com'era"})
+        : (v.scelta ? el("button", {type:"button", class:"link", "data-pren-ctrl-cambia":String(i), disabled:f.inviando,
+            text: v.esito === "sicuro" ? "Metti di nuovo «" + v.nome + "»" : "Cambia"}) : null);
       return el("li", {class:"ctrl-voce pren-ctrl-voce sicuro"},
         el("p", {class:"articolo"}, q, nome, v.scelta === "nuovo" ? el("span", {class:"pill p-ora", text:"Prodotto nuovo"}) : el("span", {class:"ok", "aria-label":"riconosciuto", text:"✓"})),
         chiave(nome) !== chiave(v.articolo) || v.scelta ? scritto : null,
@@ -5108,11 +5249,19 @@ function gruppiDaControllare(){
   S.prenotazioni.forEach(function(p){
     if (p.disdetta || p.perIl < limite) return;
     p.voci.forEach(function(v){
-      if (!daControllare(v)) return;
       const k = chiave(v.articolo);
       if (!k) return;
-      if (!gruppi.has(k)) gruppi.set(k, { testo: v.articolo, pren: [] });
-      gruppi.get(k).pren.push(p);
+      if (daControllare(v)){
+        if (!gruppi.has(k)) gruppi.set(k, { id: k, k: k, tipo: "nuova", testo: v.articolo, pren: [] });
+        gruppi.get(k).pren.push(p);
+        return;
+      }
+      /* corretta dall'app: il titolare dice se ha fatto giusto («Sì, è giusto» / «No, era…»), come negli ordini */
+      const nome = correttaPren(v);
+      if (!nome) return;
+      const id = "corr:" + k + ">" + chiave(nome);
+      if (!gruppi.has(id)) gruppi.set(id, { id: id, k: k, tipo: "corretta", testo: v.articolo, nome: nome, pren: [] });
+      gruppi.get(id).pren.push(p);
     });
   });
   return gruppi;
@@ -5124,7 +5273,7 @@ function renderDaControllare(){
   const n = titolare ? gruppiDaControllare().size : 0;
   box.hidden = !n;
   riempi(box, n ? [el("button", {type:"button", class:"primary dc-apri", id:"dc-apri"},
-    "Prodotti nuovi da controllare ", el("span", {class:"badge", text:String(n)}))] : []);
+    "Prodotti da controllare ", el("span", {class:"badge", text:String(n)}))] : []);
 }
 async function salvaProdotti(cambia){
   if (!store || !store.prodotti || S.pending.has("prodotti")) return false;
@@ -5142,6 +5291,12 @@ async function confermaProdotto(testo){
     return { elenco: conProdotto(d, nome), tolti: senzaTolto(d, nome) };
   });
   if (ok){ avviso("«" + nome + "» è nell'elenco dei prodotti."); registra("prodotto confermato", {}); }
+}
+/* «Sì, è giusto»: l'app ha corretto bene, se lo ricorda e non lo chiede più */
+async function prenCorrGiusto(id){
+  const g = gruppiDaControllare().get(id); if (!g || g.tipo !== "corretta") return;
+  const ok = await salvaProdotti(function(d){ return { alias: conAlias(d, g.k, g.nome) }; });
+  if (ok){ avviso("Giusto: «" + g.testo + "» è " + g.nome + ". L'app se lo ricorda."); registra("correzione giusta", { dove: "prenotazioni" }); }
 }
 /* il nome giusto scritto dal titolare: se c'è già si collega, altrimenti diventa un prodotto nuovo */
 async function correggiProdotto(k){
@@ -5207,6 +5362,7 @@ function renderCerca(){
     })));
 }
 function renderPrenotazioni(){
+  salvaBozze();
   renderFormPren();
   if (!inPren()) return;
   renderDaControllare();
@@ -5740,6 +5896,8 @@ function renderTutto(){
   renderDatabase();
   renderImpostazioni();
   renderManuale();
+  if (!S.bozzeLette) riprendiBozze();
+  salvaBozze();
   if (inParte && $("parte-testo")){ const i = $("parte-testo"); i.focus(); try { i.setSelectionRange(i.value.length, i.value.length); } catch(e){} }
   document.querySelectorAll(".giorni-crono").forEach(function(x){ x.textContent = testoNumero(NUMERI.find(function(n){ return n.k === "crono"; }), num("crono")); });
 }
@@ -5927,6 +6085,7 @@ function collega(){
     if (b.dataset.magCosi) return salvaMag({ nome: "" , cosi: true });
     if (b.dataset.magArrivato) return magArrivato(b.dataset.magArrivato);
     if (b.dataset.prenDisdici) return apriDisdici(b.dataset.prenDisdici);
+    if (b.dataset.prenElimina) return eliminaPren(b.dataset.prenElimina);
     if (b.dataset.prenRipristina) return ripristinaPren(b.dataset.prenRipristina);
     if (b.dataset.copiaTel) return copiaTelefono(b.dataset.copiaTel);
     if (b.dataset.disdiciMotivo && S.disdici){ S.disdici.scelta = S.disdici.scelta === b.dataset.disdiciMotivo ? "" : b.dataset.disdiciMotivo; return renderDisdici(); }
@@ -5981,6 +6140,7 @@ function collega(){
     if (b.id === "mag-tutto-chiudi") return chiudiMagTutto();
     if (b.id === "mag-tutto-apri"){ chiudiMagTutto(); if (vedeMancanti()) vaiSezione("mancanti"); return; }
     if (b.dataset.prenDcConferma) return confermaProdotto(b.dataset.testo);
+    if (b.dataset.prenDcGiusto) return prenCorrGiusto(b.dataset.prenDcGiusto);
     if (b.dataset.prenDcErrore){ S.prenCorreggi = b.dataset.prenDcErrore; renderDatabase(); const sc = $("pren-dc-testo"); if (sc) sc.focus(); return; }
     if (b.dataset.prenDcAnnulla){ S.prenCorreggi = ""; return renderDatabase(); }
     if (b.dataset.prenDcSalva) return correggiProdotto(b.dataset.prenDcSalva);
@@ -6130,6 +6290,11 @@ function collega(){
   $("ctrl-quando-data").addEventListener("input", function(){ if (S.ctrl){ S.ctrl.perIl = this.value || ""; } });
   $("righe").addEventListener("input", function(){ if (this.value.trim() && !S.inizioRighe) S.inizioRighe = Date.now(); if (!this.value.trim()) S.inizioRighe = 0; aggiornaForm(); });
   $("righe-giro").addEventListener("input", aggiornaFormGiro);
+  /* quello che si scrive resta sul telefono finché non si invia */
+  document.addEventListener("input", salvaBozze, true);
+  document.addEventListener("change", salvaBozze, true);
+  document.addEventListener("visibilitychange", function(){ if (document.visibilityState === "hidden") salvaBozzeOra(); });
+  window.addEventListener("pagehide", salvaBozzeOra);
   $("per-giro").addEventListener("change", aggiornaFormGiro);
   $("form-richiesta").addEventListener("submit", invia);
   $("form-giro").addEventListener("submit", inviaGiro);
@@ -6412,10 +6577,11 @@ const VAPID_PUBLICA = "BC9TAKzQiQ-x3xtX0KWauGtV-uvIk9VFwqLjWAOzrJbe4e5w2AWyXMIej
    SPENTO: si accende con REGISTRO_ATTIVO = true solo alla partenza vera, quando il proprietario lo dice
    (e dopo il parere del consulente del lavoro: Statuto dei lavoratori e privacy).
    Non registra quello che si scrive (nomi dei clienti, telefoni, cose chieste, note): solo quale tasto,
-   quale schermata, quanto tempo, errori, rete e tipo di telefono. Le persone non hanno nome ("Persona 1"…):
-   lo decide il database (funzione "registra", supabase/aggiornamento-4-registro.sql). */
+   quale schermata, quanto tempo, errori, rete e tipo di telefono, e il posto dove si è (p).
+   Il nome di chi lo fa lo mette il database (funzione "registra", supabase/aggiornamento-10-registro-con-nomi.sql):
+   deciso dal proprietario il 19 ottobre, per vedere chi aiutare a usare meglio l'app; lo leggono solo lui e Claude. */
 const REGISTRO_ATTIVO = false;
-const VERSIONE_APP = "775bf842";
+const VERSIONE_APP = "0424ec1a";
 S.reg = [];
 S.ultimoTasto = { nome: "", alle: 0 };
 S.tocchi = { nome: "", volte: 0, alle: 0, segnato: false };
@@ -6438,7 +6604,7 @@ function registra(evento, dati){
   if (S.reg.length >= 400) return;
   let s = "";
   try { s = sezioneAttuale(); } catch(e){}
-  S.reg.push({ e: String(evento).slice(0, 40), t: Date.now(), s: s, d: dati || {} });
+  S.reg.push({ e: String(evento).slice(0, 40), t: Date.now(), s: s, p: String(S.punto || "").slice(0, 30), d: dati || {} });
   salvaRegistro();
   clearTimeout(S.timerReg);
   S.timerReg = setTimeout(mandaRegistro, 30000);
