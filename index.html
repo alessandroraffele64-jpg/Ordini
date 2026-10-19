@@ -541,7 +541,7 @@ details.crono[open] > summary{background:var(--surface-2);border-color:var(--sur
 .tasto-riq .crono-n{white-space:nowrap}
 .tasto-riq[aria-expanded="true"]{background:var(--surface-2);border-color:var(--ink)}
 .riquadro{display:flex;flex-direction:column;gap:10px;padding:12px;border:1.5px solid var(--ink);border-radius:var(--r-lg);background:var(--surface-2)}
-/* titolari: «Codici per registrarsi» e «Link per il personale» in fondo, piccoli e grigi */
+/* titolari: «Link per il personale» in fondo, piccolo e grigio */
 .tasti-discreti{display:flex;flex-direction:column;gap:4px;padding-top:8px;border-top:1px solid var(--line)}
 .tasti-discreti:not(:has(> details:not([hidden]))){display:none}
 details.card.discreto:not([open]){background:none;border:0;padding:0}
@@ -601,12 +601,11 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
 .link-lista .mini{margin-left:auto}
 
 :focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-/* sito: schermata di accesso con nome e PIN */
+/* sito: schermata di accesso con il codice personale */
 .accesso{position:fixed;inset:0;z-index:80;overflow-y:auto;background:var(--bg);padding:calc(env(safe-area-inset-top,0px) + 20px) 16px calc(env(safe-area-inset-bottom,0px) + 24px)}
 .acc-box{max-width:420px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
 .acc-testa{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:var(--r-lg);background:var(--nero);border-bottom:2px solid var(--oro)}
 .acc-testa .logo{width:56px;height:56px;border-radius:12px}
-.acc-tab{position:static;box-shadow:none}
 #form-accesso .field{flex:none}
 #form-accesso .primary{margin-top:4px}
 .acc-attesa{text-align:center;color:var(--muted);font-weight:700}
@@ -662,7 +661,10 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
 .perm-tasto[aria-checked="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .codici-lista li:has(.permessi){padding-bottom:6px}
 /* Persone registrate: elenco, permessi a gruppi, scheda della persona */
-.pers-permessi{width:100%}
+.pers-permessi,.pers-aggiungi{width:100%}
+/* il codice per entrare: grande, da leggere o dettare */
+.codice-grande{margin:6px 0;padding:14px 10px;border:2px dashed var(--line);border-radius:14px;text-align:center;font:800 34px/1.1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.12em;user-select:all}
+.pers-nuova{display:flex;flex-direction:column;gap:12px}
 .pers-riga{appearance:none;width:100%;display:flex;align-items:center;gap:10px;min-height:56px;padding:8px 12px;border:1.5px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);text-align:left;cursor:pointer;font:inherit}
 .pers-riga:hover{border-color:var(--oro)}
 .pers-riga.sospesa{opacity:.7}
@@ -727,7 +729,7 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
   #bisc-negozio > #comanda{grid-column:1;grid-row:span 3}
   #bisc-negozio > #bisc-chiesti-wrap,#bisc-negozio > #crono-bisc{grid-column:2}
   /* schede di una sola colonna: larghe come una pagina, non come tutto lo schermo */
-  #pannello-notifiche,#pannello-persone,#pannello-statistiche,#bisc-panificio,#pren-dacontrollare,#pren-pagine,#pren-scegli,#pren-giorni,#pren-risultati,#pren-fascia,#mag-form,#mag-segnate-box,#giro-wrap,#codici-box,#link-personale{max-width:760px;width:100%}
+  #pannello-notifiche,#pannello-persone,#pannello-statistiche,#bisc-panificio,#pren-dacontrollare,#pren-pagine,#pren-scegli,#pren-giorni,#pren-risultati,#pren-fascia,#mag-form,#mag-segnate-box,#giro-wrap,#link-personale{max-width:760px;width:100%}
   #pren-nuova,#mag-segna{align-self:flex-start;min-width:280px}
   .menu-voce{min-height:48px;font-size:16px}
   /* «Controlla» e «Conferma»: una finestra in mezzo allo schermo, non tutta la pagina */
@@ -918,13 +920,24 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
       <button type="button" class="primary" id="pren-nuova">+ Nuova prenotazione</button>
       <div class="blocco" id="pren-giorni"></div>
       <p class="vuoto" id="pren-vuoto">Nessuna prenotazione. Quando un cliente prenota, scrivila qui: il panificio vede subito quanto preparare per ogni giorno.</p>
+      <!-- solo titolari: le prenotazioni eliminate, con chi e quando, e «Rimetti» -->
+      <details class="crono" id="pren-eliminate" hidden>
+        <summary><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 4v4h4"></path><path d="M12 8v4l3 2"></path></svg>Prenotazioni eliminate <span class="crono-n" id="n-pren-eliminate"></span></summary>
+        <div class="blocco">
+          <p class="hint">Le prenotazioni che un titolare ha eliminato, le più recenti in alto. Le vedono solo i titolari. «Rimetti» la fa tornare com'era, per tutti.</p>
+          <ul class="lista" id="lista-pren-eliminate"></ul>
+          <p class="vuoto" id="vuoto-pren-eliminate">Nessuna prenotazione eliminata.</p>
+        </div>
+      </details>
     </div>
 
     <!-- Persone registrate: solo il titolare, dal menu -->
     <div class="view" id="pannello-persone" hidden>
       <div class="blocco" id="persone-elenco-box">
         <button type="button" class="primary pers-permessi" data-pers-scegli="1">Permessi di ogni persona</button>
-        <p class="hint">Con «Permessi» scegli cosa vede e cosa può fare ognuno. Qui sotto tocca un nome per cambiargli il ruolo, sospenderlo o togliergli l'accesso.</p>
+        <button type="button" class="primary pers-aggiungi" data-pers-aggiungi="1">+ Aggiungi persona</button>
+        <p class="hint">Con «Aggiungi persona» scrivi il nome e il posto di un dipendente nuovo: l'app ti dà il codice per entrare. Con «Permessi» scegli cosa vede e cosa può fare ognuno. Qui sotto tocca un nome per dargli un codice nuovo (se si è scollegato), cambiargli il ruolo, sospenderlo o togliergli l'accesso.</p>
+        <div class="blocco" id="persone-attesa" hidden></div>
         <div class="card blocco"><ul class="codici-lista" id="persone-lista"></ul></div>
       </div>
       <div class="blocco" id="persone-dettaglio" hidden></div>
@@ -1109,16 +1122,8 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
     </div>
   </section>
 
-  <!-- Solo titolari, in fondo e poco in vista: codici per registrarsi e link per il personale -->
+  <!-- Solo titolari, in fondo e poco in vista: link per il personale -->
   <div class="tasti-discreti">
-  <details class="card discreto" id="codici-box" hidden>
-    <summary>Codici per registrarsi</summary>
-    <div class="blocco">
-      <p class="hint">Dai a ogni dipendente il codice del suo posto di lavoro: lo scrive una sola volta, la prima volta che entra, e da lì vede solo la sua parte.</p>
-      <ul class="codici-lista" id="codici-lista"></ul>
-      <p class="hint">Non mandarli nei gruppi: chi ha un codice può registrarsi.</p>
-    </div>
-  </details>
 
 
   <!-- Solo per il titolare: i link per ognuno -->
@@ -1132,7 +1137,7 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
         <li><span class="pill dest dest-panif">Panificio e magazzino</span><code>#panificio</code><button type="button" class="mini" data-prova="panificio">Prova</button></li>
         <li><span class="pill dest dest-altro">Chi fa il giro</span><code>#consegne</code><button type="button" class="mini" data-prova="consegne">Prova</button></li>
       </ul>
-      <p class="hint" id="link-nota">È una separazione comoda, non una protezione: chi ha il link senza aggiunta vede tutto.</p>
+      <p class="hint" id="link-nota">Questi link aprono solo la pagina di ogni posto. I dati si vedono solo dopo essere entrati con il proprio codice.</p>
     </div>
   </details>
   </div>
@@ -1141,7 +1146,7 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
   <p class="chi-sei" id="chi-sei" hidden><span id="chi-sei-testo"></span><button type="button" class="link" id="esci">Esci</button></p>
 </main>
 
-<!-- Sito: chi entra scrive nome e PIN; la prima volta anche il codice del negozio -->
+<!-- Sito: chi entra scrive il codice personale che gli ha dato il titolare (vale una volta sola) -->
 <div class="accesso" id="accesso" hidden>
   <div class="acc-box">
     <div class="acc-testa">
@@ -1149,16 +1154,10 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
       <div class="testata-titolo"><p class="marchio">Profumo di Pane</p><p class="app-nome">Ordini</p></div>
     </div>
     <p class="acc-attesa" id="acc-attesa">Un attimo…</p>
-    <nav class="switch acc-tab" id="acc-tab" role="tablist" aria-label="Accesso" hidden>
-      <button type="button" role="tab" data-acc="entra" aria-selected="true">Entra</button>
-      <button type="button" role="tab" data-acc="prima" aria-selected="false">Prima volta</button>
-    </nav>
+    <button type="button" class="primary" id="acc-riprova" hidden>Riprova</button>
     <form class="card" id="form-accesso" novalidate hidden>
-      <p class="hint" id="acc-spiega"></p>
-      <label class="field" for="acc-nome"><span class="label-sm">Il tuo nome</span><input id="acc-nome" type="text" autocomplete="username" autocapitalize="words" maxlength="40" placeholder="Per esempio: Massimo"></label>
-      <label class="field" for="acc-pin"><span class="label-sm">PIN (da 4 a 6 numeri)</span><input id="acc-pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="current-password"></label>
-      <label class="field" for="acc-pin2" id="acc-riga-pin2" hidden><span class="label-sm">Ripeti il PIN</span><input id="acc-pin2" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="new-password"></label>
-      <label class="field" for="acc-codice" id="acc-riga-codice" hidden><span class="label-sm">Codice del negozio</span><input id="acc-codice" type="text" autocapitalize="characters" autocomplete="off" spellcheck="false" maxlength="30" placeholder="Te lo dà il titolare"></label>
+      <p class="hint" id="acc-spiega">Scrivi il codice che ti ha dato il titolare. Vale una volta sola: dopo resti dentro e non ti serve più.</p>
+      <label class="field" for="acc-codice"><span class="label-sm">Il tuo codice</span><input id="acc-codice" type="text" autocapitalize="characters" autocomplete="one-time-code" spellcheck="false" maxlength="12" placeholder="Per esempio: K7P 4QM"></label>
       <p class="riep-avviso" id="acc-errore" role="alert" hidden></p>
       <button type="submit" class="primary" id="acc-invia">Entra</button>
     </form>
@@ -1545,7 +1544,7 @@ function segnaNuove(richieste, pren){
   }
 }
 function ricomponi(){
-  const out = [], tolte = [], programmate = [], pren = [], mag = [];
+  const out = [], tolte = [], programmate = [], pren = [], mag = [], prenElim = [];
   const domani = domaniStr();
   S.docsRichieste.forEach(function(doc){
     const voci = doc.voci && typeof doc.voci === "object" ? doc.voci : {};
@@ -1553,7 +1552,13 @@ function ricomponi(){
       const v = voci[rid];
       if (!v || typeof v !== "object") continue;
       const k = doc.id + "~" + rid;
-      if (v.tipo === "prenotazione"){ if (!v.annullato) pren.push(normaPren(k, v, S.stati[k], doc.id, rid)); continue; }
+      if (v.tipo === "prenotazione"){
+        if (!v.annullato) pren.push(normaPren(k, v, S.stati[k], doc.id, rid));
+        /* eliminate da un titolare con «Elimina» (le vecchie tolte con «Togli» restano nascoste) */
+        else if (v.eliminata === true) prenElim.push(Object.assign(normaPren(k, v, S.stati[k], doc.id, rid), {
+          eliminataAlle: Number(v.annullatoAlle) || 0, eliminataDa: typeof v.eliminataDa === "string" ? v.eliminataDa : "", eliminataNome: String(v.eliminataNome || "").slice(0, 60) }));
+        continue;
+      }
       /* cose che mancano in magazzino segnate da chi fa il giro o dai titolari: non sono richieste dei negozi */
       if (v.tipo === "magazzino"){ if (!v.annullato) mag.push(normaMag(k, v, S.stati[k], doc.id)); continue; }
       const r = norma(k, v, S.stati[k], doc.id, rid);
@@ -1566,6 +1571,7 @@ function ricomponi(){
   S.richieste = out;
   S.tolte = tolte;
   S.prenotazioni = pren;
+  S.prenEliminate = prenElim.sort(function(a, b){ return b.eliminataAlle - a.eliminataAlle; });
   S.magazzino = mag;
   segnaNuove(out, pren);
   S.programmate = programmate.sort(function(a, b){ return a.perIl.localeCompare(b.perIl) || a.creato - b.creato; });
@@ -1636,7 +1642,11 @@ const NUMERI = [
   { k:"chiediLuogo", gruppo:"Chi lavora in più posti", nome:"«Sei ancora al…?»", unita:"ore", base:1, min:1, max:12, passo:1,
     domanda:"Dopo quante ore chiedere «Sei ancora al…?»",
     dove:"A chi lavora in più posti, quando apre l'app.",
-    esempio:function(v){ return "Tua sorella apre l'app al Corso alle 9. Se la riapre dopo le " + (9 + v) + ", l'app le chiede «Sei ancora al Corso?»."; } }
+    esempio:function(v){ return "Tua sorella apre l'app al Corso alle 9. Se la riapre dopo le " + (9 + v) + ", l'app le chiede «Sei ancora al Corso?»."; } },
+  { k:"codice", gruppo:"Codici per entrare", nome:"Quanto vale un codice per entrare", unita:"ore", base:24, min:1, max:72, passo:1,
+    domanda:"Per quante ore vale un codice per entrare, se nessuno lo usa?",
+    dove:"In «Persone registrate», quando crei un codice («Aggiungi persona» o «Crea un codice nuovo»).",
+    esempio:function(v){ return "Alle 9 crei il codice per Maria. Se non lo usa entro " + (v === 1 ? "un'ora" : v + " ore") + ", non vale più e ne devi creare uno nuovo. In ogni caso vale una volta sola. Vale per i codici creati da adesso in poi."; } }
 ];
 function numeriPuliti(d){
   const out = {};
@@ -3551,7 +3561,8 @@ function capitoliManuale(){
     ["Come vedo cosa preparare?", ["Ogni giorno ha la sua pagina con il totale «Ancora da preparare» (si sommano solo le stesse misure: kg con kg, pezzi con pezzi). Le prenotazioni «Tutta la giornata» sono in cima."]],
     ["Cosa vuol dire «Messo da parte»?", ["Che la prenotazione è pronta e messa da parte nel posto dove il cliente la ritira. Di solito lo può premere chiunque."]],
     ["Come disdico una prenotazione?", ["Tocca ", tasto("Disdici"), " e scegli il motivo (è obbligatorio). Resta barrata in fondo al giorno con chi l'ha disdetta. Se è stato uno sbaglio, ", tasto("Ripristina"), ". Chi fa il giro non può disdire (salvo che il titolare gli dia il permesso); se non vedi il tasto, il titolare te l'ha tolto."]],
-    tit ? ["Come elimino del tutto una prenotazione?", ["Solo i titolari: sotto la prenotazione tocca ", tasto("Elimina"), " e conferma. Sparisce per tutti, anche dai totali e dalle statistiche, e dall'app non si rimette. Usalo per una prenotazione scritta per sbaglio o due volte. Se il cliente ha solo cambiato idea, meglio ", tasto("Disdici"), ": resta scritto il motivo. Se elimini per sbaglio, chiedi a Claude: nel database resta una copia e si può recuperare."]] : null,
+    tit ? ["Come elimino del tutto una prenotazione?", ["Solo i titolari: sotto la prenotazione tocca ", tasto("Elimina"), " e conferma. Sparisce per tutti, anche dai totali e dalle statistiche. Usalo per una prenotazione scritta per sbaglio o due volte. Se il cliente ha solo cambiato idea, meglio ", tasto("Disdici"), ": resta scritto il motivo."]] : null,
+    tit ? ["Ho eliminato una prenotazione per sbaglio: come la rimetto?", ["In fondo alla pagina delle prenotazioni apri ", tasto("Prenotazioni eliminate"), ": ci sono quelle eliminate, con chi le ha eliminate e quando. Tocca ", tasto("Rimetti"), " e conferma: torna com'era, per tutti, anche nei totali da preparare. Le vedono solo i titolari."]] : null,
     ["Come trovo una prenotazione?", ["Tocca ", tasto("🔍 Cerca"), " e scrivi il nome del cliente, un prodotto o il telefono, anche a metà. Cerca da 7 giorni fa in avanti."]]
   ]});
   if (vedeBiscotti()) cap.push({ titolo:"Biscotti", domande: panif && !tit ? [
@@ -3595,7 +3606,9 @@ function capitoliManuale(){
   ]});
   cap.push({ titolo:"In tutte le pagine", domande:[
     ["A cosa serve il «?» in alto?", ["In ogni pagina, in alto a destra, c'è ", tasto("?"), ": apre «Come funziona» con solo le domande su quella pagina. Per vederle tutte tocca «Mostra tutte le domande». ", tasto("Indietro"), " ti riporta alla pagina dove eri."], disegnoAiuto()],
-    haAzione("vedeChi") ? ["A cosa serve il tasto «Chi?»", ["Accanto a una richiesta, tocca ", tasto("Chi?"), ": compare il nome di chi l'ha chiesta (per esempio «Ordinato da Maria»). Toccalo di nuovo per nasconderlo."]] : null
+    haAzione("vedeChi") ? ["A cosa serve il tasto «Chi?»", ["Accanto a una richiesta, tocca ", tasto("Chi?"), ": compare il nome di chi l'ha chiesta (per esempio «Ordinato da Maria»). Toccalo di nuovo per nasconderlo."]] : null,
+    ["Come si entra nell'app? Devo ricordare un PIN?", ["No, niente PIN. La prima volta il titolare ti dà un codice di 6 lettere e numeri (per esempio K7P 4QM): lo scrivi e tocchi ", tasto("Entra"), ". Da lì resti dentro, anche se chiudi l'app o spegni il telefono. Il codice vale una volta sola: dopo non serve più."]],
+    ["Ho cambiato telefono, ho cancellato l'app o ho toccato «Esci»: come rientro?", ["Chiedi al titolare un codice nuovo: lo scrivi e rientri con tutto come prima (le tue richieste, i permessi, le notifiche). Per questo non toccare ", tasto("Esci"), " se vuoi solo chiudere l'app."]]
   ]});
   if (!tit) cap.push({ titolo:"Permessi", domande:[
     ["Un collega ha un tasto che io non ho: perché?", ["Il titolare può dare o togliere a ognuno le singole cose (per esempio segnare «Urgente», disdire una prenotazione, vedere il telefono del cliente) e anche le singole notifiche. Se ti manca qualcosa che ti serve, chiedi al titolare."]]
@@ -3606,7 +3619,7 @@ function capitoliManuale(){
     ["Perché alcune righe dei permessi sono grigie?", ["Ognuno vede tutte le righe, ma alcune valgono solo in un posto: per esempio «Segnare i biscotti Fatto» vale al Panificio. Se la persona non lavora lì, la riga è su No e sotto c'è scritto quale posto aggiungere prima in «Dove lavora»."]],
     ["Posso scegliere le mie notifiche da titolare?", ["Sì: in «Persone registrate» → ", tasto("Permessi di ogni persona"), " tocca il tuo nome (o quello dell'altro titolare). Ci sono tutte le notifiche, una per riga: metti ", tasto("No"), " a quelle che non vuoi, per esempio «Un negozio chiede qualcosa all'altro» (Piazza Nenni chiede i vassoi al Corso)."]],
     ["Posso scegliere io le notifiche di una persona?", ["Sì: nei suoi permessi, in «Notifiche che può ricevere», una per riga. Puoi dare a chiunque anche notifiche che di solito non sono del suo posto (per esempio «Pronto da caricare» a una persona del Corso). «No» vuol dire che non le arriva mai; «Sì» vuol dire che la può ricevere e sul suo telefono la accende o la spegne. Sotto vedi se sul suo telefono è accesa. Nell'elenco delle persone vedi chi ha le notifiche accese 🔔 e chi no 🔕."]],
-    ["Una persona cambia negozio o va in ferie?", ["In «Persone registrate» tocca il suo nome. ", tasto("Cambia ruolo"), " la sposta (per esempio dal Corso a Piazza Nenni) senza registrarsi di nuovo. ", tasto("Sospendi"), " non la fa entrare finché non tocchi ", tasto("Riattiva"), "."]],
+    ["Una persona cambia negozio o va in ferie?", ["In «Persone registrate» tocca il suo nome. ", tasto("Cambia ruolo"), " la sposta (per esempio dal Corso a Piazza Nenni) senza codice nuovo. ", tasto("Sospendi"), " non le fa usare l'app finché non tocchi ", tasto("Riattiva"), ": dopo, sul suo telefono, basta toccare «Riprova»."]],
     ["A cosa serve «Impostazioni»?", ["Lì scegli alcuni numeri dell'app, divisi a gruppi (Richieste dei negozi, Avvisi e colori, Per quanto tempo tenere le cose…): per esempio dopo quante ore una richiesta diventa arancione o quanti tasti «Chiesti spesso» si vedono. Valgono per tutti i telefoni. Sotto ogni numero c'è un esempio che cambia mentre tocchi − e +; poi «Salva». «Rimetti com'era all'inizio» torna al numero di partenza."]],
     ["A cosa serve «Database»?", ["Entrando ci sono tre tasti: Ordini, Prenotazioni, Biscotti. Il numero dice quante cose nuove ci sono da controllare. In ogni parte ci sono i nomi nuovi o corretti dall'app («Sì, è giusto», «No, era…», «È un prodotto nuovo», «Scrivi il nome giusto»), e in fondo l'elenco completo. In Ordini, più sotto, c'è una parte a sé per le cose segnate con «+ Segna cosa manca». Una correzione vale anche per quello già scritto. Quanti giorni indietro guardare lo scegli in «Impostazioni» (di partenza 7)."]],
     ["Un prodotto è scritto male: come lo correggo?", ["Nel «Database» tocca «Scrivi il nome giusto» (o «No, era…»). Scrivi il nome: sotto escono i prodotti dell'elenco che somigliano, puoi toccarne uno. Se il nome che scrivi non c'è, diventa un prodotto nuovo. Quello scritto male resta collegato al nome giusto: la volta dopo l'app lo corregge da sola."]],
@@ -3614,8 +3627,10 @@ function capitoliManuale(){
     ["Un ordine non c'entra niente: come lo tolgo?", ["Nel «Database», parte Ordini, sotto l'ordine tocca «Elimina questo ordine» e conferma. Sparisce dalle richieste e dal giro. Se è stato uno sbaglio, lo ritrovi in Cronologia."]],
     ["Come cambio l'elenco dei prodotti?", ["Nel «Database», in fondo a Ordini o Prenotazioni, apri «Tutti i prodotti». In cima puoi aggiungere un prodotto. Accanto a ogni prodotto c'è «Modifica»: puoi cambiare il nome (se il nome nuovo c'è già, i due prodotti si uniscono), aggiungere un altro modo di scriverlo, togliere un modo di scriverlo o togliere il prodotto dall'elenco. Nei Biscotti, in cima puoi aggiungere un biscotto; con «Modifica» cambi il nome (vale anche per le comande già fatte; se il nome c'è già, i due diventano uno) o togli un biscotto aggiunto dai negozi. In fondo puoi rimettere quelli tolti."]],
     puoStat() ? ["Cosa trovo nelle «Statistiche»?", ["Quante richieste, cosa si chiede di più, cosa manca più spesso (anche le volte portate solo in parte e quelle segnate con «+ Segna cosa manca»), quanto si aspetta in magazzino prima che una cosa arrivi, quando si chiede, quanto ci mette ad arrivare al negozio, i biscotti, le prenotazioni e le disdette con il loro motivo. Scegli il periodo in alto. I tasti per scaricare danno un file che si apre con Excel."]] : null,
-    ["Dove sono i codici per registrarsi e i link per il personale?", ["In fondo alla pagina, sotto una riga sottile, scritti piccoli e in grigio: ", tasto("Codici per registrarsi"), " e ", tasto("Link per il personale"), ". Li vedono solo i titolari. Toccandoli si aprono come prima."]],
-    ["Se qualcuno dimentica il PIN o se ne va?", ["In «Persone registrate» tocca il suo nome, poi in fondo apri «Togliere l'accesso» e conferma due volte: non può più entrare, le sue richieste restano. Se serve, si registra di nuovo con il codice del negozio."]]
+    ["Come aggiungo una persona nuova?", ["In «Persone registrate» tocca ", tasto("+ Aggiungi persona"), ". Scrivi il nome con cui la vedranno i colleghi (se ce ne sono due uguali aggiungi l'iniziale del cognome, per esempio Maria R) e scegli dove lavora, poi ", tasto("Crea il codice"), ". L'app ti mostra un codice di 6 lettere e numeri, per esempio K7P 4QM: diglielo o tocca ", tasto("Copia il messaggio da mandare"), " e mandalo su WhatsApp solo a lei. Lei apre l'app, scrive il codice e tocca «Entra»: entra già con il suo nome e il suo posto. Il codice vale una volta sola e per " + num("codice") + " ore (le ore le scegli in «Impostazioni»). Scrivilo subito: dopo non si può rileggere. Finché non lo usa, in «Persone registrate» la vedi in «Codici non ancora usati»: se l'ha perso tocca ", tasto("Codice nuovo"), "."]],
+    ["Una persona ha cambiato telefono o si è scollegata: come la faccio rientrare?", ["In «Persone registrate» tocca il suo nome, poi ", tasto("Crea un codice nuovo"), ". Le dai il codice, lei lo scrive e rientra con tutto come prima: stesso nome, permessi, notifiche e richieste. Il codice per un titolare lo crea l'altro titolare; se vi scollegate tutti e due, chiedi a Claude."]],
+    ["Se qualcuno se ne va?", ["In «Persone registrate» tocca il suo nome, poi in fondo apri «Togliere l'accesso» e conferma due volte: non può più entrare, le sue richieste restano. Se un giorno torna, aggiungilo di nuovo con «+ Aggiungi persona»."]],
+    ["Dove sono i link per il personale?", ["In fondo alla pagina, sotto una riga sottile, scritto piccolo e in grigio: ", tasto("Link per il personale"), ". Lo vedono solo i titolari."]]
   ]});
   return cap;
 }
@@ -3633,13 +3648,13 @@ function renderManuale(){
 function domandePagina(sez){
   const tit = "Solo per i titolari";
   const regole = {
-    richieste: (S.punto === "Panificio" ? [["Panificio e magazzino"]] : [["Richieste del negozio"]]).concat([["Cose che non ci sono in magazzino", /striscia/i], ["In tutte le pagine"], ["Lavoro in più posti"], [tit, /codici/i]]),
-    giro: [["Giro consegne"], ["Cose che non ci sono in magazzino", /striscia|toglie/i], ["In tutte le pagine"], ["Lavoro in più posti"], [tit, /codici/i]],
+    richieste: (S.punto === "Panificio" ? [["Panificio e magazzino"]] : [["Richieste del negozio"]]).concat([["Cose che non ci sono in magazzino", /striscia/i], ["In tutte le pagine"], ["Lavoro in più posti"], [tit, /link per il personale/i]]),
+    giro: [["Giro consegne"], ["Cose che non ci sono in magazzino", /striscia|toglie/i], ["In tutte le pagine"], ["Lavoro in più posti"], [tit, /link per il personale/i]],
     prenotazioni: [["Prenotazioni"], [tit, /prodotto/i]],
     biscotti: [["Biscotti"]],
     mancanti: [["Cose che non ci sono in magazzino"]],
     notifiche: [["Notifiche"], [tit, /notifiche/i]],
-    persone: [[tit, /permess|posti|notifiche|ferie|PIN/i], ["Permessi"]],
+    persone: [[tit, /permess|posti|notifiche|ferie|persona nuova|telefono|se ne va/i], ["Permessi"]],
     database: [[tit, /Database|prodott|ordine/i]],
     impostazioni: [[tit, /Impostazioni/i]],
     statistiche: [[tit, /Statistiche/i]]
@@ -3759,7 +3774,6 @@ function renderMenu(){
   $("tab-consegne-nome").textContent = t === "titolare" ? "Consegne" : "Giro consegne";
   $("punti").hidden = t !== "titolare" || inStat() || inPren() || inNotif() || inPersone() || inMancanti() || inDatabase() || inImpostazioni() || inManuale();
   $("link-personale").hidden = t !== "titolare" || bisc;
-  $("codici-box").hidden = !S.sito || !S.owner || t !== "titolare" || bisc;
   renderTestata();
 }
 /* testata e fascia: la fascia prende il colore di dove sei (negozio, panificio, giro) */
@@ -4253,6 +4267,7 @@ function prenVisibili(){
   return neg ? S.prenotazioni.filter(function(p){ return p.ritiro === neg || p.presaDa === neg || p.mio; }) : S.prenotazioni;
 }
 S.prenotazioni = [];
+S.prenEliminate = [];
 S.formPren = { aperto: false, quando: "domani", data: "", ritiro: "", inviando: false, ctrl: null, tuttoGiorno: false };
 S.prenCerca = { aperto: false, testo: "" };
 S.prenCorreggi = "";
@@ -5090,13 +5105,52 @@ async function eliminaPren(id){
   if (!p || !puoEliminarePren() || S.pending.has(id)) return;
   const cosa = (p.cliente ? p.cliente + ": " : "") + p.voci.map(testoVocePren).join(", ");
   const si = await chiedi("Eliminare del tutto questa prenotazione?",
-    "«" + cosa + "», " + testoGiorno(p.perIl) + ". Sparisce per tutti, anche dai totali da preparare e dalle statistiche, e non si può rimettere dall'app. Se il cliente ha solo cambiato idea, usa «Disdici».",
+    "«" + cosa + "», " + testoGiorno(p.perIl) + ". Sparisce per tutti, anche dai totali da preparare e dalle statistiche. Se è stato uno sbaglio la ritrovi in fondo a Prenotazioni, in «Prenotazioni eliminate». Se il cliente ha solo cambiato idea, usa «Disdici».",
     "Sì, elimina", "No");
   if (!si) return;
   S.pending.add(id); renderTutto();
-  const ok = await scrivi(function(){ return store.annulla(p); });
+  const ok = await scrivi(function(){ return store.annulla(p, { eliminata: true, eliminataDa: S.mioId || "", eliminataNome: S.nomeMio || "" }); });
   S.pending.delete(id);
-  if (ok){ avviso("Prenotazione eliminata."); registra("prenotazione eliminata", { disdetta: p.disdetta, messaDaParte: p.stato === "parte" }); }
+  if (ok){ avviso("Prenotazione eliminata. Se è stato uno sbaglio, è in fondo alla pagina in «Prenotazioni eliminate»."); registra("prenotazione eliminata", { disdetta: p.disdetta, messaDaParte: p.stato === "parte" }); }
+  renderTutto();
+}
+/* «Prenotazioni eliminate» in fondo alla pagina: solo i titolari, con «Rimetti» */
+function chiEliminata(p){
+  if (p.eliminataDa && p.eliminataDa === S.mioId) return "te";
+  return S.nomi[p.eliminataDa] || p.eliminataNome || "un titolare";
+}
+function renderPrenEliminate(){
+  const box = $("pren-eliminate");
+  const si = puoEliminarePren();
+  box.hidden = !si;
+  if (!si) return;
+  const l = S.prenEliminate || [];
+  $("n-pren-eliminate").textContent = l.length ? "(" + l.length + ")" : "";
+  $("vuoto-pren-eliminate").hidden = l.length > 0;
+  riempi($("lista-pren-eliminate"), l.map(function(p){
+    const off = S.pending.has(p.id);
+    const chi = p.mio ? "te" : (S.nomi[p.autore] || "…");
+    return el("li", {class:"riga pren " + classeDest(p.ritiro)},
+      sigla(p.ritiro),
+      el("div", {class:"riga-main"},
+        el("p", {class:"articolo"}, p.cliente ? el("span", {text:p.cliente + ": "}) : null, p.voci.map(testoVocePren).join(", ")),
+        el("p", {class:"pren-disdetta-info", text:"Eliminata da " + chiEliminata(p) + (p.eliminataAlle ? " · " + quando(p.eliminataAlle) : "")}),
+        meta([el("span", {class:"pill p-ora", text:"Per " + testoGiorno(p.perIl)}),
+          el("span", {class:"pill dest " + classeDest(p.ritiro), text:"Ritiro " + (PREP[p.ritiro] || p.ritiro)}),
+          testoOraPren(p) ? el("span", {class:"pill p-ora", text:testoOraPren(p)}) : null,
+          "presa da " + chi + ", " + quando(p.creato)])),
+      el("div", {class:"azioni"}, el("button", {type:"button", class:"link", "data-pren-rimetti":p.id, disabled:off, text:"Rimetti"})));
+  }));
+}
+async function rimettiPren(id){
+  const p = (S.prenEliminate || []).find(function(x){ return x.id === id; });
+  if (!p || !puoEliminarePren() || S.pending.has(id)) return;
+  const si = await chiedi("Rimettere questa prenotazione?", (p.cliente ? p.cliente + ": " : "") + p.voci.map(testoVocePren).join(", ") + ", " + testoGiorno(p.perIl) + ". Torna come prima, per tutti, anche nei totali da preparare.", "Sì, rimetti", "No");
+  if (!si) return;
+  S.pending.add(id); renderTutto();
+  const ok = await scrivi(function(){ return store.ripristina(p, { eliminata: false }); });
+  S.pending.delete(id);
+  if (ok){ avviso("Prenotazione rimessa: è di nuovo " + (p.perIl === oggiStr() ? "in Oggi" : "nel suo giorno") + "."); registra("prenotazione rimessa", {}); }
   renderTutto();
 }
 /* il giorno scelto nel modulo: Oggi, Domani o quello scritto nella casella */
@@ -5424,6 +5478,7 @@ function renderPrenotazioni(){
   riempi($("pren-giorni"), cerca ? [] : gruppi);
   $("pren-vuoto").hidden = cerca || gruppi.length > 0;
   $("pren-vuoto").textContent = "Nessuna prenotazione per " + testoGiorno(g) + ".";
+  renderPrenEliminate();
 }
 const fmtCortoG = new Intl.DateTimeFormat("it-IT", {weekday:"short", day:"numeric", month:"short"});
 function fmtCortoGiorno(s){ return fmtCortoG.format(msDelGiorno(s)); }
@@ -6045,11 +6100,18 @@ function collega(){
       return;
     }
     if (b.id === "rimuovi-esempi") return rimuoviEsempi();
-    if (b.dataset.acc) return mostraAccesso(b.dataset.acc);
+    if (b.id === "acc-riprova") return location.reload();
     if (b.id === "esci") return esciSB();
     if (b.dataset.azzera) return azzeraPersona(b.dataset.azzera);
     if (b.dataset.perm){ const x = b.dataset.perm.split("|"); return cambiaPermessoPersona(x[0], x[1], x[2]); }
     if (b.dataset.persScegli) return vaiPersone({ modo: "scegli" });
+    if (b.dataset.persAggiungi) return vaiPersone({ modo: "aggiungi" });
+    if (b.dataset.persCrea) return aggiungiPersona();
+    if (b.dataset.persCodice) return codiceNuovoPersona(b.dataset.persCodice);
+    if (b.dataset.codiceRifai) return rifaiCodice(b.dataset.codiceRifai);
+    if (b.dataset.codiceAnnulla) return annullaCodice(b.dataset.codiceAnnulla);
+    if (b.dataset.copiaCodice) return copiaCodice();
+    if (b.dataset.persFatto) return vaiPersone(null);
     if (b.dataset.persPermessi) return vaiPersone({ modo: "permessi", id: b.dataset.persPermessi });
     if (b.dataset.persScheda) return vaiPersone({ modo: "scheda", id: b.dataset.persScheda });
     if (b.dataset.persIndietro) return vaiPersone(S.pv && S.pv.modo === "permessi" && S.pvDa === "scheda" ? { modo: "scheda", id: S.pv.id } : (S.pv && S.pv.modo === "permessi" ? { modo: "scegli" } : null));
@@ -6087,6 +6149,7 @@ function collega(){
     if (b.dataset.prenDisdici) return apriDisdici(b.dataset.prenDisdici);
     if (b.dataset.prenElimina) return eliminaPren(b.dataset.prenElimina);
     if (b.dataset.prenRipristina) return ripristinaPren(b.dataset.prenRipristina);
+    if (b.dataset.prenRimetti) return rimettiPren(b.dataset.prenRimetti);
     if (b.dataset.copiaTel) return copiaTelefono(b.dataset.copiaTel);
     if (b.dataset.disdiciMotivo && S.disdici){ S.disdici.scelta = S.disdici.scelta === b.dataset.disdiciMotivo ? "" : b.dataset.disdiciMotivo; return renderDisdici(); }
     if (b.id === "disdici-no") return chiudiDisdici(true);
@@ -6248,7 +6311,6 @@ function collega(){
     n.addEventListener("touchend", fine);
     n.addEventListener("touchcancel", fine);
   })();
-  $("codici-box").addEventListener("toggle", function(){ if ($("codici-box").open) mostraCodici(); });
   /* registro: quali domande del manuale si aprono (il testo è quello dell'app, non quello scritto dalle persone) */
   document.addEventListener("toggle", function(ev){
     const d = ev.target;
@@ -6333,8 +6395,8 @@ function usaLocale(){
   store = {
     aggiungi: async function(voce){ const id = nuovoId(); if (!docs.has("locale")) docs.set("locale", {}); docs.get("locale")[id] = Object.assign({}, voce); emetti(); return "locale~" + id; },
     stato: async function(k, p){ stati[k] = Object.assign({}, stati[k], p); emetti(); },
-    annulla: async function(r){ const d = docs.get(r.autore); if (d && d[r.rid]) Object.assign(d[r.rid], { annullato: true, annullatoAlle: Date.now() }); emetti(); },
-    ripristina: async function(r){ const d = docs.get(r.autore); if (d && d[r.rid]) Object.assign(d[r.rid], { annullato: false, ripristinatoAlle: Date.now() }); emetti(); },
+    annulla: async function(r, piu){ const d = docs.get(r.autore); if (d && d[r.rid]) Object.assign(d[r.rid], { annullato: true, annullatoAlle: Date.now() }, piu); emetti(); },
+    ripristina: async function(r, piu){ const d = docs.get(r.autore); if (d && d[r.rid]) Object.assign(d[r.rid], { annullato: false, ripristinatoAlle: Date.now() }, piu); emetti(); },
     rimuoviEsempi: async function(){ docs.delete(ESEMPI); emetti(); },
     salvaMappa: async function(k, rep){ S.mappa = Object.assign({}, S.mappa, {[k]: rep}); emetti(); },
     bisc: async function(id, dati){
@@ -6371,20 +6433,16 @@ async function aggiornaOCrea(ref, dati){
   }
 }
 
-/* ---------- sito: accesso con nome e PIN, dati su Supabase ----------
+/* ---------- sito: accesso con il codice personale, dati su Supabase ----------
    Le regole su chi può fare cosa stanno nel database (supabase/setup.sql):
    qui si mostra solo quello che il database permette. */
 const SB_URL = "https://axyxyxwufnrabcpqcprb.supabase.co";
 const SB_KEY = "sb_publishable_JVR80zwzvlmNDA6nYsP2zw_tQAyXert";
 const SB_LIBRERIA = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
-const DOMINIO_STAFF = "profumodipane.it";
 const NOMI_RUOLI = {"corso":"Corso", "piazza-nenni":"Piazza Nenni", "panificio":"Panificio e magazzino", "consegne":"Giro consegne", "titolare":"Titolare"};
 let sb = null;
 const RAW = { voci: {}, autori: {}, bisc: {}, imp: {} };
 
-function slugNome(n){ return chiave(n).replace(/ /g, ".").slice(0, 40); }
-function emailDi(nome){ return "ordini." + slugNome(nome) + "@" + DOMINIO_STAFF; }
-function passwordDi(pin){ return "pdp-" + pin + "-pane"; }
 function errSB(e){
   const msg = String((e && (e.message || e.error_description)) || e || "");
   const code = e && e.code;
@@ -6581,7 +6639,7 @@ const VAPID_PUBLICA = "BC9TAKzQiQ-x3xtX0KWauGtV-uvIk9VFwqLjWAOzrJbe4e5w2AWyXMIej
    Il nome di chi lo fa lo mette il database (funzione "registra", supabase/aggiornamento-10-registro-con-nomi.sql):
    deciso dal proprietario il 19 ottobre, per vedere chi aiutare a usare meglio l'app; lo leggono solo lui e Claude. */
 const REGISTRO_ATTIVO = false;
-const VERSIONE_APP = "0424ec1a";
+const VERSIONE_APP = "51c0d799";
 S.reg = [];
 S.ultimoTasto = { nome: "", alle: 0 };
 S.tocchi = { nome: "", volte: 0, alle: 0, segnato: false };
@@ -7090,8 +7148,8 @@ function storeSB(){
       await scriviOp({ tab: "stati", tipo: "upsert", id: k, riga: { id: k, dati: dati } }, eventoStato(k, p));
       S.stati[k] = dati; emettiSB(true);
     },
-    annulla: function(r){ return cambiaVoce(r, { annullato: true, annullatoAlle: Date.now() }); },
-    ripristina: function(r){ return cambiaVoce(r, { annullato: false, ripristinatoAlle: Date.now() }); },
+    annulla: function(r, piu){ return cambiaVoce(r, Object.assign({ annullato: true, annullatoAlle: Date.now() }, piu)); },
+    ripristina: function(r, piu){ return cambiaVoce(r, Object.assign({ annullato: false, ripristinatoAlle: Date.now() }, piu)); },
     rimuoviEsempi: async function(){},
     salvaMappa: function(k, rep){ return salvaImp("reparti", function(d){ const m = Object.assign({}, d.mappa); m[k] = rep; return { mappa: m }; }); },
     prodotti: function(cambia){ return salvaImp("prodotti", cambia); },
@@ -7117,23 +7175,13 @@ function storeSB(){
 }
 
 /* ---------- accesso ---------- */
-S.modoAccesso = "entra";
 function erroreAccesso(msg){ $("acc-errore").textContent = msg || ""; $("acc-errore").hidden = !msg; }
-function mostraAccesso(modo, msg){
-  S.modoAccesso = modo === "prima" ? "prima" : "entra";
-  const prima = S.modoAccesso === "prima";
+function mostraAccesso(msg){
   $("accesso").hidden = false;
   $("acc-attesa").hidden = true;
-  $("acc-tab").hidden = false;
+  $("acc-riprova").hidden = true;
   $("form-accesso").hidden = false;
-  document.querySelectorAll("[data-acc]").forEach(function(b){ b.setAttribute("aria-selected", String(b.dataset.acc === S.modoAccesso)); });
-  $("acc-spiega").textContent = prima
-    ? "Scegli il nome con cui ti vedranno i colleghi e un PIN che ricorderai. Il codice del negozio te lo dà il titolare."
-    : "Scrivi il nome e il PIN che hai scelto la prima volta.";
-  $("acc-riga-pin2").hidden = !prima;
-  $("acc-riga-codice").hidden = !prima;
-  $("acc-pin").setAttribute("autocomplete", prima ? "new-password" : "current-password");
-  $("acc-invia").textContent = prima ? "Registrati ed entra" : "Entra";
+  $("acc-invia").textContent = "Entra";
   $("acc-invia").disabled = false;
   erroreAccesso(msg || "");
 }
@@ -7141,8 +7189,13 @@ function attesaAccesso(testo){
   $("accesso").hidden = false;
   $("acc-attesa").textContent = testo;
   $("acc-attesa").hidden = false;
-  $("acc-tab").hidden = true;
+  $("acc-riprova").hidden = true;
   $("form-accesso").hidden = true;
+}
+/* sospeso (per esempio in ferie): il telefono resta collegato, quando il titolare lo riattiva basta «Riprova» */
+function mostraSospeso(){
+  attesaAccesso(TESTO_SOSPESO);
+  $("acc-riprova").hidden = false;
 }
 async function entraConSessione(sess){
   if (!sess || !sess.user) return false;
@@ -7163,8 +7216,7 @@ async function entraConSessione(sess){
     return false;
   }
   if (prof[0].sospeso === true){
-    /* il titolare ha sospeso questa persona (per esempio in ferie): rientra quando la riattiva */
-    try { await sb.auth.signOut(); } catch(e){}
+    /* il titolare ha sospeso questa persona (per esempio in ferie): resta collegata, rientra quando la riattiva */
     S.sospeso = true;
     return false;
   }
@@ -7182,7 +7234,7 @@ async function entraConSessione(sess){
   $("accesso").hidden = true;
   $("chi-sei-testo").replaceChildren("Sei entrato come ", el("b", { text: S.nomeMio }), " · " + (NOMI_RUOLI[prof[0].ruolo] || ""));
   $("chi-sei").hidden = false;
-  if (S.owner) $("link-nota").textContent = "Sul sito ognuno vede già solo la sua parte: la decide il codice con cui si è registrato. Qui puoi vedere com'è.";
+  if (S.owner) $("link-nota").textContent = "Sul sito ognuno vede già solo la sua parte: la decide il posto che hai scelto quando l'hai aggiunto. Qui puoi vedere com'è.";
   applicaRuolo();
   ascoltaSB();
   caricaPreferenzeNotifiche();
@@ -7190,89 +7242,80 @@ async function entraConSessione(sess){
   await caricaTuttoSB();
   return true;
 }
+/* il codice si scrive con o senza spazi, maiuscole o minuscole: K7P 4QM = k7p4qm */
+function pulisciCodice(t){ return String(t || "").replace(/[^A-Za-z0-9]/g, "").toUpperCase(); }
+/* la «password» del telefono: lunga e a caso, nessuno la deve ricordare (il telefono resta collegato) */
+function parolaCasuale(){
+  const b = new Uint8Array(24);
+  crypto.getRandomValues(b);
+  return Array.from(b, function(x){ return ("0" + x.toString(16)).slice(-2); }).join("");
+}
+const ERRORI_CODICE = {
+  sbagliato: "Questo codice non esiste. Controlla di averlo scritto giusto (6 lettere e numeri).",
+  scaduto: "Questo codice non vale più: è già stato usato oppure è passato troppo tempo. Chiedine uno nuovo al titolare.",
+  tolto: "Il titolare ti ha tolto l'accesso. Se è uno sbaglio, chiedigli di aggiungerti di nuovo.",
+  troppi: "Troppi codici sbagliati. Aspetta 10 minuti e riprova.",
+  telefono: "Il telefono non riesce a entrare. Riprova."
+};
 async function inviaAccesso(ev){
   ev.preventDefault();
   if (S.accedendo) return;
-  const prima = S.modoAccesso === "prima";
-  const nome = $("acc-nome").value.replace(/\s+/g, " ").trim();
-  const pin = $("acc-pin").value.trim();
-  const codice = $("acc-codice").value.trim();
-  if (nome.length < 2 || !slugNome(nome)) return erroreAccesso("Scrivi il tuo nome.");
-  if (!/^\d{4,6}$/.test(pin)) return erroreAccesso("Il PIN deve avere da 4 a 6 numeri.");
-  if (prima && $("acc-pin2").value.trim() !== pin) return erroreAccesso("I due PIN non sono uguali.");
-  if (prima && !codice) return erroreAccesso("Scrivi il codice del negozio.");
+  const codice = pulisciCodice($("acc-codice").value);
+  if (!codice) return erroreAccesso("Scrivi il codice che ti ha dato il titolare.");
+  if (codice.length !== 6) return erroreAccesso("Il codice ha 6 lettere e numeri, per esempio K7P 4QM. Controlla di averlo scritto tutto.");
   S.accedendo = true;
   $("acc-invia").disabled = true;
-  $("acc-invia").textContent = prima ? "Registro…" : "Entro…";
+  $("acc-invia").textContent = "Entro…";
   erroreAccesso("");
-  const credenziali = { email: emailDi(nome), password: passwordDi(pin) };
+  const parola = parolaCasuale();
   try {
-    if (!prima){
-      const r = await sb.auth.signInWithPassword(credenziali);
-      if (r.error){
-        if (errSB(r.error).code === "unavailable") throw r.error;
-        return mostraAccesso("entra", "Nome o PIN sbagliati. Se è la prima volta che entri, tocca \"Prima volta\".");
-      }
-      if (!(await entraConSessione(r.data.session))){
-        if (S.sospeso) return mostraAccesso("entra", TESTO_SOSPESO);
-        mostraAccesso("prima", "Manca l'ultimo passo: ripeti il PIN e scrivi il codice del negozio.");
-        $("acc-nome").value = nome; $("acc-pin").value = pin;
-      }
-      return;
-    }
-    let sess = null;
-    const r = await sb.auth.signUp(credenziali);
+    const r = await sb.rpc("usa_codice", { codice: codice, password: parola });
     if (r.error){
       if (errSB(r.error).code === "unavailable") throw r.error;
-      if (!/already|registered|exists/i.test(r.error.message || "") && r.error.code !== "user_already_exists"){
-        return mostraAccesso("prima", "Registrazione non riuscita: " + (r.error.message || "riprova tra poco."));
+      return mostraAccesso("Non riuscito: " + (r.error.message || "riprova tra poco."));
+    }
+    const d = r.data || {};
+    if (!d.ok) return mostraAccesso(ERRORI_CODICE[d.errore] || "Non riuscito, riprova.");
+    const credenziali = { email: d.email, password: parola };
+    const a = d.crea ? await sb.auth.signUp(credenziali) : await sb.auth.signInWithPassword(credenziali);
+    if (a.error){
+      if (errSB(a.error).code === "unavailable") throw a.error;
+      return mostraAccesso("Non riuscito: " + (a.error.message || "riprova tra poco."));
+    }
+    const sess = a.data && a.data.session;
+    if (!sess) return mostraAccesso("Entrata da completare: nelle impostazioni di Supabase va spenta la conferma via email (Confirm email).");
+    if (d.nuovo){
+      /* persona nuova: il nome e il posto li ha già scritti il titolare */
+      const c = await sb.rpc("completa_codice", { codice: codice });
+      if (c.error){
+        if (errSB(c.error).code === "unavailable") throw c.error;
+        try { await sb.auth.signOut(); } catch(e){}
+        return mostraAccesso(/già usato/i.test(c.error.message || "") ? "Questo nome è già usato da un'altra persona: chiedi al titolare un codice nuovo." : "Non riuscito: " + (c.error.message || "riprova."));
       }
-      /* il nome c'è già: se il PIN è giusto è la stessa persona che non aveva finito */
-      const l = await sb.auth.signInWithPassword(credenziali);
-      if (l.error) return mostraAccesso("prima", "Questo nome è già usato. Se sei tu, tocca \"Entra\"; se no aggiungi l'iniziale del cognome (per esempio: Anna R).");
-      sess = l.data.session;
-    } else {
-      sess = r.data.session;
     }
-    if (!sess) return mostraAccesso("prima", "Registrazione da completare: nelle impostazioni di Supabase va spenta la conferma via email (Confirm email).");
-    const rr = await sb.rpc("registrati", { codice_negozio: codice, nome_persona: nome });
-    if (rr.error){
-      const m = rr.error.message || "";
-      if (errSB(rr.error).code === "unavailable") throw rr.error;
-      return mostraAccesso("prima", /codice/i.test(m) ? "Codice del negozio sbagliato. Controlla con il titolare." : (/già usato/i.test(m) ? "Questo nome è già usato: aggiungi l'iniziale del cognome." : "Registrazione non riuscita: " + m));
+    $("acc-codice").value = "";
+    if (!(await entraConSessione(sess))){
+      if (S.sospeso) return mostraSospeso();
+      mostraAccesso("Non riuscito, riprova.");
     }
-    if (!(await entraConSessione(sess))) mostraAccesso("prima", "Registrazione non riuscita, riprova.");
   } catch(e){
-    mostraAccesso(S.modoAccesso, "Non riesco a collegarmi. Controlla la connessione e riprova.");
+    mostraAccesso("Non riesco a collegarmi. Controlla la connessione e riprova.");
   } finally {
     S.accedendo = false;
-    if (!$("form-accesso").hidden){ $("acc-invia").disabled = false; $("acc-invia").textContent = prima ? "Registrati ed entra" : "Entra"; }
+    if (!$("form-accesso").hidden){ $("acc-invia").disabled = false; $("acc-invia").textContent = "Entra"; }
   }
 }
-const TESTO_SOSPESO = "Il titolare ha sospeso il tuo accesso. Quando ti riattiva, entra di nuovo con il tuo nome e il tuo PIN.";
+const TESTO_SOSPESO = "Il titolare ha sospeso il tuo accesso (per esempio durante le ferie). Quando ti riattiva, tocca «Riprova»: non ti serve un codice nuovo.";
 function profiloRicordato(){ try { return JSON.parse(localStorage.getItem("pdp-profilo") || "null"); } catch(e){ return null; } }
 async function esciSB(){
   if (S.coda.length && !confirmUscita()) return;
+  const si = await chiedi("Vuoi uscire dall'app?", "Per rientrare ti servirà un codice nuovo: te lo deve dare il titolare. Se vuoi solo chiudere l'app, non serve uscire.", "Sì, esci", "No, resto");
+  if (!si) return;
   try { await spegniNotifiche(true); } catch(e){}
   try { localStorage.removeItem("pdp-profilo"); localStorage.removeItem("pdp-ultima-lista"); localStorage.removeItem("pdp-notifiche"); } catch(e){}
   try { await sb.auth.signOut(); } catch(e){}
   try { location.hash = ""; } catch(e){}
   location.reload();
-}
-async function mostraCodici(){
-  const lista = $("codici-lista");
-  riempi(lista, [el("li", { class: "hint", text: "Carico…" })]);
-  try {
-    const righe = await sbFai(sb.rpc("codici_negozio"));
-    const ordine = ["corso","piazza-nenni","panificio","consegne","titolare"];
-    righe.sort(function(a, b){ return ordine.indexOf(a.ruolo) - ordine.indexOf(b.ruolo); });
-    riempi(lista, righe.map(function(x){
-      const cl = x.ruolo === "corso" ? "dest-corso" : x.ruolo === "piazza-nenni" ? "dest-nenni" : x.ruolo === "panificio" ? "dest-panif" : "dest-altro";
-      return el("li", null, el("span", { class: "pill dest " + cl, text: NOMI_RUOLI[x.ruolo] || x.ruolo }), el("code", { text: x.codice }));
-    }));
-  } catch(e){
-    riempi(lista, [el("li", { class: "hint", text: "Non riesco a caricare i codici. Riprova." })]);
-  }
 }
 /* ---------- Persone registrate (solo titolari) ----------
    Tre schermate: l'elenco (in alto il tasto «Permessi»), i permessi di una persona
@@ -7291,6 +7334,8 @@ async function mostraPersone(){
   const ordine = ["titolare","corso","piazza-nenni","panificio","consegne"];
   S.persone.sort(function(a, b){ return (ordine.indexOf(a.ruolo) - ordine.indexOf(b.ruolo)) || a.nome.localeCompare(b.nome, "it"); });
   renderPersone();
+  /* i codici creati e non ancora usati (se il database è aggiornato) */
+  try { S.codiciAttesa = await sbFai(sb.rpc("codici_in_attesa")) || []; } catch(e){ S.codiciAttesa = null; }
   /* chi ha le notifiche accese (se il database è aggiornato) */
   try {
     const r = await sbFai(sb.rpc("notifiche_persone"));
@@ -7315,6 +7360,8 @@ function renderPersone(){
   $("persone-elenco-box").hidden = !!pv;
   $("persone-dettaglio").hidden = !pv;
   if (!pv) return renderElencoPersone();
+  if (pv.modo === "aggiungi") return riempi($("persone-dettaglio"), schermataAggiungi());
+  if (pv.modo === "codice") return riempi($("persone-dettaglio"), schermataCodice(pv));
   const p = pv.id ? personaDa(pv.id) : null;
   if (pv.id && !p){ S.pv = null; return renderPersone(); }
   if (pv.modo === "scegli") return riempi($("persone-dettaglio"), schermataScegli());
@@ -7322,6 +7369,7 @@ function renderPersone(){
   return riempi($("persone-dettaglio"), schermataScheda(p));
 }
 function renderElencoPersone(){
+  renderCodiciAttesa();
   const lista = $("persone-lista");
   if (!S.persone) return;
   if (!S.persone.length) return riempi(lista, [el("li", { class: "hint", text: "Nessuno registrato." })]);
@@ -7477,6 +7525,10 @@ function schermataScheda(p){
   const stato = [p.sospeso ? "Accesso sospeso: non può entrare finché non lo riattivi." : "", testoNotifPersona(p.id)].filter(Boolean);
   if (stato.length) out.push(el("p", { class: "hint", text: stato.join(" · ") }));
   out.push(el("button", { type: "button", class: "primary", "data-pers-permessi": p.id, text: (tit ? "Notifiche di " : "Permessi di ") + p.nome }));
+  if (!io){
+    out.push(gruppoPerm("Codice per entrare", [el("button", { type: "button", class: "mini", "data-pers-codice": p.id, disabled: S.pending.has("codice"), text: "Crea un codice nuovo per " + p.nome })],
+      "Se " + p.nome + " si è scollegato: ha cambiato telefono, ha cancellato l'app o ha toccato «Esci». Con il codice nuovo rientra con le stesse cose di prima (permessi, notifiche, richieste)." + (tit ? " Il codice per te lo crea l'altro titolare." : "")));
+  }
   if (!tit && !io){
     const off = S.pending.has("persona-" + p.id);
     const sel = el("select", { id: "pers-ruolo", "aria-label": "Nuovo ruolo di " + p.nome },
@@ -7484,15 +7536,135 @@ function schermataScheda(p){
     out.push(gruppoPerm("Ruolo", [el("div", { class: "pers-ruolo" }, sel, el("button", { type: "button", class: "mini", "data-pers-ruolo": p.id, disabled: off, text: "Cambia ruolo" }))],
       "Per esempio se passa dal Corso a Piazza Nenni. Non deve registrarsi di nuovo; le sue richieste restano."));
     out.push(gruppoPerm(p.sospeso ? "Riattiva" : "Sospendi", [el("button", { type: "button", class: "mini", "data-pers-sospendi": p.id, disabled: off, text: p.sospeso ? "Riattiva " + p.nome : "Sospendi " + p.nome })],
-      p.sospeso ? "Potrà entrare di nuovo con il suo nome e il suo PIN." : "Per esempio durante le ferie: non può entrare finché non riattivi il suo accesso, e non deve registrarsi di nuovo."));
+      p.sospeso ? "Potrà usare di nuovo l'app: sul suo telefono basta toccare «Riprova», senza codice nuovo." : "Per esempio durante le ferie: non può usare l'app finché non riattivi il suo accesso. Quando lo riattivi non gli serve un codice nuovo."));
   }
   if (!io){
     out.push(el("details", { class: "crono pers-pericolo" }, el("summary", { text: "Togliere l'accesso" }),
       el("div", { class: "blocco" },
-        el("p", { class: "hint", text: "Se dimentica il PIN o non lavora più da voi. Non può più entrare, le sue richieste restano. Per rientrare deve registrarsi di nuovo con il codice del negozio." }),
+        el("p", { class: "hint", text: "Se non lavora più da voi. Non può più entrare, le sue richieste restano. Se un giorno torna, aggiungilo di nuovo con «Aggiungi persona»." }),
         el("button", { type: "button", class: "mini pericolo", "data-azzera": p.id, disabled: S.azzerando, text: "Togli l'accesso a " + p.nome }))));
   }
   return out;
+}
+/* ---------- codici per entrare (punto 37) ----------
+   Il titolare crea un codice per UNA persona: nuova («Aggiungi persona», nome e posto li scrive lui)
+   o già registrata che si è scollegata. Vale una volta sola e per num("codice") ore (Impostazioni).
+   Il codice non si salva in chiaro (database: aggiornamento-11-codici-personali.sql): si vede solo adesso. */
+const POSTI_NUOVA = ["corso", "piazza-nenni", "panificio", "consegne", "titolare"];
+function codiceBello(c){ return String(c || "").slice(0, 3) + " " + String(c || "").slice(3); }
+function testoScade(t){
+  const ms = typeof t === "number" ? t : Date.parse(t);
+  if (!ms) return "";
+  const g = new Date(ms), giorno = g.getFullYear() + "-" + ("0" + (g.getMonth() + 1)).slice(-2) + "-" + ("0" + g.getDate()).slice(-2);
+  return (giorno === oggiStr() ? "oggi" : (giorno === domaniStr() ? "domani" : testoGiorno(giorno))) + " alle " + fmtOra.format(ms);
+}
+function messaggioCodice(pv){
+  return "Ciao " + pv.nome + ", per entrare nell'app Ordini apri " + location.origin + location.pathname.replace(/index\.html$/, "") +
+    " e scrivi questo codice: " + codiceBello(pv.codice) + ". Vale una volta sola, fino a " + testoScade(pv.scade) + ".";
+}
+function renderCodiciAttesa(){
+  const box = $("persone-attesa");
+  const l = S.codiciAttesa || [];
+  box.hidden = !l.length;
+  if (!l.length) return riempi(box, []);
+  riempi(box, [el("h3", { class: "pers-titolo", text: "Codici non ancora usati" }),
+    el("p", { class: "hint", text: "Queste persone non sono ancora entrate con il codice che hai creato. Se l'hanno perso, crea un codice nuovo: quello vecchio non vale più." }),
+    el("div", { class: "card blocco" }, el("ul", { class: "codici-lista" }, ...l.map(function(x, i){
+      const off = S.pending.has("codice");
+      return el("li", null,
+        el("span", { class: "pers-nome" }, el("b", { text: x.nome }), el("small", { text: (x.persona ? "Codice nuovo per rientrare" : "Persona nuova") + " · vale fino a " + testoScade(x.scade) })),
+        el("span", { class: "pill dest " + classeRuolo(x.ruolo), text: NOMI_RUOLI[x.ruolo] || x.ruolo }),
+        el("span", { class: "azioni" },
+          el("button", { type: "button", class: "mini", "data-codice-rifai": String(i), disabled: off, text: "Codice nuovo" }),
+          el("button", { type: "button", class: "link pericolo", "data-codice-annulla": String(i), disabled: off, text: "Annulla" })));
+    })))]);
+}
+function schermataAggiungi(){
+  const off = S.pending.has("codice");
+  return [tastoIndietro(),
+    el("h3", { class: "pers-titolo", text: "Aggiungi una persona" }),
+    el("p", { class: "hint", text: "Scrivi il nome con cui la vedranno i colleghi e dove lavora. L'app ti dà un codice: glielo dici o glielo mandi, lei lo scrive nell'app e resta dentro. Non deve scegliere né nome né PIN." }),
+    el("div", { class: "card blocco pers-nuova" },
+      el("label", { class: "field", for: "nuova-nome" }, el("span", { class: "label-sm", text: "Nome" }),
+        el("input", { id: "nuova-nome", type: "text", autocapitalize: "words", autocomplete: "off", maxlength: "40", placeholder: "Per esempio: Maria (se ce ne sono due: Maria R)" })),
+      el("label", { class: "field", for: "nuova-posto" }, el("span", { class: "label-sm", text: "Dove lavora" }),
+        el("select", { id: "nuova-posto" }, el("option", { value: "", text: "Scegli…" }),
+          ...POSTI_NUOVA.map(function(r){ return el("option", { value: r, text: NOMI_RUOLI[r] }); }))),
+      el("p", { class: "hint", text: "Se lavora anche in un altro posto, dopo lo aggiungi in «Permessi di ogni persona» → «Dove lavora»." }),
+      el("button", { type: "button", class: "primary", "data-pers-crea": "1", disabled: off, text: off ? "Creo il codice…" : "Crea il codice" }))];
+}
+function schermataCodice(pv){
+  return [el("h3", { class: "pers-titolo" }, el("span", { text: "Codice per " + pv.nome + " " }), el("span", { class: "pill dest " + classeRuolo(pv.ruolo), text: NOMI_RUOLI[pv.ruolo] || pv.ruolo })),
+    el("div", { class: "card blocco" },
+      el("p", { class: "codice-grande", text: codiceBello(pv.codice) }),
+      el("p", { class: "hint", text: pv.nome + " apre l'app, scrive questo codice e tocca «Entra». " + (pv.rientra ? "Rientra con le stesse cose di prima." : "Entra già come " + pv.nome + ", " + (NOMI_RUOLI[pv.ruolo] || pv.ruolo) + ".") }),
+      el("p", { class: "hint", text: "Vale una volta sola, fino a " + testoScade(pv.scade) + ". Scrivilo o copialo adesso: dopo non si può più rileggere (se si perde, ne crei uno nuovo). Mandalo solo a lei, non nei gruppi." }),
+      el("button", { type: "button", class: "primary", "data-copia-codice": "1", text: "Copia il messaggio da mandare" }),
+      el("button", { type: "button", class: "link", "data-pers-fatto": "1", text: "Fatto, torna alle persone" }))];
+}
+async function creaCodice(arg, rientra){
+  if (S.pending.has("codice")) return;
+  S.pending.add("codice"); renderPersone();
+  try {
+    const d = await sbFai(sb.rpc("nuovo_codice", arg));
+    S.pending.delete("codice");
+    registra("codice creato", { ruolo: d.ruolo, rientra: !!rientra });
+    vaiPersone({ modo: "codice", codice: d.codice, nome: d.nome, ruolo: d.ruolo, scade: d.scade, rientra: !!rientra });
+    mostraPersone();
+  } catch(e){
+    S.pending.delete("codice");
+    const m = (e && e.message) || "";
+    avviso(e && e.code === "unavailable" ? "Non riesco a collegarmi. Riprova." : (/function|funzione|schema cache|does not exist/i.test(m) ? "Prima va lanciato in Supabase l'aggiornamento 11 (aggiornamento-11-codici-personali.sql)." : "Non riuscito: " + (m || "riprova.")));
+    renderPersone();
+  }
+}
+async function aggiungiPersona(){
+  const nome = ($("nuova-nome").value || "").replace(/\s+/g, " ").trim(), posto = $("nuova-posto").value;
+  if (nome.length < 2) return avviso("Scrivi il nome.");
+  if (!posto) return avviso("Scegli dove lavora.");
+  if ((S.persone || []).some(function(x){ return x.nome.toLowerCase() === nome.toLowerCase(); })) return avviso("C'è già una persona che si chiama " + nome + ": aggiungi l'iniziale del cognome.");
+  if (posto === "titolare"){
+    const si = await chiedi("Aggiungere " + nome + " come titolare?", "Un titolare vede e fa tutto: persone, permessi, impostazioni, database.", "Sì, titolare", "No");
+    if (!si) return;
+  }
+  await creaCodice({ per_persona: null, nome_nuovo: nome, ruolo_nuovo: posto }, false);
+}
+async function codiceNuovoPersona(id){
+  const p = personaDa(id);
+  if (!p || id === S.mioId) return;
+  const si = await chiedi("Creare un codice nuovo per " + p.nome + "?", "Serve se si è scollegato (telefono nuovo, app cancellata, «Esci»). Se ha ancora l'app aperta non cambia niente per lui.", "Sì, crea", "No");
+  if (!si) return;
+  await creaCodice({ per_persona: id, nome_nuovo: null, ruolo_nuovo: null }, true);
+}
+async function rifaiCodice(i){
+  const x = (S.codiciAttesa || [])[Number(i)];
+  if (!x) return;
+  await creaCodice(x.persona ? { per_persona: x.persona, nome_nuovo: null, ruolo_nuovo: null } : { per_persona: null, nome_nuovo: x.nome, ruolo_nuovo: x.ruolo }, !!x.persona);
+}
+async function annullaCodice(i){
+  const x = (S.codiciAttesa || [])[Number(i)];
+  if (!x || S.pending.has("codice")) return;
+  const si = await chiedi("Annullare il codice di " + x.nome + "?", x.persona ? "Il codice non varrà più." : "Il codice non varrà più e " + x.nome + " non potrà entrare.", "Sì, annulla", "No");
+  if (!si) return;
+  S.pending.add("codice"); renderPersone();
+  try { await sbFai(sb.rpc("annulla_codice", { codice_id: x.id })); avviso("Fatto: il codice di " + x.nome + " non vale più."); }
+  catch(e){ avviso(e && e.code === "unavailable" ? "Non riesco a collegarmi. Riprova." : "Non riuscito: " + ((e && e.message) || "riprova.")); }
+  S.pending.delete("codice");
+  mostraPersone();
+}
+async function copiaCodice(){
+  const pv = S.pv;
+  if (!pv || pv.modo !== "codice") return;
+  const t = messaggioCodice(pv);
+  let ok = false;
+  try { if (navigator.clipboard && navigator.clipboard.writeText){ await navigator.clipboard.writeText(t); ok = true; } } catch(e){}
+  if (!ok){
+    try {
+      const x = el("textarea", {readonly:true, style:"position:fixed;top:-100px;opacity:0"});
+      x.value = t; document.body.append(x); x.select(); ok = document.execCommand("copy"); x.remove();
+    } catch(e){}
+  }
+  avviso(ok ? "Messaggio copiato: incollalo in WhatsApp solo a " + pv.nome + "." : "Non riesco a copiarlo: scrivi tu il codice " + codiceBello(pv.codice) + ".");
 }
 function vaiPersone(pv){
   /* «Indietro» dai permessi torna da dove si è venuti (scheda della persona o elenco per scegliere) */
@@ -7577,8 +7749,8 @@ async function sospendiPersona(id){
   if (!p || p.ruolo === "titolare" || id === S.mioId) return;
   const sosp = !p.sospeso;
   const si = sosp
-    ? await chiedi("Sospendere " + p.nome + "?", "Non può entrare finché non riattivi il suo accesso. Non perde niente e non deve registrarsi di nuovo.", "Sì, sospendi", "No")
-    : await chiedi("Riattivare " + p.nome + "?", "Potrà entrare di nuovo con il suo nome e il suo PIN.", "Sì, riattiva", "No");
+    ? await chiedi("Sospendere " + p.nome + "?", "Non può usare l'app finché non riattivi il suo accesso. Non perde niente e non gli serve un codice nuovo.", "Sì, sospendi", "No")
+    : await chiedi("Riattivare " + p.nome + "?", "Potrà usare di nuovo l'app: sul suo telefono basta toccare «Riprova».", "Sì, riattiva", "No");
   if (!si) return;
   await azionePersona(p, "sospendi_persona", { persona: id, sospendi: sosp }, sosp ? "Fatto: accesso di " + p.nome + " sospeso." : "Fatto: " + p.nome + " può entrare di nuovo.", sosp ? "persona sospesa" : "persona riattivata");
 }
@@ -7603,12 +7775,12 @@ async function azzeraPersona(id){
   if (!p || id === S.mioId) return;
   const uno = await chiedi("Togliere l'accesso a " + p.nome + "?", "Non potrà più entrare. Le sue richieste restano.", "Sì, continua", "No");
   if (!uno) return;
-  const due = await chiedi("Sei proprio sicuro?", "Non si può annullare: per rientrare " + p.nome + " dovrà registrarsi di nuovo con il codice del negozio. Se è solo in ferie, usa «Sospendi».", "Sì, togli l'accesso", "No");
+  const due = await chiedi("Sei proprio sicuro?", "Non si può annullare: per rientrare " + p.nome + " andrà aggiunto di nuovo con «Aggiungi persona», come uno nuovo. Se è solo in ferie, usa «Sospendi»; se ha cambiato telefono, usa «Crea un codice nuovo».", "Sì, togli l'accesso", "No");
   if (!due) return;
   S.azzerando = true; renderPersone();
   try {
     await sbFai(sb.rpc("azzera_persona", { persona: id }));
-    avviso("Fatto: " + p.nome + " non può più entrare. Se serve, si registra di nuovo con il codice del negozio.");
+    avviso("Fatto: " + p.nome + " non può più entrare. Se serve, aggiungilo di nuovo con «Aggiungi persona».");
     S.pv = null;
   } catch(e){
     avviso(e && e.code === "unavailable" ? "Non riesco a collegarmi. Riprova." : "Non riuscito: " + ((e && e.message) || "riprova."));
@@ -7681,7 +7853,8 @@ async function avviaSupabase(){
       try { if (await entraConSessione({ user: { id: ric.id } })){ S.senzaSessione = true; return; } } catch(e2){}
     }
   }
-  mostraAccesso(S.azzerato ? "prima" : "entra", S.azzerato ? "Il tuo accesso è stato azzerato dal titolare: registrati di nuovo con il codice del negozio." : (S.sospeso ? TESTO_SOSPESO : ""));
+  if (S.sospeso) return mostraSospeso();
+  mostraAccesso(S.azzerato ? "Il titolare ti ha tolto l'accesso. Se è uno sbaglio, chiedigli di aggiungerti di nuovo: ti darà un codice." : "");
 }
 
 async function avvia(){
@@ -7706,12 +7879,12 @@ async function avvia(){
       return S.mioId + "~" + id;
     },
     stato: function(k, p){ return aggiornaOCrea(colS.doc(k), p); },
-    annulla: function(r){
-      const v = {}; v[r.rid] = { annullato: true, annullatoAlle: Date.now() };
+    annulla: function(r, piu){
+      const v = {}; v[r.rid] = Object.assign({ annullato: true, annullatoAlle: Date.now() }, piu);
       return colR.doc(r.autore).update({ voci: v });
     },
-    ripristina: function(r){
-      const v = {}; v[r.rid] = { annullato: false, ripristinatoAlle: Date.now() };
+    ripristina: function(r, piu){
+      const v = {}; v[r.rid] = Object.assign({ annullato: false, ripristinatoAlle: Date.now() }, piu);
       return colR.doc(r.autore).update({ voci: v });
     },
     rimuoviEsempi: function(){ return colR.doc(ESEMPI).delete(); },
