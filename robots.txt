@@ -1,2 +1,6 @@
+# L'app non deve comparire su Google.
+# Qui NON si blocca la lettura: se Google non può leggere la pagina, non vede
+# il cartello «noindex» dentro index.html e può continuare a mostrarla.
+# Lasciandola leggere, Google trova «noindex» e la toglie dai risultati.
 User-agent: *
-Disallow: /
+Allow: /
