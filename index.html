@@ -466,6 +466,7 @@ textarea:focus,select:focus{outline:3px solid var(--accent);outline-offset:1px;b
 .chip-cosa.verde .segno{color:var(--arrivo-txt)}
 .chip-cosa.arancio{border-color:var(--giorno-bordo);border-style:dashed;background:var(--giorno-bg);color:var(--giorno-ink)}
 .chip-cosa.aperto{outline:3px solid var(--ink);outline-offset:1px}
+.chip-cosa.pronto{outline:3px solid var(--urgent-txt);outline-offset:1px}
 .chip-cosa .qta{font-weight:400}
 .chip-cosa .etich,.chip-cosa .scritto{font-weight:400;font-size:13px;color:var(--muted)}
 .chip-cosa .bollino{font-size:12px;padding:1px 7px;border-radius:999px;background:var(--surface-2);color:var(--ink)}
@@ -1986,10 +1987,12 @@ function aggiungiTesto(testo){
 }
 /* le cose scritte, senza quelle cancellate (rosse, con «Recupera») */
 function chipsVivi(){ return S.chips.filter(function(c){ return !c.tolto; }); }
-/* cancellata: sparisce, e torna rossa e barrata appena si scrive un'altra cosa */
+/* cancellata: resta subito al suo posto rossa e barrata con «Recupera» (solo l'ultima);
+   sparisce appena si aggiunge un'altra cosa, si invia o si esce */
 function togliChip(c){
   if (!c) return;
-  c.tolto = true; c.nascosto = true;
+  scartaTolti();
+  c.tolto = true; S.chipPronto = "";
   if (S.chipAperto === c.id) S.chipAperto = "";
   registra("cosa scritta cancellata", {});
 }
@@ -2004,7 +2007,7 @@ function syncRighe(){
   aggiornaForm(); salvaBozze();
 }
 function svuotaChips(){
-  S.chips = []; S.chipAperto = ""; S.chipCtx = { reparto:"", ordinare:false, urgente:null };
+  S.chips = []; S.chipAperto = ""; S.chipPronto = ""; S.avvisoChip = ""; S.chipCtx = { reparto:"", ordinare:false, urgente:null };
   $("righe-scrivi").value = ""; $("righe").value = "";
   renderChips(); renderSuggChip(); aggiornaForm();
 }
@@ -2018,23 +2021,23 @@ function aggiungiDaCasella(){
   const inp = $("righe-scrivi"), t = inp.value;
   if (!t.trim()) return 0;
   const n = aggiungiTesto(t);
-  if (n){ inp.value = ""; S.chipAperto = ""; mostraTolti(); S.avvisoChip = n < 0 ? "Va bene: vale per le cose che scrivi dopo." : ""; }
+  if (n){ inp.value = ""; S.chipAperto = ""; scartaTolti(); S.avvisoChip = n < 0 ? "Va bene: vale per le cose che scrivi dopo." : ""; }
   else S.avvisoChip = "Scrivi cosa serve, per esempio «2 kg pane casereccio».";
   renderChips(); renderSuggChip(); syncRighe();
   return n;
 }
 function trovaChip(id){ return S.chips.find(function(c){ return c.id === id; }); }
-function mostraTolti(){ S.chips.forEach(function(c){ c.nascosto = false; }); }
+function scartaTolti(){ S.chips = chipsVivi(); }
 function renderChips(){
   const mancanti = vedeMancanti();
-  riempi($("righe-chips"), S.chips.filter(function(c){ return !(c.tolto && c.nascosto); }).map(function(c){
+  riempi($("righe-chips"), S.chips.map(function(c){
     const nome = c.tipo === "arancio" ? c.originale : c.articolo;
     if (c.tolto) return el("li", {class:"tolto"},
       el("span", {class:"chip-tolto", text:(c.quantita ? c.quantita + " · " : "") + nome, "aria-label":"Cancellato: " + nome}),
       el("button", {type:"button", class:"chip-recupera", "data-chip-recupera":c.id, text:"↺ Recupera"}));
     const aperto = S.chipAperto === c.id;
     const manca = mancanti && c.tipo !== "arancio" && !c.ordinare && mancaGia({ articolo: c.articolo, reparto: c.reparto, da: "Panificio" });
-    return el("li", null, el("button", {type:"button", class:"chip-cosa " + c.tipo + (aperto ? " aperto" : ""), "data-chip":c.id, "aria-expanded":String(aperto),
+    return el("li", null, el("button", {type:"button", class:"chip-cosa " + c.tipo + (aperto ? " aperto" : "") + (S.chipPronto === c.id ? " pronto" : ""), "data-chip":c.id, "aria-expanded":String(aperto),
         "aria-label":(c.tipo === "verde" ? "Riconosciuto: " : c.tipo === "arancio" ? "Da scegliere: " : "Cosa nuova: ") + (c.quantita ? c.quantita + " " : "") + nome + ". Tocca per cambiarlo o toglierlo."},
       el("span", {class:"segno", "aria-hidden":"true", text: c.tipo === "verde" ? "✓" : c.tipo === "arancio" ? "?" : "+"}),
       c.quantita ? el("span", {class:"qta", text:c.quantita + " ·"}) : null,
@@ -2126,7 +2129,7 @@ function tastoChip(b){
   if (d.chipSugg){
     const x = parseRiga($("righe-scrivi").value, S.chipCtx) || {};
     if (chipsVivi().length < 30){ const n = nuovoChip(x, d.chipSugg); n.scelto = true; S.chips.push(classificaChip(n)); }
-    $("righe-scrivi").value = ""; mostraTolti();
+    $("righe-scrivi").value = ""; scartaTolti();
     registra("prodotto suggerito toccato", {});
   } else if (d.chipScegli){
     const ij = d.chipScegli.split("|"); c = trovaChip(ij[0]);
@@ -2156,7 +2159,7 @@ function tastoChip(b){
     togliChip(trovaChip(d.chipTogli));
   } else if (d.chipRecupera){
     c = trovaChip(d.chipRecupera);
-    if (c){ c.tolto = false; c.nascosto = false; if (c.tipo === "arancio") c.rimandato = true; registra("cosa cancellata recuperata", {}); }
+    if (c){ c.tolto = false; if (c.tipo === "arancio") c.rimandato = true; registra("cosa cancellata recuperata", {}); }
   } else if (d.chipCambia){
     c = trovaChip(d.chipCambia);
     if (c){
@@ -2199,8 +2202,9 @@ async function esciScrivi(){
     const si = await chiedi("Vuoi cancellare tutto quello che hai scritto?", "Le cose scritte si perdono e non vengono inviate.", "Sì, cancella tutto", "No, resto");
     if (!si){ registra("cosa serve: ha ripensato e resta", {}); return; }
     registra("richieste lasciate a metà", { cose: chipsVivi().length });
-    svuotaChips(); syncRighe();
   }
+  /* uscendo non resta niente: né le cose scritte né quelle cancellate */
+  svuotaChips(); syncRighe();
   chiudiScrivi();
   renderNegozio();
 }
@@ -3954,11 +3958,11 @@ function capitoliManuale(){
   if (negozio || tit) cap.push({ titolo:"Richieste del negozio", domande:[
     ["Come chiedo una cosa?", ["Nella pagina principale tocca la casella di «Cosa serve?»: si apre a tutto schermo, così vedi solo quello che stai scrivendo. Scrivi una cosa e premi Invio: diventa un rettangolino. Poi scrivi la prossima. La quantità puoi metterla o no, prima o dopo (per esempio «2 casse acqua naturale grande» oppure «Vassoi»). Mentre scrivi, sotto escono i prodotti che somigliano: toccane uno per metterlo subito. Puoi anche incollare un messaggio intero: ogni riga diventa un rettangolino. Alla fine tocca ", tasto("Controlla e invia"), ": si apre «Controlla prima di inviare»."]],
     ["Come esco da «Cosa serve?» a tutto schermo?", ["Solo in due modi: inviando, oppure con «Cancella tutto ed esci» in alto (l'app chiede se sei sicuro: le cose scritte si perdono). Anche il tasto «indietro» del telefono chiede prima. Se l'app si chiude per sbaglio non perdi niente: riaprendola ritrovi le cose scritte."]],
-    ["Ho cancellato una cosa per sbaglio: come la riprendo?", ["Quando cancelli un rettangolino (con il tasto cancella o con «Togli») sparisce. Appena scrivi un'altra cosa ricompare al suo posto rosso e barrato, con accanto il tasto «↺ Recupera»: toccalo e torna com'era. Le cose rosse non si inviano."]],
+    ["Ho cancellato una cosa per sbaglio: come la riprendo?", ["Quando togli un rettangolino resta al suo posto rosso e barrato, con accanto il tasto «↺ Recupera»: toccalo e torna com'era. Resta solo l'ultimo cancellato, e sparisce appena aggiungi un'altra cosa. Le cose rosse non si inviano."]],
     ["Cosa vogliono dire i colori dei rettangolini?", ["Verde ✓: l'app ha riconosciuto la cosa e ci ha messo il nome giusto. Esempio: scrivi «pane caserecio» e diventa «✓ Pane casereccio», con sotto piccolo quello che avevi scritto.", el("br"),
       "Arancione ?: l'app ha un dubbio e te lo chiede subito, in un riquadro in mezzo allo schermo. Esempio: «latte» → «Latte cucina» o «Latte bar»; «acqua» → quale delle quattro; «pane e pitte» → «Sono due cose?»; una cosa scritta due volte → «Togli questo» o «Tienili tutti e due». Se è una cosa che l'app non conosce tocca «No, è una cosa nuova». Se chiudi il riquadro (✕ o tocco fuori) la cosa resta arancione: toccala per scegliere. Finché c'è qualcosa di arancione non si può inviare.", el("br"),
       "Bianco «nuovo»: l'app non conosce la cosa. Va bene lo stesso: si manda com'è scritta e poi la controlla il titolare.", el("br"),
-      "Per cambiare o togliere un rettangolino toccalo: si apre un riquadro con «Scrivila diversa», «Togli» e, se l'app ha corretto il nome, «È una cosa nuova». Si chiude con la ✕ rossa o toccando fuori. Con la casella vuota, il tasto cancella toglie l'ultimo rettangolino intero (si può recuperare)."]],
+      "Per cambiare o togliere un rettangolino toccalo: si apre un riquadro con «Scrivila diversa», «Togli» e, se l'app ha corretto il nome, «È una cosa nuova». Si chiude con la ✕ rossa o toccando fuori. Con la casella vuota, il tasto cancella prima segna l'ultimo rettangolino (bordo rosso, «Premi ancora cancella per toglierlo»), la seconda volta lo toglie (si può recuperare)."]],
     ["Cosa sono i tasti «Chiesti spesso»?", ["Sono le cose che il tuo negozio ha chiesto più spesso negli ultimi " + num("chiestiGiorni") + " giorni, già con il nome giusto. Toccane uno per aggiungerlo senza scriverlo. Ne vedi " + num("chiestiTasti") + "; con «Altri…» fino a " + Math.max(num("chiestiTasti"), num("chiestiMax")) + ". Le cose che hai già chiesto e non sono ancora arrivate non ci sono."]],
     ["Cosa controllo prima di inviare?", ["Le cose sono divise per reparto (il nome del reparto è scritto piccolo sopra), come le prepara chi fa il giro. Il reparto non si sceglie: per le cose nuove lo sceglie il titolare. Per ogni cosa vedi:", el("br"),
       "• il nome: è già quello dei rettangolini; se l'app l'ha corretto da sola vedi ✓ e puoi toccare «Lascia com'era»;", el("br"),
@@ -6894,7 +6898,7 @@ function collega(){
     }
     if (b.dataset.aggiungi){
       apriScrivi();
-      aggiungiTesto(b.dataset.aggiungi); mostraTolti();
+      aggiungiTesto(b.dataset.aggiungi); scartaTolti();
       renderChips(); syncRighe();
       renderNegozio();
       return;
@@ -7169,19 +7173,23 @@ function collega(){
   /* «Cosa serve?»: Invio fa il rettangolino; cancella con la casella vuota toglie l'ultimo; incollando più righe ne fa uno per riga */
   $("righe-scrivi").addEventListener("keydown", function(ev){
     if (ev.key === "Enter"){ ev.preventDefault(); aggiungiDaCasella(); return; }
+    /* cancella con la casella vuota: la prima volta segna l'ultima cosa, la seconda la toglie
+       (così non si cancella per sbaglio continuando a premere dopo le lettere) */
     if (ev.key === "Backspace" && !this.value && chipsVivi().length){
       ev.preventDefault();
-      const vivi = chipsVivi();
-      togliChip(vivi[vivi.length - 1]);
+      const vivi = chipsVivi(), ultima = vivi[vivi.length - 1];
+      if (S.chipPronto === ultima.id){ togliChip(ultima); S.avvisoChip = ""; }
+      else { S.chipPronto = ultima.id; S.avvisoChip = "Premi ancora cancella per togliere «" + (ultima.tipo === "arancio" ? ultima.originale : ultima.articolo) + "»."; }
       renderChips(); syncRighe();
+      return;
     }
+    if (S.chipPronto){ S.chipPronto = ""; S.avvisoChip = ""; renderChips(); }
   });
   $("righe-scrivi").addEventListener("input", function(){
     /* tastiere che mandano l'«a capo» dentro il testo, o un messaggio incollato */
     if (/[\n\r]/.test(this.value)){ aggiungiDaCasella(); return; }
     S.avvisoChip = "";
     /* le cose cancellate tornano (rosse, con «Recupera») appena si scrive un'altra cosa */
-    if (this.value.trim()) mostraTolti();
     renderChips(); renderSuggChip(); syncRighe();
   });
   /* toccando la casella si apre «Cosa serve?» a tutto schermo */
@@ -7502,7 +7510,7 @@ const VAPID_PUBLICA = "BC9TAKzQiQ-x3xtX0KWauGtV-uvIk9VFwqLjWAOzrJbe4e5w2AWyXMIej
    Il nome di chi lo fa lo mette il database (funzione "registra", supabase/aggiornamento-10-registro-con-nomi.sql):
    deciso dal proprietario il 19 ottobre, per vedere chi aiutare a usare meglio l'app; lo leggono solo lui e Claude. */
 const REGISTRO_ATTIVO = false;
-const VERSIONE_APP = "d588fe7e";
+const VERSIONE_APP = "5a18a410";
 S.reg = [];
 S.ultimoTasto = { nome: "", alle: 0 };
 S.tocchi = { nome: "", volte: 0, alle: 0, segnato: false };
