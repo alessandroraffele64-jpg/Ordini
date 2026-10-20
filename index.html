@@ -357,6 +357,32 @@ button.striscia-testo{cursor:pointer}
 .db-voce .riga-db .label-sm{min-width:110px}
 .corr-prod{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;padding:6px 0;border-bottom:1px dashed var(--line)}
 .corr-prod:last-child{border-bottom:0}
+button.db-prod-riga{width:100%;min-height:48px;background:none;border:0;border-bottom:1px dashed var(--line);border-radius:0;color:var(--ink);font:inherit;text-align:left;cursor:pointer;padding:8px 4px}
+button.db-prod-riga:hover{background:var(--surface-2)}
+.db-prod-riga .nome{flex:1 1 auto}
+.db-prod-riga .freccia{font-size:22px;color:var(--muted);line-height:1}
+.db-rep-tasto{width:100%;display:flex;align-items:center;gap:10px;min-height:52px;padding:8px 12px;border:1.5px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);font:inherit;font-weight:700;font-size:17px;text-align:left;cursor:pointer}
+.db-rep-tasto .db-rep-nome{flex:1}
+.db-rep-tasto .freccia{width:16px;color:var(--muted)}
+.db-rep-tasto[aria-expanded="true"]{background:var(--surface-2)}
+.db-rep-dentro{padding:0 4px 6px 12px}
+#db-parte[data-modo="prodotto"] > :not(#db-testa):not(#db-prodotto){display:none}
+#db-parte:not([data-modo="prodotto"]) > #db-prodotto{display:none}
+#db-parte[data-modo="uno"] > #db-spiega,#db-parte[data-modo="uno"] > #db-elenco-box,#db-parte[data-modo="uno"] > #db-modifiche-box{display:none}
+#db-prodotto .db-mod{margin:0}
+#db-prodotto h3{margin:0;font-size:17px}
+#db-prodotto select{min-height:44px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font-size:16px;font-weight:700;padding:0 10px;flex:1 1 180px;max-width:100%}
+.db-ultime{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+.db-modifiche{list-style:none;padding:0;gap:0}
+.db-modifiche li{display:flex;flex-wrap:wrap;align-items:center;gap:2px 10px;padding:8px 0;border-bottom:1px dashed var(--line)}
+.db-modifiche li .hint{flex-basis:100%;margin:0}
+.db-modifiche .db-mod-testo{flex:1 1 200px}
+.db-uno-conto{font-weight:700;margin:0 0 4px}
+.db-voce.db-uno{border-width:2px;padding:18px;font-size:18px}
+.db-voce.db-uno .domanda-db{font-size:20px}
+.db-voce.db-uno .row .mini{min-height:56px;font-size:17px;flex:1 1 200px}
+.db-uno-giu{gap:12px;margin-top:10px;align-items:center}
+.db-uno-giu .mini{min-height:52px}
 .corr-prod .nome{font-weight:700}
 .corr-prod .anche{font-size:14px;color:var(--muted);flex-basis:100%}
 .pren-dc-voce .row{gap:8px;align-items:center}
@@ -431,6 +457,32 @@ h2{font-family:var(--font-display);font-weight:700;font-size:19px;line-height:1.
 .card{background:var(--surface);border:1px solid var(--line-2);border-radius:var(--r-lg);padding:16px;display:flex;flex-direction:column;gap:12px}
 textarea{width:100%;min-height:100px;resize:vertical;padding:12px 14px;border:1.5px solid var(--line);border-radius:var(--r-md);background:var(--bg);font-size:17px;line-height:1.4}
 textarea:focus,select:focus{outline:3px solid var(--accent);outline-offset:1px;border-color:transparent}
+.righe-box{display:flex;flex-direction:column;gap:8px;border:1.5px solid var(--line);border-radius:var(--r-md);background:var(--bg);padding:10px}
+.righe-box:focus-within{border-color:var(--ink)}
+.righe-chips{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+.righe-chips:empty,.righe-sugg:empty,.righe-domanda:empty{display:none}
+.chip-cosa{display:inline-flex;flex-wrap:wrap;align-items:center;gap:2px 6px;min-height:42px;padding:6px 10px;border-radius:10px;border:2px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-weight:700;font-size:16px;text-align:left;cursor:pointer;max-width:100%}
+.chip-cosa.verde{border-color:var(--arrivo-txt);background:var(--arrivo-bg)}
+.chip-cosa.verde .segno{color:var(--arrivo-txt)}
+.chip-cosa.arancio{border-color:var(--giorno-bordo);border-style:dashed;background:var(--giorno-bg);color:var(--giorno-ink)}
+.chip-cosa.aperto{outline:3px solid var(--ink);outline-offset:1px}
+.chip-cosa .qta{font-weight:400}
+.chip-cosa .etich,.chip-cosa .scritto{font-weight:400;font-size:13px;color:var(--muted)}
+.chip-cosa .bollino{font-size:12px;padding:1px 7px;border-radius:999px;background:var(--surface-2);color:var(--ink)}
+.chip-cosa .bollino.urg{background:var(--urgent);color:var(--urgent-ink)}
+.chip-cosa .manca{flex-basis:100%;font-size:13px;color:var(--urgent-txt)}
+#righe-scrivi{width:100%;min-height:44px;border:0;background:transparent;font-size:17px;padding:4px 2px;outline:none;color:var(--ink)}
+.righe-sugg{display:flex;flex-wrap:wrap;gap:6px;align-items:center;border-top:1px dashed var(--line);padding-top:8px}
+.righe-sugg .label-sm{flex-basis:100%;margin:0}
+.righe-domanda{border:2px solid var(--giorno-bordo);border-radius:var(--r-md);background:var(--surface);padding:12px;display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.righe-domanda.azioni{border-color:var(--ink)}
+.righe-domanda .domanda{font-weight:700;font-size:17px;margin:0}
+.righe-domanda .row{gap:8px;flex-wrap:wrap}
+.righe-domanda .mini{min-height:48px;font-size:16px}
+.righe-domanda.scuoti{animation:scuoti .4s}
+@keyframes scuoti{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.db-rep-nuovo select{min-height:44px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font-size:16px;font-weight:700;padding:0 10px;max-width:100%}
+.ctrl-rep{list-style:none;font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:8px 0 -2px}
 .chip-add{appearance:none;border:1.5px solid var(--line);background:var(--surface);border-radius:999px;min-height:36px;padding:0 12px;font-size:14px;font-weight:700;color:var(--ink);cursor:pointer}
 .chip-add:hover{border-color:var(--oro);color:var(--ink)}
 .anteprima{display:flex;flex-direction:column;border-top:2px dashed var(--line);padding-top:10px;gap:4px;font-size:15px}
@@ -802,10 +854,17 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
 
     <div class="view" id="pannello-richieste">
     <form class="card" id="form-richiesta" novalidate>
-      <label class="label" for="righe">Cosa serve?</label>
+      <label class="label" for="righe-scrivi">Cosa serve?</label>
       <p class="chi-ordina" id="chi-ordina"></p>
-      <textarea id="righe" rows="4" autocomplete="off" placeholder="Una cosa per riga, per esempio:&#10;2 kg pane casereccio&#10;Pitte piene&#10;Cartoni pizza grandi"></textarea>
-      <p class="hint">Scrivi come in chat: una cosa per riga o separate da virgole. Puoi anche dettare con il microfono della tastiera. Prima di inviare controlli da dove si prende ogni cosa e cosa è urgente.</p>
+      <!-- le cose scritte, una per riga: lo tiene l'app (per le bozze e «Chiesti spesso»), non si vede -->
+      <textarea id="righe" hidden aria-hidden="true" tabindex="-1"></textarea>
+      <div class="righe-box" id="righe-box">
+        <ul class="righe-chips" id="righe-chips" aria-label="Cose scritte"></ul>
+        <input id="righe-scrivi" type="text" maxlength="400" autocomplete="off" autocapitalize="sentences" enterkeyhint="enter" placeholder="Scrivi una cosa e premi Invio, es. 2 kg pane casereccio">
+        <div class="righe-sugg" id="righe-sugg" aria-live="polite"></div>
+      </div>
+      <div class="righe-domanda" id="righe-domanda" aria-live="polite"></div>
+      <p class="hint">Scrivi una cosa e premi Invio: diventa un rettangolino. <b>Verde</b>: l'app l'ha riconosciuta. <b>Arancione</b>: l'app ti chiede quale. <b>Bianco</b>: una cosa nuova, va bene lo stesso. Puoi anche incollare un messaggio intero o dettare con il microfono. Prima di inviare controlli da dove si prende ogni cosa e cosa è urgente.</p>
       <div id="frequenti-wrap" class="blocco" hidden>
         <p class="label-sm">Chiesti spesso</p>
         <div class="chips" id="frequenti"></div>
@@ -964,6 +1023,7 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
       <div class="blocco" id="db-menu"></div>
       <div id="db-parte" hidden>
         <div class="db-testa" id="db-testa"></div>
+        <div class="blocco" id="db-prodotto"></div>
         <p class="hint" id="db-spiega"></p>
         <div class="blocco" id="db-lista"></div>
         <p class="vuoto" id="db-vuoto">Niente da controllare.</p>
@@ -971,7 +1031,15 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
           <summary><span id="db-elenco-titolo">Tutti i prodotti</span> <span class="crono-n" id="db-n"></span></summary>
           <div class="blocco">
             <p class="hint" id="db-elenco-spiega"></p>
+            <label class="field man-cerca" for="db-cerca"><span class="label-sm" id="db-cerca-titolo">Cerca un prodotto</span><input id="db-cerca" type="search" autocomplete="off" placeholder="Scrivi una parte del nome, es. latte"></label>
             <div class="blocco" id="db-elenco"></div>
+          </div>
+        </details>
+        <details class="crono" id="db-modifiche-box">
+          <summary>Ultime modifiche <span class="crono-n" id="db-mod-n"></span></summary>
+          <div class="blocco">
+            <p class="hint">Le ultime cose cambiate qui, dalla più nuova. «Annulla» rimette com'era prima: si annulla una alla volta, partendo dalla più nuova.</p>
+            <div class="blocco" id="db-modifiche"></div>
           </div>
         </details>
       </div>
@@ -1800,6 +1868,248 @@ function righeDi(id){
   });
   return out.slice(0,30);
 }
+/* ---------- «Cosa serve?»: ogni cosa scritta diventa un rettangolino ----------
+   verde: l'app è sicura (va bene un prodotto solo) · arancione: l'app chiede (più prodotti, errore grosso,
+   due cose in una riga, cosa già scritta) · bianco: cosa nuova, si manda com'è e la controllano i titolari nel Database.
+   Il testo nascosto #righe tiene le stesse cose una per riga (per le bozze, «Chiesti spesso» e il tasto «Controlla e invia»). */
+S.chips = []; S.chipCtx = { reparto:"", ordinare:false, urgente:null }; S.chipAperto = "";
+/* i prodotti dell'elenco che cominciano con le parole scritte: «latte» → Latte cucina, Latte bar */
+function prodottiCheIniziano(testo){
+  const f = formaProdotto(testo).split(" ").filter(Boolean);
+  if (!f.length) return [];
+  return elencoProdottiRich().filter(function(n){
+    const w = formaProdotto(n).split(" ");
+    return w.length > f.length && f.every(function(p, i){ return w[i] === p; });
+  });
+}
+/* una lettera o due sbagliate («pane caserecio»): se somiglia così tanto a un prodotto solo, è quello */
+function vicinoUnico(testo){
+  const f = formaProdotto(testo);
+  if (f.length < 5) return "";
+  const trovati = [];
+  formeRich().forEach(function(x){
+    const d = distanza(f, x[0]);
+    if (d <= Math.max(1, Math.floor(Math.max(f.length, x[0].length) / 5)) && !trovati.some(function(n){ return chiave(n) === chiave(x[1]); })) trovati.push(x[1]);
+  });
+  return trovati.length === 1 ? trovati[0] : "";
+}
+function classificaChip(c){
+  c.scelte = null; c.motivo = ""; c.scritto = ""; c.parti = null;
+  const testo = c.originale;
+  if (c.comEra){ c.tipo = "nuovo"; c.articolo = maiuscola(testo); }
+  else {
+    const t = trovaProdottoRich(testo);
+    const esatto = elencoProdottiRich().find(function(n){ return chiave(n) === chiave(testo); });
+    const molti = esatto ? [] : prodottiCheIniziano(testo);
+    /* va bene per più prodotti: si chiede sempre, anche se prima l'app sceglieva da sola */
+    if (molti.length >= 2){ c.tipo = "arancio"; c.motivo = "quale"; c.scelte = molti.slice(0, 6); c.articolo = maiuscola(testo); }
+    else if (t.esito === "sicuro" && t.nome){ c.tipo = "verde"; c.articolo = t.nome; if (chiave(t.nome) !== chiave(testo)) c.scritto = testo; }
+    else if (t.esito === "dubbio" && (c.vicino = vicinoUnico(testo))){ c.tipo = "verde"; c.articolo = c.vicino; c.scritto = testo; }
+    else if (t.esito === "dubbio"){ c.tipo = "arancio"; c.motivo = t.scelte.length === 1 ? "forse" : "quale"; c.scelte = t.scelte; c.articolo = maiuscola(testo); }
+    else { c.tipo = "nuovo"; c.articolo = maiuscola(testo); }
+    /* «pane e pitte»: forse sono due cose */
+    if (c.tipo !== "verde" && !c.unaSola && /\s+e\s+/i.test(testo)){
+      const parti = testo.split(/\s+e\s+/i).map(function(x){ return x.trim(); }).filter(Boolean);
+      if (parti.length >= 2 && parti.every(function(x){ return trovaProdottoRich(x).esito === "sicuro"; })){ c.tipo = "arancio"; c.motivo = "due"; c.parti = parti; c.scelte = null; }
+    }
+  }
+  return segnaDoppio(c);
+}
+/* la stessa cosa scritta due volte: si chiede */
+function segnaDoppio(c){
+  if (c.tipo === "arancio" || c.doppioOk) return c;
+  const k = chiave(c.articolo);
+  if (S.chips.some(function(x){ return x !== c && x.tipo !== "arancio" && chiave(x.articolo) === k; })){ c.tipoPrima = c.tipo; c.tipo = "arancio"; c.motivo = "doppio"; }
+  return c;
+}
+function nuovoChip(x, nome){
+  return { id: nuovoId(), originale: nome || x.articolo, quantita: x.quantita || "", urgente: x.urgente === true && puoUrgente("negozio"),
+    ordinare: !!x.ordinare, reparto: x.reparto || "" };
+}
+/* il testo scritto (o incollato): ogni riga, o ogni pezzo tra virgole, diventa un rettangolino.
+   Le intestazioni («BEVANDE», «Da comprare») valgono per le cose dopo; «urgente» alla fine rende tutto urgente. */
+function aggiungiTesto(testo){
+  const righe = String(testo || "").split("\n");
+  let n = 0, intest = false;
+  righe.forEach(function(riga, i){
+    const h = INTESTAZIONI[chiave(pulisci(riga))];
+    if (h){
+      intest = true;
+      if (h.urgente === true && !righe.slice(i + 1).some(function(x){ return x.trim(); })){
+        if (puoUrgente("negozio")) S.chips.forEach(function(c){ c.urgente = true; });
+        return;
+      }
+      S.chipCtx = { reparto: h.reparto || "", ordinare: !!h.ordinare, urgente: ("urgente" in h) ? h.urgente : null };
+      return;
+    }
+    riga.split(/;|,\s+/).forEach(function(pezzo){
+      const x = parseRiga(pezzo, S.chipCtx);
+      if (!x || S.chips.length >= 30) return;
+      S.chips.push(classificaChip(nuovoChip(x)));
+      n++;
+    });
+  });
+  return n || (intest ? -1 : 0);
+}
+function rigaChip(c){
+  return (c.quantita ? c.quantita + " " : "") + (c.tipo === "verde" ? c.articolo : c.originale) + (c.urgente ? " urgente" : "") + (c.ordinare ? " da comprare" : "");
+}
+/* il testo nascosto segue i rettangolini (e quello che si sta scrivendo) */
+function syncRighe(){
+  const scrivi = $("righe-scrivi").value.trim();
+  $("righe").value = S.chips.map(rigaChip).concat(scrivi ? [scrivi] : []).join("\n");
+  if ($("righe").value.trim()){ if (!S.inizioRighe) S.inizioRighe = Date.now(); } else S.inizioRighe = 0;
+  aggiornaForm(); salvaBozze();
+}
+function svuotaChips(){
+  S.chips = []; S.chipAperto = ""; S.chipCtx = { reparto:"", ordinare:false, urgente:null };
+  $("righe-scrivi").value = ""; $("righe").value = "";
+  renderChips(); renderSuggChip(); aggiornaForm();
+}
+/* rimette i rettangolini da un testo (bozza ritrovata) */
+function chipsDaTesto(t){
+  S.chips = []; S.chipCtx = { reparto:"", ordinare:false, urgente:null };
+  aggiungiTesto(t);
+  renderChips(); syncRighe();
+}
+function aggiungiDaCasella(){
+  const inp = $("righe-scrivi"), t = inp.value;
+  if (!t.trim()) return 0;
+  const n = aggiungiTesto(t);
+  if (n){ inp.value = ""; S.chipAperto = ""; S.avvisoChip = n < 0 ? "Va bene: vale per le cose che scrivi dopo." : ""; }
+  else S.avvisoChip = "Scrivi cosa serve, per esempio «2 kg pane casereccio».";
+  renderChips(); renderSuggChip(); syncRighe();
+  return n;
+}
+function trovaChip(id){ return S.chips.find(function(c){ return c.id === id; }); }
+function renderChips(){
+  const mancanti = vedeMancanti();
+  riempi($("righe-chips"), S.chips.map(function(c){
+    const aperto = S.chipAperto === c.id;
+    const nome = c.tipo === "arancio" ? c.originale : c.articolo;
+    const manca = mancanti && c.tipo !== "arancio" && !c.ordinare && mancaGia({ articolo: c.articolo, reparto: c.reparto, da: "Panificio" });
+    return el("li", null, el("button", {type:"button", class:"chip-cosa " + c.tipo + (aperto ? " aperto" : ""), "data-chip":c.id, "aria-expanded":String(aperto),
+        "aria-label":(c.tipo === "verde" ? "Riconosciuto: " : c.tipo === "arancio" ? "Da scegliere: " : "Cosa nuova: ") + (c.quantita ? c.quantita + " " : "") + nome + ". Tocca per cambiarlo o toglierlo."},
+      el("span", {class:"segno", "aria-hidden":"true", text: c.tipo === "verde" ? "✓" : c.tipo === "arancio" ? "?" : "+"}),
+      c.quantita ? el("span", {class:"qta", text:c.quantita + " ·"}) : null,
+      el("span", {class:"nome", text:nome}),
+      c.tipo === "nuovo" ? el("span", {class:"etich", text:"nuovo"}) : null,
+      c.urgente ? el("span", {class:"bollino urg", text:"Urgente"}) : null,
+      c.ordinare ? el("span", {class:"bollino", text:"Da comprare"}) : null,
+      c.scritto ? el("span", {class:"scritto", text:"(scritto: " + c.scritto + ")"}) : null,
+      manca ? el("span", {class:"manca", text:"Non c'è in magazzino"}) : null));
+  }));
+  $("righe-scrivi").placeholder = S.chips.length ? "Scrivi un'altra cosa e premi Invio" : "Scrivi una cosa e premi Invio, es. 2 kg pane casereccio";
+  renderDomandaChip();
+}
+/* sotto la casella: la domanda per la prima cosa arancione, oppure i tasti della cosa toccata */
+function renderDomandaChip(){
+  const box = $("righe-domanda");
+  box.classList.remove("azioni");
+  const aperto = S.chipAperto && trovaChip(S.chipAperto);
+  if (aperto){
+    const c = aperto;
+    box.classList.add("azioni");
+    riempi(box, [
+      el("p", {class:"domanda", text:"«" + (c.quantita ? c.quantita + " " : "") + (c.tipo === "arancio" ? c.originale : c.articolo) + "»: cosa vuoi fare?"}),
+      el("div", {class:"row"},
+        el("button", {type:"button", class:"mini", "data-chip-cambia":c.id, text:"Cambia"}),
+        c.tipo === "verde" && c.scritto ? el("button", {type:"button", class:"mini", "data-chip-altro":c.id, text:"È un'altra cosa, lascia «" + c.originale + "»"}) : null,
+        el("button", {type:"button", class:"mini pericolo", "data-chip-togli":c.id, text:"Togli"}),
+        el("button", {type:"button", class:"link", "data-chip":"", text:"Chiudi"}))]);
+    return;
+  }
+  const arancio = S.chips.filter(function(c){ return c.tipo === "arancio"; });
+  if (!arancio.length){ riempi(box, S.avvisoChip ? [el("p", {class:"hint", text:S.avvisoChip})] : []); box.classList.toggle("azioni", !!S.avvisoChip); return; }
+  const c = arancio[0];
+  const parti = [];
+  if (c.motivo === "due"){
+    parti.push(el("p", {class:"domanda", text:"«" + c.originale + "»: sono " + c.parti.length + " cose diverse?"}),
+      el("div", {class:"row"},
+        el("button", {type:"button", class:"mini", "data-chip-dividi":c.id, text:"Sì, dividi: " + c.parti.map(function(x){ return trovaProdottoRich(x).nome || x; }).join(" + ")}),
+        el("button", {type:"button", class:"mini", "data-chip-una":c.id, text:"No, è una cosa sola"})));
+  } else if (c.motivo === "doppio"){
+    parti.push(el("p", {class:"domanda", text:"«" + c.articolo + "» l'hai già scritto sopra."}),
+      el("div", {class:"row"},
+        el("button", {type:"button", class:"mini", "data-chip-togli":c.id, text:"Togli questo"}),
+        el("button", {type:"button", class:"mini", "data-chip-tieni":c.id, text:"Tienili tutti e due"})));
+  } else {
+    parti.push(el("p", {class:"domanda", text: c.motivo === "forse" ? "«" + c.originale + "»: forse è «" + c.scelte[0] + "»?" : "«" + c.originale + "»: quale di questi?"}),
+      el("div", {class:"row"},
+        ...c.scelte.map(function(n, j){ return el("button", {type:"button", class:"mini", "data-chip-scegli":c.id + "|" + j, text: c.motivo === "forse" ? "Sì, è " + n : n}); }),
+        el("button", {type:"button", class:"mini", "data-chip-altro":c.id, text: c.motivo === "forse" ? "No, è un'altra cosa" : "Un'altra cosa"})));
+  }
+  if (arancio.length > 1) parti.push(el("p", {class:"hint", text: arancio.length === 2 ? "Dopo c'è ancora 1 cosa da scegliere." : "Dopo ci sono ancora " + (arancio.length - 1) + " cose da scegliere."}));
+  riempi(box, parti);
+}
+/* mentre si scrive: i prodotti dell'elenco che somigliano, da toccare */
+function renderSuggChip(){
+  const inp = $("righe-scrivi"), box = $("righe-sugg");
+  const x = parseRiga(inp.value, null);
+  const t = x ? x.articolo : "", k = chiave(t);
+  if (k.length < 2){ riempi(box, []); return; }
+  const out = [], tutti = elencoProdottiRich(), parole = k.split(" ");
+  function metti(n){ if (out.length < 4 && !out.some(function(y){ return chiave(y) === chiave(n); })) out.push(n); }
+  tutti.forEach(function(n){ if (chiave(n).indexOf(k) === 0) metti(n); });
+  tutti.forEach(function(n){ const kn = " " + chiave(n); if (parole.every(function(p){ return kn.indexOf(" " + p) >= 0; })) metti(n); });
+  if (k.length >= 3) cercaProdotto(t, formeRich(), {}).scelte.forEach(metti);
+  riempi(box, out.length ? [el("p", {class:"label-sm", text:"Forse cerchi (toccalo):"})].concat(out.map(function(n){
+    return el("button", {type:"button", class:"chip-add", "data-chip-sugg":n, text:(x.quantita ? x.quantita + " · " : "") + n});
+  })) : []);
+}
+/* i tasti dei rettangolini e delle domande sotto la casella */
+function tastoChip(b){
+  const d = b.dataset;
+  let c;
+  if (d.chip !== undefined){ S.chipAperto = S.chipAperto === d.chip ? "" : d.chip; S.avvisoChip = ""; renderChips(); return true; }
+  if (d.chipSugg){
+    const x = parseRiga($("righe-scrivi").value, S.chipCtx) || {};
+    if (S.chips.length < 30){ const n = nuovoChip(x, d.chipSugg); n.scelto = true; S.chips.push(classificaChip(n)); }
+    $("righe-scrivi").value = "";
+    registra("prodotto suggerito toccato", {});
+  } else if (d.chipScegli){
+    const ij = d.chipScegli.split("|"); c = trovaChip(ij[0]);
+    if (c && c.scelte && c.scelte[Number(ij[1])]){
+      c.articolo = c.scelte[Number(ij[1])]; c.scritto = chiave(c.originale) !== chiave(c.articolo) ? c.originale : "";
+      c.tipo = "verde"; c.scelte = null; c.motivo = ""; c.scelto = true; segnaDoppio(c);
+      registra("nome suggerito accettato", {});
+    }
+  } else if (d.chipAltro){
+    c = trovaChip(d.chipAltro);
+    if (c){ c.comEra = true; classificaChip(c); registra("nome suggerito rifiutato", {}); }
+  } else if (d.chipDividi){
+    c = trovaChip(d.chipDividi);
+    if (c && c.parti){
+      const nuovi = c.parti.map(function(t, i){ return nuovoChip({ quantita: i ? "" : c.quantita, urgente: c.urgente, ordinare: c.ordinare, reparto: c.reparto }, maiuscola(t)); });
+      const i = S.chips.indexOf(c);
+      S.chips.splice(i, 1);
+      nuovi.forEach(function(n, j){ S.chips.splice(i + j, 0, n); classificaChip(n); });
+    }
+  } else if (d.chipUna){
+    c = trovaChip(d.chipUna);
+    if (c){ c.unaSola = true; classificaChip(c); }
+  } else if (d.chipTieni){
+    c = trovaChip(d.chipTieni);
+    if (c){ c.doppioOk = true; c.tipo = c.tipoPrima || "verde"; c.motivo = ""; }
+  } else if (d.chipTogli){
+    S.chips = S.chips.filter(function(x){ return x.id !== d.chipTogli; });
+    if (S.chipAperto === d.chipTogli) S.chipAperto = "";
+  } else if (d.chipCambia){
+    c = trovaChip(d.chipCambia);
+    if (c){
+      S.chips = S.chips.filter(function(x){ return x !== c; });
+      $("righe-scrivi").value = (c.quantita ? c.quantita + " " : "") + c.originale;
+      S.chipAperto = "";
+    }
+  } else return false;
+  S.avvisoChip = "";
+  renderChips(); renderSuggChip(); syncRighe();
+  const inp = $("righe-scrivi");
+  /* dopo una scelta si torna a scrivere (o alla prossima domanda) */
+  const prossima = document.querySelector("#righe-domanda button");
+  if (S.chips.some(function(x){ return x.tipo === "arancio"; }) && prossima) prossima.focus(); else inp.focus();
+  return true;
+}
 const ETICHETTE_ORIGINE = {};
 function nomeOrigine(o){ return ETICHETTE_ORIGINE[o] || o; }
 
@@ -1869,9 +2179,25 @@ function originiPer(per){
 }
 function invia(ev){
   ev.preventDefault();
-  const rr = righeDi("righe");
-  if (!rr.length || !store || S.sola || S.inviando || !S.mioId || !haAzione("richMandare")) return;
-  apriControllo("negozio", S.punto, rr);
+  /* «Invio» nella casella fa solo il rettangolino (anche sulle tastiere che mandano il modulo);
+     il tasto «Controlla e invia» toccato fa anche il rettangolino di quello che è ancora scritto */
+  if (document.activeElement === $("righe-scrivi") && Date.now() - (S.toccoInvia || 0) > 1500){ aggiungiDaCasella(); return; }
+  if ($("righe-scrivi").value.trim()) aggiungiDaCasella();
+  if (!S.chips.length || !store || S.sola || S.inviando || !S.mioId || !haAzione("richMandare")) return;
+  /* prima si sceglie quello che è ancora arancione */
+  if (S.chips.some(function(c){ return c.tipo === "arancio"; })){
+    S.chipAperto = ""; renderChips();
+    const box = $("righe-domanda");
+    box.classList.remove("scuoti"); void box.offsetWidth; box.classList.add("scuoti");
+    try { box.scrollIntoView({ block: "center", behavior: "smooth" }); } catch(e){}
+    const b = box.querySelector("button"); if (b) b.focus();
+    esito("esito", "Prima scegli le cose arancioni, qui sopra.");
+    return;
+  }
+  esito("esito", "");
+  apriControllo("negozio", S.punto, S.chips.map(function(c){
+    return { articolo: c.articolo, quantita: c.quantita, reparto: c.reparto, ordinare: c.ordinare, urgente: c.urgente, scritto: c.scritto, comEra: !!c.comEra, scelto: !!c.scelto, daChip: true };
+  }));
 }
 function inviaGiro(ev){
   ev.preventDefault();
@@ -1891,10 +2217,17 @@ function apriControllo(dove, per, rr){
         da: (x.ordinare && opz.indexOf("Da comprare") >= 0) ? "Da comprare" : "Panificio",
         urgente: x.urgente === true && puoUrgente(dove)
       };
-      /* nomi giusti: solo per le richieste, non per i promemoria */
+      /* nomi giusti: solo per le richieste, non per i promemoria; i rettangolini sono già controllati */
+      if (x.daChip){ if (x.scritto) v.scritto = x.scritto; if (x.comEra) v.comEra = true; if (x.scelto) v.scelto = true; return v; }
       return per === PROMEMORIA ? v : riconosciVoce(v);
     })
   };
+  /* nei negozi le cose si vedono divise per reparto, come le prepara chi fa il giro */
+  if (dove === "negozio" && per !== PROMEMORIA){
+    const ord = function(v){ return REPARTI.indexOf(repartoDi({ articolo: v.articolo, reparto: v.reparto })); };
+    S.ctrl.voci = S.ctrl.voci.map(function(v, i){ return [v, i]; }).sort(function(a, b){ return ord(a[0]) - ord(b[0]) || a[1] - b[1]; }).map(function(x){ return x[0]; });
+    S.ctrl.perReparto = true;
+  }
   const posti = [];
   S.richieste.concat(S.tolte).filter(function(r){ return r.da === FUORI && r.ritiroDove; })
     .sort(function(a, b){ return b.creato - a.creato; })
@@ -1947,14 +2280,19 @@ function renderControllo(){
     dom.textContent = "Attenzione: " + elencoNomi + (doppie.length === 1 ? " è già stato chiesto e non è ancora arrivato." : " sono già stati chiesti e non sono ancora arrivati.") +
       " Se non serve di nuovo, tocca «Non serve»." + (altrove ? " Controlla anche da dove si prende." : "");
   }
-  riempi($("ctrl-lista"), c.voci.map(function(v, i){
+  let repPrima = "";
+  riempi($("ctrl-lista"), [].concat(...c.voci.map(function(v, i){
+    const rep = c.perReparto ? repartoDi({ articolo: v.articolo, reparto: v.reparto }) : "";
+    const testaRep = rep && rep !== repPrima ? el("li", {class:"ctrl-rep", "aria-hidden":"true", text:rep}) : null;
+    repPrima = rep || repPrima;
     const fuori = v.da !== "Panificio";
     const cls = fuori ? ((v.da === "Da comprare" || v.da === FUORI) ? " fuori comprare" : " fuori " + classeDest(v.da)) : "";
     const testa = el("p", {class:"articolo"}, v.quantita ? el("span", {class:"qta", text:v.quantita}) : null, v.articolo,
       (!promem && gia.has(chiave(v.articolo))) ? el("span", {class:"pill ctrl-gia", text:giaQuando(gia.get(chiave(v.articolo)))}) : null,
       (!promem && mancaGia(v)) ? el("span", {class:"pill p-finito", text:"Non c'è in magazzino: aspetta che arrivi"}) : null);
     /* nome cambiato dall'app: si vede cosa era scritto e si può lasciare com'era */
-    const nome = v.scritto
+    /* scelto da chi scrive tra i rettangolini arancioni: non serve ripeterlo */
+    const nome = v.scritto && !v.scelto
       ? el("p", {class:"hint ctrl-nome"}, "✓ Hai scritto «" + v.scritto + "»: l'app ha messo il nome giusto. ",
           el("button", {type:"button", class:"link", "data-ctrl-com-era":String(i), disabled:c.inviando, "aria-label":"Lascia com'era scritto: " + v.scritto, text:"Lascia com'era"}))
       : (v.scelte && v.scelte.length
@@ -1988,8 +2326,8 @@ function renderControllo(){
     if (!v.conNota) scelte.append(el("button", {type:"button", class:"link", "data-ctrl-nota-apri":String(i), disabled:c.inviando, "aria-label":"Aggiungi una nota a " + v.articolo, text:"+ Nota"}));
     const nota = v.conNota ? el("label", {class:"ctrl-nota"}, el("span", {class:"label-sm", text:"Nota per chi prepara"}),
       el("input", {type:"text", "data-ctrl-nota":String(i), maxlength:"140", autocomplete:"off", placeholder:"Es. quelle del frigo grande", value:v.nota || "", disabled:c.inviando})) : null;
-    return el("li", {class:"ctrl-voce" + cls}, testa, nome, scelte, extra, nota);
-  }));
+    return [testaRep, el("li", {class:"ctrl-voce" + cls}, testa, nome, scelte, extra, nota)].filter(Boolean);
+  })));
   /* per quando: oggi, domani o un altro giorno (prova, solo titolari) */
   const puoQuando = false; /* sostituito dalla sezione Prenotazioni */
   $("ctrl-quando").hidden = !puoQuando;
@@ -2041,13 +2379,13 @@ async function confermaControllo(){
     registra(giro ? "aggiunte dal giro" : "richieste mandate", { cose: ok, provate: c.voci.length, senzaRete: !!salvateSenzaRete,
       secondi: !giro && S.inizioRighe ? Math.round((Date.now() - S.inizioRighe) / 1000) : null });
     if (!giro) S.inizioRighe = 0;
-    $(giro ? "righe-giro" : "righe").value = "";
+    if (giro) $("righe-giro").value = ""; else svuotaChips();
     if (salvateSenzaRete) esito(giro ? "esito-giro" : "esito", "Senza rete: salvata sul telefono, parte da sola appena torna il campo.");
     else if (giro) esito("esito-giro", ok === 1 ? "Aggiunta." : ok + " cose aggiunte.");
     else esito("esito", ok === 1 ? "Richiesta inviata." : ok + " richieste inviate.");
   }
   renderTutto();
-  const f = $(giro ? "righe-giro" : "righe");
+  const f = $(giro ? "righe-giro" : "righe-scrivi");
   if (f) f.focus();
 }
 
@@ -2296,7 +2634,7 @@ function riprendiBozze(){
   function valida(x){ return x && typeof x === "object" && Number(x.alle) >= limite; }
   const ritrovate = [];
   if (valida(b.righe) && typeof b.righe.testo === "string" && !$("righe").value.trim() && (!b.righe.punto || b.righe.punto === S.punto)){
-    $("righe").value = b.righe.testo.slice(0, 4000);
+    chipsDaTesto(b.righe.testo.slice(0, 4000));
     ritrovate.push("le richieste che stavi scrivendo");
   }
   if (valida(b.giro) && typeof b.giro.testo === "string" && !$("righe-giro").value.trim()){
@@ -2916,6 +3254,7 @@ function aggiornaFormGiro(){
   b.textContent = S.inviandoGiro ? "Aggiungo…" : (rr.length > 1 ? "Controlla e aggiungi (" + rr.length + ")" : "Controlla e aggiungi");
 }
 function renderNegozio(){
+  if (S.chips.length) renderChips();
   document.querySelectorAll('input[name="punto"]').forEach(function(inp){ inp.checked = inp.value === S.punto; });
   $("titolo-arrivo").textContent = "In arrivo " + (PREP[S.punto] || S.punto);
   const panif = S.punto === "Panificio";
@@ -3518,10 +3857,14 @@ function capitoliManuale(){
   const panif = S.ruolo.tipo === "negozio" && S.punto === "Panificio";
   const cap = [];
   if (negozio || tit) cap.push({ titolo:"Richieste del negozio", domande:[
-    ["Come chiedo una cosa?", ["Nella pagina principale scrivi in «Cosa serve?» una cosa per riga. La quantità puoi metterla o no (per esempio «2 casse acqua naturale» oppure «Vassoi»). Poi tocca ", tasto("Controlla e invia"), ": si apre «Controlla prima di inviare»."]],
+    ["Come chiedo una cosa?", ["Nella pagina principale scrivi in «Cosa serve?» una cosa e premi Invio: diventa un rettangolino. Poi scrivi la prossima. La quantità puoi metterla o no, prima o dopo (per esempio «2 casse acqua naturale grande» oppure «Vassoi»). Mentre scrivi, sotto escono i prodotti che somigliano: toccane uno per metterlo subito. Puoi anche incollare un messaggio intero: ogni riga diventa un rettangolino. Alla fine tocca ", tasto("Controlla e invia"), ": si apre «Controlla prima di inviare»."]],
+    ["Cosa vogliono dire i colori dei rettangolini?", ["Verde ✓: l'app ha riconosciuto la cosa e ci ha messo il nome giusto. Esempio: scrivi «pane caserecio» e diventa «✓ Pane casereccio», con sotto piccolo quello che avevi scritto.", el("br"),
+      "Arancione ?: l'app ha un dubbio e ti chiede, subito sotto la casella, con dei tasti. Esempio: «latte» → «Latte cucina» o «Latte bar»; «acqua» → quale delle quattro; «pane e pitte» → «Sono due cose?»; una cosa scritta due volte → «Togli questo» o «Tienili tutti e due». Finché c'è qualcosa di arancione non si può inviare.", el("br"),
+      "Bianco «nuovo»: l'app non conosce la cosa. Va bene lo stesso: si manda com'è scritta e poi la controlla il titolare.", el("br"),
+      "Per cambiare o togliere un rettangolino toccalo: escono «Cambia», «Togli» e, se l'app ha corretto il nome, «È un'altra cosa». Con la casella vuota, il tasto cancella toglie l'ultimo rettangolino intero."]],
     ["Cosa sono i tasti «Chiesti spesso»?", ["Sono le cose che il tuo negozio ha chiesto più spesso negli ultimi " + num("chiestiGiorni") + " giorni, già con il nome giusto. Toccane uno per aggiungerlo senza scriverlo. Ne vedi " + num("chiestiTasti") + "; con «Altri…» fino a " + Math.max(num("chiestiTasti"), num("chiestiMax")) + ". Le cose che hai già chiesto e non sono ancora arrivate non ci sono."]],
-    ["Cosa controllo prima di inviare?", ["Per ogni cosa vedi:", el("br"),
-      "• il nome: se l'app è sicura mette lei il nome giusto (vedi ✓ e puoi toccare «Lascia com'era»); se ha un dubbio chiede «Quale di questi?» e tu tocchi quello giusto, oppure «Nessuno, è un'altra cosa»;", el("br"),
+    ["Cosa controllo prima di inviare?", ["Le cose sono divise per reparto (il nome del reparto è scritto piccolo sopra), come le prepara chi fa il giro. Il reparto non si sceglie: per le cose nuove lo sceglie il titolare. Per ogni cosa vedi:", el("br"),
+      "• il nome: è già quello dei rettangolini; se l'app l'ha corretto da sola vedi ✓ e puoi toccare «Lascia com'era»;", el("br"),
       "• da dove si prende: di solito dal Panificio; puoi scegliere anche l'altro negozio, «Da ritirare fuori» (scrivi dove) o «Da comprare»;", el("br"),
       "• ", tasto("Urgente"), " se serve subito, e ", tasto("+ Nota"), " per chi prepara.", el("br"),
       "Quando è tutto giusto tocca ", tasto("Sì, invia"), ". Per l'acqua l'app chiede sempre quale: naturale o frizzante, grande o piccola."]],
@@ -3621,11 +3964,17 @@ function capitoliManuale(){
     ["Posso scegliere io le notifiche di una persona?", ["Sì: nei suoi permessi, in «Notifiche che può ricevere», una per riga. Puoi dare a chiunque anche notifiche che di solito non sono del suo posto (per esempio «Pronto da caricare» a una persona del Corso). «No» vuol dire che non le arriva mai; «Sì» vuol dire che la può ricevere e sul suo telefono la accende o la spegne. Sotto vedi se sul suo telefono è accesa. Nell'elenco delle persone vedi chi ha le notifiche accese 🔔 e chi no 🔕."]],
     ["Una persona cambia negozio o va in ferie?", ["In «Persone registrate» tocca il suo nome. ", tasto("Cambia ruolo"), " la sposta (per esempio dal Corso a Piazza Nenni) senza codice nuovo. ", tasto("Sospendi"), " non le fa usare l'app finché non tocchi ", tasto("Riattiva"), ": dopo, sul suo telefono, basta toccare «Riprova»."]],
     ["A cosa serve «Impostazioni»?", ["Lì scegli alcuni numeri dell'app, divisi a gruppi (Richieste dei negozi, Avvisi e colori, Per quanto tempo tenere le cose…): per esempio dopo quante ore una richiesta diventa arancione o quanti tasti «Chiesti spesso» si vedono. Valgono per tutti i telefoni. Sotto ogni numero c'è un esempio che cambia mentre tocchi − e +; poi «Salva». «Rimetti com'era all'inizio» torna al numero di partenza."]],
-    ["A cosa serve «Database»?", ["Entrando ci sono tre tasti: Ordini, Prenotazioni, Biscotti. Il numero dice quante cose nuove ci sono da controllare. In ogni parte ci sono i nomi nuovi o corretti dall'app («Sì, è giusto», «No, era…», «È un prodotto nuovo», «Scrivi il nome giusto»), e in fondo l'elenco completo. In Ordini, più sotto, c'è una parte a sé per le cose segnate con «+ Segna cosa manca». Una correzione vale anche per quello già scritto. Quanti giorni indietro guardare lo scegli in «Impostazioni» (di partenza 7)."]],
+    ["A cosa serve «Database»?", ["Entrando ci sono tre tasti: Ordini, Prenotazioni, Biscotti. Il numero dice quante cose nuove ci sono da controllare. In ogni parte ci sono i nomi nuovi o corretti dall'app («Sì, è giusto», «No, era…», «È un prodotto nuovo», «Scrivi il nome giusto») e i prodotti che forse sono doppi; in fondo l'elenco completo, con «Cerca un prodotto», e le «Ultime modifiche» con «Annulla». In Ordini, più sotto, c'è una parte a sé per le cose segnate con «+ Segna cosa manca». Una correzione vale anche per quello già scritto. Quanti giorni indietro guardare lo scegli in «Impostazioni» (di partenza 7)."]],
+    ["Come scelgo il reparto di una cosa nuova?", ["Nel «Database», parte Ordini, sotto ogni cosa che l'app non conosce c'è «Reparto», con il reparto che l'app ha pensato dal nome. Se è sbagliato sceglilo giusto, poi tocca «È un prodotto nuovo» (o «Salva il nome giusto»): il reparto si salva insieme. Esempio: «sacchetti freezer grandi» → Congelati. I negozi non scelgono il reparto."]],
     ["Un prodotto è scritto male: come lo correggo?", ["Nel «Database» tocca «Scrivi il nome giusto» (o «No, era…»). Scrivi il nome: sotto escono i prodotti dell'elenco che somigliano, puoi toccarne uno. Se il nome che scrivi non c'è, diventa un prodotto nuovo. Quello scritto male resta collegato al nome giusto: la volta dopo l'app lo corregge da sola."]],
     ["Come controllo le cose segnate con «+ Segna cosa manca»?", ["Nel «Database», parte Ordini, sotto le richieste dei negozi c'è «Segnate con «+ Segna cosa manca»». Funziona come per le richieste: «Sì, è giusto», «No, era…», «È un prodotto nuovo». Esempio: Massimo ha segnato «acqua nat» e tu scegli «Acqua naturale grande»: da quel momento è collegata all'acqua chiesta dai negozi, e con «È arrivato» arrivano insieme. Se è stata segnata per sbaglio, «Elimina, è stato uno sbaglio»."]],
     ["Un ordine non c'entra niente: come lo tolgo?", ["Nel «Database», parte Ordini, sotto l'ordine tocca «Elimina questo ordine» e conferma. Sparisce dalle richieste e dal giro. Se è stato uno sbaglio, lo ritrovi in Cronologia."]],
-    ["Come cambio l'elenco dei prodotti?", ["Nel «Database», in fondo a Ordini o Prenotazioni, apri «Tutti i prodotti». In cima puoi aggiungere un prodotto. Accanto a ogni prodotto c'è «Modifica»: puoi cambiare il nome (se il nome nuovo c'è già, i due prodotti si uniscono), aggiungere un altro modo di scriverlo, togliere un modo di scriverlo o togliere il prodotto dall'elenco. Nei Biscotti, in cima puoi aggiungere un biscotto; con «Modifica» cambi il nome (vale anche per le comande già fatte; se il nome c'è già, i due diventano uno) o togli un biscotto aggiunto dai negozi. In fondo puoi rimettere quelli tolti."]],
+    ["Come cambio l'elenco dei prodotti?", ["Nel «Database», in fondo a Ordini o Prenotazioni, apri «Tutti i prodotti». In cima puoi aggiungere un prodotto. Negli Ordini i prodotti sono divisi per reparto: ogni reparto è un tasto con il numero dei prodotti, per esempio «Frigo 30»; toccalo per aprirlo. Tocca un prodotto per aprire la sua pagina: lì cambi il nome (se il nome nuovo c'è già, i due prodotti si uniscono), il reparto (solo Ordini), aggiungi o togli un modo di scriverlo, vedi le ultime volte che è stato chiesto e puoi toglierlo dall'elenco. «‹ Tutti i prodotti» o «Indietro» tornano all'elenco. Nei Biscotti è uguale: tocca un biscotto per cambiare il nome (vale anche per le comande già fatte) o togliere uno aggiunto dai negozi. In fondo puoi rimettere quelli tolti."]],
+    ["Come trovo un prodotto nell'elenco?", ["Nel «Database», apri «Tutti i prodotti» e scrivi nella casella «Cerca un prodotto» una parte del nome, per esempio «latte». Escono solo i prodotti che hanno quelle lettere nel nome o in un modo di scriverlo, con i reparti già aperti. Cancella la casella per vedere di nuovo tutto."]],
+    ["Come cambio il reparto di un prodotto?", ["Nel «Database», parte Ordini, apri «Tutti i prodotti», tocca il prodotto e nella sua pagina scegli il reparto in «Mettilo in un altro reparto», poi «Cambia reparto». Esempio: le «Crocchette di patate» finite in Frigo vanno in Congelati. Il reparto decide dove esce la cosa nel «Carico per reparto» delle consegne, anche per quelle già chieste."]],
+    ["Cosa vuol dire «Forse sono lo stesso prodotto»?", ["L'app ha trovato nell'elenco due nomi molto simili, per esempio «Guanti» e «Guanti neri L». Se sono la stessa cosa, tocca «Sì, tieni…» sul nome che vuoi tenere: l'altro diventa un modo di scriverlo e quello già mandato con l'altro nome passa a questo. Se sono cose diverse, tocca «No, sono diversi»: l'app non lo chiede più. Due nomi con numeri diversi (per esempio vaschetta 250 e 500) non li segnala."]],
+    ["Cos'è «Controlla uno alla volta»?", ["Quando nel «Database» ci sono più cose da controllare, in alto c'è il tasto «Controlla uno alla volta» con il numero. Ti mostra una cosa per volta, grande, con i tasti per rispondere. Appena rispondi passa da sola alla prossima. «Salta» la lascia per dopo; «Esci e torna alla lista» (o «Indietro») torna alla lista di sempre."]],
+    ["Ho sbagliato una modifica nel «Database»: come torno indietro?", ["In fondo a ogni parte del «Database» c'è «Ultime modifiche»: le ultime 30 cose cambiate, dalla più nuova, con chi l'ha fatto e quando. Esempio: «Oggi 10:12 · Alessandro · «latte» corretto in «Latte cucina»». Sulla più nuova c'è «Annulla»: rimette com'era prima. Si annulla una alla volta, partendo dalla più nuova, così non si rovinano le modifiche fatte dopo."]],
     puoStat() ? ["Cosa trovo nelle «Statistiche»?", ["Quante richieste, cosa si chiede di più, cosa manca più spesso (anche le volte portate solo in parte e quelle segnate con «+ Segna cosa manca»), quanto si aspetta in magazzino prima che una cosa arrivi, quando si chiede, quanto ci mette ad arrivare al negozio, i biscotti, le prenotazioni e le disdette con il loro motivo. Scegli il periodo in alto. I tasti per scaricare danno un file che si apre con Excel."]] : null,
     ["Come aggiungo una persona nuova?", ["In «Persone registrate» tocca ", tasto("+ Aggiungi persona"), ". Scrivi il nome con cui la vedranno i colleghi (se ce ne sono due uguali aggiungi l'iniziale del cognome, per esempio Maria R) e scegli dove lavora, poi ", tasto("Crea il codice"), ". L'app ti mostra un codice di 6 lettere e numeri, per esempio K7P 4QM: diglielo o tocca ", tasto("Copia il messaggio da mandare"), " e mandalo su WhatsApp solo a lei. Lei apre l'app, scrive il codice e tocca «Entra»: entra già con il suo nome e il suo posto. Il codice vale una volta sola e per " + num("codice") + " ore (le ore le scegli in «Impostazioni»). Scrivilo subito: dopo non si può rileggere. Finché non lo usa, in «Persone registrate» la vedi in «Codici non ancora usati»: se l'ha perso tocca ", tasto("Codice nuovo"), "."]],
     ["Una persona ha cambiato telefono o si è scollegata: come la faccio rientrare?", ["In «Persone registrate» tocca il suo nome, poi ", tasto("Crea un codice nuovo"), ". Le dai il codice, lei lo scrive e rientra con tutto come prima: stesso nome, permessi, notifiche e richieste. Il codice per un titolare lo crea l'altro titolare; se vi scollegate tutti e due, chiedi a Claude."]],
@@ -3857,7 +4206,7 @@ function vaiSezione(id, forza, scheda){
     mostraSez(id);
     if (id === "prenotazioni"){ S.prenGiorno = oggiStr(); S.prenScegli = false; }
     if (id === "persone"){ S.pv = null; mostraPersone(); }
-    if (id === "database"){ S.corrApri = ""; S.prenCorreggi = ""; S.dbMod = ""; S.dbScheda = scheda || ""; }
+    if (id === "database"){ S.corrApri = ""; S.prenCorreggi = ""; S.dbMod = ""; S.dbUno = false; S.dbScheda = scheda || ""; $("db-cerca").value = ""; }
     if (id === "impostazioni") S.bozzaNumeri = {};
     if (id === "statistiche") caricaStatistiche();
     if (id === "notifiche") renderNotifiche();
@@ -4301,7 +4650,9 @@ function leggiProdotti(d, max){
     }
   }
   const tolti = Array.isArray(d.tolti) ? d.tolti.filter(function(x){ return typeof x === "string" && x; }).map(chiave) : [];
-  return { elenco: elenco, alias: alias, tolti: tolti, spenti: spenti };
+  /* coppie di prodotti che il titolare ha detto «No, sono diversi» ("a|b", in ordine) */
+  const diversi = Array.isArray(d.diversi) ? d.diversi.filter(function(x){ return typeof x === "string" && x.indexOf("|") > 0; }).slice(0, 1000) : [];
+  return { elenco: elenco, alias: alias, tolti: tolti, spenti: spenti, diversi: diversi };
 }
 /* tutti gli altri modi di scrivere: quelli di partenza (se non tolti) più quelli dei titolari */
 function aliasTutti(base, dati){
@@ -4459,6 +4810,18 @@ function riconosciVoce(v){
    («È un prodotto nuovo» / «Scrivi il nome giusto»). Un ordine che non c'entra niente si elimina, con conferma. */
 S.corrApri = "";
 S.corrGruppi = new Map();
+S.corrRep = {};
+/* il reparto scelto per una cosa nuova nel Database: si salva per il nome giusto */
+function salvaRepartoNuovo(id, nome){
+  const sel = document.querySelector('[data-corr-rep="' + String(id).replace(/["\\]/g, "") + '"]');
+  const rep = sel ? sel.value : S.corrRep[id];
+  delete S.corrRep[id];
+  if (REPARTI.indexOf(rep) < 0 || !store || !store.salvaMappa) return;
+  const k = chiave(nome);
+  if (S.mappa[k] === rep || (!S.mappa[k] && repartoDi({ articolo: nome }) === rep && !sel)) return;
+  S.mappa = Object.assign({}, S.mappa); S.mappa[k] = rep;
+  scrivi(function(){ return store.salvaMappa(k, rep); });
+}
 S.dbScheda = "";
 S.dbMod = "";
 function puoDatabase(){ return !!S.owner && !!S.ruolo && S.ruolo.tipo === "titolare" && !!store && !S.sola; }
@@ -4509,7 +4872,7 @@ function biscNuovi(){
 }
 function contaDatabase(){
   if (!puoDatabase()) return { ordini: 0, prenotazioni: 0, biscotti: 0, tutti: 0 };
-  const c = { ordini: gruppiCorrezioni().length, prenotazioni: gruppiDaControllare().size, biscotti: biscNuovi().length };
+  const c = { ordini: gruppiCorrezioni().length + doppiProd(parteProd("ordini")).length, prenotazioni: gruppiDaControllare().size + doppiProd(parteProd("prenotazioni")).length, biscotti: biscNuovi().length };
   c.tutti = c.ordini + c.prenotazioni + c.biscotti;
   return c;
 }
@@ -4540,7 +4903,7 @@ function renderDatabase(){
   const pann = $("pannello-database");
   const di = [S.dbScheda, S.dbMod, S.corrApri, S.prenCorreggi].join("|");
   const valori = {};
-  if (di === S.dbCampiDi) pann.querySelectorAll("input[id]").forEach(function(i){ valori[i.id] = i.value; });
+  if (di === S.dbCampiDi) pann.querySelectorAll("input[id]").forEach(function(i){ if (i.id !== "db-cerca") valori[i.id] = i.value; });
   const attivo = document.activeElement && pann.contains(document.activeElement) ? document.activeElement.id : "";
   S.dbCampiDi = di;
   const menu = !S.dbScheda;
@@ -4549,18 +4912,37 @@ function renderDatabase(){
   if (menu) renderDbMenu();
   else {
     const x = SCHEDE_DB.find(function(s){ return s[0] === S.dbScheda; }) || SCHEDE_DB[0];
-    riempi($("db-testa"), [
-      el("button", {type:"button", class:"mini", "data-db-scheda":"", text:"‹ Database"}),
-      el("h2", {text:x[1]})]);
-    if (S.dbScheda === "prenotazioni") renderDbPren();
-    else if (S.dbScheda === "biscotti") renderDbBisc();
-    else renderDbOrdini();
+    const bisc = S.dbScheda === "biscotti";
+    /* la pagina di un prodotto: si apre toccandolo nell'elenco */
+    const nome = S.dbMod ? nomeDaChiave(S.dbMod) : "";
+    if (S.dbMod && !nome) S.dbMod = "";
+    $("db-parte").dataset.modo = nome ? "prodotto" : (S.dbUno ? "uno" : "");
+    $("db-cerca-titolo").textContent = bisc ? "Cerca un biscotto" : "Cerca un prodotto";
+    if (nome){
+      riempi($("db-testa"), [
+        el("button", {type:"button", class:"mini", "data-db-mod":"", text: bisc ? "‹ Tutti i biscotti" : "‹ Tutti i prodotti"}),
+        el("h2", {text:nome})]);
+      renderDbProdotto(nome);
+    } else {
+      riempi($("db-testa"), [
+        el("button", {type:"button", class:"mini", "data-db-scheda":"", text:"‹ Database"}),
+        el("h2", {text:x[1]})]);
+      if (S.dbScheda === "prenotazioni") renderDbPren();
+      else if (bisc) renderDbBisc();
+      else renderDbOrdini();
+      renderModificheDb();
+    }
   }
   for (const id in valori){
     const i = $(id);
     if (i && valori[id] && i.value !== valori[id]){ i.value = valori[id]; if (i.dataset.suggParte) aggiornaSugg(i); }
   }
   if (attivo && $(attivo) && document.activeElement !== $(attivo)) $(attivo).focus();
+}
+/* il nome del prodotto (o biscotto) della parte aperta, dalla sua chiave */
+function nomeDaChiave(k){
+  const l = S.dbScheda === "biscotti" ? catalogoBisc() : parteProd(S.dbScheda).elenco();
+  return l.find(function(n){ return chiave(n) === k; }) || "";
 }
 /* il sotto menù: un tasto per ogni parte, con quante cose ci sono da controllare */
 function renderDbMenu(){
@@ -4602,7 +4984,8 @@ function renderDbOrdini(){
   const gruppi = gruppiCorrezioni();
   S.corrGruppi = new Map(gruppi.map(function(g){ return [g.id, g]; }));
   const off = S.pending.has("prodotti-richieste");
-  $("db-spiega").textContent = "Le richieste dei negozi degli ultimi " + secondi("controllo") + ". Qui vedi cosa ha scritto la persona e cosa ha messo l'app. Se l'app ha sbagliato, scrivi il nome giusto: si correggono tutte le richieste scritte così e la volta dopo l'app lo sa. Se un ordine non c'entra niente, eliminalo. Più sotto, a parte, le cose segnate con «+ Segna cosa manca».";
+  const parte = parteProd("ordini");
+  $("db-spiega").textContent = "Le richieste dei negozi degli ultimi " + secondi("controllo") + ". Qui vedi cosa ha scritto la persona e cosa ha messo l'app. Se l'app ha sbagliato, scrivi il nome giusto: si correggono tutte le richieste scritte così e la volta dopo l'app lo sa. Se un ordine non c'entra niente, eliminalo. Più sotto, a parte, le cose segnate con «+ Segna cosa manca» e i prodotti che forse sono doppi.";
   function voce(g){
     const posti = g.mag
       ? Array.from(new Set(g.rich.map(function(m){ return m.mio ? "te" : (S.nomi[m.autore] || "…"); }))).join(", ")
@@ -4614,6 +4997,11 @@ function renderDbOrdini(){
       parti.push(el("p", {class:"domanda-db", text:"È giusto?"}));
     } else {
       parti.push(el("p", {class:"domanda-db", text:"L'app non conosce questo prodotto. È nuovo o è scritto male?"}));
+      /* il reparto di una cosa nuova lo sceglie il titolare (nei negozi non si sceglie) */
+      const indov = S.corrRep[g.id] || repartoDi({ articolo: g.testo });
+      parti.push(el("label", {class:"riga-db db-rep-nuovo"}, el("span", {class:"label-sm", text:"Reparto"}),
+        el("select", {"data-corr-rep":g.id, "aria-label":"Reparto di " + g.testo}, ...REPARTI.map(function(r){ return el("option", {value:r, selected: r === indov, text:r}); }))),
+        el("p", {class:"hint", text:"Se è un prodotto nuovo, scegli il reparto giusto: si salva con «È un prodotto nuovo» o «Salva il nome giusto». L'app aveva pensato: " + repartoDi({ articolo: g.testo }) + "."}));
     }
     parti.push(el("p", {class:"hint", text: g.mag
       ? (g.rich.length === 1 ? "Segnata 1 volta" : "Segnata " + g.rich.length + " volte") + " da " + posti + " · " + quando(ultima) +
@@ -4639,31 +5027,32 @@ function renderDbOrdini(){
       "aria-label":(g.mag ? "Elimina: " : "Elimina l'ordine: ") + g.testo,
       text: g.mag ? (g.rich.length === 1 ? "Elimina, è stato uno sbaglio" : "Elimina tutte e " + g.rich.length + ", è stato uno sbaglio")
         : (g.rich.length === 1 ? "Elimina questo ordine" : "Elimina questi " + g.rich.length + " ordini")})));
-    return el("div", {class:"card pren-dc-voce db-voce"}, ...parti);
+    return { id: g.id, gruppo: g.mag ? "mag" : "", nodo: el("div", {class:"card pren-dc-voce db-voce"}, ...parti) };
   }
-  const ordini = gruppi.filter(function(g){ return !g.mag; }), mag = gruppi.filter(function(g){ return g.mag; });
-  const lista = ordini.map(voce);
-  if (mag.length) lista.push(
-    el("div", {class:"db-sotto-parte"},
-      el("h3", {text:"Segnate con «+ Segna cosa manca» (" + mag.length + ")"}),
+  const voci = gruppi.filter(function(g){ return !g.mag; }).map(voce)
+    .concat(gruppi.filter(function(g){ return g.mag; }).map(voce), vociDoppi(parte));
+  const nMag = voci.filter(function(v){ return v.gruppo === "mag"; }).length;
+  mostraDaControllare(voci, {
+    mag: el("div", {class:"db-sotto-parte"},
+      el("h3", {text:"Segnate con «+ Segna cosa manca» (" + nMag + ")"}),
       el("p", {class:"hint", text:"Le cose che chi fa il giro o un titolare ha segnato come finite in magazzino. Controlla il nome: se è giusto, quando un negozio chiede la stessa cosa l'app sa già che non c'è, e con «È arrivato» arrivano insieme. Esempio: «acqua nat» segnata in magazzino va corretta in «Acqua naturale grande», così si collega all'acqua chiesta dal Corso."})),
-    ...mag.map(voce));
-  riempi($("db-lista"), lista);
-  $("db-vuoto").hidden = gruppi.length > 0;
+    doppi: testataDoppi(voci.length - nMag - gruppi.filter(function(g){ return !g.mag; }).length) });
+  $("db-vuoto").hidden = voci.length > 0;
   $("db-vuoto").textContent = S.pronto ? "Niente da controllare: tutti i nomi degli ordini sono a posto." : "Carico le richieste…";
   $("db-elenco-titolo").textContent = "Tutti i prodotti degli ordini";
-  $("db-elenco-spiega").textContent = "L'elenco che l'app usa per riconoscere i nomi, diviso per reparto. Sotto ogni prodotto, gli altri modi di scriverlo che conosce. Tocca «Modifica» per cambiare il nome, aggiungere un modo di scriverlo o togliere il prodotto.";
-  renderElencoProd(parteProd("ordini"), true);
+  $("db-elenco-spiega").textContent = "L'elenco che l'app usa per riconoscere i nomi, diviso per reparto: tocca un reparto per aprirlo. Sotto ogni prodotto, gli altri modi di scriverlo che conosce. Tocca un prodotto per aprire la sua pagina: lì cambi il nome, il reparto, i modi di scriverlo, o lo togli.";
+  renderElencoProd(parte, true);
 }
 function renderDbPren(){
   const gruppi = gruppiDaControllare();
   const off = S.pending.has("prodotti");
+  const parte = parteProd("prenotazioni");
   $("db-spiega").textContent = "Le prenotazioni degli ultimi " + secondi("controllo") + ". Qui vedi cosa ha scritto la persona e cosa ha messo l'app. Se l'app ha corretto bene, tocca «Sì, è giusto»; se ha sbagliato, «No, era…» e scrivi il nome giusto: tutte le prenotazioni scritte così si correggono da sole e la volta dopo l'app lo sa. Se l'app non conosce il prodotto: «È un prodotto nuovo» oppure «Scrivi il nome giusto».";
   /* prima i più recenti */
   const lista = Array.from(gruppi.values()).sort(function(a, b){
     return Math.max.apply(null, b.pren.map(function(p){ return p.creato; })) - Math.max.apply(null, a.pren.map(function(p){ return p.creato; }));
   });
-  riempi($("db-lista"), lista.map(function(g){
+  const voci = lista.map(function(g){
     const dove = g.pren.slice(0, 3).map(function(p){ return fmtCortoGiorno(p.perIl) + (p.cliente ? ", " + p.cliente : ""); }).join(" · ") + (g.pren.length > 3 ? " e altre" : "");
     const corretta = g.tipo === "corretta";
     let azioni;
@@ -4681,59 +5070,49 @@ function renderDbPren(){
         el("button", {type:"button", class:"mini", "data-pren-dc-conferma":g.id, "data-testo":g.testo, disabled:off, text:"È un prodotto nuovo"}),
         el("button", {type:"button", class:"mini", "data-pren-dc-errore":g.id, disabled:off, text:"Scrivi il nome giusto"}));
     }
-    return el("div", {class:"card pren-dc-voce db-voce"},
+    return { id: g.id, gruppo: "", nodo: el("div", {class:"card pren-dc-voce db-voce"},
       rigaDb("Scritto", el("strong", {text:"«" + g.testo + "»"})),
       corretta ? rigaDb("L'app ha messo", el("strong", {text:g.nome})) : null,
       el("p", {class:"domanda-db", text: corretta ? "È giusto?" : "L'app non conosce questo prodotto. È nuovo o è scritto male?"}),
       el("p", {class:"hint", text:(g.pren.length === 1 ? "1 prenotazione" : g.pren.length + " prenotazioni") + " · " + dove}),
-      azioni);
-  }));
-  $("db-vuoto").hidden = gruppi.size > 0;
+      azioni) };
+  }).concat(vociDoppi(parte));
+  mostraDaControllare(voci, { doppi: testataDoppi(voci.length - lista.length) });
+  $("db-vuoto").hidden = voci.length > 0;
   $("db-vuoto").textContent = S.pronto ? "Niente da controllare: tutti i prodotti delle prenotazioni sono a posto." : "Carico le prenotazioni…";
   $("db-elenco-titolo").textContent = "Tutti i prodotti delle prenotazioni";
-  $("db-elenco-spiega").textContent = "L'elenco che l'app usa per riconoscere i prodotti delle prenotazioni. Sotto ogni prodotto, gli altri modi di scriverlo che conosce. Tocca «Modifica» per cambiare il nome, aggiungere un modo di scriverlo o togliere il prodotto.";
-  renderElencoProd(parteProd("prenotazioni"), false);
+  $("db-elenco-spiega").textContent = "L'elenco che l'app usa per riconoscere i prodotti delle prenotazioni. Sotto ogni prodotto, gli altri modi di scriverlo che conosce. Tocca un prodotto per aprire la sua pagina: lì cambi il nome, i modi di scriverlo, o lo togli.";
+  renderElencoProd(parte, false);
 }
 function renderDbBisc(){
   const nuovi = biscNuovi();
   const off = S.pending.has("biscotti-imp");
   $("db-spiega").textContent = "I biscotti aggiunti dai negozi che non erano nell'elenco. «Conferma»: il biscotto resta nell'elenco. «Togli dall'elenco»: non si può più scegliere (le comande già fatte restano).";
-  riempi($("db-lista"), nuovi.map(function(n){
-    return el("div", {class:"card pren-dc-voce db-voce"},
+  mostraDaControllare(nuovi.map(function(n){
+    return { id: "bisc:" + chiave(n), gruppo: "", nodo: el("div", {class:"card pren-dc-voce db-voce"},
       rigaDb("Aggiunto", el("strong", {text:n})),
       el("p", {class:"domanda-db", text:"Esiste davvero questo biscotto?"}),
       el("div", {class:"row"},
         el("button", {type:"button", class:"mini", "data-db-bisc-si":n, disabled:off, text:"Sì, conferma"}),
-        el("button", {type:"button", class:"mini", "data-db-bisc-no":n, disabled:off, text:"No, togli dall'elenco"})));
-  }));
+        el("button", {type:"button", class:"mini", "data-db-bisc-no":n, disabled:off, text:"No, togli dall'elenco"}))) };
+  }), {});
   $("db-vuoto").hidden = nuovi.length > 0;
   $("db-vuoto").textContent = "Niente da controllare: nessun biscotto nuovo.";
-  const elenco = catalogoBisc();
+  const tutti = catalogoBisc();
   const base = new Set(BISCOTTI_BASE.map(chiave));
   const tolti = S.biscTolti.filter(function(n){ return !base.has(chiave(n)); });
   $("db-elenco-titolo").textContent = "Tutti i biscotti";
-  $("db-elenco-spiega").textContent = "L'elenco dei biscotti che i negozi possono chiedere. Tocca «Modifica» per cambiare il nome (vale anche per le comande già fatte) o togliere un biscotto aggiunto dai negozi. Quelli tolti si possono rimettere.";
-  $("db-n").textContent = String(elenco.length);
+  $("db-elenco-spiega").textContent = "L'elenco dei biscotti che i negozi possono chiedere. Tocca un biscotto per aprire la sua pagina: lì cambi il nome (vale anche per le comande già fatte) o togli un biscotto aggiunto dai negozi. Quelli tolti si possono rimettere.";
+  $("db-n").textContent = String(tutti.length);
+  const q = cercaDb();
+  const elenco = q ? tutti.filter(function(n){ return chiave(n).indexOf(q) >= 0; }) : tutti;
   const out = [el("div", {class:"db-nuovo"},
     el("label", {class:"label-sm", for:"db-nuovo-prod", text:"Aggiungi un biscotto all'elenco"}),
     el("div", {class:"row"},
       el("input", {id:"db-nuovo-prod", type:"text", maxlength:"60", autocomplete:"off", autocapitalize:"sentences", placeholder:"Nome del biscotto", "data-invio":"db-aggiungi"}),
-      el("button", {type:"button", class:"mini", id:"db-aggiungi", disabled:off, text:"Aggiungi"}))),
-    el("div", null, ...elenco.map(function(n){
-    const aperta = S.dbMod === chiave(n);
-    const riga = el("div", {class:"corr-prod"}, el("span", {class:"nome", text:n}),
-      el("button", {type:"button", class:"link", "data-db-mod": aperta ? "" : chiave(n), "aria-expanded":String(aperta), "aria-label":(aperta ? "Chiudi: " : "Modifica: ") + n, text: aperta ? "Chiudi" : "Modifica"}));
-    if (aperta){
-      riga.append(el("div", {class:"db-mod"},
-        el("label", {class:"label-sm", for:"db-mod-nome", text:"Nome giusto"}),
-        el("div", {class:"row"},
-          el("input", {id:"db-mod-nome", type:"text", maxlength:"60", autocomplete:"off", value:n, "data-invio":"db-rinomina"}),
-          el("button", {type:"button", class:"mini", id:"db-rinomina", "data-db-rinomina":n, disabled:off, text:"Cambia nome"})),
-        base.has(chiave(n)) ? el("p", {class:"hint", text:"È un biscotto dell'elenco di partenza: si può cambiare il nome ma non toglierlo."})
-          : el("div", {class:"row"}, el("button", {type:"button", class:"mini pericolo", "data-db-bisc-no":n, disabled:off, text:"Togli dall'elenco"}))));
-    }
-    return riga;
-  }))];
+      el("button", {type:"button", class:"mini", id:"db-aggiungi", disabled:off, text:"Aggiungi"})))];
+  if (!elenco.length) out.push(el("p", {class:"vuoto", text:"Nessun biscotto con «" + $("db-cerca").value.trim() + "»."}));
+  else out.push(el("div", null, ...elenco.map(function(n){ return rigaProdotto(n, []); })));
   if (tolti.length) out.push(el("section", {class:"corr-rep"}, el("p", {class:"label-sm", text:"Tolti dall'elenco"}),
     el("div", null, ...tolti.map(function(n){
       return el("div", {class:"corr-prod"}, el("span", {class:"nome", text:n}),
@@ -4744,52 +5123,364 @@ function renderDbBisc(){
 /* l'elenco completo dei prodotti (ordini o prenotazioni), che si può cambiare:
    in cima «Aggiungi un prodotto»; per ogni prodotto «Modifica» apre nome, altri modi di scriverlo e «Togli dall'elenco» */
 function renderElencoProd(parte, perReparto){
-  const elenco = parte.elenco();
-  $("db-n").textContent = String(elenco.length);
-  const alias = aliasTutti(parte.aliasBase, parte.dati);
-  const anche = {};
-  for (const k in alias){ const n = chiave(alias[k]); if (k !== n) (anche[n] = anche[n] || []).push(k); }
+  const tutti = parte.elenco();
+  $("db-n").textContent = String(tutti.length);
+  const anche = altriModi(parte);
   const off = S.pending.has(parte.pending);
-  function riga(n){
-    const altri = anche[chiave(n)] || [];
-    const aperta = S.dbMod === chiave(n);
-    const r = el("div", {class:"corr-prod"}, el("span", {class:"nome", text:n}),
-      el("button", {type:"button", class:"link", "data-db-mod": aperta ? "" : chiave(n), "aria-expanded":String(aperta), "aria-label":(aperta ? "Chiudi: " : "Modifica: ") + n, text: aperta ? "Chiudi" : "Modifica"}));
-    if (altri.length) r.append(el("span", {class:"anche"}, "Scritto anche: ", ...altri.map(function(k, i){
-      return el("span", null, i ? ", " : "", "«" + k + "»",
-        aperta ? el("button", {type:"button", class:"link", "data-db-togli-alias":k, disabled:off, "aria-label":"Togli «" + k + "» → " + n, text:" (togli)"}) : null);
-    })));
-    if (aperta) r.append(el("div", {class:"db-mod"},
-      el("label", {class:"label-sm", for:"db-mod-nome", text:"Nome giusto"}),
-      el("div", {class:"row"},
-        el("input", {id:"db-mod-nome", type:"text", maxlength:"60", autocomplete:"off", value:n, "data-invio":"db-rinomina"}),
-        el("button", {type:"button", class:"mini", id:"db-rinomina", "data-db-rinomina":n, disabled:off, text:"Cambia nome"})),
-      el("label", {class:"label-sm", for:"db-mod-alias", text:"Aggiungi un altro modo di scriverlo"}),
-      el("div", {class:"row"},
-        el("input", {id:"db-mod-alias", type:"text", maxlength:"60", autocomplete:"off", placeholder:"Come lo scrivono nei negozi", "data-invio":"db-alias"}),
-        el("button", {type:"button", class:"mini", id:"db-alias", "data-db-alias":n, disabled:off, text:"Aggiungi"})),
-      el("div", {class:"row"},
-        el("button", {type:"button", class:"mini pericolo", "data-db-togli-prod":n, disabled:off, text:"Togli dall'elenco"}))));
-    return r;
-  }
+  const q = cercaDb();
+  const elenco = q ? tutti.filter(function(n){
+    return chiave(n).indexOf(q) >= 0 || (anche[chiave(n)] || []).some(function(k){ return k.indexOf(q) >= 0; });
+  }) : tutti;
   const out = [el("div", {class:"db-nuovo"},
     el("label", {class:"label-sm", for:"db-nuovo-prod", text:"Aggiungi un prodotto all'elenco"}),
     el("div", {class:"row"},
       el("input", {id:"db-nuovo-prod", type:"text", maxlength:"60", autocomplete:"off", autocapitalize:"sentences", placeholder:"Nome del prodotto", "data-invio":"db-aggiungi"}),
       el("button", {type:"button", class:"mini", id:"db-aggiungi", disabled:off, text:"Aggiungi"})))];
-  if (perReparto){
+  if (!elenco.length) out.push(el("p", {class:"vuoto", text: q ? "Nessun prodotto con «" + $("db-cerca").value.trim() + "». Se manca, aggiungilo qui sopra." : "L'elenco è vuoto."}));
+  else if (perReparto){
+    /* i reparti sono chiusi: si apre quello che serve. Cercando, si aprono quelli con un prodotto trovato */
     const perRep = new Map(REPARTI.map(function(r){ return [r, []]; }));
     elenco.forEach(function(n){ perRep.get(repartoDi({ articolo: n })).push(n); });
     perRep.forEach(function(nomi, rep){
-      if (nomi.length) out.push(el("section", {class:"corr-rep"}, el("p", {class:"label-sm", text:rep}), el("div", null, ...nomi.map(riga))));
+      if (!nomi.length) return;
+      const aperto = !!q || S.repAperti.has(rep);
+      out.push(el("section", {class:"corr-rep"},
+        el("button", {type:"button", class:"db-rep-tasto", "data-db-rep":rep, "aria-expanded":String(aperto)},
+          el("span", {class:"freccia", "aria-hidden":"true", text: aperto ? "▾" : "▸"}),
+          el("span", {class:"db-rep-nome", text:rep}),
+          el("span", {class:"badge", "aria-label":nomi.length === 1 ? "1 prodotto" : nomi.length + " prodotti", text:String(nomi.length)})),
+        aperto ? el("div", {class:"db-rep-dentro"}, ...nomi.map(function(n){ return rigaProdotto(n, anche[chiave(n)]); })) : null));
     });
-  } else out.push(el("div", null, ...elenco.map(riga)));
+  } else out.push(el("div", null, ...elenco.map(function(n){ return rigaProdotto(n, anche[chiave(n)]); })));
   riempi($("db-elenco"), out);
+}
+/* gli altri modi di scrivere ogni prodotto: { chiave del nome: [modi di scriverlo] } */
+function altriModi(parte){
+  const alias = aliasTutti(parte.aliasBase, parte.dati), anche = {};
+  for (const k in alias){ const n = chiave(alias[k]); if (k !== n) (anche[n] = anche[n] || []).push(k); }
+  return anche;
+}
+S.repAperti = new Set();
+function cercaDb(){ return chiave($("db-cerca").value || ""); }
+/* una riga dell'elenco: toccandola si apre la pagina del prodotto */
+function rigaProdotto(n, altri){
+  return el("button", {type:"button", class:"corr-prod db-prod-riga", "data-db-mod":chiave(n), "aria-label":"Apri la pagina di " + n},
+    el("span", {class:"nome", text:n}),
+    el("span", {class:"freccia", "aria-hidden":"true", text:"›"}),
+    altri && altri.length ? el("span", {class:"anche", text:"Scritto anche: " + altri.map(function(k){ return "«" + k + "»"; }).join(", ")}) : null);
+}
+/* la pagina di un prodotto (o di un biscotto): nome, reparto, modi di scriverlo, chi l'ha chiesto, togli */
+function renderDbProdotto(nome){
+  const bisc = S.dbScheda === "biscotti";
+  const parte = bisc ? null : parteProd(S.dbScheda);
+  const off = S.pending.has(bisc ? "biscotti-imp" : parte.pending);
+  const out = [];
+  out.push(el("section", {class:"card db-mod"},
+    el("h3", {text:"Nome"}),
+    el("label", {class:"label-sm", for:"db-mod-nome", text:"Il nome giusto"}),
+    el("div", {class:"row"},
+      el("input", {id:"db-mod-nome", type:"text", maxlength:"60", autocomplete:"off", value:nome, "data-invio":"db-rinomina"}),
+      el("button", {type:"button", class:"mini", id:"db-rinomina", "data-db-rinomina":nome, disabled:off, text:"Cambia nome"})),
+    el("p", {class:"hint", text: bisc
+      ? "Il nome nuovo vale anche per le comande già fatte. Se scrivi il nome di un altro biscotto dell'elenco, i due diventano uno solo."
+      : "Il nome nuovo vale anche per quello già mandato. Se scrivi il nome di un altro prodotto dell'elenco, i due diventano uno solo."})));
+  if (!bisc && parte.id === "ordini"){
+    const k = chiave(nome), adesso = repartoDi({ articolo: nome });
+    out.push(el("section", {class:"card db-mod"},
+      el("h3", {text:"Reparto"}),
+      el("p", {class:"riga-db"}, "Adesso è in: ", el("strong", {text:adesso}),
+        REPARTI.indexOf(S.mappa[k]) >= 0 ? null : el("span", {class:"hint", text:" (l'ha scelto l'app dal nome)"})),
+      el("label", {class:"label-sm", for:"db-mod-rep", text:"Mettilo in un altro reparto"}),
+      el("div", {class:"row"},
+        el("select", {id:"db-mod-rep"}, ...REPARTI.map(function(r){ return el("option", {value:r, selected: r === adesso, text:r}); })),
+        el("button", {type:"button", class:"mini", "data-db-reparto":nome, text:"Cambia reparto"})),
+      el("p", {class:"hint", text:"Il reparto decide dove esce questa cosa nel «Carico per reparto» delle consegne. Vale anche per quelle già chieste."})));
+  }
+  if (!bisc){
+    const altri = altriModi(parte)[chiave(nome)] || [];
+    out.push(el("section", {class:"card db-mod"},
+      el("h3", {text:"Altri modi di scriverlo"}),
+      el("p", {class:"hint", text:"Quando qualcuno scrive così, l'app capisce che è " + nome + "."}),
+      altri.length ? el("div", null, ...altri.map(function(k){
+        return el("div", {class:"corr-prod"}, el("span", {class:"nome", text:"«" + k + "»"}),
+          el("button", {type:"button", class:"link", "data-db-togli-alias":k, disabled:off, "aria-label":"Togli «" + k + "»", text:"Togli"}));
+      })) : el("p", {class:"hint", text:"Nessuno per ora."}),
+      el("label", {class:"label-sm", for:"db-mod-alias", text:"Aggiungi un altro modo di scriverlo"}),
+      el("div", {class:"row"},
+        el("input", {id:"db-mod-alias", type:"text", maxlength:"60", autocomplete:"off", placeholder:"Come lo scrivono nei negozi", "data-invio":"db-alias"}),
+        el("button", {type:"button", class:"mini", id:"db-alias", "data-db-alias":nome, disabled:off, text:"Aggiungi"}))));
+  }
+  const ultime = ultimeVolte(nome);
+  out.push(el("section", {class:"card db-mod"},
+    el("h3", {text: bisc ? "Chiesto ultimamente" : (parte.id === "ordini" ? "Chiesto ultimamente" : "Prenotato ultimamente")}),
+    ultime.length ? el("ul", {class:"db-ultime"}, ...ultime.map(function(t){ return el("li", {text:t}); }))
+      : el("p", {class:"hint", text:"Nessuno di recente."})));
+  const base = bisc && BISCOTTI_BASE.some(function(x){ return chiave(x) === chiave(nome); });
+  out.push(el("section", {class:"card db-mod"},
+    el("h3", {text:"Togliere dall'elenco"}),
+    base ? el("p", {class:"hint", text:"È un biscotto dell'elenco di partenza: si può cambiare il nome ma non toglierlo."})
+      : el("p", {class:"hint", text: bisc ? "Non si potrà più scegliere. Le comande già fatte restano." : "L'app non lo riconoscerà più. Quello già mandato resta com'è."}),
+    base ? null : el("div", {class:"row"}, el("button", {type:"button", class:"mini pericolo", disabled:off,
+      "data-db-togli-prod": bisc ? null : nome, "data-db-bisc-no": bisc ? nome : null, text:"Togli dall'elenco"}))));
+  riempi($("db-prodotto"), out);
+}
+/* le ultime 5 volte che è stato chiesto (o prenotato) */
+function ultimeVolte(nome){
+  const k = chiave(nome);
+  if (S.dbScheda === "biscotti")
+    return S.biscotti.filter(function(b){ return chiave(b.nome) === k && b.segnatoAlle; })
+      .sort(function(a, b){ return b.segnatoAlle - a.segnatoAlle; }).slice(0, 5)
+      .map(function(b){ return quando(b.segnatoAlle) + " · " + (b.negozio || "") + (b.livello === "finiti" ? " · finiti" : " · pochi"); });
+  if (S.dbScheda === "prenotazioni"){
+    const out = [];
+    S.prenotazioni.slice().sort(function(a, b){ return b.perIl.localeCompare(a.perIl); }).forEach(function(p){
+      if (p.disdetta) return;
+      p.voci.forEach(function(v){ if (out.length < 5 && chiave(nomeProdotto(v)) === k) out.push(fmtCortoGiorno(p.perIl) + " · " + (p.cliente || "cliente") + (v.quantita ? " · " + v.quantita : "") + " · ritiro " + p.ritiro); });
+    });
+    return out;
+  }
+  return S.richieste.concat(S.programmate || []).filter(function(r){ return !r.esempio && chiave(nomeFrequente(r.salvato) || r.salvato) === k; })
+    .sort(function(a, b){ return b.creato - a.creato; }).slice(0, 5)
+    .map(function(r){ return quando(r.creato) + " · " + r.per + (r.quantita ? " · " + r.quantita : ""); });
+}
+/* le cose da controllare: in lista, oppure una alla volta a tutta pagina («Controlla uno alla volta»).
+   voci: [{ id, gruppo, nodo }]; testate: il titolo di ogni gruppo nella lista */
+S.dbUno = false; S.dbSaltati = new Set();
+function mostraDaControllare(voci, testate){
+  const lista = $("db-lista");
+  if (S.dbUno){
+    const resto = voci.filter(function(v){ return !S.dbSaltati.has(v.id); });
+    if (!resto.length){
+      riempi(lista, [el("div", {class:"card db-uno-fine"},
+        el("p", {class:"domanda-db", text: voci.length
+          ? (voci.length === 1 ? "Hai visto tutto. Ne resta 1 che hai saltato." : "Hai visto tutto. Ne restano " + voci.length + " che hai saltato.")
+          : "Fatto: hai controllato tutto."}),
+        el("div", {class:"row"},
+          voci.length ? el("button", {type:"button", class:"mini", "data-db-uno":"1", text:"Rivedi quelle saltate"}) : null,
+          el("button", {type:"button", class:"primary", "data-db-uno":"0", text:"Torna alla lista"})))]);
+      return;
+    }
+    const v = resto[0];
+    v.nodo.classList.add("db-uno");
+    riempi(lista, [
+      el("p", {class:"db-uno-conto", text: resto.length === 1 ? "L'ultima da controllare" : "Da controllare: ne restano " + resto.length}),
+      v.nodo,
+      el("div", {class:"row db-uno-giu"},
+        el("button", {type:"button", class:"mini", "data-db-salta":v.id, text: resto.length === 1 ? "Salta, la guardo dopo" : "Salta, passa alla prossima"}),
+        el("button", {type:"button", class:"link", "data-db-uno":"0", text:"Esci e torna alla lista"}))]);
+    return;
+  }
+  const out = [];
+  if (voci.length > 1) out.push(el("button", {type:"button", class:"primary dc-apri", "data-db-uno":"1"},
+    "Controlla uno alla volta ", el("span", {class:"badge", text:String(voci.length)})));
+  let gr = "";
+  voci.forEach(function(v){
+    if ((v.gruppo || "") !== gr){ gr = v.gruppo || ""; if (testate[gr]) out.push(testate[gr]); }
+    out.push(v.nodo);
+  });
+  riempi(lista, out);
+}
+/* ---------- prodotti doppi: due nomi dell'elenco che sembrano la stessa cosa ---------- */
+function coppia(a, b){ return [chiave(a), chiave(b)].sort().join("|"); }
+S.doppiCache = {};
+function doppiProd(parte){
+  const elenco = parte.elenco(), diversi = parte.dati.diversi || [];
+  const di = elenco.join("\n") + "#" + diversi.join(",");
+  const c = S.doppiCache[parte.id];
+  if (c && c.di === di) return c.out;
+  const no = new Set(diversi), base = new Set(parte.base.map(chiave));
+  /* si guardano solo le coppie con almeno un prodotto aggiunto dai titolari: l'elenco di partenza è già a posto */
+  const forme = elenco.map(formaProdotto), numeri = elenco.map(function(n){ return (n.match(/\d+/g) || []).join(","); });
+  const out = [];
+  for (let i = 0; i < elenco.length; i++){
+    for (let j = i + 1; j < elenco.length; j++){
+      const fa = forme[i], fb = forme[j];
+      /* numeri diversi (Vaschetta 250 / 500) sono cose diverse */
+      if (!fa || !fb || numeri[i] !== numeri[j] || (base.has(chiave(elenco[i])) && base.has(chiave(elenco[j]))) || no.has(coppia(elenco[i], elenco[j]))) continue;
+      /* scritti quasi uguali («Crocchette patate» / «Crochette patate»); le parole corte devono essere proprio uguali */
+      const lung = Math.max(fa.length, fb.length);
+      let simile = fa === fb || (lung >= 6 && distanza(fa, fb) <= Math.max(1, Math.floor(lung / 6)));
+      /* un nome dentro l'altro, con la stessa prima parola («Latte» / «Latte cucina») */
+      if (!simile){
+        const wa = fa.split(" "), wb = fb.split(" ");
+        const corta = wa.length <= wb.length ? wa : wb, lunga = corta === wa ? wb : wa;
+        simile = corta.length < lunga.length && corta[0] === lunga[0] && corta.every(function(w){ return w.length >= 3 && lunga.indexOf(w) >= 0; });
+      }
+      if (simile) out.push([elenco[i], elenco[j]]);
+    }
+  }
+  S.doppiCache[parte.id] = { di: di, out: out.slice(0, 30) };
+  return S.doppiCache[parte.id].out;
+}
+function vociDoppi(parte){
+  const off = S.pending.has(parte.pending);
+  return doppiProd(parte).map(function(c){
+    const a = c[0], b = c[1];
+    return { id: "doppio:" + coppia(a, b), gruppo: "doppi", nodo: el("div", {class:"card pren-dc-voce db-voce"},
+      rigaDb("Primo", el("strong", {text:a})),
+      rigaDb("Secondo", el("strong", {text:b})),
+      el("p", {class:"domanda-db", text:"Sono lo stesso prodotto?"}),
+      el("p", {class:"hint", text:"Se sì, tocca il nome da tenere: l'altro diventa un modo di scriverlo, e quello già scritto con l'altro nome passa a questo."}),
+      el("div", {class:"row"},
+        el("button", {type:"button", class:"mini", "data-doppio-tieni":a, "data-doppio-togli":b, disabled:off, text:"Sì, tieni «" + a + "»"}),
+        el("button", {type:"button", class:"mini", "data-doppio-tieni":b, "data-doppio-togli":a, disabled:off, text:"Sì, tieni «" + b + "»"}),
+        el("button", {type:"button", class:"mini", "data-doppio-no":a, "data-doppio-con":b, disabled:off, text:"No, sono diversi"}))) };
+  });
+}
+function testataDoppi(n){
+  return el("div", {class:"db-sotto-parte"},
+    el("h3", {text:"Forse sono lo stesso prodotto (" + n + ")"}),
+    el("p", {class:"hint", text:"L'app ha trovato nell'elenco nomi molto simili. Esempio: «Crocchette di patate» e «Crocchette patate» sono la stessa cosa scritta in due modi: tieni un nome solo. Se invece sono cose diverse, tocca «No, sono diversi» e l'app non lo chiede più."}));
+}
+async function doppioTieni(tieni, togli){
+  const parte = parteProd(S.dbScheda);
+  const ok = await unisciProd(parte, togli, tieni);
+  if (ok){
+    avvisoDb("Fatto: «" + togli + "» ora è «" + tieni + "».", "«" + togli + "» e «" + tieni + "» uniti: resta «" + tieni + "»");
+    copiaReparto(parte, togli, tieni);
+    registra("prodotti doppi uniti", { dove: parte.id });
+  }
+}
+async function doppioNo(a, b){
+  const parte = parteProd(S.dbScheda), c = coppia(a, b);
+  const ok = await parte.salva(function(d){
+    const l = Array.isArray(d.diversi) ? d.diversi.slice() : [];
+    if (l.indexOf(c) < 0) l.push(c);
+    return { diversi: l };
+  });
+  if (ok){ avvisoDb("Va bene: «" + a + "» e «" + b + "» restano due prodotti diversi.", "«" + a + "» e «" + b + "»: sono diversi"); registra("prodotti doppi: diversi", { dove: parte.id }); }
+}
+/* il reparto del prodotto: si salva come quelli spostati nelle consegne */
+async function dbReparto(nome){
+  const sel = $("db-mod-rep"), rep = sel ? sel.value : "";
+  if (REPARTI.indexOf(rep) < 0 || !store || !store.salvaMappa) return;
+  const k = chiave(nome);
+  if (rep === repartoDi({ articolo: nome }) && S.mappa[k] === rep){ avviso("È già in " + rep + "."); return; }
+  const prima = { imp: "reparti", liste: {}, chiavi: { mappa: {} } };
+  prima.chiavi.mappa[k] = Object.prototype.hasOwnProperty.call(S.mappa, k) ? S.mappa[k] : null;
+  const ok = await scrivi(function(){ return store.salvaMappa(k, rep); });
+  if (ok){
+    S.mappa = Object.assign({}, S.mappa); S.mappa[k] = rep;
+    S.primaDb = prima;
+    avvisoDb("Fatto: " + nome + " ora è nel reparto " + rep + ".", nome + " messo nel reparto " + rep);
+    registra("reparto cambiato dal database", {});
+    renderTutto();
+  }
+}
+/* cambiando nome (o unendo due prodotti degli ordini), il nome nuovo prende il reparto del vecchio, se non ne ha uno suo */
+function copiaReparto(parte, vecchio, nuovo){
+  if (parte.id !== "ordini" || !store || !store.salvaMappa) return;
+  const rv = S.mappa[chiave(vecchio)];
+  if (REPARTI.indexOf(rv) < 0 || REPARTI.indexOf(S.mappa[chiave(nuovo)]) >= 0) return;
+  scrivi(function(){ return store.salvaMappa(chiave(nuovo), rv); });
+}
+/* ---------- «Ultime modifiche» del Database, con «Annulla» ----------
+   impostazioni condivise "modifiche-database": { voci: [{ id, quando, chi, nome, parte, imp, testo, liste, chiavi }] }
+   Si salva solo cosa è cambiato: liste (elenco, tolti…): { piu: [aggiunti], meno: [tolti] };
+   chiavi (alias, nomi dei biscotti, reparti): { chiave: valore di prima, null = non c'era } */
+const CAMPI_DB = {
+  "prodotti": { liste: ["elenco", "tolti", "diversi"], chiavi: ["alias"] },
+  "prodotti-richieste": { liste: ["elenco", "tolti", "diversi"], chiavi: ["alias"] },
+  "biscotti": { liste: ["confermati", "tolti", "aggiunte"], chiavi: ["nomi"] } };
+const PARTE_DI_IMP = { "prodotti": "prenotazioni", "prodotti-richieste": "ordini", "biscotti": "biscotti", "reparti": "ordini" };
+S.modDb = []; S.primaDb = null;
+function leggiModifiche(d){
+  return (d && Array.isArray(d.voci) ? d.voci : []).filter(function(v){
+    return v && typeof v === "object" && typeof v.id === "string" && PARTE_DI_IMP[v.imp] && Number(v.quando);
+  }).slice(0, 120);
+}
+/* prima di salvare si guarda cosa cambia, per poterlo annullare */
+function conPrima(imp, cambia){
+  return function(d){
+    d = d || {};
+    const c = cambia(d) || {}, campi = CAMPI_DB[imp], prima = { imp: imp, liste: {}, chiavi: {} };
+    campi.liste.forEach(function(f){
+      if (!(f in c)) return;
+      const a = Array.isArray(d[f]) ? d[f] : [], b = Array.isArray(c[f]) ? c[f] : [];
+      const piu = b.filter(function(x){ return a.indexOf(x) < 0; }), meno = a.filter(function(x){ return b.indexOf(x) < 0; });
+      if (piu.length || meno.length) prima.liste[f] = { piu: piu, meno: meno };
+    });
+    campi.chiavi.forEach(function(f){
+      if (!(f in c)) return;
+      const a = d[f] && typeof d[f] === "object" ? d[f] : {}, b = c[f] && typeof c[f] === "object" ? c[f] : {}, diff = {};
+      let n = 0;
+      Object.keys(a).concat(Object.keys(b)).forEach(function(k){
+        if (a[k] !== b[k] && !(k in diff)){ diff[k] = k in a ? a[k] : null; n++; }
+      });
+      if (n) prima.chiavi[f] = diff;
+    });
+    S.primaDb = prima;
+    return c;
+  };
+}
+/* l'avviso di sempre, e la modifica va nelle «Ultime modifiche» */
+function avvisoDb(msg, testo){
+  avviso(msg);
+  const p = S.primaDb; S.primaDb = null;
+  if (!p || !store || !store.modifiche || (!Object.keys(p.liste).length && !Object.keys(p.chiavi).length)) return;
+  const voce = { id: nuovoId(), quando: Date.now(), chi: S.mioId || "", nome: S.nomeMio || "", parte: PARTE_DI_IMP[p.imp], imp: p.imp,
+    testo: String(testo || msg).slice(0, 200), liste: p.liste, chiavi: p.chiavi };
+  scrivi(function(){ return store.modifiche(function(d){
+    const conta = {};
+    /* le ultime 30 di ogni parte */
+    return { voci: [voce].concat(leggiModifiche(d)).filter(function(v){ conta[v.parte] = (conta[v.parte] || 0) + 1; return conta[v.parte] <= 30; }) };
+  }); });
+}
+function renderModificheDb(){
+  const voci = S.modDb.filter(function(v){ return v.parte === S.dbScheda; }).sort(function(a, b){ return b.quando - a.quando; });
+  $("db-mod-n").textContent = String(voci.length);
+  const visti = new Set(), off = S.pending.has("modifiche-database");
+  riempi($("db-modifiche"), voci.length ? [el("ul", {class:"db-ultime db-modifiche"}, ...voci.map(function(v){
+    /* «Annulla» solo sulla più nuova di ogni elenco: si torna indietro una alla volta */
+    const prima = !visti.has(v.imp); visti.add(v.imp);
+    return el("li", null,
+      el("span", {class:"hint", text:quando(v.quando) + " · " + (v.chi === S.mioId ? "tu" : (v.nome || S.nomi[v.chi] || "…"))}),
+      el("span", {class:"db-mod-testo", text:v.testo}),
+      prima ? el("button", {type:"button", class:"mini", "data-db-annulla-mod":v.id, disabled:off, text:"Annulla"}) : null);
+  }))] : [el("p", {class:"hint", text:"Nessuna modifica per ora."})]);
+}
+async function annullaModifica(id){
+  const v = S.modDb.find(function(x){ return x.id === id; });
+  if (!v || !puoDatabase()) return;
+  const si = await chiedi("Annullare questa modifica?", "«" + v.testo + "» (" + quando(v.quando) + "). Torna tutto com'era prima.", "Sì, annulla", "No");
+  if (!si) return;
+  S.pending.add("modifiche-database"); renderTutto();
+  let ok = true;
+  if (v.imp === "reparti"){
+    const m = (v.chiavi && v.chiavi.mappa) || {};
+    for (const k in m){
+      if (!(await scrivi(function(){ return store.salvaMappa(k, m[k] || ""); }))) ok = false;
+      else { S.mappa = Object.assign({}, S.mappa); if (REPARTI.indexOf(m[k]) >= 0) S.mappa[k] = m[k]; else delete S.mappa[k]; }
+    }
+  } else {
+    const torna = function(d){
+      const c = {};
+      for (const f in (v.liste || {})){
+        const l = v.liste[f] || {}, piu = l.piu || [], meno = l.meno || [];
+        const ora = Array.isArray(d[f]) ? d[f] : [];
+        c[f] = ora.filter(function(x){ return piu.indexOf(x) < 0; }).concat(meno.filter(function(x){ return ora.indexOf(x) < 0; }));
+      }
+      for (const f in (v.chiavi || {})){
+        const o = Object.assign({}, d[f]);
+        for (const k in v.chiavi[f]){ if (v.chiavi[f][k] === null) delete o[k]; else o[k] = v.chiavi[f][k]; }
+        c[f] = o;
+      }
+      return c;
+    };
+    S.pending.delete("modifiche-database");
+    ok = v.imp === "biscotti" ? await salvaBiscImp(torna) : await parteProd(PARTE_DI_IMP[v.imp]).salva(torna);
+    S.pending.add("modifiche-database");
+    S.primaDb = null;
+  }
+  if (ok) ok = await scrivi(function(){ return store.modifiche(function(d){ return { voci: leggiModifiche(d).filter(function(x){ return x.id !== id; }) }; }); });
+  S.pending.delete("modifiche-database");
+  if (ok){ S.dbMod = ""; avviso("Annullato: è tornato com'era prima."); registra("modifica del database annullata", { dove: v.parte }); }
+  renderTutto();
 }
 async function salvaProdRich(cambia){
   if (!store || !store.prodottiRich || !puoDatabase() || S.pending.has("prodotti-richieste")) return false;
   S.pending.add("prodotti-richieste"); renderTutto();
-  const ok = await scrivi(function(){ return store.prodottiRich(cambia); });
+  const ok = await scrivi(function(){ return store.prodottiRich(conPrima("prodotti-richieste", cambia)); });
   S.pending.delete("prodotti-richieste");
   ricomponi(); renderTutto();
   return ok;
@@ -4805,13 +5496,13 @@ function senzaTolto(d, nome){ return (Array.isArray(d.tolti) ? d.tolti : []).fil
 async function corrGiusto(id){
   const g = S.corrGruppi.get(id); if (!g) return;
   const ok = await salvaProdRich(function(d){ return { alias: conAlias(d, g.k, g.nome) }; });
-  if (ok){ avviso("Giusto: «" + g.testo + "» è " + g.nome + ". L'app se lo ricorda."); registra("correzione giusta", {}); }
+  if (ok){ avvisoDb("Giusto: «" + g.testo + "» è " + g.nome + ". L'app se lo ricorda.", "«" + g.testo + "» è " + g.nome + ": giusto"); registra("correzione giusta", {}); }
 }
 async function corrNuovo(id){
   const g = S.corrGruppi.get(id); if (!g) return;
   const nome = maiuscola(g.testo).slice(0, 60);
   const ok = await salvaProdRich(function(d){ return { elenco: conProdotto(d, nome), tolti: senzaTolto(d, nome) }; });
-  if (ok){ avviso("«" + nome + "» è nell'elenco dei prodotti."); registra("prodotto confermato", { dove: "richieste" }); }
+  if (ok){ avvisoDb("«" + nome + "» è nell'elenco dei prodotti.", "«" + nome + "» aggiunto come prodotto nuovo"); salvaRepartoNuovo(id, nome); registra("prodotto confermato", { dove: "richieste" }); }
 }
 /* il nome giusto scritto dal titolare: se c'è già nell'elenco si collega a quello,
    altrimenti diventa un prodotto nuovo; quello scritto male resta collegato al nome giusto */
@@ -4829,7 +5520,8 @@ async function corrSalva(id){
   });
   if (ok){
     S.corrApri = "";
-    avviso((esiste ? "Corretto" : "Prodotto nuovo aggiunto") + ": ora è «" + nome + "», anche nelle richieste già mandate.");
+    avvisoDb((esiste ? "Corretto" : "Prodotto nuovo aggiunto") + ": ora è «" + nome + "», anche nelle richieste già mandate.", "«" + g.testo + "» corretto in «" + nome + "»" + (esiste ? "" : " (prodotto nuovo)"));
+    if (!esiste && g.tipo === "nuova") salvaRepartoNuovo(id, nome); else delete S.corrRep[id];
     registra("prodotto corretto", { dove: "richieste", nuovo: !esiste });
     renderTutto();
   }
@@ -4866,7 +5558,7 @@ async function dbAggiungi(){
   const c = parte.elenco().find(function(x){ return chiave(x) === chiave(nome); });
   if (c){ avviso("«" + c + "» c'è già nell'elenco."); return; }
   const ok = await parte.salva(function(d){ return { elenco: conProdotto(d, nome), tolti: senzaTolto(d, nome) }; });
-  if (ok){ if ($("db-nuovo-prod")) $("db-nuovo-prod").value = ""; avviso("«" + nome + "» è nell'elenco dei prodotti."); registra("prodotto aggiunto", { dove: parte.id }); }
+  if (ok){ if ($("db-nuovo-prod")) $("db-nuovo-prod").value = ""; avvisoDb("«" + nome + "» è nell'elenco dei prodotti.", "«" + nome + "» aggiunto all'elenco"); registra("prodotto aggiunto", { dove: parte.id }); }
 }
 /* cambiare nome: il nome vecchio e tutti i suoi modi di scriverlo portano al nome nuovo,
    anche nelle richieste e prenotazioni già mandate. Se il nome nuovo c'è già, i due prodotti si uniscono. */
@@ -4883,8 +5575,18 @@ async function dbRinomina(vecchio){
     if (!si) return;
     nuovo = c;
   }
+  const ok = await unisciProd(parte, vecchio, nuovo);
+  if (ok){
+    S.dbMod = chiave(nuovo);
+    avvisoDb("Fatto: «" + vecchio + "» ora si chiama «" + nuovo + "».", c ? "«" + vecchio + "» unito a «" + nuovo + "»" : "«" + vecchio + "» ora si chiama «" + nuovo + "»");
+    copiaReparto(parte, vecchio, nuovo);
+    registra("prodotto rinominato", { dove: parte.id }); renderTutto();
+  }
+}
+/* il nome vecchio e tutti i suoi modi di scriverlo portano al nome nuovo, anche in quello già mandato */
+function unisciProd(parte, vecchio, nuovo){
   const alias = aliasTutti(parte.aliasBase, parte.dati);
-  const ok = await parte.salva(function(d){
+  return parte.salva(function(d){
     const a = Object.assign({}, d.alias);
     for (const k in alias){ if (chiave(alias[k]) === chiave(vecchio)) a[k] = nuovo; }
     a[chiave(vecchio)] = nuovo;
@@ -4893,7 +5595,6 @@ async function dbRinomina(vecchio){
     if (parte.base.some(function(x){ return chiave(x) === chiave(vecchio); }) && tolti.indexOf(chiave(vecchio)) < 0) tolti = tolti.concat([chiave(vecchio)]);
     return { alias: a, elenco: e, tolti: tolti };
   });
-  if (ok){ S.dbMod = ""; avviso("Fatto: «" + vecchio + "» ora si chiama «" + nuovo + "»."); registra("prodotto rinominato", { dove: parte.id }); renderTutto(); }
 }
 async function dbAlias(nome){
   const parte = parteProd(S.dbScheda), inp = $("db-mod-alias");
@@ -4904,7 +5605,7 @@ async function dbAlias(nome){
   const altro = parte.elenco().find(function(x){ return chiave(x) === k; });
   if (altro){ avviso("«" + altro + "» è un altro prodotto dell'elenco: per unirli usa «Cambia nome»."); return; }
   const ok = await parte.salva(function(d){ return { alias: conAlias(d, k, nome) }; });
-  if (ok){ if ($("db-mod-alias")) $("db-mod-alias").value = ""; avviso("Ora l'app sa che «" + t + "» è " + nome + "."); registra("modo di scrivere aggiunto", { dove: parte.id }); }
+  if (ok){ if ($("db-mod-alias")) $("db-mod-alias").value = ""; avvisoDb("Ora l'app sa che «" + t + "» è " + nome + ".", "«" + t + "» aggiunto come modo di scrivere " + nome); registra("modo di scrivere aggiunto", { dove: parte.id }); }
 }
 async function dbTogliProd(nome){
   const parte = parteProd(S.dbScheda);
@@ -4918,7 +5619,7 @@ async function dbTogliProd(nome){
     if (parte.base.some(function(x){ return chiave(x) === chiave(nome); }) && tolti.indexOf(chiave(nome)) < 0) tolti.push(chiave(nome));
     return { alias: a, tolti: tolti, elenco: (Array.isArray(d.elenco) ? d.elenco : []).filter(function(x){ return chiave(x) !== chiave(nome); }) };
   });
-  if (ok){ S.dbMod = ""; avviso("Tolto dall'elenco: " + nome + "."); registra("prodotto tolto", { dove: parte.id }); renderTutto(); }
+  if (ok){ S.dbMod = ""; avvisoDb("Tolto dall'elenco: " + nome + ".", "«" + nome + "» tolto dall'elenco"); registra("prodotto tolto", { dove: parte.id }); renderTutto(); }
 }
 async function dbTogliAlias(k){
   const parte = parteProd(S.dbScheda);
@@ -4927,20 +5628,20 @@ async function dbTogliAlias(k){
   if (!si) return;
   /* resta salvata vuota: così non vale più (anche dove le modifiche si uniscono) */
   const ok = await parte.salva(function(d){ return { alias: conAlias(d, k, "") }; });
-  if (ok) avviso("Tolto.");
+  if (ok) avvisoDb("Tolto.", "«" + k + "» non è più un modo di scrivere " + nome);
 }
 /* biscotti nuovi: si confermano o si tolgono dall'elenco (impostazioni condivise "biscotti": confermati, tolti) */
 async function salvaBiscImp(cambia){
   if (!store || !store.biscImp || !puoDatabase() || S.pending.has("biscotti-imp")) return false;
   S.pending.add("biscotti-imp"); renderTutto();
-  const ok = await scrivi(function(){ return store.biscImp(cambia); });
+  const ok = await scrivi(function(){ return store.biscImp(conPrima("biscotti", cambia)); });
   S.pending.delete("biscotti-imp"); renderTutto();
   return ok;
 }
 function conNome(l, nome){ l = (Array.isArray(l) ? l : []).slice(); if (!l.some(function(x){ return chiave(x) === chiave(nome); })) l.push(nome); return l; }
 async function biscConferma(nome){
   const ok = await salvaBiscImp(function(d){ return { confermati: conNome(d.confermati, nome) }; });
-  if (ok) avviso(nome + ": confermato.");
+  if (ok) avvisoDb(nome + ": confermato.", "«" + nome + "» confermato");
 }
 async function biscTogliNuovo(nome){
   const si = await chiedi("Togliere «" + nome + "» dall'elenco dei biscotti?", "Non si potrà più scegliere. Le comande già fatte restano.", "Sì, togli", "No");
@@ -4949,7 +5650,7 @@ async function biscTogliNuovo(nome){
     return { tolti: conNome(d.tolti, nome),
       aggiunte: (Array.isArray(d.aggiunte) ? d.aggiunte : []).filter(function(x){ return chiave(x) !== chiave(nome); }) };
   });
-  if (ok) avviso("Tolto dall'elenco: " + nome + ".");
+  if (ok){ if (S.dbMod === chiave(nome)) S.dbMod = ""; avvisoDb("Tolto dall'elenco: " + nome + ".", "«" + nome + "» tolto dall'elenco"); renderTutto(); }
 }
 /* il titolare aggiunge un biscotto all'elenco: è già confermato */
 async function biscAggiungi(){
@@ -4963,7 +5664,7 @@ async function biscAggiungi(){
     const nomi = Object.assign({}, d.nomi); delete nomi[chiave(nome)];
     return { tolti: senzaTolto(d, nome), confermati: conNome(d.confermati, nome), aggiunte: conNome(d.aggiunte, nome).slice(-60), nomi: nomi };
   });
-  if (ok){ if ($("db-nuovo-prod")) $("db-nuovo-prod").value = ""; avviso("«" + nome + "» è nell'elenco dei biscotti."); registra("biscotto aggiunto", {}); }
+  if (ok){ if ($("db-nuovo-prod")) $("db-nuovo-prod").value = ""; avvisoDb("«" + nome + "» è nell'elenco dei biscotti.", "«" + nome + "» aggiunto all'elenco"); registra("biscotto aggiunto", {}); }
 }
 /* cambiare il nome di un biscotto: il nome vecchio porta al nuovo, anche nelle comande già fatte.
    Se il nome nuovo c'è già, i due biscotti diventano uno. */
@@ -4989,14 +5690,14 @@ async function biscRinomina(vecchio){
     const agg = (Array.isArray(d.aggiunte) ? d.aggiunte : []).filter(function(x){ return chiave(x) !== chiave(vecchio); });
     return { nomi: nomi, tolti: senzaTolto(d, nuovo), confermati: conNome(d.confermati, nuovo), aggiunte: (base ? agg : conNome(agg, nuovo)).slice(-60) };
   });
-  if (ok){ S.dbMod = ""; avviso("Fatto: «" + vecchio + "» ora si chiama «" + nuovo + "»."); registra("biscotto rinominato", {}); renderTutto(); }
+  if (ok){ S.dbMod = chiave(nuovo); avvisoDb("Fatto: «" + vecchio + "» ora si chiama «" + nuovo + "».", "«" + vecchio + "» ora si chiama «" + nuovo + "»"); registra("biscotto rinominato", {}); renderTutto(); }
 }
 async function biscRimetti(nome){
   const ok = await salvaBiscImp(function(d){
     return { tolti: (Array.isArray(d.tolti) ? d.tolti : []).filter(function(x){ return chiave(x) !== chiave(nome); }),
       confermati: conNome(d.confermati, nome), aggiunte: conNome(d.aggiunte, nome) };
   });
-  if (ok) avviso(nome + ": di nuovo nell'elenco.");
+  if (ok) avvisoDb(nome + ": di nuovo nell'elenco.", "«" + nome + "» rimesso nell'elenco");
 }
 
 /* ---------- prenotazioni dei clienti ---------- */
@@ -5332,7 +6033,7 @@ function renderDaControllare(){
 async function salvaProdotti(cambia){
   if (!store || !store.prodotti || S.pending.has("prodotti")) return false;
   S.pending.add("prodotti"); renderTutto();
-  const ok = await scrivi(function(){ return store.prodotti(cambia); });
+  const ok = await scrivi(function(){ return store.prodotti(conPrima("prodotti", cambia)); });
   S.pending.delete("prodotti");
   renderTutto();
   return ok;
@@ -5344,13 +6045,13 @@ async function confermaProdotto(testo){
   const ok = await salvaProdotti(function(d){
     return { elenco: conProdotto(d, nome), tolti: senzaTolto(d, nome) };
   });
-  if (ok){ avviso("«" + nome + "» è nell'elenco dei prodotti."); registra("prodotto confermato", {}); }
+  if (ok){ avvisoDb("«" + nome + "» è nell'elenco dei prodotti.", "«" + nome + "» aggiunto come prodotto nuovo"); registra("prodotto confermato", {}); }
 }
 /* «Sì, è giusto»: l'app ha corretto bene, se lo ricorda e non lo chiede più */
 async function prenCorrGiusto(id){
   const g = gruppiDaControllare().get(id); if (!g || g.tipo !== "corretta") return;
   const ok = await salvaProdotti(function(d){ return { alias: conAlias(d, g.k, g.nome) }; });
-  if (ok){ avviso("Giusto: «" + g.testo + "» è " + g.nome + ". L'app se lo ricorda."); registra("correzione giusta", { dove: "prenotazioni" }); }
+  if (ok){ avvisoDb("Giusto: «" + g.testo + "» è " + g.nome + ". L'app se lo ricorda.", "«" + g.testo + "» è " + g.nome + ": giusto"); registra("correzione giusta", { dove: "prenotazioni" }); }
 }
 /* il nome giusto scritto dal titolare: se c'è già si collega, altrimenti diventa un prodotto nuovo */
 async function correggiProdotto(k){
@@ -5364,7 +6065,7 @@ async function correggiProdotto(k){
     if (!esiste){ cambia.elenco = conProdotto(d, nome); cambia.tolti = senzaTolto(d, nome); }
     return cambia;
   });
-  if (ok){ registra("prodotto corretto", { nuovo: !esiste }); S.prenCorreggi = ""; avviso((esiste ? "Corretto" : "Prodotto nuovo aggiunto") + ": ora è «" + nome + "»."); renderTutto(); }
+  if (ok){ registra("prodotto corretto", { nuovo: !esiste }); S.prenCorreggi = ""; avvisoDb((esiste ? "Corretto" : "Prodotto nuovo aggiunto") + ": ora è «" + nome + "».", "«" + t + "» corretto in «" + nome + "»" + (esiste ? "" : " (prodotto nuovo)")); renderTutto(); }
 }
 /* ---------- cerca: cliente, prodotto o telefono, da 7 giorni fa in avanti ---------- */
 function cercaPren(testo){
@@ -6017,7 +6718,8 @@ function collega(){
     if (b.id === "esci-anteprima"){ S.anteprima = false; return vaiA(""); }
     if (b.id === "apri-menu") return apriMenu();
     /* dentro una parte del Database, «Indietro» torna al sotto menù */
-    if (b.id === "torna" && inDatabase() && S.dbScheda){ S.dbScheda = ""; S.dbMod = ""; S.corrApri = ""; S.prenCorreggi = ""; renderTutto(); return; }
+    if (b.id === "torna" && inDatabase() && S.dbScheda && (S.dbMod || S.dbUno)){ S.dbMod = ""; S.dbUno = false; renderTutto(); return; }
+    if (b.id === "torna" && inDatabase() && S.dbScheda){ S.dbScheda = ""; S.dbMod = ""; S.corrApri = ""; S.prenCorreggi = ""; $("db-cerca").value = ""; renderTutto(); return; }
     if (b.id === "torna" && inManuale() && S.manPagina){
       const da = S.manPagina; S.manPagina = null;
       if (da.sez === "giro" || da.sez === "richieste") return vaiSezione("richieste");
@@ -6035,7 +6737,7 @@ function collega(){
     if (b.id === "ho-finito") return apriRiepilogo();
     if (b.id === "riep-conferma") return chiudiRiepilogo(true);
     if (b.id === "riep-indietro") return chiudiRiepilogo(false);
-    if (b.id === "ctrl-indietro"){ chiudiControllo(); const t = S.vista === "consegne" ? $("righe-giro") : $("righe"); if (t) t.focus(); return; }
+    if (b.id === "ctrl-indietro"){ chiudiControllo(); const t = S.vista === "consegne" ? $("righe-giro") : $("righe-scrivi"); if (t) t.focus(); return; }
     if (b.id === "ctrl-invia") return confermaControllo();
     if (b.dataset.ctrlTogli && S.ctrl && !S.ctrl.inviando){
       const c = S.ctrl;
@@ -6043,7 +6745,7 @@ function collega(){
       if (!c.voci.length){
         const giro = c.dove === "giro";
         chiudiControllo();
-        $(giro ? "righe-giro" : "righe").value = "";
+        if (giro) $("righe-giro").value = ""; else svuotaChips();
         esito(giro ? "esito-giro" : "esito", "Niente di nuovo da inviare: era già stato chiesto.");
         renderTutto();
         return;
@@ -6094,11 +6796,12 @@ function collega(){
       return;
     }
     if (b.dataset.aggiungi){
-      const t = $("righe");
-      t.value = t.value.replace(/\s+$/, "") + (t.value.trim() ? "\n" : "") + b.dataset.aggiungi;
+      aggiungiTesto(b.dataset.aggiungi);
+      renderChips(); syncRighe();
       renderNegozio();
       return;
     }
+    if (tastoChip(b)) return;
     if (b.id === "rimuovi-esempi") return rimuoviEsempi();
     if (b.id === "acc-riprova") return location.reload();
     if (b.id === "esci") return esciSB();
@@ -6184,10 +6887,23 @@ function collega(){
     if (b.dataset.corrNuovo) return corrNuovo(b.dataset.corrNuovo);
     if (b.dataset.corrEra){ S.corrApri = b.dataset.corrEra; renderDatabase(); const sc = $("corr-testo"); if (sc) sc.focus(); return; }
     if (b.dataset.corrAnnulla){ S.corrApri = ""; return renderDatabase(); }
-    if (b.dataset.dbScheda !== undefined){ S.dbScheda = b.dataset.dbScheda; S.corrApri = ""; S.prenCorreggi = ""; S.dbMod = ""; renderTutto(); try { window.scrollTo(0, 0); } catch(e){} return; }
+    if (b.dataset.dbScheda !== undefined){ S.dbScheda = b.dataset.dbScheda; S.corrApri = ""; S.prenCorreggi = ""; S.dbMod = ""; S.dbUno = false; $("db-cerca").value = ""; renderTutto(); try { window.scrollTo(0, 0); } catch(e){} return; }
+    if (b.dataset.dbUno !== undefined){ S.dbUno = b.dataset.dbUno === "1"; S.dbSaltati.clear(); S.corrApri = ""; S.prenCorreggi = ""; renderDatabase(); try { window.scrollTo(0, 0); } catch(e){} return; }
+    if (b.dataset.dbSalta){ S.dbSaltati.add(b.dataset.dbSalta); S.corrApri = ""; S.prenCorreggi = ""; renderDatabase(); return; }
+    if (b.dataset.dbRep){ const r = b.dataset.dbRep; if (S.repAperti.has(r)) S.repAperti.delete(r); else S.repAperti.add(r); renderDatabase(); return; }
+    if (b.dataset.dbReparto) return dbReparto(b.dataset.dbReparto);
+    if (b.dataset.doppioTieni) return doppioTieni(b.dataset.doppioTieni, b.dataset.doppioTogli);
+    if (b.dataset.doppioNo) return doppioNo(b.dataset.doppioNo, b.dataset.doppioCon);
+    if (b.dataset.dbAnnullaMod) return annullaModifica(b.dataset.dbAnnullaMod);
     if (b.dataset.corrElimina) return corrElimina(b.dataset.corrElimina);
     if (b.dataset.metti && b.dataset.per){ const i = $(b.dataset.per); if (i){ i.value = b.dataset.metti; aggiornaSugg(i); i.focus(); } return; }
-    if (b.dataset.dbMod !== undefined){ S.dbMod = b.dataset.dbMod; renderDatabase(); const i = $("db-mod-nome"); if (i) i.focus(); return; }
+    if (b.dataset.dbMod !== undefined){
+      /* tornando all'elenco si ritrova il prodotto da dove si era */
+      const da = S.dbMod; S.dbMod = b.dataset.dbMod; renderDatabase();
+      const riga = !S.dbMod && da ? document.querySelector('#db-elenco [data-db-mod="' + da.replace(/["\\]/g, "") + '"]') : null;
+      try { if (riga) riga.scrollIntoView({ block: "center" }); else window.scrollTo(0, 0); } catch(e){}
+      return;
+    }
     if (b.id === "db-aggiungi") return dbAggiungi();
     if (b.dataset.dbRinomina) return dbRinomina(b.dataset.dbRinomina);
     if (b.dataset.dbAlias) return dbAlias(b.dataset.dbAlias);
@@ -6290,6 +7006,7 @@ function collega(){
   $("disdici-altro").addEventListener("input", renderDisdici);
   $("pren-cerca-testo").addEventListener("input", function(){ S.prenCerca.testo = this.value; renderCerca(); });
   $("man-cerca").addEventListener("input", filtraManuale);
+  $("db-cerca").addEventListener("input", renderDatabase);
   $("notifica").addEventListener("click", function(){ if (Date.now() - fineTrascina > 400) chiudiNotifica(); });
   /* la notifica si toglie anche spingendola verso l'alto col dito, come quelle del telefono */
   (function(){
@@ -6350,7 +7067,35 @@ function collega(){
     if (t.dataset.ctrlPorta){ const v = S.ctrl.voci[Number(t.dataset.ctrlPorta)]; if (v) v.portaA = t.value; }
   });
   $("ctrl-quando-data").addEventListener("input", function(){ if (S.ctrl){ S.ctrl.perIl = this.value || ""; } });
-  $("righe").addEventListener("input", function(){ if (this.value.trim() && !S.inizioRighe) S.inizioRighe = Date.now(); if (!this.value.trim()) S.inizioRighe = 0; aggiornaForm(); });
+  /* «Cosa serve?»: Invio fa il rettangolino; cancella con la casella vuota toglie l'ultimo; incollando più righe ne fa uno per riga */
+  $("righe-scrivi").addEventListener("keydown", function(ev){
+    if (ev.key === "Enter"){ ev.preventDefault(); aggiungiDaCasella(); return; }
+    if (ev.key === "Backspace" && !this.value && S.chips.length){
+      ev.preventDefault();
+      const c = S.chips.pop(); if (S.chipAperto === c.id) S.chipAperto = "";
+      renderChips(); syncRighe();
+    }
+  });
+  $("righe-scrivi").addEventListener("input", function(){
+    /* tastiere che mandano l'«a capo» dentro il testo, o un messaggio incollato */
+    if (/[\n\r]/.test(this.value)){ aggiungiDaCasella(); return; }
+    S.avvisoChip = ""; renderSuggChip(); syncRighe();
+    if (!this.value) renderDomandaChip();
+  });
+  $("righe-scrivi").addEventListener("paste", function(ev){
+    const t = ev.clipboardData && ev.clipboardData.getData("text");
+    /* la casella non tiene gli «a capo»: si fanno subito i rettangolini, uno per riga */
+    if (t && /[\n\r]/.test(t)){
+      ev.preventDefault();
+      const prima = this.value.trim(); this.value = "";
+      aggiungiTesto((prima ? prima + "\n" : "") + t.replace(/\r\n?/g, "\n"));
+      S.chipAperto = ""; S.avvisoChip = "";
+      renderChips(); renderSuggChip(); syncRighe();
+    }
+  });
+  $("invia").addEventListener("pointerdown", function(){ S.toccoInvia = Date.now(); });
+  /* toccando un prodotto suggerito la tastiera resta aperta */
+  $("righe-sugg").addEventListener("pointerdown", function(ev){ if (ev.target.closest("button")) ev.preventDefault(); });
   $("righe-giro").addEventListener("input", aggiornaFormGiro);
   /* quello che si scrive resta sul telefono finché non si invia */
   document.addEventListener("input", salvaBozze, true);
@@ -6364,6 +7109,8 @@ function collega(){
     const f = ev.target.closest && ev.target.closest("[data-parte-form]");
     if (f){ ev.preventDefault(); confermaParte(f.dataset.parteForm); }
   });
+  /* Database: il reparto scelto per una cosa nuova resta anche se la pagina si ridisegna */
+  document.addEventListener("change", function(ev){ const t = ev.target; if (t && t.dataset && t.dataset.corrRep) S.corrRep[t.dataset.corrRep] = t.value; });
   /* Database: i nomi che somigliano mentre si scrive; «Invio» preme il tasto accanto */
   document.addEventListener("input", function(ev){ if (ev.target.dataset && ev.target.dataset.suggParte) aggiornaSugg(ev.target); });
   document.addEventListener("keydown", function(ev){
@@ -6384,7 +7131,7 @@ function collega(){
 /* Senza archivio condiviso (pagina aperta fuori da Claude): prova su questo schermo */
 function usaLocale(){
   const docs = new Map(); const stati = {}; const bisc = new Map();
-  let prodGrezzo = {}, prodRichGrezzo = {};
+  let prodGrezzo = {}, prodRichGrezzo = {}, modGrezzo = {};
   S.mioId = "locale"; S.owner = true;
   const emetti = function(){
     S.docsRichieste = Array.from(docs.entries()).map(function(e){ return { id:e[0], voci:e[1] }; });
@@ -6414,6 +7161,7 @@ function usaLocale(){
     },
     prodotti: async function(cambia){ prodGrezzo = Object.assign({}, prodGrezzo, cambia(prodGrezzo)); S.prodImp = prodottiCondivisi(prodGrezzo); emetti(); },
     prodottiRich: async function(cambia){ prodRichGrezzo = Object.assign({}, prodRichGrezzo, cambia(prodRichGrezzo)); S.prodRich = prodottiRichCondivisi(prodRichGrezzo); emetti(); },
+    modifiche: async function(cambia){ modGrezzo = Object.assign({}, modGrezzo, cambia(modGrezzo)); S.modDb = leggiModifiche(modGrezzo); emetti(); },
     numeri: async function(cambia){ impostaNumeri(Object.assign({}, S.numeri, cambia(S.numeri || {}))); emetti(); },
     permessi: async function(cambia){ S.permessi = permessiPuliti(Object.assign({ persone: S.permessi || {} }, cambia({ persone: S.permessi || {} }))); emetti(); }
   };
@@ -6493,6 +7241,7 @@ function applicaImpostazioni(){
   S.biscotti.forEach(function(b){ b.nome = nomeBiscGiusto(b.nome); });
   S.prodImp = prodottiCondivisi(RAW.imp.prodotti);
   S.prodRich = prodottiRichCondivisi(RAW.imp["prodotti-richieste"]);
+  S.modDb = leggiModifiche(RAW.imp["modifiche-database"]);
   impostaNumeri(RAW.imp.numeri);
   S.permessi = permessiPuliti(RAW.imp.permessi);
   /* i permessi sono cambiati: il posto di chi lavora in più posti può essere da rifare */
@@ -6639,7 +7388,7 @@ const VAPID_PUBLICA = "BC9TAKzQiQ-x3xtX0KWauGtV-uvIk9VFwqLjWAOzrJbe4e5w2AWyXMIej
    Il nome di chi lo fa lo mette il database (funzione "registra", supabase/aggiornamento-10-registro-con-nomi.sql):
    deciso dal proprietario il 19 ottobre, per vedere chi aiutare a usare meglio l'app; lo leggono solo lui e Claude. */
 const REGISTRO_ATTIVO = false;
-const VERSIONE_APP = "51c0d799";
+const VERSIONE_APP = "4fda257f";
 S.reg = [];
 S.ultimoTasto = { nome: "", alle: 0 };
 S.tocchi = { nome: "", volte: 0, alle: 0, segnato: false };
@@ -7154,6 +7903,7 @@ function storeSB(){
     salvaMappa: function(k, rep){ return salvaImp("reparti", function(d){ const m = Object.assign({}, d.mappa); m[k] = rep; return { mappa: m }; }); },
     prodotti: function(cambia){ return salvaImp("prodotti", cambia); },
     prodottiRich: function(cambia){ return salvaImp("prodotti-richieste", cambia); },
+    modifiche: function(cambia){ return salvaImp("modifiche-database", cambia); },
     numeri: function(cambia){ return salvaImp("numeri", cambia); },
     permessi: function(cambia){ return salvaImp("permessi", cambia); },
     bisc: async function(id, dati){
@@ -7897,6 +8647,7 @@ async function avvia(){
     biscImp: function(cambia){ return aggiornaOCrea(db.doc("impostazioni/biscotti"), cambia(S.biscGrezzo || {})); },
     prodotti: function(cambia){ return aggiornaOCrea(db.doc("impostazioni/prodotti"), cambia(S.prodGrezzo || {})); },
     prodottiRich: function(cambia){ return aggiornaOCrea(db.doc("impostazioni/prodotti-richieste"), cambia(S.prodRichGrezzo || {})); },
+    modifiche: function(cambia){ return aggiornaOCrea(db.doc("impostazioni/modifiche-database"), cambia(S.modGrezzo || {})); },
     numeri: function(cambia){ return aggiornaOCrea(db.doc("impostazioni/numeri"), cambia(S.numeri || {})); },
     permessi: function(cambia){ return aggiornaOCrea(db.doc("impostazioni/permessi"), cambia({ persone: S.permessi || {} })); }
   };
@@ -7920,11 +8671,12 @@ async function avvia(){
   db.collection("impostazioni").onSnapshot(function(snap){
     const pulita = {}, freq = {};
     let aggiunte = [];
-    S.prodGrezzo = {}; S.prodRichGrezzo = {};
+    S.prodGrezzo = {}; S.prodRichGrezzo = {}; S.modGrezzo = {};
     snap.docs.forEach(function(d){
       const dati = d.exists ? (d.data() || {}) : {};
       if (d.id === "prodotti") S.prodGrezzo = dati;
       if (d.id === "prodotti-richieste") S.prodRichGrezzo = dati;
+      if (d.id === "modifiche-database") S.modGrezzo = dati;
       if (d.id === "numeri") impostaNumeri(dati);
       if (d.id === "reparti" && dati.mappa && typeof dati.mappa === "object"){
         for (const k in dati.mappa){ if (REPARTI.indexOf(dati.mappa[k]) >= 0) pulita[k] = dati.mappa[k]; }
@@ -7948,6 +8700,7 @@ async function avvia(){
     S.mappa = pulita; S.frequenti = freq; S.aggiunteBisc = aggiunte;
     S.prodImp = prodottiCondivisi(S.prodGrezzo);
     S.prodRich = prodottiRichCondivisi(S.prodRichGrezzo);
+    S.modDb = leggiModifiche(S.modGrezzo);
     ricomponi();
     renderTutto();
   }, function(){});
