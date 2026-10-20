@@ -443,6 +443,32 @@ h2{font-family:var(--font-display);font-weight:700;font-size:19px;line-height:1.
 .card{background:var(--surface);border:1px solid var(--line-2);border-radius:var(--r-lg);padding:16px;display:flex;flex-direction:column;gap:12px}
 textarea{width:100%;min-height:100px;resize:vertical;padding:12px 14px;border:1.5px solid var(--line);border-radius:var(--r-md);background:var(--bg);font-size:17px;line-height:1.4}
 textarea:focus,select:focus{outline:3px solid var(--accent);outline-offset:1px;border-color:transparent}
+.righe-box{display:flex;flex-direction:column;gap:8px;border:1.5px solid var(--line);border-radius:var(--r-md);background:var(--bg);padding:10px}
+.righe-box:focus-within{border-color:var(--ink)}
+.righe-chips{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+.righe-chips:empty,.righe-sugg:empty,.righe-domanda:empty{display:none}
+.chip-cosa{display:inline-flex;flex-wrap:wrap;align-items:center;gap:2px 6px;min-height:42px;padding:6px 10px;border-radius:10px;border:2px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-weight:700;font-size:16px;text-align:left;cursor:pointer;max-width:100%}
+.chip-cosa.verde{border-color:var(--arrivo-txt);background:var(--arrivo-bg)}
+.chip-cosa.verde .segno{color:var(--arrivo-txt)}
+.chip-cosa.arancio{border-color:var(--giorno-bordo);border-style:dashed;background:var(--giorno-bg);color:var(--giorno-ink)}
+.chip-cosa.aperto{outline:3px solid var(--ink);outline-offset:1px}
+.chip-cosa .qta{font-weight:400}
+.chip-cosa .etich,.chip-cosa .scritto{font-weight:400;font-size:13px;color:var(--muted)}
+.chip-cosa .bollino{font-size:12px;padding:1px 7px;border-radius:999px;background:var(--surface-2);color:var(--ink)}
+.chip-cosa .bollino.urg{background:var(--urgent);color:var(--urgent-ink)}
+.chip-cosa .manca{flex-basis:100%;font-size:13px;color:var(--urgent-txt)}
+#righe-scrivi{width:100%;min-height:44px;border:0;background:transparent;font-size:17px;padding:4px 2px;outline:none;color:var(--ink)}
+.righe-sugg{display:flex;flex-wrap:wrap;gap:6px;align-items:center;border-top:1px dashed var(--line);padding-top:8px}
+.righe-sugg .label-sm{flex-basis:100%;margin:0}
+.righe-domanda{border:2px solid var(--giorno-bordo);border-radius:var(--r-md);background:var(--surface);padding:12px;display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.righe-domanda.azioni{border-color:var(--ink)}
+.righe-domanda .domanda{font-weight:700;font-size:17px;margin:0}
+.righe-domanda .row{gap:8px;flex-wrap:wrap}
+.righe-domanda .mini{min-height:48px;font-size:16px}
+.righe-domanda.scuoti{animation:scuoti .4s}
+@keyframes scuoti{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.db-rep-nuovo select{min-height:44px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font-size:16px;font-weight:700;padding:0 10px;max-width:100%}
+.ctrl-rep{list-style:none;font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:8px 0 -2px}
 .chip-add{appearance:none;border:1.5px solid var(--line);background:var(--surface);border-radius:999px;min-height:36px;padding:0 12px;font-size:14px;font-weight:700;color:var(--ink);cursor:pointer}
 .chip-add:hover{border-color:var(--oro);color:var(--ink)}
 .anteprima{display:flex;flex-direction:column;border-top:2px dashed var(--line);padding-top:10px;gap:4px;font-size:15px}
@@ -813,10 +839,17 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
 
     <div class="view" id="pannello-richieste">
     <form class="card" id="form-richiesta" novalidate>
-      <label class="label" for="righe">Cosa serve?</label>
+      <label class="label" for="righe-scrivi">Cosa serve?</label>
       <p class="chi-ordina" id="chi-ordina"></p>
-      <textarea id="righe" rows="4" autocomplete="off" placeholder="Una cosa per riga, per esempio:&#10;2 kg pane casereccio&#10;Pitte piene&#10;Cartoni pizza grandi"></textarea>
-      <p class="hint">Scrivi come in chat: una cosa per riga o separate da virgole. Puoi anche dettare con il microfono della tastiera. Prima di inviare controlli da dove si prende ogni cosa e cosa è urgente.</p>
+      <!-- le cose scritte, una per riga: lo tiene l'app (per le bozze e «Chiesti spesso»), non si vede -->
+      <textarea id="righe" hidden aria-hidden="true" tabindex="-1"></textarea>
+      <div class="righe-box" id="righe-box">
+        <ul class="righe-chips" id="righe-chips" aria-label="Cose scritte"></ul>
+        <input id="righe-scrivi" type="text" maxlength="400" autocomplete="off" autocapitalize="sentences" enterkeyhint="enter" placeholder="Scrivi una cosa e premi Invio, es. 2 kg pane casereccio">
+        <div class="righe-sugg" id="righe-sugg" aria-live="polite"></div>
+      </div>
+      <div class="righe-domanda" id="righe-domanda" aria-live="polite"></div>
+      <p class="hint">Scrivi una cosa e premi Invio: diventa un rettangolino. <b>Verde</b>: l'app l'ha riconosciuta. <b>Arancione</b>: l'app ti chiede quale. <b>Bianco</b>: una cosa nuova, va bene lo stesso. Puoi anche incollare un messaggio intero o dettare con il microfono. Prima di inviare controlli da dove si prende ogni cosa e cosa è urgente.</p>
       <div id="frequenti-wrap" class="blocco" hidden>
         <p class="label-sm">Chiesti spesso</p>
         <div class="chips" id="frequenti"></div>
@@ -1820,6 +1853,248 @@ function righeDi(id){
   });
   return out.slice(0,30);
 }
+/* ---------- «Cosa serve?»: ogni cosa scritta diventa un rettangolino ----------
+   verde: l'app è sicura (va bene un prodotto solo) · arancione: l'app chiede (più prodotti, errore grosso,
+   due cose in una riga, cosa già scritta) · bianco: cosa nuova, si manda com'è e la controllano i titolari nel Database.
+   Il testo nascosto #righe tiene le stesse cose una per riga (per le bozze, «Chiesti spesso» e il tasto «Controlla e invia»). */
+S.chips = []; S.chipCtx = { reparto:"", ordinare:false, urgente:null }; S.chipAperto = "";
+/* i prodotti dell'elenco che cominciano con le parole scritte: «latte» → Latte cucina, Latte bar */
+function prodottiCheIniziano(testo){
+  const f = formaProdotto(testo).split(" ").filter(Boolean);
+  if (!f.length) return [];
+  return elencoProdottiRich().filter(function(n){
+    const w = formaProdotto(n).split(" ");
+    return w.length > f.length && f.every(function(p, i){ return w[i] === p; });
+  });
+}
+/* una lettera o due sbagliate («pane caserecio»): se somiglia così tanto a un prodotto solo, è quello */
+function vicinoUnico(testo){
+  const f = formaProdotto(testo);
+  if (f.length < 5) return "";
+  const trovati = [];
+  formeRich().forEach(function(x){
+    const d = distanza(f, x[0]);
+    if (d <= Math.max(1, Math.floor(Math.max(f.length, x[0].length) / 5)) && !trovati.some(function(n){ return chiave(n) === chiave(x[1]); })) trovati.push(x[1]);
+  });
+  return trovati.length === 1 ? trovati[0] : "";
+}
+function classificaChip(c){
+  c.scelte = null; c.motivo = ""; c.scritto = ""; c.parti = null;
+  const testo = c.originale;
+  if (c.comEra){ c.tipo = "nuovo"; c.articolo = maiuscola(testo); }
+  else {
+    const t = trovaProdottoRich(testo);
+    const esatto = elencoProdottiRich().find(function(n){ return chiave(n) === chiave(testo); });
+    const molti = esatto ? [] : prodottiCheIniziano(testo);
+    /* va bene per più prodotti: si chiede sempre, anche se prima l'app sceglieva da sola */
+    if (molti.length >= 2){ c.tipo = "arancio"; c.motivo = "quale"; c.scelte = molti.slice(0, 6); c.articolo = maiuscola(testo); }
+    else if (t.esito === "sicuro" && t.nome){ c.tipo = "verde"; c.articolo = t.nome; if (chiave(t.nome) !== chiave(testo)) c.scritto = testo; }
+    else if (t.esito === "dubbio" && (c.vicino = vicinoUnico(testo))){ c.tipo = "verde"; c.articolo = c.vicino; c.scritto = testo; }
+    else if (t.esito === "dubbio"){ c.tipo = "arancio"; c.motivo = t.scelte.length === 1 ? "forse" : "quale"; c.scelte = t.scelte; c.articolo = maiuscola(testo); }
+    else { c.tipo = "nuovo"; c.articolo = maiuscola(testo); }
+    /* «pane e pitte»: forse sono due cose */
+    if (c.tipo !== "verde" && !c.unaSola && /\s+e\s+/i.test(testo)){
+      const parti = testo.split(/\s+e\s+/i).map(function(x){ return x.trim(); }).filter(Boolean);
+      if (parti.length >= 2 && parti.every(function(x){ return trovaProdottoRich(x).esito === "sicuro"; })){ c.tipo = "arancio"; c.motivo = "due"; c.parti = parti; c.scelte = null; }
+    }
+  }
+  return segnaDoppio(c);
+}
+/* la stessa cosa scritta due volte: si chiede */
+function segnaDoppio(c){
+  if (c.tipo === "arancio" || c.doppioOk) return c;
+  const k = chiave(c.articolo);
+  if (S.chips.some(function(x){ return x !== c && x.tipo !== "arancio" && chiave(x.articolo) === k; })){ c.tipoPrima = c.tipo; c.tipo = "arancio"; c.motivo = "doppio"; }
+  return c;
+}
+function nuovoChip(x, nome){
+  return { id: nuovoId(), originale: nome || x.articolo, quantita: x.quantita || "", urgente: x.urgente === true && puoUrgente("negozio"),
+    ordinare: !!x.ordinare, reparto: x.reparto || "" };
+}
+/* il testo scritto (o incollato): ogni riga, o ogni pezzo tra virgole, diventa un rettangolino.
+   Le intestazioni («BEVANDE», «Da comprare») valgono per le cose dopo; «urgente» alla fine rende tutto urgente. */
+function aggiungiTesto(testo){
+  const righe = String(testo || "").split("\n");
+  let n = 0, intest = false;
+  righe.forEach(function(riga, i){
+    const h = INTESTAZIONI[chiave(pulisci(riga))];
+    if (h){
+      intest = true;
+      if (h.urgente === true && !righe.slice(i + 1).some(function(x){ return x.trim(); })){
+        if (puoUrgente("negozio")) S.chips.forEach(function(c){ c.urgente = true; });
+        return;
+      }
+      S.chipCtx = { reparto: h.reparto || "", ordinare: !!h.ordinare, urgente: ("urgente" in h) ? h.urgente : null };
+      return;
+    }
+    riga.split(/;|,\s+/).forEach(function(pezzo){
+      const x = parseRiga(pezzo, S.chipCtx);
+      if (!x || S.chips.length >= 30) return;
+      S.chips.push(classificaChip(nuovoChip(x)));
+      n++;
+    });
+  });
+  return n || (intest ? -1 : 0);
+}
+function rigaChip(c){
+  return (c.quantita ? c.quantita + " " : "") + (c.tipo === "verde" ? c.articolo : c.originale) + (c.urgente ? " urgente" : "") + (c.ordinare ? " da comprare" : "");
+}
+/* il testo nascosto segue i rettangolini (e quello che si sta scrivendo) */
+function syncRighe(){
+  const scrivi = $("righe-scrivi").value.trim();
+  $("righe").value = S.chips.map(rigaChip).concat(scrivi ? [scrivi] : []).join("\n");
+  if ($("righe").value.trim()){ if (!S.inizioRighe) S.inizioRighe = Date.now(); } else S.inizioRighe = 0;
+  aggiornaForm(); salvaBozze();
+}
+function svuotaChips(){
+  S.chips = []; S.chipAperto = ""; S.chipCtx = { reparto:"", ordinare:false, urgente:null };
+  $("righe-scrivi").value = ""; $("righe").value = "";
+  renderChips(); renderSuggChip(); aggiornaForm();
+}
+/* rimette i rettangolini da un testo (bozza ritrovata) */
+function chipsDaTesto(t){
+  S.chips = []; S.chipCtx = { reparto:"", ordinare:false, urgente:null };
+  aggiungiTesto(t);
+  renderChips(); syncRighe();
+}
+function aggiungiDaCasella(){
+  const inp = $("righe-scrivi"), t = inp.value;
+  if (!t.trim()) return 0;
+  const n = aggiungiTesto(t);
+  if (n){ inp.value = ""; S.chipAperto = ""; S.avvisoChip = n < 0 ? "Va bene: vale per le cose che scrivi dopo." : ""; }
+  else S.avvisoChip = "Scrivi cosa serve, per esempio «2 kg pane casereccio».";
+  renderChips(); renderSuggChip(); syncRighe();
+  return n;
+}
+function trovaChip(id){ return S.chips.find(function(c){ return c.id === id; }); }
+function renderChips(){
+  const mancanti = vedeMancanti();
+  riempi($("righe-chips"), S.chips.map(function(c){
+    const aperto = S.chipAperto === c.id;
+    const nome = c.tipo === "arancio" ? c.originale : c.articolo;
+    const manca = mancanti && c.tipo !== "arancio" && !c.ordinare && mancaGia({ articolo: c.articolo, reparto: c.reparto, da: "Panificio" });
+    return el("li", null, el("button", {type:"button", class:"chip-cosa " + c.tipo + (aperto ? " aperto" : ""), "data-chip":c.id, "aria-expanded":String(aperto),
+        "aria-label":(c.tipo === "verde" ? "Riconosciuto: " : c.tipo === "arancio" ? "Da scegliere: " : "Cosa nuova: ") + (c.quantita ? c.quantita + " " : "") + nome + ". Tocca per cambiarlo o toglierlo."},
+      el("span", {class:"segno", "aria-hidden":"true", text: c.tipo === "verde" ? "✓" : c.tipo === "arancio" ? "?" : "+"}),
+      c.quantita ? el("span", {class:"qta", text:c.quantita + " ·"}) : null,
+      el("span", {class:"nome", text:nome}),
+      c.tipo === "nuovo" ? el("span", {class:"etich", text:"nuovo"}) : null,
+      c.urgente ? el("span", {class:"bollino urg", text:"Urgente"}) : null,
+      c.ordinare ? el("span", {class:"bollino", text:"Da comprare"}) : null,
+      c.scritto ? el("span", {class:"scritto", text:"(scritto: " + c.scritto + ")"}) : null,
+      manca ? el("span", {class:"manca", text:"Non c'è in magazzino"}) : null));
+  }));
+  $("righe-scrivi").placeholder = S.chips.length ? "Scrivi un'altra cosa e premi Invio" : "Scrivi una cosa e premi Invio, es. 2 kg pane casereccio";
+  renderDomandaChip();
+}
+/* sotto la casella: la domanda per la prima cosa arancione, oppure i tasti della cosa toccata */
+function renderDomandaChip(){
+  const box = $("righe-domanda");
+  box.classList.remove("azioni");
+  const aperto = S.chipAperto && trovaChip(S.chipAperto);
+  if (aperto){
+    const c = aperto;
+    box.classList.add("azioni");
+    riempi(box, [
+      el("p", {class:"domanda", text:"«" + (c.quantita ? c.quantita + " " : "") + (c.tipo === "arancio" ? c.originale : c.articolo) + "»: cosa vuoi fare?"}),
+      el("div", {class:"row"},
+        el("button", {type:"button", class:"mini", "data-chip-cambia":c.id, text:"Cambia"}),
+        c.tipo === "verde" && c.scritto ? el("button", {type:"button", class:"mini", "data-chip-altro":c.id, text:"È un'altra cosa, lascia «" + c.originale + "»"}) : null,
+        el("button", {type:"button", class:"mini pericolo", "data-chip-togli":c.id, text:"Togli"}),
+        el("button", {type:"button", class:"link", "data-chip":"", text:"Chiudi"}))]);
+    return;
+  }
+  const arancio = S.chips.filter(function(c){ return c.tipo === "arancio"; });
+  if (!arancio.length){ riempi(box, S.avvisoChip ? [el("p", {class:"hint", text:S.avvisoChip})] : []); box.classList.toggle("azioni", !!S.avvisoChip); return; }
+  const c = arancio[0];
+  const parti = [];
+  if (c.motivo === "due"){
+    parti.push(el("p", {class:"domanda", text:"«" + c.originale + "»: sono " + c.parti.length + " cose diverse?"}),
+      el("div", {class:"row"},
+        el("button", {type:"button", class:"mini", "data-chip-dividi":c.id, text:"Sì, dividi: " + c.parti.map(function(x){ return trovaProdottoRich(x).nome || x; }).join(" + ")}),
+        el("button", {type:"button", class:"mini", "data-chip-una":c.id, text:"No, è una cosa sola"})));
+  } else if (c.motivo === "doppio"){
+    parti.push(el("p", {class:"domanda", text:"«" + c.articolo + "» l'hai già scritto sopra."}),
+      el("div", {class:"row"},
+        el("button", {type:"button", class:"mini", "data-chip-togli":c.id, text:"Togli questo"}),
+        el("button", {type:"button", class:"mini", "data-chip-tieni":c.id, text:"Tienili tutti e due"})));
+  } else {
+    parti.push(el("p", {class:"domanda", text: c.motivo === "forse" ? "«" + c.originale + "»: forse è «" + c.scelte[0] + "»?" : "«" + c.originale + "»: quale di questi?"}),
+      el("div", {class:"row"},
+        ...c.scelte.map(function(n, j){ return el("button", {type:"button", class:"mini", "data-chip-scegli":c.id + "|" + j, text: c.motivo === "forse" ? "Sì, è " + n : n}); }),
+        el("button", {type:"button", class:"mini", "data-chip-altro":c.id, text: c.motivo === "forse" ? "No, è un'altra cosa" : "Un'altra cosa"})));
+  }
+  if (arancio.length > 1) parti.push(el("p", {class:"hint", text: arancio.length === 2 ? "Dopo c'è ancora 1 cosa da scegliere." : "Dopo ci sono ancora " + (arancio.length - 1) + " cose da scegliere."}));
+  riempi(box, parti);
+}
+/* mentre si scrive: i prodotti dell'elenco che somigliano, da toccare */
+function renderSuggChip(){
+  const inp = $("righe-scrivi"), box = $("righe-sugg");
+  const x = parseRiga(inp.value, null);
+  const t = x ? x.articolo : "", k = chiave(t);
+  if (k.length < 2){ riempi(box, []); return; }
+  const out = [], tutti = elencoProdottiRich(), parole = k.split(" ");
+  function metti(n){ if (out.length < 4 && !out.some(function(y){ return chiave(y) === chiave(n); })) out.push(n); }
+  tutti.forEach(function(n){ if (chiave(n).indexOf(k) === 0) metti(n); });
+  tutti.forEach(function(n){ const kn = " " + chiave(n); if (parole.every(function(p){ return kn.indexOf(" " + p) >= 0; })) metti(n); });
+  if (k.length >= 3) cercaProdotto(t, formeRich(), {}).scelte.forEach(metti);
+  riempi(box, out.length ? [el("p", {class:"label-sm", text:"Forse cerchi (toccalo):"})].concat(out.map(function(n){
+    return el("button", {type:"button", class:"chip-add", "data-chip-sugg":n, text:(x.quantita ? x.quantita + " · " : "") + n});
+  })) : []);
+}
+/* i tasti dei rettangolini e delle domande sotto la casella */
+function tastoChip(b){
+  const d = b.dataset;
+  let c;
+  if (d.chip !== undefined){ S.chipAperto = S.chipAperto === d.chip ? "" : d.chip; S.avvisoChip = ""; renderChips(); return true; }
+  if (d.chipSugg){
+    const x = parseRiga($("righe-scrivi").value, S.chipCtx) || {};
+    if (S.chips.length < 30){ const n = nuovoChip(x, d.chipSugg); n.scelto = true; S.chips.push(classificaChip(n)); }
+    $("righe-scrivi").value = "";
+    registra("prodotto suggerito toccato", {});
+  } else if (d.chipScegli){
+    const ij = d.chipScegli.split("|"); c = trovaChip(ij[0]);
+    if (c && c.scelte && c.scelte[Number(ij[1])]){
+      c.articolo = c.scelte[Number(ij[1])]; c.scritto = chiave(c.originale) !== chiave(c.articolo) ? c.originale : "";
+      c.tipo = "verde"; c.scelte = null; c.motivo = ""; c.scelto = true; segnaDoppio(c);
+      registra("nome suggerito accettato", {});
+    }
+  } else if (d.chipAltro){
+    c = trovaChip(d.chipAltro);
+    if (c){ c.comEra = true; classificaChip(c); registra("nome suggerito rifiutato", {}); }
+  } else if (d.chipDividi){
+    c = trovaChip(d.chipDividi);
+    if (c && c.parti){
+      const nuovi = c.parti.map(function(t, i){ return nuovoChip({ quantita: i ? "" : c.quantita, urgente: c.urgente, ordinare: c.ordinare, reparto: c.reparto }, maiuscola(t)); });
+      const i = S.chips.indexOf(c);
+      S.chips.splice(i, 1);
+      nuovi.forEach(function(n, j){ S.chips.splice(i + j, 0, n); classificaChip(n); });
+    }
+  } else if (d.chipUna){
+    c = trovaChip(d.chipUna);
+    if (c){ c.unaSola = true; classificaChip(c); }
+  } else if (d.chipTieni){
+    c = trovaChip(d.chipTieni);
+    if (c){ c.doppioOk = true; c.tipo = c.tipoPrima || "verde"; c.motivo = ""; }
+  } else if (d.chipTogli){
+    S.chips = S.chips.filter(function(x){ return x.id !== d.chipTogli; });
+    if (S.chipAperto === d.chipTogli) S.chipAperto = "";
+  } else if (d.chipCambia){
+    c = trovaChip(d.chipCambia);
+    if (c){
+      S.chips = S.chips.filter(function(x){ return x !== c; });
+      $("righe-scrivi").value = (c.quantita ? c.quantita + " " : "") + c.originale;
+      S.chipAperto = "";
+    }
+  } else return false;
+  S.avvisoChip = "";
+  renderChips(); renderSuggChip(); syncRighe();
+  const inp = $("righe-scrivi");
+  /* dopo una scelta si torna a scrivere (o alla prossima domanda) */
+  const prossima = document.querySelector("#righe-domanda button");
+  if (S.chips.some(function(x){ return x.tipo === "arancio"; }) && prossima) prossima.focus(); else inp.focus();
+  return true;
+}
 const ETICHETTE_ORIGINE = {};
 function nomeOrigine(o){ return ETICHETTE_ORIGINE[o] || o; }
 
@@ -1889,9 +2164,25 @@ function originiPer(per){
 }
 function invia(ev){
   ev.preventDefault();
-  const rr = righeDi("righe");
-  if (!rr.length || !store || S.sola || S.inviando || !S.mioId || !haAzione("richMandare")) return;
-  apriControllo("negozio", S.punto, rr);
+  /* «Invio» nella casella fa solo il rettangolino (anche sulle tastiere che mandano il modulo);
+     il tasto «Controlla e invia» toccato fa anche il rettangolino di quello che è ancora scritto */
+  if (document.activeElement === $("righe-scrivi") && Date.now() - (S.toccoInvia || 0) > 1500){ aggiungiDaCasella(); return; }
+  if ($("righe-scrivi").value.trim()) aggiungiDaCasella();
+  if (!S.chips.length || !store || S.sola || S.inviando || !S.mioId || !haAzione("richMandare")) return;
+  /* prima si sceglie quello che è ancora arancione */
+  if (S.chips.some(function(c){ return c.tipo === "arancio"; })){
+    S.chipAperto = ""; renderChips();
+    const box = $("righe-domanda");
+    box.classList.remove("scuoti"); void box.offsetWidth; box.classList.add("scuoti");
+    try { box.scrollIntoView({ block: "center", behavior: "smooth" }); } catch(e){}
+    const b = box.querySelector("button"); if (b) b.focus();
+    esito("esito", "Prima scegli le cose arancioni, qui sopra.");
+    return;
+  }
+  esito("esito", "");
+  apriControllo("negozio", S.punto, S.chips.map(function(c){
+    return { articolo: c.articolo, quantita: c.quantita, reparto: c.reparto, ordinare: c.ordinare, urgente: c.urgente, scritto: c.scritto, comEra: !!c.comEra, scelto: !!c.scelto, daChip: true };
+  }));
 }
 function inviaGiro(ev){
   ev.preventDefault();
@@ -1911,10 +2202,17 @@ function apriControllo(dove, per, rr){
         da: (x.ordinare && opz.indexOf("Da comprare") >= 0) ? "Da comprare" : "Panificio",
         urgente: x.urgente === true && puoUrgente(dove)
       };
-      /* nomi giusti: solo per le richieste, non per i promemoria */
+      /* nomi giusti: solo per le richieste, non per i promemoria; i rettangolini sono già controllati */
+      if (x.daChip){ if (x.scritto) v.scritto = x.scritto; if (x.comEra) v.comEra = true; if (x.scelto) v.scelto = true; return v; }
       return per === PROMEMORIA ? v : riconosciVoce(v);
     })
   };
+  /* nei negozi le cose si vedono divise per reparto, come le prepara chi fa il giro */
+  if (dove === "negozio" && per !== PROMEMORIA){
+    const ord = function(v){ return REPARTI.indexOf(repartoDi({ articolo: v.articolo, reparto: v.reparto })); };
+    S.ctrl.voci = S.ctrl.voci.map(function(v, i){ return [v, i]; }).sort(function(a, b){ return ord(a[0]) - ord(b[0]) || a[1] - b[1]; }).map(function(x){ return x[0]; });
+    S.ctrl.perReparto = true;
+  }
   const posti = [];
   S.richieste.concat(S.tolte).filter(function(r){ return r.da === FUORI && r.ritiroDove; })
     .sort(function(a, b){ return b.creato - a.creato; })
@@ -1967,14 +2265,19 @@ function renderControllo(){
     dom.textContent = "Attenzione: " + elencoNomi + (doppie.length === 1 ? " è già stato chiesto e non è ancora arrivato." : " sono già stati chiesti e non sono ancora arrivati.") +
       " Se non serve di nuovo, tocca «Non serve»." + (altrove ? " Controlla anche da dove si prende." : "");
   }
-  riempi($("ctrl-lista"), c.voci.map(function(v, i){
+  let repPrima = "";
+  riempi($("ctrl-lista"), [].concat(...c.voci.map(function(v, i){
+    const rep = c.perReparto ? repartoDi({ articolo: v.articolo, reparto: v.reparto }) : "";
+    const testaRep = rep && rep !== repPrima ? el("li", {class:"ctrl-rep", "aria-hidden":"true", text:rep}) : null;
+    repPrima = rep || repPrima;
     const fuori = v.da !== "Panificio";
     const cls = fuori ? ((v.da === "Da comprare" || v.da === FUORI) ? " fuori comprare" : " fuori " + classeDest(v.da)) : "";
     const testa = el("p", {class:"articolo"}, v.quantita ? el("span", {class:"qta", text:v.quantita}) : null, v.articolo,
       (!promem && gia.has(chiave(v.articolo))) ? el("span", {class:"pill ctrl-gia", text:giaQuando(gia.get(chiave(v.articolo)))}) : null,
       (!promem && mancaGia(v)) ? el("span", {class:"pill p-finito", text:"Non c'è in magazzino: aspetta che arrivi"}) : null);
     /* nome cambiato dall'app: si vede cosa era scritto e si può lasciare com'era */
-    const nome = v.scritto
+    /* scelto da chi scrive tra i rettangolini arancioni: non serve ripeterlo */
+    const nome = v.scritto && !v.scelto
       ? el("p", {class:"hint ctrl-nome"}, "✓ Hai scritto «" + v.scritto + "»: l'app ha messo il nome giusto. ",
           el("button", {type:"button", class:"link", "data-ctrl-com-era":String(i), disabled:c.inviando, "aria-label":"Lascia com'era scritto: " + v.scritto, text:"Lascia com'era"}))
       : (v.scelte && v.scelte.length
@@ -2008,8 +2311,8 @@ function renderControllo(){
     if (!v.conNota) scelte.append(el("button", {type:"button", class:"link", "data-ctrl-nota-apri":String(i), disabled:c.inviando, "aria-label":"Aggiungi una nota a " + v.articolo, text:"+ Nota"}));
     const nota = v.conNota ? el("label", {class:"ctrl-nota"}, el("span", {class:"label-sm", text:"Nota per chi prepara"}),
       el("input", {type:"text", "data-ctrl-nota":String(i), maxlength:"140", autocomplete:"off", placeholder:"Es. quelle del frigo grande", value:v.nota || "", disabled:c.inviando})) : null;
-    return el("li", {class:"ctrl-voce" + cls}, testa, nome, scelte, extra, nota);
-  }));
+    return [testaRep, el("li", {class:"ctrl-voce" + cls}, testa, nome, scelte, extra, nota)].filter(Boolean);
+  })));
   /* per quando: oggi, domani o un altro giorno (prova, solo titolari) */
   const puoQuando = false; /* sostituito dalla sezione Prenotazioni */
   $("ctrl-quando").hidden = !puoQuando;
@@ -2061,13 +2364,13 @@ async function confermaControllo(){
     registra(giro ? "aggiunte dal giro" : "richieste mandate", { cose: ok, provate: c.voci.length, senzaRete: !!salvateSenzaRete,
       secondi: !giro && S.inizioRighe ? Math.round((Date.now() - S.inizioRighe) / 1000) : null });
     if (!giro) S.inizioRighe = 0;
-    $(giro ? "righe-giro" : "righe").value = "";
+    if (giro) $("righe-giro").value = ""; else svuotaChips();
     if (salvateSenzaRete) esito(giro ? "esito-giro" : "esito", "Senza rete: salvata sul telefono, parte da sola appena torna il campo.");
     else if (giro) esito("esito-giro", ok === 1 ? "Aggiunta." : ok + " cose aggiunte.");
     else esito("esito", ok === 1 ? "Richiesta inviata." : ok + " richieste inviate.");
   }
   renderTutto();
-  const f = $(giro ? "righe-giro" : "righe");
+  const f = $(giro ? "righe-giro" : "righe-scrivi");
   if (f) f.focus();
 }
 
@@ -2316,7 +2619,7 @@ function riprendiBozze(){
   function valida(x){ return x && typeof x === "object" && Number(x.alle) >= limite; }
   const ritrovate = [];
   if (valida(b.righe) && typeof b.righe.testo === "string" && !$("righe").value.trim() && (!b.righe.punto || b.righe.punto === S.punto)){
-    $("righe").value = b.righe.testo.slice(0, 4000);
+    chipsDaTesto(b.righe.testo.slice(0, 4000));
     ritrovate.push("le richieste che stavi scrivendo");
   }
   if (valida(b.giro) && typeof b.giro.testo === "string" && !$("righe-giro").value.trim()){
@@ -2936,6 +3239,7 @@ function aggiornaFormGiro(){
   b.textContent = S.inviandoGiro ? "Aggiungo…" : (rr.length > 1 ? "Controlla e aggiungi (" + rr.length + ")" : "Controlla e aggiungi");
 }
 function renderNegozio(){
+  if (S.chips.length) renderChips();
   document.querySelectorAll('input[name="punto"]').forEach(function(inp){ inp.checked = inp.value === S.punto; });
   $("titolo-arrivo").textContent = "In arrivo " + (PREP[S.punto] || S.punto);
   const panif = S.punto === "Panificio";
@@ -3538,10 +3842,14 @@ function capitoliManuale(){
   const panif = S.ruolo.tipo === "negozio" && S.punto === "Panificio";
   const cap = [];
   if (negozio || tit) cap.push({ titolo:"Richieste del negozio", domande:[
-    ["Come chiedo una cosa?", ["Nella pagina principale scrivi in «Cosa serve?» una cosa per riga. La quantità puoi metterla o no (per esempio «2 casse acqua naturale» oppure «Vassoi»). Poi tocca ", tasto("Controlla e invia"), ": si apre «Controlla prima di inviare»."]],
+    ["Come chiedo una cosa?", ["Nella pagina principale scrivi in «Cosa serve?» una cosa e premi Invio: diventa un rettangolino. Poi scrivi la prossima. La quantità puoi metterla o no, prima o dopo (per esempio «2 casse acqua naturale grande» oppure «Vassoi»). Mentre scrivi, sotto escono i prodotti che somigliano: toccane uno per metterlo subito. Puoi anche incollare un messaggio intero: ogni riga diventa un rettangolino. Alla fine tocca ", tasto("Controlla e invia"), ": si apre «Controlla prima di inviare»."]],
+    ["Cosa vogliono dire i colori dei rettangolini?", ["Verde ✓: l'app ha riconosciuto la cosa e ci ha messo il nome giusto. Esempio: scrivi «pane caserecio» e diventa «✓ Pane casereccio», con sotto piccolo quello che avevi scritto.", el("br"),
+      "Arancione ?: l'app ha un dubbio e ti chiede, subito sotto la casella, con dei tasti. Esempio: «latte» → «Latte cucina» o «Latte bar»; «acqua» → quale delle quattro; «pane e pitte» → «Sono due cose?»; una cosa scritta due volte → «Togli questo» o «Tienili tutti e due». Finché c'è qualcosa di arancione non si può inviare.", el("br"),
+      "Bianco «nuovo»: l'app non conosce la cosa. Va bene lo stesso: si manda com'è scritta e poi la controlla il titolare.", el("br"),
+      "Per cambiare o togliere un rettangolino toccalo: escono «Cambia», «Togli» e, se l'app ha corretto il nome, «È un'altra cosa». Con la casella vuota, il tasto cancella toglie l'ultimo rettangolino intero."]],
     ["Cosa sono i tasti «Chiesti spesso»?", ["Sono le cose che il tuo negozio ha chiesto più spesso negli ultimi " + num("chiestiGiorni") + " giorni, già con il nome giusto. Toccane uno per aggiungerlo senza scriverlo. Ne vedi " + num("chiestiTasti") + "; con «Altri…» fino a " + Math.max(num("chiestiTasti"), num("chiestiMax")) + ". Le cose che hai già chiesto e non sono ancora arrivate non ci sono."]],
-    ["Cosa controllo prima di inviare?", ["Per ogni cosa vedi:", el("br"),
-      "• il nome: se l'app è sicura mette lei il nome giusto (vedi ✓ e puoi toccare «Lascia com'era»); se ha un dubbio chiede «Quale di questi?» e tu tocchi quello giusto, oppure «Nessuno, è un'altra cosa»;", el("br"),
+    ["Cosa controllo prima di inviare?", ["Le cose sono divise per reparto (il nome del reparto è scritto piccolo sopra), come le prepara chi fa il giro. Il reparto non si sceglie: per le cose nuove lo sceglie il titolare. Per ogni cosa vedi:", el("br"),
+      "• il nome: è già quello dei rettangolini; se l'app l'ha corretto da sola vedi ✓ e puoi toccare «Lascia com'era»;", el("br"),
       "• da dove si prende: di solito dal Panificio; puoi scegliere anche l'altro negozio, «Da ritirare fuori» (scrivi dove) o «Da comprare»;", el("br"),
       "• ", tasto("Urgente"), " se serve subito, e ", tasto("+ Nota"), " per chi prepara.", el("br"),
       "Quando è tutto giusto tocca ", tasto("Sì, invia"), ". Per l'acqua l'app chiede sempre quale: naturale o frizzante, grande o piccola."]],
@@ -3642,6 +3950,7 @@ function capitoliManuale(){
     ["Una persona cambia negozio o va in ferie?", ["In «Persone registrate» tocca il suo nome. ", tasto("Cambia ruolo"), " la sposta (per esempio dal Corso a Piazza Nenni) senza codice nuovo. ", tasto("Sospendi"), " non le fa usare l'app finché non tocchi ", tasto("Riattiva"), ": dopo, sul suo telefono, basta toccare «Riprova»."]],
     ["A cosa serve «Impostazioni»?", ["Lì scegli alcuni numeri dell'app, divisi a gruppi (Richieste dei negozi, Avvisi e colori, Per quanto tempo tenere le cose…): per esempio dopo quante ore una richiesta diventa arancione o quanti tasti «Chiesti spesso» si vedono. Valgono per tutti i telefoni. Sotto ogni numero c'è un esempio che cambia mentre tocchi − e +; poi «Salva». «Rimetti com'era all'inizio» torna al numero di partenza."]],
     ["A cosa serve «Database»?", ["Entrando ci sono tre tasti: Ordini, Prenotazioni, Biscotti. Il numero dice quante cose nuove ci sono da controllare. In ogni parte ci sono i nomi nuovi o corretti dall'app («Sì, è giusto», «No, era…», «È un prodotto nuovo», «Scrivi il nome giusto») e i prodotti che forse sono doppi; in fondo l'elenco completo, con «Cerca un prodotto», e le «Ultime modifiche» con «Annulla». In Ordini, più sotto, c'è una parte a sé per le cose segnate con «+ Segna cosa manca». Una correzione vale anche per quello già scritto. Quanti giorni indietro guardare lo scegli in «Impostazioni» (di partenza 7)."]],
+    ["Come scelgo il reparto di una cosa nuova?", ["Nel «Database», parte Ordini, sotto ogni cosa che l'app non conosce c'è «Reparto», con il reparto che l'app ha pensato dal nome. Se è sbagliato sceglilo giusto, poi tocca «È un prodotto nuovo» (o «Salva il nome giusto»): il reparto si salva insieme. Esempio: «sacchetti freezer grandi» → Congelati. I negozi non scelgono il reparto."]],
     ["Un prodotto è scritto male: come lo correggo?", ["Nel «Database» tocca «Scrivi il nome giusto» (o «No, era…»). Scrivi il nome: sotto escono i prodotti dell'elenco che somigliano, puoi toccarne uno. Se il nome che scrivi non c'è, diventa un prodotto nuovo. Quello scritto male resta collegato al nome giusto: la volta dopo l'app lo corregge da sola."]],
     ["Come controllo le cose segnate con «+ Segna cosa manca»?", ["Nel «Database», parte Ordini, sotto le richieste dei negozi c'è «Segnate con «+ Segna cosa manca»». Funziona come per le richieste: «Sì, è giusto», «No, era…», «È un prodotto nuovo». Esempio: Massimo ha segnato «acqua nat» e tu scegli «Acqua naturale grande»: da quel momento è collegata all'acqua chiesta dai negozi, e con «È arrivato» arrivano insieme. Se è stata segnata per sbaglio, «Elimina, è stato uno sbaglio»."]],
     ["Un ordine non c'entra niente: come lo tolgo?", ["Nel «Database», parte Ordini, sotto l'ordine tocca «Elimina questo ordine» e conferma. Sparisce dalle richieste e dal giro. Se è stato uno sbaglio, lo ritrovi in Cronologia."]],
@@ -4486,6 +4795,18 @@ function riconosciVoce(v){
    («È un prodotto nuovo» / «Scrivi il nome giusto»). Un ordine che non c'entra niente si elimina, con conferma. */
 S.corrApri = "";
 S.corrGruppi = new Map();
+S.corrRep = {};
+/* il reparto scelto per una cosa nuova nel Database: si salva per il nome giusto */
+function salvaRepartoNuovo(id, nome){
+  const sel = document.querySelector('[data-corr-rep="' + String(id).replace(/["\\]/g, "") + '"]');
+  const rep = sel ? sel.value : S.corrRep[id];
+  delete S.corrRep[id];
+  if (REPARTI.indexOf(rep) < 0 || !store || !store.salvaMappa) return;
+  const k = chiave(nome);
+  if (S.mappa[k] === rep || (!S.mappa[k] && repartoDi({ articolo: nome }) === rep && !sel)) return;
+  S.mappa = Object.assign({}, S.mappa); S.mappa[k] = rep;
+  scrivi(function(){ return store.salvaMappa(k, rep); });
+}
 S.dbScheda = "";
 S.dbMod = "";
 function puoDatabase(){ return !!S.owner && !!S.ruolo && S.ruolo.tipo === "titolare" && !!store && !S.sola; }
@@ -4661,6 +4982,11 @@ function renderDbOrdini(){
       parti.push(el("p", {class:"domanda-db", text:"È giusto?"}));
     } else {
       parti.push(el("p", {class:"domanda-db", text:"L'app non conosce questo prodotto. È nuovo o è scritto male?"}));
+      /* il reparto di una cosa nuova lo sceglie il titolare (nei negozi non si sceglie) */
+      const indov = S.corrRep[g.id] || repartoDi({ articolo: g.testo });
+      parti.push(el("label", {class:"riga-db db-rep-nuovo"}, el("span", {class:"label-sm", text:"Reparto"}),
+        el("select", {"data-corr-rep":g.id, "aria-label":"Reparto di " + g.testo}, ...REPARTI.map(function(r){ return el("option", {value:r, selected: r === indov, text:r}); }))),
+        el("p", {class:"hint", text:"Se è un prodotto nuovo, scegli il reparto giusto: si salva con «È un prodotto nuovo» o «Salva il nome giusto». L'app aveva pensato: " + repartoDi({ articolo: g.testo }) + "."}));
     }
     parti.push(el("p", {class:"hint", text: g.mag
       ? (g.rich.length === 1 ? "Segnata 1 volta" : "Segnata " + g.rich.length + " volte") + " da " + posti + " · " + quando(ultima) +
@@ -5161,7 +5487,7 @@ async function corrNuovo(id){
   const g = S.corrGruppi.get(id); if (!g) return;
   const nome = maiuscola(g.testo).slice(0, 60);
   const ok = await salvaProdRich(function(d){ return { elenco: conProdotto(d, nome), tolti: senzaTolto(d, nome) }; });
-  if (ok){ avvisoDb("«" + nome + "» è nell'elenco dei prodotti.", "«" + nome + "» aggiunto come prodotto nuovo"); registra("prodotto confermato", { dove: "richieste" }); }
+  if (ok){ avvisoDb("«" + nome + "» è nell'elenco dei prodotti.", "«" + nome + "» aggiunto come prodotto nuovo"); salvaRepartoNuovo(id, nome); registra("prodotto confermato", { dove: "richieste" }); }
 }
 /* il nome giusto scritto dal titolare: se c'è già nell'elenco si collega a quello,
    altrimenti diventa un prodotto nuovo; quello scritto male resta collegato al nome giusto */
@@ -5180,6 +5506,7 @@ async function corrSalva(id){
   if (ok){
     S.corrApri = "";
     avvisoDb((esiste ? "Corretto" : "Prodotto nuovo aggiunto") + ": ora è «" + nome + "», anche nelle richieste già mandate.", "«" + g.testo + "» corretto in «" + nome + "»" + (esiste ? "" : " (prodotto nuovo)"));
+    if (!esiste && g.tipo === "nuova") salvaRepartoNuovo(id, nome); else delete S.corrRep[id];
     registra("prodotto corretto", { dove: "richieste", nuovo: !esiste });
     renderTutto();
   }
@@ -6395,7 +6722,7 @@ function collega(){
     if (b.id === "ho-finito") return apriRiepilogo();
     if (b.id === "riep-conferma") return chiudiRiepilogo(true);
     if (b.id === "riep-indietro") return chiudiRiepilogo(false);
-    if (b.id === "ctrl-indietro"){ chiudiControllo(); const t = S.vista === "consegne" ? $("righe-giro") : $("righe"); if (t) t.focus(); return; }
+    if (b.id === "ctrl-indietro"){ chiudiControllo(); const t = S.vista === "consegne" ? $("righe-giro") : $("righe-scrivi"); if (t) t.focus(); return; }
     if (b.id === "ctrl-invia") return confermaControllo();
     if (b.dataset.ctrlTogli && S.ctrl && !S.ctrl.inviando){
       const c = S.ctrl;
@@ -6403,7 +6730,7 @@ function collega(){
       if (!c.voci.length){
         const giro = c.dove === "giro";
         chiudiControllo();
-        $(giro ? "righe-giro" : "righe").value = "";
+        if (giro) $("righe-giro").value = ""; else svuotaChips();
         esito(giro ? "esito-giro" : "esito", "Niente di nuovo da inviare: era già stato chiesto.");
         renderTutto();
         return;
@@ -6454,11 +6781,12 @@ function collega(){
       return;
     }
     if (b.dataset.aggiungi){
-      const t = $("righe");
-      t.value = t.value.replace(/\s+$/, "") + (t.value.trim() ? "\n" : "") + b.dataset.aggiungi;
+      aggiungiTesto(b.dataset.aggiungi);
+      renderChips(); syncRighe();
       renderNegozio();
       return;
     }
+    if (tastoChip(b)) return;
     if (b.id === "rimuovi-esempi") return rimuoviEsempi();
     if (b.id === "acc-riprova") return location.reload();
     if (b.id === "esci") return esciSB();
@@ -6724,7 +7052,35 @@ function collega(){
     if (t.dataset.ctrlPorta){ const v = S.ctrl.voci[Number(t.dataset.ctrlPorta)]; if (v) v.portaA = t.value; }
   });
   $("ctrl-quando-data").addEventListener("input", function(){ if (S.ctrl){ S.ctrl.perIl = this.value || ""; } });
-  $("righe").addEventListener("input", function(){ if (this.value.trim() && !S.inizioRighe) S.inizioRighe = Date.now(); if (!this.value.trim()) S.inizioRighe = 0; aggiornaForm(); });
+  /* «Cosa serve?»: Invio fa il rettangolino; cancella con la casella vuota toglie l'ultimo; incollando più righe ne fa uno per riga */
+  $("righe-scrivi").addEventListener("keydown", function(ev){
+    if (ev.key === "Enter"){ ev.preventDefault(); aggiungiDaCasella(); return; }
+    if (ev.key === "Backspace" && !this.value && S.chips.length){
+      ev.preventDefault();
+      const c = S.chips.pop(); if (S.chipAperto === c.id) S.chipAperto = "";
+      renderChips(); syncRighe();
+    }
+  });
+  $("righe-scrivi").addEventListener("input", function(){
+    /* tastiere che mandano l'«a capo» dentro il testo, o un messaggio incollato */
+    if (/[\n\r]/.test(this.value)){ aggiungiDaCasella(); return; }
+    S.avvisoChip = ""; renderSuggChip(); syncRighe();
+    if (!this.value) renderDomandaChip();
+  });
+  $("righe-scrivi").addEventListener("paste", function(ev){
+    const t = ev.clipboardData && ev.clipboardData.getData("text");
+    /* la casella non tiene gli «a capo»: si fanno subito i rettangolini, uno per riga */
+    if (t && /[\n\r]/.test(t)){
+      ev.preventDefault();
+      const prima = this.value.trim(); this.value = "";
+      aggiungiTesto((prima ? prima + "\n" : "") + t.replace(/\r\n?/g, "\n"));
+      S.chipAperto = ""; S.avvisoChip = "";
+      renderChips(); renderSuggChip(); syncRighe();
+    }
+  });
+  $("invia").addEventListener("pointerdown", function(){ S.toccoInvia = Date.now(); });
+  /* toccando un prodotto suggerito la tastiera resta aperta */
+  $("righe-sugg").addEventListener("pointerdown", function(ev){ if (ev.target.closest("button")) ev.preventDefault(); });
   $("righe-giro").addEventListener("input", aggiornaFormGiro);
   /* quello che si scrive resta sul telefono finché non si invia */
   document.addEventListener("input", salvaBozze, true);
@@ -6738,6 +7094,8 @@ function collega(){
     const f = ev.target.closest && ev.target.closest("[data-parte-form]");
     if (f){ ev.preventDefault(); confermaParte(f.dataset.parteForm); }
   });
+  /* Database: il reparto scelto per una cosa nuova resta anche se la pagina si ridisegna */
+  document.addEventListener("change", function(ev){ const t = ev.target; if (t && t.dataset && t.dataset.corrRep) S.corrRep[t.dataset.corrRep] = t.value; });
   /* Database: i nomi che somigliano mentre si scrive; «Invio» preme il tasto accanto */
   document.addEventListener("input", function(ev){ if (ev.target.dataset && ev.target.dataset.suggParte) aggiornaSugg(ev.target); });
   document.addEventListener("keydown", function(ev){
