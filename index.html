@@ -327,7 +327,15 @@ button.striscia-testo{cursor:pointer}
 .pren-ctrl-voce select{min-height:44px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font-size:16px;font-weight:700;padding:0 10px;max-width:100%}
 /* cerca */
 .pren-cerca{display:flex;flex-direction:column;gap:8px}
-.pren-cerca-apri{align-self:flex-end}
+.pren-cerca-apri{flex:none;min-height:56px}
+.pren-cerca-riga{display:flex;align-items:stretch;gap:8px}
+.pren-future{appearance:none;flex:1 1 auto;min-width:0;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:2px;min-height:56px;padding:6px 12px;border:1.5px solid var(--altrog);border-radius:var(--r-md);background:var(--surface);color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+.pren-future .label-sm{color:var(--muted)}
+.pren-future strong{font-size:15px;line-height:1.3}
+.pren-future.vuota{border-color:var(--line);cursor:default}
+.pren-future.vuota strong{color:var(--muted);font-weight:600}
+.pren-fut-tutto{display:flex;flex-direction:column;gap:6px;padding:12px 14px;border:1.5px solid var(--ink);border-radius:var(--r-lg);background:var(--surface-2)}
+.pren-fut-tutto .pren-fut-n{font-family:var(--font-display);font-size:20px;letter-spacing:.02em;margin:0}
 .pren-cerca-campo{display:flex;align-items:flex-end;gap:8px}
 .pren-cerca-campo .field{flex:1 1 auto;min-width:0}
 .pren-cerca-campo input{min-height:48px;width:100%}
@@ -995,7 +1003,11 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
     <div class="view" id="pannello-prenotazioni" hidden>
       <div class="pren-dacontrollare" id="pren-dacontrollare" hidden></div>
       <div class="pren-cerca" id="pren-cerca">
-        <button type="button" class="mini pren-cerca-apri" id="pren-cerca-apri" aria-expanded="false">🔍 Cerca</button>
+        <div class="pren-cerca-riga" id="pren-cerca-riga">
+          <!-- le prenotazioni dal dopodomani in poi: i giorni, e toccando la pagina con tutte -->
+          <button type="button" class="pren-future" id="pren-future"></button>
+          <button type="button" class="mini pren-cerca-apri" id="pren-cerca-apri" aria-expanded="false">🔍 Cerca</button>
+        </div>
         <div class="pren-cerca-campo" id="pren-cerca-campo" hidden>
           <label class="field" for="pren-cerca-testo"><span class="label-sm">Cerca cliente, prodotto o telefono</span><input id="pren-cerca-testo" type="search" autocomplete="off" placeholder="Es. Rossi, pitta, 333"></label>
           <button type="button" class="mini" id="pren-cerca-chiudi">Chiudi</button>
@@ -1013,16 +1025,28 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
       </div>
       <button type="button" class="primary" id="pren-nuova">+ Nuova prenotazione</button>
       <div class="blocco" id="pren-giorni"></div>
+      <!-- pagina «Prossimi giorni»: tutte le prenotazioni dal dopodomani, in fila per data, con i totali -->
+      <div class="blocco" id="pren-futuro" hidden>
+        <div class="pren-fascia">
+          <p><span class="label-sm">Stai guardando</span><strong>Prossimi giorni</strong><span>Dal dopodomani in poi</span></p>
+          <button type="button" class="mini" id="pren-futuro-chiudi">Torna a oggi</button>
+        </div>
+        <div id="pren-futuro-lista"></div>
+      </div>
       <p class="vuoto" id="pren-vuoto">Nessuna prenotazione. Quando un cliente prenota, scrivila qui: il panificio vede subito quanto preparare per ogni giorno.</p>
+      <div class="blocco" id="pren-altri-sotto" hidden><p class="label-sm">Altri giorni con prenotazioni</p><div class="chips" id="pren-altri-sotto-giorni"></div></div>
       <!-- solo titolari: le prenotazioni eliminate, con chi e quando, e «Rimetti» -->
-      <details class="crono" id="pren-eliminate" hidden>
-        <summary><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 4v4h4"></path><path d="M12 8v4l3 2"></path></svg>Prenotazioni eliminate <span class="crono-n" id="n-pren-eliminate"></span></summary>
-        <div class="blocco">
+      <div class="due-tasti">
+        <div class="tasti-riga">
+          <button type="button" class="tasto-riq" id="pren-eliminate" aria-expanded="false" aria-controls="riq-pren-eliminate" hidden><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 4v4h4"></path><path d="M12 8v4l3 2"></path></svg>Prenotazioni eliminate <span class="crono-n" id="n-pren-eliminate"></span></button>
+        </div>
+        <div class="riquadro" id="riq-pren-eliminate" hidden>
+          <p class="label-sm">Prenotazioni eliminate</p>
           <p class="hint">Le prenotazioni che un titolare ha eliminato, le più recenti in alto. Le vedono solo i titolari. «Rimetti» la fa tornare com'era, per tutti.</p>
           <ul class="lista" id="lista-pren-eliminate"></ul>
           <p class="vuoto" id="vuoto-pren-eliminate">Nessuna prenotazione eliminata.</p>
         </div>
-      </details>
+      </div>
     </div>
 
     <!-- Persone registrate: solo il titolare, dal menu -->
@@ -3299,6 +3323,10 @@ function apriRiquadro(b, apri){
     $(x.getAttribute("aria-controls")).hidden = !on;
   });
 }
+/* cambiando pagina i riquadri aperti si chiudono: tornando li trovi chiusi */
+function chiudiRiquadri(){
+  document.querySelectorAll('.tasto-riq[aria-expanded="true"]').forEach(function(x){ apriRiquadro(x, false); });
+}
 /* un tasto sparito (niente consegnato oggi, niente tolto) non lascia aperto il suo riquadro */
 function sistemaRiquadri(){
   document.querySelectorAll(".tasto-riq").forEach(function(x){
@@ -3568,6 +3596,7 @@ function renderBiscPanificio(){
   $("vuoto-crono-fatti").hidden = fatti.length > 0;
 }
 function mostraSez(sez){
+  const prima = S.sez;
   S.sez = ["biscotti","statistiche","prenotazioni","notifiche","persone","mancanti","database","impostazioni","manuale"].indexOf(sez) >= 0 ? sez : "richieste";
   $("pannello-database").hidden = S.sez !== "database";
   $("pannello-impostazioni").hidden = S.sez !== "impostazioni";
@@ -3579,6 +3608,7 @@ function mostraSez(sez){
   $("pannello-richieste").hidden = S.sez !== "richieste";
   $("pannello-biscotti").hidden = S.sez !== "biscotti";
   $("pannello-statistiche").hidden = S.sez !== "statistiche";
+  if (prima !== S.sez) chiudiRiquadri();
   renderStrisceMag();
   registraSchermata();
 }
@@ -4004,7 +4034,7 @@ function capitoliManuale(){
     ["Perché una richiesta è arancione («Ferma da…»)?", ["Vuol dire che aspetta da più di " + secondi("ferma") + " senza che nessuno l'abbia preparata o caricata, oppure che almeno " + num("scavalcate") + " cose chieste dopo sono già arrivate e lei no. Serve a non dimenticarla: se è importante, avvisa chi fa il giro."], disegnoFerma()],
     ["Come tolgo una richiesta sbagliata?", ["Tocca ", tasto("Togli"), " e poi, entro " + secondi("conferma") + ", ", tasto("Conferma"), ". Di solito ognuno toglie solo le sue (il titolare può dare a una persona anche il permesso di togliere quelle dei colleghi). Una cosa segnata «non c'è in magazzino» la toglie solo il titolare.", el("br"),
       "Se hai sbagliato a togliere: in fondo alla pagina tocca ", tasto("Cronologia: cose tolte"), ". Le cose tolte restano lì per " + secondi("crono") + " e c'è ", tasto("Recupera"), "."]],
-    ["Dove vedo quello che è arrivato oggi?", ["In fondo alla pagina tocca ", tasto("Consegnato oggi"), ": si apre un riquadro con tutto quello che vi hanno portato oggi. Accanto c'è ", tasto("Cronologia: cose tolte"), ". Si apre uno alla volta: aprendo uno, l'altro si chiude. Per chiuderlo tocca di nuovo il tasto; si chiude anche da solo quando torni in cima alla pagina."]],
+    ["Dove vedo quello che è arrivato oggi?", ["In fondo alla pagina tocca ", tasto("Consegnato oggi"), ": si apre un riquadro con tutto quello che vi hanno portato oggi. Accanto c'è ", tasto("Cronologia: cose tolte"), ". Si apre uno alla volta: aprendo uno, l'altro si chiude. Per chiuderlo tocca di nuovo il tasto; si chiude anche da solo quando torni in cima alla pagina o cambi pagina."]],
     ["E se chiedo una cosa che già non c'è in magazzino?", ["L'app lo sa: la richiesta parte già segnata «non c'è» e resta barrata nella tua lista finché non arriva. Quando arriva vedi «Arrivata in magazzino» e poi viene caricata come le altre."]],
     ["Cosa vuol dire «Da comprare»?", ["È una cosa che non c'è e va comprata. La vedono i titolari e chi fa il giro, in «Non in magazzino». Quando arriva, va nelle consegne e ve la portano."]],
     ["Cosa succede se arriva solo una parte?", ["Chi fa il giro carica quello che c'è e scrive cosa manca. La tua richiesta va «In viaggio» con la scritta «Solo una parte: mancano 2 casse». Nella tua lista compare anche una riga nuova con quello che manca, barrata perché non c'è in magazzino (e ti arriva la notifica). Quando arriva, te la portano come le altre."], disegnoParte()],
@@ -4020,7 +4050,7 @@ function capitoliManuale(){
   ]});
   if (haSezione("consegne")) cap.push({ titolo:"Giro consegne", domande:[
     ["Come funziona il giro?", ["In alto scegli ", tasto("Carico per reparto"), " (le cose da caricare, divise per reparto) oppure ", tasto("Giro per negozio"), " (le cose caricate, divise per negozio). Quello scelto è colorato: blu per il carico, arancione per il giro, con una fascia dello stesso colore lungo il lato sinistro dello schermo. I due tasti restano fermi in alto anche quando scorri la lista, così passi dall'uno all'altro quando vuoi."]],
-    ["Dove vedo quello che ho consegnato oggi?", ["In fondo alla pagina tocca ", tasto("Consegnato oggi"), ": si apre un riquadro con l'elenco. Accanto c'è ", tasto("Cronologia: cose tolte"), " (le cose tolte, da recuperare se è stato uno sbaglio). Si apre uno alla volta; si chiude toccando di nuovo il tasto o da solo quando torni in cima."]],
+    ["Dove vedo quello che ho consegnato oggi?", ["In fondo alla pagina tocca ", tasto("Consegnato oggi"), ": si apre un riquadro con l'elenco. Accanto c'è ", tasto("Cronologia: cose tolte"), " (le cose tolte, da recuperare se è stato uno sbaglio). Si apre uno alla volta; si chiude toccando di nuovo il tasto o da solo quando torni in cima o cambi pagina."]],
     ["Come segno quello che carico e consegno?", ["Tocca ", tasto("Caricato"), " quando la cosa è sul furgone: il negozio la vede «In viaggio». Al negozio tocca ", tasto("Consegnato"), ", oppure ", tasto("Tutto consegnato"), " per tutte le cose di quel negozio. «Annulla» rimette la cosa da caricare."]],
     ["E se ne ho solo una parte?", ["Tocca ", tasto("Solo una parte"), ", scrivi cosa manca ancora (per esempio «2 casse») e tocca ", tasto("Carica la parte"), ". La richiesta diventa caricata con la scritta «Solo una parte: mancano 2 casse». Quello che manca diventa una riga nuova per lo stesso negozio, segnata «non c'è»: va nella striscia rossa e, quando arriva, torna in cima alle consegne in verde."], disegnoParte()],
     ["E se una cosa non c'è in magazzino?", ["Tocca «Non c'è» e poi «Conferma». La cosa esce dalla tua lista e va nella striscia rossa in alto, che vedono tutti. Il negozio la vede barrata."]],
@@ -4036,7 +4066,9 @@ function capitoliManuale(){
     ["Cosa vuol dire «Messo da parte»?", ["Che la prenotazione è pronta e messa da parte nel posto dove il cliente la ritira. Di solito lo può premere chiunque."]],
     ["Come disdico una prenotazione?", ["Tocca ", tasto("Disdici"), " e scegli il motivo (è obbligatorio). Resta barrata in fondo al giorno con chi l'ha disdetta. Se è stato uno sbaglio, ", tasto("Ripristina"), ". Chi fa il giro non può disdire (salvo che il titolare gli dia il permesso); se non vedi il tasto, il titolare te l'ha tolto."]],
     tit ? ["Come elimino del tutto una prenotazione?", ["Solo i titolari: sotto la prenotazione tocca ", tasto("Elimina"), " e conferma. Sparisce per tutti, anche dai totali e dalle statistiche. Usalo per una prenotazione scritta per sbaglio o due volte. Se il cliente ha solo cambiato idea, meglio ", tasto("Disdici"), ": resta scritto il motivo."]] : null,
-    tit ? ["Ho eliminato una prenotazione per sbaglio: come la rimetto?", ["In fondo alla pagina delle prenotazioni apri ", tasto("Prenotazioni eliminate"), ": ci sono quelle eliminate, con chi le ha eliminate e quando. Tocca ", tasto("Rimetti"), " e conferma: torna com'era, per tutti, anche nei totali da preparare. Le vedono solo i titolari."]] : null,
+    tit ? ["Ho eliminato una prenotazione per sbaglio: come la rimetto?", ["In fondo alla pagina delle prenotazioni tocca il tasto ", tasto("Prenotazioni eliminate"), ": si apre un riquadro con quelle eliminate, con chi le ha eliminate e quando. Tocca ", tasto("Rimetti"), " e conferma: torna com'era, per tutti, anche nei totali da preparare. Le vedono solo i titolari."]] : null,
+    ["Come vedo le prenotazioni dei prossimi giorni?", ["Accanto a ", tasto("🔍 Cerca"), " c'è il rettangolo «Da dopodomani» con i giorni che hanno prenotazioni (per esempio «gio 23 ott · sab 25 ott»); se non ce ne sono c'è scritto «Nessuna prenotazione». Toccalo: si apre una pagina con tutte le prenotazioni dal dopodomani in poi, in fila per data. In cima c'è il totale di tutto (quante prenotazioni e cosa preparare), poi ogni giorno con il suo totale. Per uscire tocca ", tasto("Torna a oggi"), "."]],
+    ["Come guardo un giorno preciso?", ["Tocca ", tasto("Scegli data"), " e scegli il giorno nel calendario: si apre subito la pagina di quel giorno. Sotto ci sono gli altri giorni con prenotazioni: toccane uno per andarci. Per scegliere un altro giorno dal calendario tocca di nuovo il tasto con la data in alto."]],
     ["Come trovo una prenotazione?", ["Tocca ", tasto("🔍 Cerca"), " e scrivi il nome del cliente, un prodotto o il telefono, anche a metà. Cerca da 7 giorni fa in avanti."]]
   ]});
   if (vedeBiscotti()) cap.push({ titolo:"Biscotti", domande: panif && !tit ? [
@@ -4336,7 +4368,7 @@ function vaiSezione(id, forza, scheda){
     if (!inSezioneExtra()) S.vistaPrima = S.vista;
     mostraVista("negozio");
     mostraSez(id);
-    if (id === "prenotazioni"){ S.prenGiorno = oggiStr(); S.prenScegli = false; }
+    if (id === "prenotazioni"){ S.prenGiorno = oggiStr(); S.prenScegli = false; S.prenFuture = false; }
     if (id === "persone"){ S.pv = null; mostraPersone(); }
     if (id === "database"){ S.corrApri = ""; S.prenCorreggi = ""; S.dbMod = ""; S.dbUno = false; S.dbScheda = scheda || ""; $("db-cerca").value = ""; }
     if (id === "impostazioni") S.bozzaNumeri = {};
@@ -5953,10 +5985,9 @@ function chiEliminata(p){
   return S.nomi[p.eliminataDa] || p.eliminataNome || "un titolare";
 }
 function renderPrenEliminate(){
-  const box = $("pren-eliminate");
   const si = puoEliminarePren();
-  box.hidden = !si;
-  if (!si) return;
+  $("pren-eliminate").hidden = !si;
+  if (!si) return sistemaRiquadri();
   const l = S.prenEliminate || [];
   $("n-pren-eliminate").textContent = l.length ? "(" + l.length + ")" : "";
   $("vuoto-pren-eliminate").hidden = l.length > 0;
@@ -6220,6 +6251,7 @@ function cercaPren(testo){
 }
 function renderCerca(){
   const c = S.prenCerca;
+  $("pren-cerca-riga").hidden = c.aperto;
   $("pren-cerca-apri").hidden = c.aperto;
   $("pren-cerca-apri").setAttribute("aria-expanded", String(c.aperto));
   $("pren-cerca-campo").hidden = !c.aperto;
@@ -6255,12 +6287,22 @@ function renderPrenotazioni(){
   renderDaControllare();
   renderCerca();
   const cerca = S.prenCerca.aperto;
-  $("pren-nuova").hidden = !puoPrenNuove() || cerca;
   /* una pagina per giorno: Oggi, Domani o un giorno scelto */
   const oggi = oggiStr(), domani = domaniStr();
   if (!S.prenGiorno) S.prenGiorno = oggi;
   const g = S.prenGiorno;
   const vis = prenVisibili();
+  const futuro = !!S.prenFuture && !cerca;
+  renderPrenFuture(vis, domani, futuro);
+  $("pren-cerca").hidden = futuro;
+  $("pren-nuova").hidden = !puoPrenNuove() || cerca || futuro;
+  if (futuro){
+    ["pren-pagine", "pren-scegli", "pren-fascia", "pren-vuoto", "pren-altri-sotto"].forEach(function(id){ $(id).hidden = true; });
+    $("pannello-prenotazioni").classList.add("altro-giorno");
+    riempi($("pren-giorni"), []);
+    renderPrenEliminate();
+    return;
+  }
   const daFare = function(giorno){ return vis.filter(function(p){ return p.perIl === giorno && prenAperta(p); }).length; };
   const altro = g !== oggi && g !== domani;
   const pagina = function(k, nome, n, on, diverso){
@@ -6273,17 +6315,25 @@ function renderPrenotazioni(){
     pagina("domani", "Domani", daFare(domani), g === domani, true),
     pagina("altro", altro ? fmtCortoGiorno(g) : "Scegli data", null, altro || !!S.prenScegli, true)
   ]);
-  const scegli = (!!S.prenScegli || altro) && !cerca;
+  /* «Scegli data»: il calendario si vede finché non si sceglie il giorno; scelto il giorno si vede quella pagina
+     e sotto gli altri giorni con prenotazioni */
+  const scegli = !!S.prenScegli && !cerca;
   $("pren-scegli").hidden = !scegli;
+  const giorni = Array.from(new Set(vis.filter(function(p){ return p.perIl > domani && prenAperta(p); }).map(function(p){ return p.perIl; }))).sort().slice(0, 12);
+  const chipGiorni = function(){
+    return giorni.map(function(d){
+      return el("button", {type:"button", class:"chip-add stat-per", "data-pren-giorno":d, "aria-pressed":String(d === g), text: fmtCortoGiorno(d) + " · " + daFare(d)});
+    });
+  };
   if (scegli){
     const inp = $("pren-pagina-data");
     if (altro && inp.value !== g) inp.value = g;
-    const giorni = Array.from(new Set(vis.filter(function(p){ return p.perIl > domani && prenAperta(p); }).map(function(p){ return p.perIl; }))).sort().slice(0, 12);
     $("pren-altri-box").hidden = !giorni.length;
-    riempi($("pren-altri-giorni"), giorni.map(function(d){
-      return el("button", {type:"button", class:"chip-add stat-per", "data-pren-giorno":d, "aria-pressed":String(d === g), text: fmtCortoGiorno(d) + " · " + daFare(d)});
-    }));
+    riempi($("pren-altri-giorni"), chipGiorni());
   }
+  const sotto = altro && !scegli && !cerca && giorni.some(function(d){ return d !== g; });
+  $("pren-altri-sotto").hidden = !sotto;
+  riempi($("pren-altri-sotto-giorni"), sotto ? chipGiorni() : []);
   /* su un giorno diverso da oggi deve vedersi subito */
   $("pannello-prenotazioni").classList.toggle("altro-giorno", g !== oggi && !cerca);
   $("pren-fascia").hidden = g === oggi || cerca;
@@ -6313,6 +6363,51 @@ function renderPrenotazioni(){
   $("pren-vuoto").textContent = "Nessuna prenotazione per " + testoGiorno(g) + ".";
   renderPrenEliminate();
 }
+/* il rettangolo accanto a «Cerca» (i giorni dal dopodomani con prenotazioni) e la pagina «Prossimi giorni»:
+   tutte le prenotazioni dal dopodomani, in fila per data, con il totale di ogni giorno e quello di tutto in cima */
+function renderPrenFuture(vis, domani, aperta){
+  const tutte = vis.filter(function(p){ return p.perIl > domani; });
+  const vive = tutte.filter(function(p){ return !p.disdetta; });
+  const giorni = Array.from(new Set(vive.map(function(p){ return p.perIl; }))).sort();
+  const r = $("pren-future");
+  r.classList.toggle("vuota", !giorni.length);
+  r.setAttribute("aria-disabled", String(!giorni.length));
+  const MAX = 4;
+  const nomi = giorni.slice(0, MAX).map(fmtCortoGiorno).join(" · ") + (giorni.length > MAX ? " e altri " + (giorni.length - MAX) : "");
+  riempi(r, [el("span", {class:"label-sm", text:"Da dopodomani"}),
+    el("strong", {text: giorni.length ? nomi + " ›" : "Nessuna prenotazione"})]);
+  $("pren-futuro").hidden = !aperta;
+  if (!aperta) return;
+  const contaPren = function(n){ return n === 1 ? "1 prenotazione" : n + " prenotazioni"; };
+  const out = [];
+  if (!tutte.length){
+    out.push(el("p", {class:"vuoto", text:"Nessuna prenotazione dal dopodomani in poi."}));
+  } else {
+    const disd = tutte.length - vive.length;
+    const tot = totaliDaProdurre(tutte.filter(prenAperta));
+    out.push(el("div", {class:"pren-fut-tutto"},
+      el("p", {class:"label-sm", text:"In tutto, dal dopodomani"}),
+      el("p", {class:"pren-fut-n", text: contaPren(vive.length) + " in " + (giorni.length === 1 ? "1 giorno" : giorni.length + " giorni") + (disd ? " · " + disd + (disd === 1 ? " disdetta" : " disdette") : "")}),
+      tot.length ? el("p", {class:"label-sm", text:"Ancora da preparare, in totale"}) : null,
+      tot.length ? el("ul", {class:"pren-tot"}, ...tot.map(function(t){ return el("li", {text:testoTotale(t)}); })) : null));
+    const perGiorno = new Map();
+    tutte.forEach(function(p){ if (!perGiorno.has(p.perIl)) perGiorno.set(p.perIl, []); perGiorno.get(p.perIl).push(p); });
+    Array.from(perGiorno.keys()).sort().forEach(function(d){
+      const lista = perGiorno.get(d).sort(function(a, b){
+        return (a.disdetta - b.disdetta) || ((a.stato === "parte") - (b.stato === "parte")) || chiaveOraPren(a).localeCompare(chiaveOraPren(b)) || a.creato - b.creato;
+      });
+      const nVive = lista.filter(function(p){ return !p.disdetta; }).length, nDisd = lista.length - nVive;
+      const totG = totaliDaProdurre(lista.filter(prenAperta));
+      const titolo = fmtGiornoLungo.format(msDelGiorno(d));
+      out.push(el("section", {class:"gruppo"}, testaGruppo("Prossimi giorni", titolo.charAt(0).toUpperCase() + titolo.slice(1),
+        contaPren(nVive) + (nDisd ? " · " + nDisd + (nDisd === 1 ? " disdetta" : " disdette") : "")),
+        totG.length ? el("div", {class:"pren-totali"}, el("p", {class:"label-sm", text:"Ancora da preparare, in totale"}),
+          el("ul", {class:"pren-tot"}, ...totG.map(function(t){ return el("li", {text:testoTotale(t)}); }))) : null,
+        el("ul", {class:"lista"}, ...lista.map(rigaPren))));
+    });
+  }
+  riempi($("pren-futuro-lista"), out);
+}
 const fmtCortoG = new Intl.DateTimeFormat("it-IT", {weekday:"short", day:"numeric", month:"short"});
 function fmtCortoGiorno(s){ return fmtCortoG.format(msDelGiorno(s)); }
 /* il modulo parte dal giorno che si sta guardando */
@@ -6332,6 +6427,7 @@ function apriFormPren(){
 }
 function vaiGiornoPren(g){
   S.prenGiorno = g || oggiStr();
+  S.prenFuture = false;
   renderPrenotazioni();
   try { window.scrollTo(0, 0); } catch(e){}
 }
@@ -6395,7 +6491,7 @@ async function salvaPrenDavvero(){
       tuttaGiornata: !!f.tuttoGiorno, telefono: !!voce.telefono, ritiro: voce.ritiro });
     svuotaFormPren();
     f.aperto = false; f.ritiro = "";
-    S.prenGiorno = c.giorno; S.prenScegli = false;
+    S.prenGiorno = c.giorno; S.prenScegli = false; S.prenFuture = false;
     avviso("Prenotazione salvata per " + testoGiorno(c.giorno) + ".");
   }
   renderTutto();
@@ -6793,6 +6889,7 @@ function renderTutto(){
 
 /* ---------- interfacce ---------- */
 function mostraVista(v){
+  if (v !== S.vista) chiudiRiquadri();
   S.vista = v;
   $("view-negozio").hidden = v !== "negozio";
   $("view-consegne").hidden = v !== "consegne";
@@ -6858,6 +6955,7 @@ function collega(){
       if (da.sez === "giro" || da.sez === "richieste") return vaiSezione("richieste");
       return vaiSezione(da.sez, false, da.scheda);
     }
+    if (b.id === "torna" && inPren() && S.prenFuture){ S.prenScegli = false; return vaiGiornoPren(oggiStr()); }
     if (b.id === "torna") return vaiSezione("richieste");
     if (b.id === "aiuto-pagina") return apriAiutoPagina();
     if (b.id === "man-tutte"){ S.manPagina = null; return filtraManuale(); }
@@ -6973,6 +7071,11 @@ function collega(){
       return vaiGiornoPren(k === "domani" ? domaniStr() : oggiStr());
     }
     if (b.dataset.prenGiorno) return vaiGiornoPren(b.dataset.prenGiorno);
+    if (b.id === "pren-future"){
+      if (!b.classList.contains("vuota")){ S.prenFuture = true; S.prenScegli = false; renderPrenotazioni(); try { window.scrollTo(0, 0); } catch(e){} registra("prossimi giorni aperti", {}); }
+      return;
+    }
+    if (b.id === "pren-futuro-chiudi"){ S.prenScegli = false; return vaiGiornoPren(oggiStr()); }
     if (b.id === "pren-torna-oggi"){ S.prenScegli = false; return vaiGiornoPren(oggiStr()); }
     if (b.id === "pren-annulla" || b.id === "pren-chiudi") return chiudiFormPren();
     if (b.id === "domanda-si" || b.id === "domanda-no"){ if (rispostaDomanda) rispostaDomanda(b.id === "domanda-si"); return; }
@@ -7088,7 +7191,7 @@ function collega(){
     $("mag-salva").disabled = S.magForm.inviando || !this.value.trim();
   });
   $("pren-righe").addEventListener("input", function(){ $("pren-salva").disabled = S.formPren.inviando || !righeDi("pren-righe").length; });
-  $("pren-pagina-data").addEventListener("change", function(){ if (/^\d{4}-\d{2}-\d{2}$/.test(this.value)) vaiGiornoPren(this.value); });
+  $("pren-pagina-data").addEventListener("change", function(){ if (/^\d{4}-\d{2}-\d{2}$/.test(this.value)){ S.prenScegli = false; vaiGiornoPren(this.value); } });
   /* cambiare il negozio del ritiro: prima si chiede */
   $("pren-ritiro").addEventListener("change", async function(ev){
     if (ev.target.name !== "pren-ritiro") return;
@@ -7548,7 +7651,7 @@ const VAPID_PUBLICA = "BC9TAKzQiQ-x3xtX0KWauGtV-uvIk9VFwqLjWAOzrJbe4e5w2AWyXMIej
    Il nome di chi lo fa lo mette il database (funzione "registra", supabase/aggiornamento-10-registro-con-nomi.sql):
    deciso dal proprietario il 19 ottobre, per vedere chi aiutare a usare meglio l'app; lo leggono solo lui e Claude. */
 const REGISTRO_ATTIVO = false;
-const VERSIONE_APP = "bf4658c1";
+const VERSIONE_APP = "1d3342a4";
 S.reg = [];
 S.ultimoTasto = { nome: "", alle: 0 };
 S.tocchi = { nome: "", volte: 0, alle: 0, segnato: false };
