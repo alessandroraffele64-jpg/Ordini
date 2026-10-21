@@ -2203,7 +2203,7 @@ function renderChips(){
 /* la domanda di una cosa arancione */
 function domandaArancio(c){
   if (c.motivo === "qta") return [el("p", {class:"domanda", text:"«" + c.articolo + "»: quanti?"}),
-    el("div", {class:"row qta-veloci"}, ...["1","2","3","5","10"].map(function(n){ return el("button", {type:"button", class:"mini", "data-chip-qta":c.id + "|" + n, text:n}); })),
+    el("div", {class:"row qta-veloci"}, ...["0,5","1","2","3","5","10"].map(function(n){ return el("button", {type:"button", class:"mini", "data-chip-qta":c.id + "|" + n, text:n}); })),
     el("div", {class:"row qta-scrivi"},
       el("input", {id:"chip-qta-in", type:"text", maxlength:"24", autocomplete:"off", enterkeyhint:"done", placeholder:"Oppure scrivi, es. 1 kg", "aria-label":"Quantità di " + c.articolo}),
       el("button", {type:"button", class:"mini", "data-chip-qta-ok":c.id, text:"Ok"})),
@@ -4227,7 +4227,7 @@ function capitoliManuale(){
   ]});
   if (vedePren()) cap.push({ titolo:"Prenotazioni", domande:[
     ["Come scrivo una prenotazione?", ["Tocca ", tasto("+ Nuova prenotazione"), ". Scegli il giorno, dove la ritira il cliente (Corso, Piazza Nenni o Panificio; il tuo è già scelto), il nome e, se vuoi, il telefono. L'ora è obbligatoria: un'ora precisa oppure «Tutta la giornata». In «Cosa?» scrivi un prodotto con la quantità e premi Invio (per esempio «40 filoncini» o «1 kg pane casereccio»): diventa un rettangolino, come in «Cosa serve?». Verde ✓: l'app l'ha riconosciuto e ha messo il nome giusto. Arancione: l'app ti chiede quale prodotto è oppure quanti. Bianco: un prodotto nuovo, va bene lo stesso."]],
-    ["Ho dimenticato la quantità: cosa succede?", ["Il rettangolino diventa arancione e si apre un riquadro «quanti?» con i tasti 1, 2, 3, 5, 10, oppure scrivi tu (per esempio «1 kg» o «mezzo kg») e tocca ", tasto("Ok"), ". Se proprio non serve, tocca «Lascia così, senza quantità». Per cambiare una quantità già messa tocca il rettangolino e poi ", tasto("Cambia la quantità"), "."]],
+    ["Ho dimenticato la quantità: cosa succede?", ["Il rettangolino diventa arancione e si apre un riquadro «quanti?» con i tasti 0,5, 1, 2, 3, 5, 10, oppure scrivi tu (per esempio «1 kg» o «mezzo kg») e tocca ", tasto("Ok"), ". Se proprio non serve, tocca «Lascia così, senza quantità». Per cambiare una quantità già messa tocca il rettangolino e poi ", tasto("Cambia la quantità"), "."]],
     ["Cosa succede quando tocco Salva?", ["Prima rispondi alle cose arancioni. Poi si apre «Controlla la prenotazione»: il riepilogo completo, senza tastiera, con giorno, ora, ritiro, cliente, telefono, i prodotti con la quantità e la nota. Se è tutto giusto tocca ", tasto("Conferma"), "; se devi cambiare qualcosa tocca ", tasto("‹ Torna a scrivere"), ". Se l'app ha corretto un nome e non va bene, prima di salvare tocca il rettangolino e «È una cosa nuova, lascia…»: si salva come l'hai scritto. Le correzioni dell'app e i prodotti nuovi li controlla poi un titolare."]],
     ["Se esco dall'app per sbaglio, perdo la prenotazione che stavo scrivendo?", ["No. Quello che hai scritto resta sul telefono per " + secondi("bozze") + ": riaprendo l'app in alto compare «ho ritrovato la prenotazione che stavi scrivendo» e in Prenotazioni la ritrovi aperta. Si perde solo se tocchi «Sì, esci»."]],
     ["Come vedo cosa preparare?", ["Ogni giorno ha la sua pagina con il totale «Ancora da preparare» (si sommano solo le stesse misure: kg con kg, pezzi con pezzi). Le prenotazioni «Tutta la giornata» sono in cima."]],
