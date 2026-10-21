@@ -149,6 +149,13 @@ body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area
 .bisc[data-blocco]{border-style:dashed;color:var(--muted);background:transparent;cursor:default}
 .bisc[data-blocco]:disabled{opacity:1}
 .inviata{font-size:17px;font-weight:700;color:var(--done)}
+.bisc-finestra{position:fixed;inset:0;z-index:58;display:flex;align-items:center;justify-content:center;overflow-y:auto;overscroll-behavior:contain;padding:calc(env(safe-area-inset-top,0px) + 20px) 16px calc(env(safe-area-inset-bottom,0px) + 20px);background:var(--bg)}
+.bisc-finestra-box{width:100%;max-width:480px;margin:auto;display:flex;flex-direction:column;gap:14px;text-align:center}
+.bisc-ok{width:72px;height:72px;margin:0 auto;display:flex;align-items:center;justify-content:center;border-radius:50%;background:var(--done);color:#fff;font-size:40px;font-weight:700}
+.bisc-finestra h2{margin:0;font-size:26px}
+.bisc-finestra .inviata{font-size:20px}
+.bisc-domanda{margin:8px 0 0;font-size:21px;font-weight:700}
+.bisc-finestra .primary,.bisc-finestra .mini{min-height:60px;font-size:18px;border-radius:14px}
 .tag-urg{flex:none;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:999px;white-space:nowrap}
 .tag-urg.finiti{background:var(--urgent);color:var(--urgent-ink)}
 .tag-urg.pochi{background:var(--surface-2);color:var(--ink)}
@@ -1095,10 +1102,17 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
             </form>
             <button type="button" class="primary" id="invia-comanda" disabled>Invia comanda</button>
           </div>
-          <div class="blocco" id="fase-inviata" hidden>
-            <p class="inviata" id="inviata-testo"></p>
-            <button type="button" class="primary" id="altra-urgenza"></button>
-            <button type="button" class="mini" id="ho-finito">Ho finito</button>
+          <!-- dopo «Invia comanda»: finestra a tutto schermo, si esce solo con uno dei due tasti -->
+          <div class="bisc-finestra" id="fase-inviata" role="dialog" aria-modal="true" aria-labelledby="inviata-titolo" hidden>
+            <div class="bisc-finestra-box">
+              <div class="bisc-ok" aria-hidden="true">✓</div>
+              <h2 id="inviata-titolo">Comanda inviata</h2>
+              <p class="inviata" id="inviata-testo"></p>
+              <p class="bisc-domanda" id="inviata-domanda"></p>
+              <button type="button" class="primary" id="altra-urgenza"></button>
+              <button type="button" class="mini" id="ho-finito">Ho finito</button>
+              <p class="hint">Per andare avanti tocca uno dei tasti qui sopra.</p>
+            </div>
           </div>
           <p class="esito" id="esito-bisc" role="status"></p>
         </section>
@@ -2675,7 +2689,7 @@ async function inviaComanda(){
 /* ---------- cose scritte e non inviate: restano sul telefono ----------
    Se si esce dall'app per sbaglio (o il telefono la chiude), riaprendola si ritrova quello che si stava scrivendo:
    le righe di «Cosa serve?», quelle del giro, la prenotazione a metà e la comanda dei biscotti
-   (anche i biscotti già mandati, così si vede il riepilogo e si continua con «Ora i biscotti finiti»).
+   (anche i biscotti già mandati, così si vede il riepilogo e si continua con «Sì, adesso i biscotti finiti»).
    Si salva solo su questo telefono, per questa persona, per num("bozze") ore; si cancella quando si invia. */
 S.bozzeLette = false;
 let timerBozze = 0;
@@ -3383,6 +3397,18 @@ function renderBiscotti(){
   $("bisc-negozio").hidden = panif;
   $("bisc-panificio").hidden = !panif;
   if (panif) renderBiscPanificio(); else renderBiscNegozio();
+  tieniFinestraBisc();
+}
+/* la finestra «Comanda inviata» non si chiude con il tasto «indietro» del telefono:
+   si tiene un passo in più nella cronologia del browser finché la finestra è aperta */
+function finestraBiscAperta(){ return inBiscotti() && S.punto !== "Panificio" && S.bozza.fase === "inviata"; }
+function tieniFinestraBisc(){
+  if (finestraBiscAperta()){
+    if (!S.biscStorico){ try { history.pushState({ biscotti: 1 }, ""); S.biscStorico = true; } catch(e){} }
+  } else if (S.biscStorico){
+    S.biscStorico = false;
+    try { history.back(); } catch(e){}
+  }
 }
 function renderBiscNegozio(){
   const neg = S.punto, bz = S.bozza;
@@ -3424,14 +3450,17 @@ function renderBiscNegozio(){
   }
   if (bz.fase === "inviata"){
     const u = bz.ultimo || { livello: bz.livello, n: 0 };
-    $("inviata-testo").textContent = "Comanda inviata: " + u.n + (u.n === 1 ? " biscotto " : " biscotti ") + (u.livello === "finiti" ? "finiti." : "con pochi pacchi.");
+    $("inviata-testo").textContent = "Hai chiesto " + u.n + (u.n === 1 ? " biscotto " : " biscotti ") + (u.livello === "finiti" ? (u.n === 1 ? "finito." : "finiti.") : "con pochi pacchi.");
     const altro = u.livello === "finiti" ? "pochi" : "finiti";
     const giaAltro = bz.inviati.some(function(x){ return x.livello === altro; });
+    $("inviata-domanda").textContent = giaAltro ? "Hai mandato sia i biscotti finiti sia quelli con pochi pacchi."
+      : (altro === "pochi" ? "Ci sono anche biscotti con pochi pacchi?" : "Mancano anche dei biscotti finiti?");
     const a = $("altra-urgenza");
     a.hidden = giaAltro;
     a.dataset.urg = altro;
-    a.textContent = altro === "pochi" ? "Ora i biscotti con pochi pacchi" : "Ora i biscotti finiti";
+    a.textContent = altro === "pochi" ? "Sì, adesso i biscotti con pochi pacchi" : "Sì, adesso i biscotti finiti";
     $("ho-finito").className = giaAltro ? "primary" : "mini";
+    $("ho-finito").textContent = giaAltro ? "Ho finito" : "No, ho finito";
   }
 
   /* già chiesti e in arrivo */
@@ -3998,8 +4027,9 @@ function capitoliManuale(){
     ["Cosa vedo?", ["Le comande di biscotti dei negozi, con l'urgenza: «Finiti» (zero pacchi, urgenti) o «Pochi pacchi»."]],
     ["Come segno che li ho fatti?", ["Tocca il tasto sul biscotto: il negozio lo vede fatto. Se è stato uno sbaglio, in fondo c'è «Rimetti da fare»."]]
   ] : [
-    ["Come chiedo dei biscotti?", ["Tocca ", tasto("Nuova comanda"), ", scegli quanto sono urgenti («Finiti» o «Pochi pacchi») e tocca i biscotti che mancano. Non parte niente finché non premi ", tasto("Invia comanda"), ". Quando hai finito, ", tasto("Ho finito"), "."]],
-    ["Se esco dall'app a metà comanda, cosa succede?", ["Niente si perde. Esempio: invii i biscotti con pochi pacchi e, mentre stai per scegliere quelli finiti, esci per sbaglio. Riaprendo l'app (entro " + secondi("bozze") + ") in Biscotti ritrovi la stessa comanda: vedi quelli già inviati, tocchi ", tasto("Ora i biscotti finiti"), " e continui, senza aprire una comanda nuova. Anche i biscotti scelti ma non ancora inviati restano scelti."]],
+    ["Come chiedo dei biscotti?", ["Tocca ", tasto("Nuova comanda"), ", scegli quanto sono urgenti («Finiti» o «Pochi pacchi») e tocca i biscotti che mancano. Non parte niente finché non premi ", tasto("Invia comanda"), "."]],
+    ["Cos'è la finestra «Comanda inviata»?", ["Dopo ", tasto("Invia comanda"), " lo schermo intero diventa una finestra. Esempio: hai mandato 3 biscotti con pochi pacchi; la finestra chiede «Mancano anche dei biscotti finiti?». Tocca ", tasto("Sì, adesso i biscotti finiti"), " per sceglierli subito, oppure ", tasto("No, ho finito"), ": si apre il riepilogo con tutti i biscotti mandati e tocchi ", tasto("Confermo"), ". La finestra non si chiude in altri modi (né toccando fuori, né con il tasto «indietro» del telefono), così nessuno si dimentica l'altra parte."]],
+    ["Se esco dall'app a metà comanda, cosa succede?", ["Niente si perde. Esempio: invii i biscotti con pochi pacchi e, mentre stai per scegliere quelli finiti, esci per sbaglio. Riaprendo l'app (entro " + secondi("bozze") + ") in Biscotti ritrovi la stessa comanda: vedi quelli già inviati, ritrovi la finestra «Comanda inviata», tocchi ", tasto("Sì, adesso i biscotti finiti"), " e continui, senza aprire una comanda nuova. Anche i biscotti scelti ma non ancora inviati restano scelti."]],
     ["Un biscotto non è nell'elenco?", ["Scrivilo in «Un biscotto che non è in elenco» e tocca Aggiungi. Un titolare poi lo conferma o lo toglie dall'elenco."]]
   ]});
   cap.push({ titolo:"Cose che non ci sono in magazzino", domande:[
@@ -6740,6 +6770,7 @@ function renderTutto(){
   renderManuale();
   if (!S.bozzeLette) riprendiBozze();
   salvaBozze();
+  tieniFinestraBisc();
   if (inParte && $("parte-testo")){ const i = $("parte-testo"); i.focus(); try { i.setSelectionRange(i.value.length, i.value.length); } catch(e){} }
   document.querySelectorAll(".giorni-crono").forEach(function(x){ x.textContent = testoNumero(NUMERI.find(function(n){ return n.k === "crono"; }), num("crono")); });
 }
@@ -7184,6 +7215,12 @@ function collega(){
   $("chip-velo").addEventListener("click", function(ev){ if (ev.target === this) chiudiChip(); });
   /* il tasto «indietro» del telefono non fa uscire senza chiedere */
   window.addEventListener("popstate", function(){
+    if (S.biscStorico){
+      /* finestra dei biscotti aperta: il tasto «indietro» non fa niente */
+      S.biscStorico = false;
+      if (finestraBiscAperta()){ try { history.pushState({ biscotti: 1 }, ""); S.biscStorico = true; } catch(e){} }
+      return;
+    }
     if (!S.pieno) return;
     S.pienoStorico = false;
     try { history.pushState({ scrivi: 1 }, ""); S.pienoStorico = true; } catch(e){}
