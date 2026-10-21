@@ -1852,7 +1852,7 @@ const NUMERI = [
     esempio:function(v){ return "Alle 9 Maria scrive tre cose in «Cosa serve?» e per sbaglio esce dall'app. Se la riapre entro le " + ((9 + v) % 24) + ", ritrova le tre cose scritte e le può inviare. Dopo, l'app le lascia perdere."; } },
   { k:"registroMesi", gruppo:"Per quanto tempo tenere le cose", nome:"Registro di come si usa l'app", unita:"mesi", base:6, min:3, max:24, passo:1,
     domanda:"Per quanti mesi tenere il registro di come si usa l'app?",
-    dove:"Non si vede nell'app: lo leggono solo il proprietario (dal database) e Claude. Adesso il registro è spento: si accende alla partenza vera.",
+    dove:"Non si vede nell'app: lo leggono solo il proprietario (dal database) e Claude. È acceso dal 22 ottobre 2026.",
     esempio:function(v){ return "Le righe del registro più vecchie di " + v + " mesi si cancellano da sole."; } },
   { k:"chiediLuogo", gruppo:"Chi lavora in più posti", nome:"«Sei ancora al…?»", unita:"ore", base:1, min:1, max:12, passo:1,
     domanda:"Dopo quante ore chiedere «Sei ancora al…?»",
@@ -2102,7 +2102,10 @@ function classificaChip(c){
       if (parti.length >= 2 && parti.every(function(x){ return trovaCas(x).esito === "sicuro"; })){ c.tipo = "arancio"; c.motivo = "due"; c.parti = parti; c.scelte = null; }
     }
   }
-  return chiediQta(segnaDoppio(c));
+  const r = chiediQta(segnaDoppio(c));
+  /* per il registro: questa cosa ha fatto una domanda (arancione) almeno una volta */
+  if (r.tipo === "arancio") r.eraArancio = true;
+  return r;
 }
 /* nelle prenotazioni la quantità serve: se manca, il rettangolino è arancione e chiede «Quanti?» */
 function chiediQta(c){
@@ -2168,6 +2171,18 @@ function syncRighe(){
   CE("testo").value = chipsVivi().map(rigaChip).concat(scrivi ? [scrivi] : []).join("\n");
   if (S.cas === "neg"){ if (CE("testo").value.trim()){ if (!S.inizioRighe) S.inizioRighe = Date.now(); } else S.inizioRighe = 0; }
   aggiornaCasella(); salvaBozze();
+}
+/* per il registro: come sono andati i rettangolini di un invio (solo quanti, mai i nomi) */
+function contaChip(lista){
+  const n = { verdi: 0, corretteDallApp: 0, conDomanda: 0, sceltiDaDomanda: 0, nuove: 0, lasciateComeScritte: 0 };
+  (lista || []).forEach(function(c){
+    if (c.eraArancio) n.conDomanda++;
+    if (c.scelto) n.sceltiDaDomanda++;
+    if (c.comEra) n.lasciateComeScritte++;
+    else if (c.tipo === "verde"){ n.verdi++; if (c.scritto) n.corretteDallApp++; }
+    else if (c.tipo === "nuovo") n.nuove++;
+  });
+  return n;
 }
 function svuotaChips(){
   S.chips = []; S.chipAperto = ""; S.chipPronto = ""; S.avvisoChip = ""; S.chipCtx = { reparto:"", ordinare:false, urgente:null };
@@ -2694,8 +2709,9 @@ async function confermaControllo(){
   if (giro) S.inviandoGiro = false; else S.inviando = false;
   chiudiControllo();
   if (ok){
-    registra(giro ? "aggiunte dal giro" : "richieste mandate", { cose: ok, provate: c.voci.length, senzaRete: !!salvateSenzaRete,
-      secondi: !giro && S.inizioRighe ? Math.round((Date.now() - S.inizioRighe) / 1000) : null });
+    const rett = conCasella(giro ? "giro" : "neg", function(){ return contaChip(chipsVivi()); });
+    registra(giro ? "aggiunte dal giro" : "richieste mandate", Object.assign({ cose: ok, provate: c.voci.length, senzaRete: !!salvateSenzaRete,
+      secondi: !giro && S.inizioRighe ? Math.round((Date.now() - S.inizioRighe) / 1000) : null }, rett));
     if (!giro) S.inizioRighe = 0;
     conCasella(giro ? "giro" : "neg", function(){ svuotaChips(); chiudiScrivi(); });
     if (salvateSenzaRete) esito(giro ? "esito-giro" : "esito", "Senza rete: salvata sul telefono, parte da sola appena torna il campo.");
@@ -2902,6 +2918,7 @@ async function inviaComanda(){
     bz.inviati = bz.inviati.filter(function(x){ return x.nome !== f.nome; }).concat([f]);
   });
   if (fatti.length){
+    registra("comanda biscotti inviata", { cose: fatti.length, livello: liv, nonInviati: bz.sel.size });
     bz.fase = "inviata";
     bz.ultimo = { livello: liv, n: fatti.length };
   }
@@ -3222,6 +3239,7 @@ async function salvaMag(){
     salvate.push(x.nome);
   }
   f.inviando = false;
+  if (salvate.length) registra("segnate cose che mancano", Object.assign({ cose: salvate.length, giaSegnate: saltate.length }, contaChip(vivi)));
   conCasella("mag", function(){
     if (salvate.length === da.length){ svuotaChips(); chiudiScrivi(); f.aperto = false; }
     else {
@@ -6694,6 +6712,7 @@ async function salvaPrenDavvero(){
       scelteDaDomanda: c.voci.filter(function(v){ return v.scelto; }).length,
       senzaQuantita: c.voci.filter(function(v){ return !v.quantita; }).length,
       nuove: c.voci.filter(function(v){ return v.nuovo; }).length,
+      corretteDallApp: c.voci.filter(function(v){ return v.scritto; }).length,
       tuttaGiornata: !!f.tuttoGiorno, telefono: !!voce.telefono, ritiro: voce.ritiro });
     svuotaFormPren();
     f.aperto = false; f.ritiro = "";
@@ -7693,6 +7712,7 @@ function impostaManutenzione(attiva){
   clearInterval(S.timerMan);
   if (!attiva){ location.reload(); return; }
   try { salvaBozzeOra(); } catch(e){}
+  registraSempre("pagina manutenzione", {});
   $("manutenzione").hidden = false;
   /* se la notizia in tempo reale si perde, si controlla ogni tanto */
   S.timerMan = setInterval(controllaManutenzione, 30000);
@@ -7889,14 +7909,13 @@ function ascoltaSB(){
 const VAPID_PUBLICA = "BC9TAKzQiQ-x3xtX0KWauGtV-uvIk9VFwqLjWAOzrJbe4e5w2AWyXMIejHxZzWcXJsEWg4LojFvStVd5nUNMX5s";
 
 /* ---------- registro di come si usa l'app (lo legge Claude; nell'app non si vede) ----------
-   SPENTO: si accende con REGISTRO_ATTIVO = true solo alla partenza vera, quando il proprietario lo dice
-   (e dopo il parere del consulente del lavoro: Statuto dei lavoratori e privacy).
+   ACCESO dal 22 ottobre 2026 (deciso dal proprietario il 21 ottobre sera, prima delle statistiche).
    Non registra quello che si scrive (nomi dei clienti, telefoni, cose chieste, note): solo quale tasto,
    quale schermata, quanto tempo, errori, rete e tipo di telefono, e il posto dove si è (p).
    Il nome di chi lo fa lo mette il database (funzione "registra", supabase/aggiornamento-10-registro-con-nomi.sql):
    deciso dal proprietario il 19 ottobre, per vedere chi aiutare a usare meglio l'app; lo leggono solo lui e Claude. */
-const REGISTRO_ATTIVO = false;
-const VERSIONE_APP = "a77205c5";
+const REGISTRO_ATTIVO = true;
+const VERSIONE_APP = "349258cd";
 S.reg = [];
 S.ultimoTasto = { nome: "", alle: 0 };
 S.tocchi = { nome: "", volte: 0, alle: 0, segnato: false };
@@ -7924,10 +7943,27 @@ function registra(evento, dati){
   clearTimeout(S.timerReg);
   S.timerReg = setTimeout(mandaRegistro, 30000);
 }
+/* prima di entrare (codice sbagliato, pagina della manutenzione) il database non accetta il registro:
+   si tiene sul telefono e parte quando la persona è entrata */
+function registraSempre(evento, dati){
+  if (!REGISTRO_ATTIVO || !S.sito) return;
+  if (S.ruoloSito) return registra(evento, dati);
+  try {
+    const l = JSON.parse(localStorage.getItem("pdp-registro-prima") || "[]");
+    const lista = Array.isArray(l) ? l.slice(-29) : [];
+    lista.push({ e: String(evento).slice(0, 40), t: Date.now(), s: "", p: "", d: dati || {} });
+    localStorage.setItem("pdp-registro-prima", JSON.stringify(lista));
+  } catch(e){}
+}
 function salvaRegistro(){ try { localStorage.setItem("pdp-registro", JSON.stringify(S.reg)); } catch(e){} }
 function caricaRegistro(){
   if (!REGISTRO_ATTIVO) { try { localStorage.removeItem("pdp-registro"); } catch(e){} return; }
   try { const r = JSON.parse(localStorage.getItem("pdp-registro") || "[]"); if (Array.isArray(r)) S.reg = r.slice(-400); } catch(e){}
+  try {
+    const p = JSON.parse(localStorage.getItem("pdp-registro-prima") || "[]");
+    localStorage.removeItem("pdp-registro-prima");
+    if (Array.isArray(p) && p.length){ S.reg = S.reg.concat(p.slice(-30)).slice(-400); salvaRegistro(); }
+  } catch(e){}
   leggiNotificheRicevute();
 }
 /* le notifiche arrivate sul telefono (anche ad app chiusa): le conta il service worker, qui si registrano */
@@ -8599,10 +8635,14 @@ async function inviaAccesso(ev){
     const r = await sb.rpc("usa_codice", { codice: codice, password: parola });
     if (r.error){
       if (errSB(r.error).code === "unavailable") throw r.error;
+      registraSempre("entrata non riuscita", { perche: "errore" });
       return mostraAccesso("Non riuscito: " + (r.error.message || "riprova tra poco."));
     }
     const d = r.data || {};
-    if (!d.ok) return mostraAccesso(ERRORI_CODICE[d.errore] || "Non riuscito, riprova.");
+    if (!d.ok){
+      registraSempre("entrata non riuscita", { perche: String(d.errore || "?").slice(0, 20) });
+      return mostraAccesso(ERRORI_CODICE[d.errore] || "Non riuscito, riprova.");
+    }
     const credenziali = { email: d.email, password: parola };
     const a = d.crea ? await sb.auth.signUp(credenziali) : await sb.auth.signInWithPassword(credenziali);
     if (a.error){
@@ -8624,8 +8664,9 @@ async function inviaAccesso(ev){
     if (!(await entraConSessione(sess))){
       if (S.sospeso) return mostraSospeso();
       mostraAccesso("Non riuscito, riprova.");
-    }
+    } else registra("entrato con il codice", { nuovo: !!d.nuovo });
   } catch(e){
+    registraSempre("entrata non riuscita", { perche: "rete" });
     mostraAccesso("Non riesco a collegarmi. Controlla la connessione e riprova.");
   } finally {
     S.accedendo = false;
