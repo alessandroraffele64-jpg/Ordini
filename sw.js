@@ -1,7 +1,7 @@
 /* Copia dell'app sul telefono: si apre anche senza campo.
    La pagina si prende sempre dalla rete se c'è (così gli aggiornamenti arrivano subito);
    senza rete si usa la copia. I dati di Supabase non passano mai di qui. */
-const VERSIONE = "4e013524e5";
+const VERSIONE = "227f6896c0";
 const CACHE = "ordini-" + VERSIONE;
 const BASE = ["./", "manifest.webmanifest", "icone/icona-180.png", "icone/icona-192.png"];
 
@@ -18,6 +18,8 @@ self.addEventListener("fetch", function(e){
   if (r.method !== "GET") return;
   const u = new URL(r.url);
   if (/supabase\.co$/.test(u.hostname)) return;
+  /* il numero della versione si chiede sempre alla rete */
+  if (/versione\.json$/.test(u.pathname)) return;
   if (r.mode === "navigate"){
     e.respondWith(fetch(r).then(function(res){
       if (res.ok){ const copia = res.clone(); caches.open(CACHE).then(function(c){ c.put("./", copia); }); }
