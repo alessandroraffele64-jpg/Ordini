@@ -43,9 +43,12 @@ export function permessa(isc, chiave) {
   if (e && typeof e[chiave] === "boolean") return e[chiave];
   return (NOTIFICHE_DI_SOLITO[chiave] || []).indexOf(tipoPosto(isc.ruolo)) >= 0;
 }
-// ...e sul suo telefono è accesa? (se non l'ha mai scelta: sì; per i titolari com'era «Ricevi tutto», di partenza spento)
+// ...e sul suo telefono è accesa? Le notifiche dei dipendenti le decide solo il titolare (21 ottobre):
+// se gliel'ha data arriva sempre, le scelte fatte sul telefono non contano. I titolari scelgono le loro
+// (se non l'hanno mai scelta: com'era «Ricevi tutto», di partenza spento).
 function vuole(isc, chiave) {
   if (!permessa(isc, chiave)) return false;
+  if (isc.ruolo !== "titolare") return true;
   const p = isc.preferenze || {};
   let v = p[chiave];
   // «Nuove richieste da prendere al Panificio» prima si chiamava «nuove» per il panificio
