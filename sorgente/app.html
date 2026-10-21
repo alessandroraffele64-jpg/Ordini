@@ -401,6 +401,7 @@ button.db-prod-riga:hover{background:var(--surface-2)}
 .notif-scelta input{flex:none;width:22px;height:22px;margin:1px 0 0;accent-color:var(--accent)}
 .notif-scelta span{display:flex;flex-direction:column;gap:2px}
 .notif-scelta small{font-size:13px;color:var(--muted)}
+.notif-fissa{cursor:default}
 .pill.p-coda{background:var(--urgent-bg);color:var(--urgent-txt);box-shadow:inset 0 0 0 1.5px var(--urgent)}
 .coda-avviso{padding:10px 14px;border-radius:var(--r-md);background:var(--urgent-bg);color:var(--urgent-txt);border:1.5px solid var(--urgent);font-size:15px;font-weight:700;line-height:1.35}
 select.prov{width:auto;min-width:0;flex:1 1 150px;min-height:42px;padding:0 8px 0 10px;font-weight:700;font-size:14px;border-radius:10px}
@@ -4056,11 +4057,11 @@ function capitoliManuale(){
   ]});
   cap.push({ titolo:"Notifiche", domande:[
     ["Come accendo le notifiche?", ["Dal menu ☰ apri «Notifiche» e tocca ", tasto("Attiva le notifiche"), ": il telefono chiede il permesso. Sull'iPhone funzionano solo se apri l'app dall'icona sulla schermata Home."]],
-    ["Quali notifiche ricevo?", tit ? ["Ognuno sceglie le sue nella sezione Notifiche.", el("br"),
+    ["Quali notifiche ricevo?", tit ? ["Quelle dei dipendenti le decidi solo tu, nei loro permessi: loro non le possono cambiare. Di solito:", el("br"),
       "• Corso e Piazza Nenni: " + diSolito("negozio"), el("br"), "• Panificio: " + diSolito("panificio"), el("br"), "• Giro: " + diSolito("consegne"), el("br"),
       "• Titolari: tutte, una per una (anche «Un negozio chiede qualcosa all'altro», a parte dalle richieste al magazzino). Quelle che non ti interessano le togli in «Persone registrate» → ", tasto("Permessi di ogni persona"), " → il tuo nome, oppure le spegni sul tuo telefono nella sezione Notifiche.", el("br"),
       "Questo è come è di solito. Se a una persona hai dato o tolto una notifica nei suoi permessi, vale la tua scelta."]
-      : [(mieNotifiche ? "Puoi ricevere: " + mieNotifiche + "." : "Il titolare non ti ha dato notifiche da ricevere.") + " Puoi spegnere quelle che non vuoi nella sezione Notifiche."]],
+      : [(mieNotifiche ? "Ricevi: " + mieNotifiche + "." : "Il titolare non ti ha dato notifiche da ricevere.") + " Le decide il titolare: se pensi che te ne manchi una, o che una non ti serva, chiedi a lui. Ti arrivano solo se sul telefono hai attivato le notifiche."]],
     ["Tocco una notifica: dove mi porta?", ["Apre l'app nella pagina giusta (per esempio le richieste o le prenotazioni)."]]
   ]});
   cap.push({ titolo:"In tutte le pagine", domande:[
@@ -4077,7 +4078,7 @@ function capitoliManuale(){
     ["Una persona lavora in più posti: come faccio?", ["Nei suoi permessi, in alto, in «Dove lavora», tocca ", tasto("Sì"), " accanto agli altri posti (anche «Giro consegne»). Se lavora in due negozi (o in un negozio e al Panificio), quando apre l'app sceglie dove è; se la riapre dopo un po' (le ore le scegli in «Impostazioni») le chiede «Sei ancora al…?», e riceve le notifiche del posto dove è. Se lavora al giro e in un altro posto (per esempio giro e Panificio), ha in alto due tasti per passare da uno all'altro, nessuna domanda, e riceve le notifiche di tutti e due."]],
     ["Perché alcune righe dei permessi sono grigie?", ["Ognuno vede tutte le righe, ma alcune valgono solo in un posto: per esempio «Segnare i biscotti Fatto» vale al Panificio. Se la persona non lavora lì, la riga è su No e sotto c'è scritto quale posto aggiungere prima in «Dove lavora»."]],
     ["Posso scegliere le mie notifiche da titolare?", ["Sì: in «Persone registrate» → ", tasto("Permessi di ogni persona"), " tocca il tuo nome (o quello dell'altro titolare). Ci sono tutte le notifiche, una per riga: metti ", tasto("No"), " a quelle che non vuoi, per esempio «Un negozio chiede qualcosa all'altro» (Piazza Nenni chiede i vassoi al Corso)."]],
-    ["Posso scegliere io le notifiche di una persona?", ["Sì: nei suoi permessi, in «Notifiche che può ricevere», una per riga. Puoi dare a chiunque anche notifiche che di solito non sono del suo posto (per esempio «Pronto da caricare» a una persona del Corso). «No» vuol dire che non le arriva mai; «Sì» vuol dire che la può ricevere e sul suo telefono la accende o la spegne. Sotto vedi se sul suo telefono è accesa. Nell'elenco delle persone vedi chi ha le notifiche accese 🔔 e chi no 🔕."]],
+    ["Posso scegliere io le notifiche di una persona?", ["Sì: nei suoi permessi, in «Notifiche che può ricevere», una per riga. Puoi dare a chiunque anche notifiche che di solito non sono del suo posto (per esempio «Pronto da caricare» a una persona del Corso). Le decidi solo tu, la persona non le può cambiare: «Sì» vuol dire che le arriva sempre, «No» che non le arriva mai. Arrivano solo se sul suo telefono ha toccato «Attiva le notifiche»: questo l'app non lo può fare al posto suo. Nell'elenco delle persone vedi chi ha le notifiche accese 🔔 e chi no 🔕."]],
     ["Una persona cambia negozio o va in ferie?", ["In «Persone registrate» tocca il suo nome. ", tasto("Cambia ruolo"), " la sposta (per esempio dal Corso a Piazza Nenni) senza codice nuovo. ", tasto("Sospendi"), " non le fa usare l'app finché non tocchi ", tasto("Riattiva"), ": dopo, sul suo telefono, basta toccare «Riprova»."]],
     ["A cosa serve «Impostazioni»?", ["Lì scegli alcuni numeri dell'app, divisi a gruppi (Richieste dei negozi, Avvisi e colori, Per quanto tempo tenere le cose…): per esempio dopo quante ore una richiesta diventa arancione o quanti tasti «Chiesti spesso» si vedono. Valgono per tutti i telefoni. Sotto ogni numero c'è un esempio che cambia mentre tocchi − e +; poi «Salva». «Rimetti com'era all'inizio» torna al numero di partenza."]],
     ["A cosa serve «Database»?", ["Entrando ci sono tre tasti: Ordini, Prenotazioni, Biscotti. Il numero dice quante cose nuove ci sono da controllare. In ogni parte ci sono i nomi nuovi o corretti dall'app («Sì, è giusto», «No, era…», «È un prodotto nuovo», «Scrivi il nome giusto») e i prodotti che forse sono doppi; in fondo l'elenco completo, con «Cerca un prodotto», e le «Ultime modifiche» con «Annulla». In Ordini, più sotto, c'è una parte a sé per le cose segnate con «+ Segna cosa manca». Una correzione vale anche per quello già scritto. Quanti giorni indietro guardare lo scegli in «Impostazioni» (di partenza 7)."]],
@@ -7724,6 +7725,16 @@ async function renderNotifiche(){
     ? notifichePerRuolo("titolare").filter(function(n){ return notificaPer(S.mioId, "titolare", n.k); }).map(function(n){ return [n.k, n.nome, n.spiega || ""]; })
     : NOTIFICHE_PERMESSI.filter(function(n){ return posti.some(function(l){ return notificaPer(S.mioId, l, n.k); }); }).map(function(n){ return [n.k, n.nome, n.spiega || ""]; });
   if (!voci.length) stato.textContent = ruolo === "titolare" ? "Notifiche attive su questo telefono, ma nei permessi le hai tolte tutte (Persone registrate → Permessi di ogni persona → il tuo nome)." : "Notifiche attive su questo telefono, ma il titolare non te ne ha date da ricevere.";
+  /* i dipendenti non scelgono: le notifiche le decide solo il titolare (21 ottobre), qui vedono solo quali ricevono */
+  if (ruolo !== "titolare"){
+    if (voci.length) stato.textContent = "Notifiche attive su questo telefono. Ricevi queste (le decide il titolare):" +
+      (posti.length > 1 ? " (sono quelle " + qui.join(" e ") + " e del giro consegne, tutte e due insieme)" : (piuLuoghi() ? " (sono quelle " + qui[0] + ", dove sei adesso)" : ""));
+    riempi(scelte, voci.map(function(o){
+      return el("li", { class: "notif-scelta notif-fissa" }, el("span", { "aria-hidden": "true", text: "🔔" }),
+        el("span", null, el("b", { text: o[1] }), o[2] ? el("small", { text: o[2] }) : null));
+    }));
+    return;
+  }
   riempi(scelte, voci.map(function(o){
     const acceso = prefNotifica(pref, o[0], ruolo);
     return el("li", null, el("label", {class:"notif-scelta"},
@@ -8404,12 +8415,14 @@ function schermataPermessi(p){
   const sulTel = function(k){
     if (!S.notifPersone) return "";
     if (!np || !np.telefoni) return "Sul suo telefono le notifiche sono spente.";
+    if (r !== "titolare") return "Gli arriva.";
     return np.preferenze.some(function(pr){ return prefNotifica(pr, k, r === "titolare" ? "titolare" : ((pr && pr.luogo) || r)); }) ? "Sul suo telefono è accesa." : "Sul suo telefono l'ha spenta.";
   };
   out.push(gruppoPerm("Notifiche che può ricevere", notifichePerRuolo(r).map(function(n){
     const si = notificaScelta(id, r, n.k);
     return rigaPerm(id, "notif", n.k, n.nome, si, notificaSolitoPersona(id, r, n.k), { spiega: n.spiega, info: si ? sulTel(n.k) : "" });
-  }), "«Sì»: la può ricevere, e sul suo telefono la accende o la spegne. «No»: non le arriva mai." + (S.notifPersone ? " " + testoNotifPersona(id) + "." : "")));
+  }), (r === "titolare" ? "«Sì»: la può ricevere, e sul suo telefono la accende o la spegne. «No»: non le arriva mai." :
+    "Le decidi solo tu: lui non le può cambiare. «Sì»: gli arriva sempre (se sul telefono ha attivato le notifiche). «No»: non gli arriva mai.") + (S.notifPersone ? " " + testoNotifPersona(id) + "." : "")));
   if (contaEccezioni(id)) out.push(el("button", { type: "button", class: "mini", "data-pers-rimetti": id, disabled: S.pending.has("permessi"), text: "Rimetti tutto come di solito" }));
   return out;
 }
