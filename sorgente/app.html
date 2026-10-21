@@ -411,6 +411,11 @@ button.db-prod-riga:hover{background:var(--surface-2)}
 .notif-scelta small{font-size:13px;color:var(--muted)}
 .notif-fissa{cursor:default}
 .pill.p-coda{background:var(--urgent-bg);color:var(--urgent-txt);box-shadow:inset 0 0 0 1.5px var(--urgent)}
+.non-salvate{margin-top:8px;padding:12px 14px;border-radius:var(--r-md);background:var(--urgent-bg);color:var(--urgent-txt);border:1.5px solid var(--urgent);font-size:15px;line-height:1.4}
+.non-salvate ul{margin:6px 0 8px;padding-left:20px}
+.non-salvate .ns-titolo{font-weight:700;margin:0}
+.non-salvate .ns-ora{font-size:13px}
+.non-salvate .ns-sotto{margin:0 0 10px;font-size:14px}
 .coda-avviso{padding:10px 14px;border-radius:var(--r-md);background:var(--urgent-bg);color:var(--urgent-txt);border:1.5px solid var(--urgent);font-size:15px;font-weight:700;line-height:1.35}
 select.prov{width:auto;min-width:0;flex:1 1 150px;min-height:42px;padding:0 8px 0 10px;font-weight:700;font-size:14px;border-radius:10px}
 .ctrl-voce.fuori select.prov{background:var(--c);border-color:var(--c);color:var(--c-ink)}
@@ -888,6 +893,7 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
   <!-- Striscia rossa: tutto quello che non c'è in magazzino, per tutti, finché non arriva -->
   <div class="strisce-mag" id="strisce-mag" role="status" hidden></div>
   <p class="coda-avviso" id="coda-avviso" role="status" hidden></p>
+  <div class="non-salvate" id="non-salvate" role="alert" hidden></div>
 
   <!-- Negozio: chi lavora al banco chiede cosa serve -->
   <section class="view" id="view-negozio" role="tabpanel" aria-labelledby="tab-negozio">
@@ -4205,7 +4211,7 @@ function capitoliManuale(){
     ["Cosa vuol dire «Da comprare»?", ["È una cosa che non c'è e va comprata. La vedono i titolari e chi fa il giro, in «Non in magazzino». Quando arriva, va nelle consegne e ve la portano."]],
     ["Cosa succede se arriva solo una parte?", ["Chi fa il giro carica quello che c'è e scrive cosa manca. La tua richiesta va «In viaggio» con la scritta «Solo una parte: mancano 2 casse». Nella tua lista compare anche una riga nuova con quello che manca, barrata perché non c'è in magazzino (e ti arriva la notifica). Quando arriva, te la portano come le altre."], disegnoParte()],
     ["Se esco dall'app per sbaglio, perdo quello che ho scritto?", ["No. Quello che hai scritto in «Cosa serve?» e non hai ancora inviato resta sul telefono per " + secondi("bozze") + ": quando riapri l'app lo ritrovi lì, e in alto c'è scritto «ho ritrovato le richieste che stavi scrivendo». Poi tocca ", tasto("Controlla e invia"), " come sempre."]],
-    ["E se non c'è campo?", ["Scrivi e invia lo stesso: la richiesta si salva sul telefono e parte da sola appena torna il campo. In alto vedi quante cose aspettano. Non uscire dall'app finché non sono partite."]]
+    ["E se non c'è campo?", ["Scrivi e invia lo stesso: la richiesta si salva sul telefono e parte da sola appena torna il campo. In alto vedi quante cose aspettano. Non uscire dall'app finché non sono partite. Se quando torna il campo una cosa non viene accettata (per esempio perché nel frattempo l'app è stata aggiornata), in alto esce un riquadro rosso «Non è stata salvata» con scritto quale: rifalla e tocca ", tasto("Ho capito"), "."]]
   ]});
   if (panif || tit) cap.push({ titolo:"Panificio e magazzino", domande:[
     ["Cosa vedo nella mia pagina?", ["Le richieste dei negozi che si prendono al Panificio, divise per reparto (Pane e forno, Frigo, Bevande…), con il colore del negozio che le ha chieste. Le urgenti sono in cima."]],
@@ -4284,7 +4290,7 @@ function capitoliManuale(){
     haAzione("vedeChi") ? ["A cosa serve il tasto «Chi?»", ["Accanto a una richiesta, tocca ", tasto("Chi?"), ": compare il nome di chi l'ha chiesta (per esempio «Ordinato da Maria»). Toccalo di nuovo per nasconderlo."]] : null,
     ["Come si entra nell'app? Devo ricordare un PIN?", ["No, niente PIN. La prima volta il titolare ti dà un codice di 6 lettere e numeri (per esempio K7P 4QM): lo scrivi e tocchi ", tasto("Entra"), ". Da lì resti dentro, anche se chiudi l'app o spegni il telefono. Il codice vale una volta sola: dopo non serve più."]],
     ["Ho cambiato telefono, ho cancellato l'app o ho toccato «Esci»: come rientro?", ["Chiedi al titolare un codice nuovo: lo scrivi e rientri con tutto come prima (le tue richieste, i permessi, le notifiche). Per questo non toccare ", tasto("Esci"), " se vuoi solo chiudere l'app."]]
-    ["Perché vedo «Manutenzione in corso, riprova tra poco»?", ["Vuol dire che stiamo aggiornando l'app (di solito la sera, a negozi chiusi). In quei minuti non entra nessuno, nemmeno i titolari, e non si può salvare niente: così l'aggiornamento non si rovina. Quello che stavi scrivendo e non hai inviato resta sul telefono. Aspetta qualche minuto: quando è finito l'app si riapre da sola, oppure tocca ", tasto("Riprova"), "."]]
+    ["Perché vedo «Manutenzione in corso, riprova tra poco»?", ["Vuol dire che stiamo aggiornando l'app (di solito la sera, a negozi chiusi). In quei minuti non entra nessuno, nemmeno i titolari, e non si può salvare niente: così l'aggiornamento non si rovina. Quello che stavi scrivendo e non hai inviato resta sul telefono. Aspetta qualche minuto: quando è finito l'app si riapre da sola, oppure tocca ", tasto("Riprova"), ". Se avevi il telefono in tasca, quando lo riprendi l'app si ricarica da sola con la versione nuova. Dopo mezz'ora la manutenzione finisce comunque da sola."]]
   ]});
   if (!tit) cap.push({ titolo:"Permessi", domande:[
     ["Un collega ha un tasto che io non ho: perché?", ["Il titolare può dare o togliere a ognuno le singole cose (per esempio segnare «Urgente», disdire una prenotazione, vedere il telefono del cliente) e anche le singole notifiche. Se ti manca qualcosa che ti serve, chiedi al titolare."]]
@@ -7226,6 +7232,7 @@ function collega(){
     }
     if (b.id === "rimuovi-esempi") return rimuoviEsempi();
     if (b.id === "acc-riprova") return location.reload();
+    if (b.id === "non-salvate-ok"){ try { localStorage.removeItem(chiaveNonSalvate()); } catch(e){} return mostraNonSalvate(); }
     if (b.id === "man-riprova") return controllaManutenzione().then(function(si){ if (si) $("man-stato").textContent = "Ancora in manutenzione (controllato alle " + fmtOra.format(new Date()) + "): riprova tra poco."; });
     if (b.id === "esci") return esciSB();
     if (b.dataset.azzera) return azzeraPersona(b.dataset.azzera);
@@ -7649,17 +7656,20 @@ function errSB(e){
 /* ---------- manutenzione ----------
    Durante un aggiornamento Claude la accende nel database (tabella «manutenzione», riga 1, attiva):
    chi apre l'app vede solo «Manutenzione in corso, riprova tra poco», nemmeno i titolari entrano,
-   e il database non accetta niente di nuovo. Nell'app non c'è un tasto: si spegne solo dal database.
+   e il database non accetta niente di nuovo. Nell'app non c'è un tasto: si spegne solo dal database,
+   o da sola 30 minuti dopo «dal» (aggiornamento 13, se ci si dimentica).
    Quando si spegne l'app si ricarica da sola, già con la versione nuova. */
 S.manutenzione = false;
 async function controllaManutenzione(){
   if (!sb) return false;
   let r;
-  try { r = await sb.from("manutenzione").select("attiva").eq("id", 1).maybeSingle(); }
+  /* lo decide il database (in_manutenzione): dall'aggiornamento 13 si spegne da sola dopo 30 minuti,
+     anche se nessuno la spegne (l'ora è quella del database, non del telefono) */
+  try { r = await sb.rpc("in_manutenzione"); }
   catch(e){ return S.manutenzione; }
-  /* senza rete si resta come si è; prima dell'aggiornamento 12 la tabella non c'è: niente manutenzione */
+  /* senza rete si resta come si è; prima dell'aggiornamento 12 la funzione non c'è: niente manutenzione */
   if (r.error) return S.manutenzione;
-  impostaManutenzione(!!(r.data && r.data.attiva));
+  impostaManutenzione(r.data === true);
   return S.manutenzione;
 }
 function impostaManutenzione(attiva){
@@ -7676,7 +7686,7 @@ function ascoltaManutenzione(){
   let primaVolta = true;
   sb.channel("pdp-manutenzione")
     .on("postgres_changes", { event: "*", schema: "public", table: "manutenzione" }, function(p){
-      if (p.new && p.new.id === 1) impostaManutenzione(p.new.attiva === true);
+      if (p.new && p.new.id === 1) controllaManutenzione();
     })
     .subscribe(function(stato){ if (stato === "SUBSCRIBED"){ if (!primaVolta) controllaManutenzione(); primaVolta = false; } });
   document.addEventListener("visibilitychange", function(){ if (document.visibilityState === "visible") controllaManutenzione(); });
@@ -8311,7 +8321,9 @@ async function svuotaCoda(){
       try { await eseguiOp(S.coda[0]); aggiungiEvento(S.coda[0].evento); }
       catch(e){
         if (e && (e.code === "unavailable" || e.code === "manutenzione")) break;
-        scartate++; /* rifiutata dal database (per esempio non è più permessa): si toglie */
+        /* rifiutata dal database (per esempio non è più permessa dopo un aggiornamento): si toglie,
+           ma si scrive cosa era, così chi l'ha fatta sa cosa rifare */
+        scartate++; segnaNonSalvata(S.coda[0]);
       }
       S.coda.shift(); salvaCoda();
     }
@@ -8319,11 +8331,66 @@ async function svuotaCoda(){
     S.svuotando = false;
     registra("coda inviata", { scartate: scartate, restano: S.coda.length });
     if (S.coda.length){ clearTimeout(S.timerCoda); S.timerCoda = setTimeout(svuotaCoda, 20000); }
-    else if (scartate) notifica("Tornato il campo", scartate === 1 ? "1 cosa salvata senza rete non è stata accettata." : scartate + " cose salvate senza rete non sono state accettate.");
+    else if (scartate) notifica("Tornato il campo", scartate === 1 ? "1 cosa salvata senza rete non è stata salvata: guarda il riquadro in alto." : scartate + " cose salvate senza rete non sono state salvate: guarda il riquadro in alto.");
     else notifica("Tornato il campo", "Tutto quello che era salvato sul telefono è stato inviato.", "ok");
     emettiSB(true);
   }
 }
+/* cose salvate senza rete che il database non ha accettato: restano scritte sul telefono
+   (riquadro rosso in alto) finché non si tocca «Ho capito» */
+function chiaveNonSalvate(){ return "pdp-non-salvate-" + (S.mioId || "x"); }
+function leggiNonSalvate(){
+  try { const l = JSON.parse(localStorage.getItem(chiaveNonSalvate()) || "[]"); return Array.isArray(l) ? l : []; } catch(e){ return []; }
+}
+function nomeRichiesta(v){
+  v = v || {};
+  if (v.tipo === "prenotazione") return "prenotazione" + (v.cliente ? " di " + v.cliente : "") + (v.perIl ? " per " + testoGiorno(v.perIl) : "");
+  return ((v.quantita ? v.quantita + " " : "") + (v.articolo || v.nome || "?")).trim() + (v.per && v.per !== PROMEMORIA ? " per " + v.per : "");
+}
+function descriviOp(o){
+  const d = (o.riga && o.riga.dati) || {};
+  if (o.tab === "richieste"){
+    if (o.tipo === "insert") return (d.tipo === "prenotazione" ? "Nuova " : d.tipo === "magazzino" ? "Segnato che manca: " : "Richiesta: ") + nomeRichiesta(d);
+    return (d.annullato ? "Tolta: " : "Cambiata: ") + nomeRichiesta(d);
+  }
+  if (o.tab === "stati"){
+    const v = RAW.voci[String(o.id).split("~")[1]];
+    /* l'ultima cosa fatta è quella con l'ora più recente */
+    const azioni = [
+      [d.arrivatoAlle, "È arrivato"],
+      [d.disdettaAlle, d.disdetta ? "Disdetta" : ""],
+      [d.ripristinataAlle, "Ripristinata"],
+      [d.parteAlle, "Solo una parte"],
+      [d.prepAlle, d.prep === "manca" ? "Non c'è" : d.prep === "pronto" ? "Pronto" : ""],
+      [d.statoAlle || d.aggiornato, d.stato === "caricato" ? "Caricato" : d.stato === "consegnato" ? "Consegnato" : d.stato === "parte" ? "Messo da parte" : d.stato === "attesa" ? "Tolto «Messo da parte»" : ""]
+    ].filter(function(a){ return a[0] && a[1]; }).sort(function(a, b){ return b[0] - a[0]; });
+    return (azioni.length ? azioni[0][1] : "Cambiato") + ": " + (v ? nomeRichiesta(v) : "una cosa che non c'è più");
+  }
+  if (o.tab === "biscotti") return "Biscotti: " + (d.nome || "?") + (d.stato === "manca" ? (d.livello === "finiti" ? " finiti" : " con pochi pacchi") : d.stato === "fatto" ? " fatti" : d.stato === "tolto" ? " tolti" : "");
+  return "Un cambio nelle impostazioni o nel Database";
+}
+function segnaNonSalvata(o){
+  let testo = "una cosa";
+  try { testo = descriviOp(o); } catch(e){}
+  const l = leggiNonSalvate().concat([{ testo: testo, alle: Date.now() }]).slice(-30);
+  try { localStorage.setItem(chiaveNonSalvate(), JSON.stringify(l)); } catch(e){}
+  registra("non salvata dopo la rete", { tabella: o.tab });
+  mostraNonSalvate();
+}
+function mostraNonSalvate(){
+  const box = $("non-salvate");
+  if (!box) return;
+  const l = leggiNonSalvate();
+  box.hidden = !l.length;
+  if (!l.length){ riempi(box, []); return; }
+  riempi(box, [
+    el("p", { class: "ns-titolo", text: l.length === 1 ? "Questa cosa non è stata salvata:" : "Queste " + l.length + " cose non sono state salvate:" }),
+    el.apply(null, ["ul", null].concat(l.map(function(x){ return el("li", null, el("strong", { text: x.testo }), el("span", { class: "ns-ora", text: " · fatta alle " + quando(x.alle) })); }))),
+    el("p", { class: "ns-sotto", text: "Le avevi fatte senza campo e, quando è tornata la rete, l'app non le ha accettate (forse nel frattempo l'app è stata aggiornata). Rifalle adesso, oppure chiedi al titolare." }),
+    el("button", { type: "button", class: "primary", id: "non-salvate-ok", text: "Ho capito" })
+  ]);
+}
+
 function riapplicaCoda(){
   S.coda.forEach(function(o){
     if (o.tab === "stati"){ S.stati[o.id] = Object.assign({}, o.riga.dati); return; }
@@ -8474,6 +8541,7 @@ async function entraConSessione(sess){
   S.nomi[S.mioId] = S.nomeMio;
   store = storeSB();
   leggiCoda();
+  mostraNonSalvate();
   if (S.coda.length && navigator.onLine === false) notifica("Senza campo", (S.coda.length === 1 ? "1 cosa aspetta" : S.coda.length + " cose aspettano") + " la rete: parte da sola appena torna il campo.");
   $("accesso").hidden = true;
   $("chi-sei-testo").replaceChildren("Sei entrato come ", el("b", { text: S.nomeMio }), " · " + (NOMI_RUOLI[prof[0].ruolo] || ""));
@@ -9054,8 +9122,27 @@ function confirmUscita(){
   avviso("Prima di uscire aspetta che torni il campo: ci sono cose non ancora inviate.");
   return false;
 }
+/* una versione nuova dell'app pubblicata mentre il telefono era in tasca (per esempio durante la manutenzione):
+   quando si riprende in mano, l'app se ne accorge da «versione.json» (lo scrive sorgente/build.py) e si ricarica.
+   Le cose scritte e non inviate restano (bozze). Una volta sola per versione, così non si ricarica all'infinito
+   se il sito nuovo non è ancora arrivato dappertutto. */
+async function controllaVersione(){
+  if (!VERSIONE_APP || S.manutenzione) return;
+  let v = "";
+  try {
+    const r = await fetch("versione.json?t=" + Date.now(), { cache: "no-store" });
+    if (!r.ok) return;
+    v = String((await r.json()).versione || "");
+  } catch(e){ return; }
+  if (!v || v === VERSIONE_APP) return;
+  try { if (sessionStorage.getItem("pdp-ricaricata") === v) return; sessionStorage.setItem("pdp-ricaricata", v); } catch(e){ return; }
+  registra("ricaricata per versione nuova", { versionePrima: VERSIONE_APP, versioneNuova: v });
+  try { salvaBozzeOra(); } catch(e){}
+  location.reload();
+}
 async function avviaSupabase(){
   S.sito = true;
+  document.addEventListener("visibilitychange", function(){ if (document.visibilityState === "visible") controllaVersione(); });
   /* il telefono si tiene una copia dell'app: si apre anche senza campo */
   try {
     if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").then(function(reg){

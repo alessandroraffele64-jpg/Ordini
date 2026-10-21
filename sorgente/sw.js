@@ -18,6 +18,8 @@ self.addEventListener("fetch", function(e){
   if (r.method !== "GET") return;
   const u = new URL(r.url);
   if (/supabase\.co$/.test(u.hostname)) return;
+  /* il numero della versione si chiede sempre alla rete */
+  if (/versione\.json$/.test(u.pathname)) return;
   if (r.mode === "navigate"){
     e.respondWith(fetch(r).then(function(res){
       if (res.ok){ const copia = res.clone(); caches.open(CACHE).then(function(c){ c.put("./", copia); }); }
