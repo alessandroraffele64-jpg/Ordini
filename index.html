@@ -768,6 +768,8 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
 .pers-freccia{font-size:22px;color:var(--muted);line-height:1}
 .codici-lista li:has(> .pers-riga){display:block}
 .pers-indietro{align-self:flex-start}
+.pill-posti{display:inline-flex;flex-wrap:wrap;gap:4px;justify-content:flex-end}
+.pers-titolo .pill-posti{justify-content:flex-start}
 .pers-titolo{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0;font-size:20px}
 .perm-gruppo{display:flex;flex-direction:column;gap:2px}
 .perm-titolo{margin:0 0 4px;font-size:16px;letter-spacing:.02em}
@@ -1058,7 +1060,7 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
       <div class="blocco" id="persone-elenco-box">
         <button type="button" class="primary pers-permessi" data-pers-scegli="1">Permessi di ogni persona</button>
         <button type="button" class="primary pers-aggiungi" data-pers-aggiungi="1">+ Aggiungi persona</button>
-        <p class="hint">Con «Aggiungi persona» scrivi il nome e il posto di un dipendente nuovo: l'app ti dà il codice per entrare. Con «Permessi» scegli cosa vede e cosa può fare ognuno. Qui sotto tocca un nome per dargli un codice nuovo (se si è scollegato), cambiargli il ruolo, sospenderlo o togliergli l'accesso.</p>
+        <p class="hint">Con «Aggiungi persona» scrivi il nome e il posto di un dipendente nuovo: l'app ti dà il codice per entrare. Con «Permessi» scegli cosa vede e cosa può fare ognuno. Qui sotto tocca un nome per dargli un codice nuovo (se si è scollegato), vedere e cambiare dove lavora, spostarlo in un altro posto, sospenderlo o togliergli l'accesso.</p>
         <div class="blocco" id="persone-attesa" hidden></div>
         <div class="card blocco"><ul class="codici-lista" id="persone-lista"></ul></div>
       </div>
@@ -4149,7 +4151,8 @@ function capitoliManuale(){
     ["Perché alcune righe dei permessi sono grigie?", ["Ognuno vede tutte le righe, ma alcune valgono solo in un posto: per esempio «Segnare i biscotti Fatto» vale al Panificio. Se la persona non lavora lì, la riga è su No e sotto c'è scritto quale posto aggiungere prima in «Dove lavora»."]],
     ["Posso scegliere le mie notifiche da titolare?", ["Sì: in «Persone registrate» → ", tasto("Permessi di ogni persona"), " tocca il tuo nome (o quello dell'altro titolare). Ci sono tutte le notifiche, una per riga: metti ", tasto("No"), " a quelle che non vuoi, per esempio «Un negozio chiede qualcosa all'altro» (Piazza Nenni chiede i vassoi al Corso)."]],
     ["Posso scegliere io le notifiche di una persona?", ["Sì: nei suoi permessi, in «Notifiche che può ricevere», una per riga. Puoi dare a chiunque anche notifiche che di solito non sono del suo posto (per esempio «Pronto da caricare» a una persona del Corso). Le decidi solo tu, la persona non le può cambiare: «Sì» vuol dire che le arriva sempre, «No» che non le arriva mai. Arrivano solo se sul suo telefono ha toccato «Attiva le notifiche»: questo l'app non lo può fare al posto suo. Nell'elenco delle persone vedi chi ha le notifiche accese 🔔 e chi no 🔕."]],
-    ["Una persona cambia negozio o va in ferie?", ["In «Persone registrate» tocca il suo nome. ", tasto("Cambia ruolo"), " la sposta (per esempio dal Corso a Piazza Nenni) senza codice nuovo. ", tasto("Sospendi"), " non le fa usare l'app finché non tocchi ", tasto("Riattiva"), ": dopo, sul suo telefono, basta toccare «Riprova»."]],
+    ["Dove vedo in quali posti lavora una persona?", ["In «Persone registrate», accanto al nome c'è un bollino per ogni posto (per esempio Piazza Nenni e Corso). Toccando il nome, il riquadro «Dove lavora» li elenca tutti; per cambiarli tocca ", tasto("Cambia dove lavora"), "."]],
+    ["Una persona cambia negozio o va in ferie?", ["In «Persone registrate» tocca il suo nome. In «Spostala in un altro posto» scegli il posto nuovo e tocca ", tasto("Sposta"), ": la sposta (per esempio dal Corso a Piazza Nenni) senza codice nuovo. ", tasto("Sospendi"), " non le fa usare l'app finché non tocchi ", tasto("Riattiva"), ": dopo, sul suo telefono, basta toccare «Riprova»."]],
     ["A cosa serve «Impostazioni»?", ["Lì scegli alcuni numeri dell'app, divisi a gruppi (Richieste dei negozi, Avvisi e colori, Per quanto tempo tenere le cose…): per esempio dopo quante ore una richiesta diventa arancione o quanti tasti «Chiesti spesso» si vedono. Valgono per tutti i telefoni. Sotto ogni numero c'è un esempio che cambia mentre tocchi − e +; poi «Salva». «Rimetti com'era all'inizio» torna al numero di partenza."]],
     ["A cosa serve «Database»?", ["Entrando ci sono tre tasti: Ordini, Prenotazioni, Biscotti. Il numero dice quante cose nuove ci sono da controllare. In ogni parte ci sono i nomi nuovi o corretti dall'app («Sì, è giusto», «No, era…», «È un prodotto nuovo», «Scrivi il nome giusto») e i prodotti che forse sono doppi; in fondo l'elenco completo, con «Cerca un prodotto», e le «Ultime modifiche» con «Annulla». In Ordini, più sotto, c'è una parte a sé per le cose segnate con «+ Segna cosa manca». Una correzione vale anche per quello già scritto. Quanti giorni indietro guardare lo scegli in «Impostazioni» (di partenza 7)."]],
     ["Come scelgo il reparto di una cosa nuova?", ["Nel «Database», parte Ordini, sotto ogni cosa che l'app non conosce c'è «Reparto», con il reparto che l'app ha pensato dal nome. Se è sbagliato sceglilo giusto, poi tocca «È un prodotto nuovo» (o «Salva il nome giusto»): il reparto si salva insieme. Esempio: «sacchetti freezer grandi» → Congelati. I negozi non scelgono il reparto."]],
@@ -7712,7 +7715,7 @@ const VAPID_PUBLICA = "BC9TAKzQiQ-x3xtX0KWauGtV-uvIk9VFwqLjWAOzrJbe4e5w2AWyXMIej
    Il nome di chi lo fa lo mette il database (funzione "registra", supabase/aggiornamento-10-registro-con-nomi.sql):
    deciso dal proprietario il 19 ottobre, per vedere chi aiutare a usare meglio l'app; lo leggono solo lui e Claude. */
 const REGISTRO_ATTIVO = false;
-const VERSIONE_APP = "0dac8a74";
+const VERSIONE_APP = "f5180643";
 S.reg = [];
 S.ultimoTasto = { nome: "", alle: 0 };
 S.tocchi = { nome: "", volte: 0, alle: 0, segnato: false };
@@ -8430,7 +8433,14 @@ async function mostraPersone(){
   renderPersone();
 }
 function classeRuolo(r){ return r === "corso" ? "dest-corso" : r === "piazza-nenni" ? "dest-nenni" : r === "panificio" ? "dest-panif" : "dest-altro"; }
-function pillRuolo(x){ return el("span", { class: "pill dest " + classeRuolo(x.ruolo), text: NOMI_RUOLI[x.ruolo] || x.ruolo }); }
+/* un bollino per ogni posto dove lavora (prima il suo, poi quelli aggiunti in «Dove lavora») */
+function postiPersona(x){
+  const posti = luoghiPer(x.id, x.ruolo);
+  return [x.ruolo].concat(posti.filter(function(l){ return l !== x.ruolo; }));
+}
+function pillRuolo(x){
+  return el("span", { class: "pill-posti" }, ...postiPersona(x).map(function(r){ return el("span", { class: "pill dest " + classeRuolo(r), text: NOMI_RUOLI[r] || r }); }));
+}
 function testoNotifPersona(id){
   if (!S.notifPersone) return "";
   const n = S.notifPersone[id];
@@ -8460,14 +8470,15 @@ function renderElencoPersone(){
   if (!S.persone.length) return riempi(lista, [el("li", { class: "hint", text: "Nessuno registrato." })]);
   riempi(lista, S.persone.map(function(x){
     const io = x.id === S.mioId;
-    const cambi = contaEccezioni(x.id);
-    const sotto = [x.sospeso ? "Accesso sospeso" : "", cambi ? "Permessi cambiati" : "", piuPosti(x) ? "Lavora in più posti" : "", testoNotifPersona(x.id)].filter(Boolean).join(" · ");
+    /* i posti in più si vedono già dai bollini: «Permessi cambiati» solo per il resto */
+    const e = (S.permessi || {})[x.id];
+    const cambi = contaEccezioni(x.id) - (e && Array.isArray(e.luoghi) ? e.luoghi.length : 0);
+    const sotto = [x.sospeso ? "Accesso sospeso" : "", cambi > 0 ? "Permessi cambiati" : "", testoNotifPersona(x.id)].filter(Boolean).join(" · ");
     return el("li", null, el("button", { type: "button", class: "pers-riga" + (x.sospeso ? " sospesa" : ""), "data-pers-scheda": x.id },
       el("span", { class: "pers-nome" }, el("b", { text: x.nome + (io ? " (tu)" : "") }), sotto ? el("small", { text: sotto }) : null),
       pillRuolo(x), el("span", { class: "pers-freccia", "aria-hidden": "true", text: "›" })));
   }));
 }
-function piuPosti(x){ return luoghiPer(x.id, x.ruolo).length > 1; }
 function schermataScegli(){
   const altri = (S.persone || []).slice();
   return [tastoIndietro(),
@@ -8620,8 +8631,15 @@ function schermataScheda(p){
     const off = S.pending.has("persona-" + p.id);
     const sel = el("select", { id: "pers-ruolo", "aria-label": "Nuovo ruolo di " + p.nome },
       ...["corso", "piazza-nenni", "panificio", "consegne"].map(function(r){ return el("option", { value: r, selected: r === p.ruolo ? true : null, text: NOMI_RUOLI[r] }); }));
-    out.push(gruppoPerm("Ruolo", [el("div", { class: "pers-ruolo" }, sel, el("button", { type: "button", class: "mini", "data-pers-ruolo": p.id, disabled: off, text: "Cambia ruolo" }))],
-      "Per esempio se passa dal Corso a Piazza Nenni. Non deve registrarsi di nuovo; le sue richieste restano."));
+    /* dove lavora: tutti i suoi posti, come nei permessi */
+    const posti = postiPersona(p);
+    out.push(gruppoPerm("Dove lavora", posti.map(function(l){ return rigaFissa(NOMI_RUOLI[l] || l, l === p.ruolo ? "Il suo posto" : "Anche qui"); })
+      .concat([el("button", { type: "button", class: "mini", "data-pers-permessi": p.id, text: "Cambia dove lavora" })]),
+      posti.length > 1 ? p.nome + " lavora in " + posti.length + " posti. Per aggiungerne o toglierne uno tocca «Cambia dove lavora»: ti porta ai suoi permessi, in alto." :
+        "Se lavora anche in un altro posto, tocca «Cambia dove lavora»: ti porta ai suoi permessi, in alto, dove scegli Sì accanto all'altro posto."));
+    out.push(gruppoPerm("Spostala in un altro posto", [el("div", { class: "pers-ruolo" }, sel, el("button", { type: "button", class: "mini", "data-pers-ruolo": p.id, disabled: off, text: "Sposta" }))],
+      "Solo se cambia posto del tutto, per esempio se passa dal Corso a Piazza Nenni e non lavora più al Corso. Non deve registrarsi di nuovo; le sue richieste restano." +
+      (posti.length > 1 ? " Gli altri posti di «Dove lavora» restano." : "")));
     out.push(gruppoPerm(p.sospeso ? "Riattiva" : "Sospendi", [el("button", { type: "button", class: "mini", "data-pers-sospendi": p.id, disabled: off, text: p.sospeso ? "Riattiva " + p.nome : "Sospendi " + p.nome })],
       p.sospeso ? "Potrà usare di nuovo l'app: sul suo telefono basta toccare «Riprova», senza codice nuovo." : "Per esempio durante le ferie: non può usare l'app finché non riattivi il suo accesso. Quando lo riattivi non gli serve un codice nuovo."));
   }
@@ -8827,7 +8845,7 @@ async function cambiaRuoloPersona(id){
   if (!p || !sel || p.ruolo === "titolare" || id === S.mioId) return;
   const nuovo = sel.value;
   if (nuovo === p.ruolo) return avviso("È già " + (NOMI_RUOLI[nuovo] || nuovo) + ".");
-  const si = await chiedi("Cambiare il ruolo di " + p.nome + "?", "Da " + NOMI_RUOLI[p.ruolo] + " a " + NOMI_RUOLI[nuovo] + ". Vedrà le sezioni del nuovo ruolo (più quelle che le hai dato tu). Le sue richieste restano.", "Sì, cambia", "No");
+  const si = await chiedi("Spostare " + p.nome + "?", "Da " + NOMI_RUOLI[p.ruolo] + " a " + NOMI_RUOLI[nuovo] + ". Vedrà le sezioni del nuovo posto (più quelle che le hai dato tu). Le sue richieste restano.", "Sì, sposta", "No");
   if (!si) return;
   await azionePersona(p, "cambia_ruolo", { persona: id, ruolo: nuovo }, "Fatto: " + p.nome + " adesso è " + NOMI_RUOLI[nuovo] + ".", "ruolo cambiato");
 }
