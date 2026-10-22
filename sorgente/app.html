@@ -4316,7 +4316,7 @@ function capitoliManuale(){
     haAzione("vedeChi") ? ["A cosa serve il tasto «Chi?»", ["Accanto a una richiesta, tocca ", tasto("Chi?"), ": compare il nome di chi l'ha chiesta (per esempio «Ordinato da Maria»). Toccalo di nuovo per nasconderlo."]] : null,
     ["Come si entra nell'app? Devo ricordare un PIN?", ["No, niente PIN. La prima volta il titolare ti dà un codice di 6 lettere e numeri (per esempio K7P 4QM): lo scrivi e tocchi ", tasto("Entra"), ". Da lì resti dentro, anche se chiudi l'app o spegni il telefono. Il codice vale una volta sola: dopo non serve più."]],
     ["Ho cambiato telefono, ho cancellato l'app o ho toccato «Esci»: come rientro?", ["Chiedi al titolare un codice nuovo: lo scrivi e rientri con tutto come prima (le tue richieste, i permessi, le notifiche). Per questo non toccare ", tasto("Esci"), " se vuoi solo chiudere l'app."]]
-    ["Perché vedo «Manutenzione in corso, riprova tra poco»?", ["Vuol dire che stiamo aggiornando l'app (di solito la sera, a negozi chiusi). In quei minuti non entra nessuno, nemmeno i titolari, e non si può salvare niente: così l'aggiornamento non si rovina. Quello che stavi scrivendo e non hai inviato resta sul telefono. Aspetta qualche minuto: quando è finito l'app si riapre da sola, oppure tocca ", tasto("Riprova"), ". Se avevi il telefono in tasca, quando lo riprendi l'app si ricarica da sola con la versione nuova. Dopo mezz'ora la manutenzione finisce comunque da sola."]]
+    ["Perché vedo «Manutenzione in corso, riprova tra poco»?", ["Vuol dire che stiamo aggiornando l'app (di solito la sera, a negozi chiusi). In quei minuti non entra nessuno, nemmeno i titolari, e non si può salvare niente: così l'aggiornamento non si rovina. Quello che stavi scrivendo e non hai inviato resta sul telefono. Aspetta qualche minuto: quando è finito l'app si riapre da sola, oppure tocca ", tasto("Riprova"), ". Se avevi il telefono in tasca, quando lo riprendi (o quando riapri l'app) l'app si ricarica da sola con la versione nuova. Dopo mezz'ora la manutenzione finisce comunque da sola."]]
   ]});
   if (!tit) cap.push({ titolo:"Permessi", domande:[
     ["Un collega ha un tasto che io non ho: perché?", ["Il titolare può dare o togliere a ognuno le singole cose (per esempio segnare «Urgente», disdire una prenotazione, vedere il telefono del cliente) e anche le singole notifiche. Se ti manca qualcosa che ti serve, chiedi al titolare."]]
@@ -9183,6 +9183,8 @@ function confirmUscita(){
 }
 /* una versione nuova dell'app pubblicata mentre il telefono era in tasca (per esempio durante la manutenzione):
    quando si riprende in mano, l'app se ne accorge da «versione.json» (lo scrive sorgente/build.py) e si ricarica.
+   Si controlla anche appena si apre: il telefono a volte apre la sua copia vecchia (rete lenta, copia presa
+   in un momento in cui l'app era chiusa) invece di quella nuova.
    Le cose scritte e non inviate restano (bozze). Una volta sola per versione, così non si ricarica all'infinito
    se il sito nuovo non è ancora arrivato dappertutto. */
 async function controllaVersione(){
@@ -9202,6 +9204,7 @@ async function controllaVersione(){
 async function avviaSupabase(){
   S.sito = true;
   document.addEventListener("visibilitychange", function(){ if (document.visibilityState === "visible") controllaVersione(); });
+  controllaVersione();
   /* il telefono si tiene una copia dell'app: si apre anche senza campo */
   try {
     if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").then(function(reg){
