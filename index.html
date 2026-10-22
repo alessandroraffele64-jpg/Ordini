@@ -518,6 +518,7 @@ textarea:focus,select:focus{outline:3px solid var(--accent);outline-offset:1px;b
 .chip-recupera{min-height:36px;padding:0 10px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font:inherit;font-size:14px;font-weight:700;cursor:pointer}
 /* «Cosa serve?» a tutto schermo: toccando la casella; si esce solo inviando o cancellando tutto */
 .scrivi-testa{display:none}
+#form-giro:not(.pieno) > :not(label.label):not(.righe-box):not(.esito){display:none}
 /* lo stesso per le cose aggiunte nel giro e per «+ Segna cosa manca» */
 form.pieno{position:fixed;inset:0;z-index:56;margin:0;border:0;border-radius:0;overflow-y:auto;padding:0 16px calc(env(safe-area-inset-bottom,0px) + 32px);background:var(--bg);max-width:none!important;display:flex;flex-direction:column;gap:12px}
 form.pieno > *{width:100%;max-width:560px;margin-left:auto;margin-right:auto}
@@ -703,6 +704,9 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
 .gruppo.arrivate{border:1.5px solid color-mix(in srgb,var(--arrivo-txt) 45%,var(--line-2))}
 .gruppo.arrivate .gruppo-head{background:linear-gradient(100deg,var(--arrivo-bg) 0%,var(--surface) 90%);border-bottom-color:color-mix(in srgb,var(--arrivo-txt) 35%,var(--line))}
 .gruppo.arrivate h3,.gruppo.arrivate .gh-per{color:var(--arrivo-txt)}
+.sotto-gruppo{margin:0;padding:8px 14px;font-size:14px;font-weight:800;letter-spacing:.02em;border-bottom:1.5px dashed var(--line)}
+.sotto-gruppo.sg-caricate{background:color-mix(in srgb,var(--surface-2) 70%,transparent);color:var(--ink)}
+.sotto-gruppo.sg-dacaricare{color:var(--muted)}
 .riga.e-caricato{background:color-mix(in srgb,var(--surface-2) 55%,transparent)}
 .riga.urgente{background:linear-gradient(100deg,var(--urgent-bg) 0%,color-mix(in srgb,var(--urgent-bg) 25%,var(--surface)) 100%)}
 .passa{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:var(--r-md);background:var(--surface-2);color:var(--ink);font-weight:700}
@@ -1237,14 +1241,14 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
     </div>
     <div class="legenda" id="legenda" aria-label="Cose aperte per negozio"></div>
 
-    <details class="card" id="giro-wrap">
-      <summary>+ Aggiungi tu una cosa da portare o da ricordare</summary>
-      <form class="blocco" id="form-giro" novalidate>
+    <!-- come «Cosa serve?» nei negozi: si tocca la casella e si apre a tutto schermo; si esce con «✕ Chiudi» -->
+    <div id="giro-wrap">
+      <form class="card" id="form-giro" novalidate>
         <div class="scrivi-testa">
           <h2 class="comanda-titolo">Cosa portare o ricordare?</h2>
           <button type="button" class="pren-chiudi" id="giro-esci">✕ Chiudi</button>
         </div>
-        <label class="label" for="giro-scrivi">Cosa?</label>
+        <label class="label" for="giro-scrivi">Aggiungi tu una cosa da portare o da ricordare</label>
         <p class="chi-ordina" id="chi-giro"></p>
         <!-- le cose scritte, una per riga: lo tiene l'app (per le bozze), non si vede -->
         <textarea id="righe-giro" hidden aria-hidden="true" tabindex="-1"></textarea>
@@ -1268,7 +1272,7 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
         <button type="submit" class="primary" id="invia-giro" disabled>Controlla e aggiungi</button>
         <p class="esito" id="esito-giro" role="status"></p>
       </form>
-    </details>
+    </div>
 
     <!-- «Carico per reparto» (blu) e «Giro per negozio» (arancione): fermi in alto; a sinistra una fascia del colore scelto -->
     <div class="modo-barra" id="modo-barra">
@@ -1712,6 +1716,8 @@ function norma(k, d, st, autore, rid){
     stato: stati.indexOf(st.stato) >= 0 ? st.stato : "attesa",
     creato: Number(d.creato) || 0,
     consegnatoAlle: Number(st.consegnatoAlle) || 0,
+    /* quando è stata caricata (per le più vecchie vale l'ultimo cambio) */
+    caricatoAlle: Number(st.caricatoAlle) || (st.stato === "caricato" ? Number(st.aggiornato) || 0 : 0),
     esempio: d.esempio === true || autore === ESEMPI,
     daGiro: d.daGiro === true,
     reparto: REPARTI.indexOf(st.reparto) >= 0 ? st.reparto : (REPARTI.indexOf(d.reparto) >= 0 ? d.reparto : ""),
@@ -2728,6 +2734,8 @@ async function cambiaStato(id, stato){
   const r = S.richieste.find(function(x){ return x.id === id; });
   if (r && r.per !== PROMEMORIA && !haAzione(stato === "consegnato" || r.stato === "consegnato" ? "giroConsegnato" : "giroCaricato")) return;
   const patch = { stato: stato, aggiornato: Date.now(), consegnatoAlle: stato === "consegnato" ? Date.now() : 0 };
+  /* caricata adesso: l'ora serve per metterla in fila tra le caricate («Riapri» tiene quella di prima) */
+  if (stato === "caricato" && !(r && r.stato === "consegnato" && r.caricatoAlle)) patch.caricatoAlle = Date.now();
   S.pending.add(id); renderTutto();
   await scrivi(function(){ return store.stato(id, patch); });
   S.pending.delete(id); renderTutto();
@@ -4256,12 +4264,12 @@ function capitoliManuale(){
   if (haSezione("consegne")) cap.push({ titolo:"Giro consegne", domande:[
     ["Come funziona il giro?", ["In alto scegli ", tasto("Carico per reparto"), " (le cose da caricare, divise per reparto) oppure ", tasto("Giro per negozio"), " (le cose caricate, divise per negozio). Quello scelto è colorato: blu per il carico, arancione per il giro, con una fascia dello stesso colore lungo il lato sinistro dello schermo. I due tasti restano fermi in alto anche quando scorri la lista, così passi dall'uno all'altro quando vuoi."]],
     ["Dove vedo quello che ho consegnato oggi?", ["In fondo alla pagina tocca ", tasto("Consegnato oggi"), ": si apre un riquadro con l'elenco. Accanto c'è ", tasto("Cronologia: cose tolte"), " (le cose tolte, da recuperare se è stato uno sbaglio). Si apre uno alla volta; si chiude toccando di nuovo il tasto o da solo quando torni in cima o cambi pagina."]],
-    ["Come segno quello che carico e consegno?", ["Tocca ", tasto("Caricato"), " quando la cosa è sul furgone: il negozio la vede «In viaggio». Al negozio tocca ", tasto("Consegnato"), ", oppure ", tasto("Tutto consegnato"), " per tutte le cose di quel negozio. «Annulla» rimette la cosa da caricare."]],
+    ["Come segno quello che carico e consegno?", ["Tocca ", tasto("Caricato"), " quando la cosa è sul furgone: il negozio la vede «In viaggio». Al negozio tocca ", tasto("Consegnato"), ", oppure ", tasto("Tutto consegnato"), " per tutte le cose di quel negozio. «Annulla» rimette la cosa da caricare. In ", tasto("Giro per negozio"), " ogni negozio ha in alto «Caricate, da consegnare», nell'ordine in cui le hai caricate (es. «Caricata 09:10», poi «Caricata 09:15»), e sotto «Ancora da caricare» con gli ordini nuovi."]],
     ["E se ne ho solo una parte?", ["Tocca ", tasto("Solo una parte"), ", scrivi cosa manca ancora (per esempio «2 casse») e tocca ", tasto("Carica la parte"), ". La richiesta diventa caricata con la scritta «Solo una parte: mancano 2 casse». Quello che manca diventa una riga nuova per lo stesso negozio, segnata «non c'è»: va nella striscia rossa e, quando arriva, torna in cima alle consegne in verde."], disegnoParte()],
     ["E se una cosa non c'è in magazzino?", ["Tocca «Non c'è» e poi «Conferma». La cosa esce dalla tua lista e va nella striscia rossa in alto, che vedono tutti. Il negozio la vede barrata."]],
     haAzione("giroSposta") ? ["Una cosa è nel reparto sbagliato: come la sposto?", ["In «Carico per reparto», sotto la cosa tocca «Sposta…» e scegli il reparto giusto (per esempio da «Altro» a «Bevande»). Da quel momento anche tutte le cose con lo stesso nome vanno in quel reparto, al panificio e nel giro."]] : null,
     ["Cosa sono le cose verdi in cima?", ["Sono cose che mancavano e adesso sono «Arrivate in magazzino»: vanno portate al negozio che le aveva chieste. Restano verdi e in cima finché non sono consegnate."], disegnoArrivata()],
-    ["Posso aggiungere io una cosa?", ["Sì, con «+ Aggiungi tu una cosa da portare o da ricordare». Tocca la casella: si apre a tutto schermo, come «Cosa serve?» nei negozi. Scrivi una cosa e premi Invio: diventa un rettangolino (verde se l'app la riconosce, arancione se ti chiede quale). Puoi scegliere un negozio, oppure «Promemoria» se è solo per te (es. «Passare a prendere le casse»): quando l'hai fatta tocca ", tasto("Fatto"), ". Per uscire senza aggiungere niente: ", tasto("Cancella tutto ed esci"), "."]],
+    ["Posso aggiungere io una cosa?", ["Sì, con la casella «Aggiungi tu una cosa da portare o da ricordare», in alto nella pagina. Tocca la casella: si apre a tutto schermo, come «Cosa serve?» nei negozi. Scrivi una cosa e premi Invio: diventa un rettangolino (verde se l'app la riconosce, arancione se ti chiede quale). Puoi scegliere un negozio, oppure «Promemoria» se è solo per te (es. «Passare a prendere le casse»): quando l'hai fatta tocca ", tasto("Fatto"), ". Poi ", tasto("Controlla e aggiungi"), " ti fa controllare prima di aggiungere. Per uscire tocca ", tasto("✕ Chiudi"), " in alto (o il tasto indietro del telefono): se non hai scritto niente torni subito al giro, se hai scritto qualcosa ti chiede se vuoi cancellarlo."]],
     ["Perché un rettangolino è bianco con scritto «temporanea»?", ["Vuol dire che l'app non conosce quella cosa e pensa che sia una cosa di passaggio, per esempio «Passare a prendere le casse». Va bene lo stesso: si aggiunge com'è scritta. Poi un titolare, nel «Database», decide se è davvero temporanea o se è un prodotto da aggiungere all'elenco. Le cose che l'app riconosce (per esempio «Vassoi») vanno come sempre."]]
   ]});
   if (vedePren()) cap.push({ titolo:"Prenotazioni", domande:[
@@ -4713,7 +4721,7 @@ async function confermaParte(id){
   let nuova = "";
   let ok = await scrivi(async function(){ nuova = await store.aggiungi(voce); }, true);
   if (ok && nuova) ok = await scrivi(function(){ return store.stato(nuova, { prep: "manca", prepAlle: ora, mancaAlle: ora, mancato: true }); });
-  if (ok) ok = await scrivi(function(){ return store.stato(id, { stato: "caricato", aggiornato: ora, consegnatoAlle: 0, parteManca: manca, parteAlle: ora }); });
+  if (ok) ok = await scrivi(function(){ return store.stato(id, { stato: "caricato", aggiornato: ora, caricatoAlle: ora, consegnatoAlle: 0, parteManca: manca, parteAlle: ora }); });
   S.pending.delete(id);
   if (ok){
     S.parteApri = null; S.parteTesto = "";
@@ -4802,7 +4810,7 @@ function ordinaCarico(a, b){ return (rangoPrep(a) - rangoPrep(b)) || ordina(a, b
 function rigaGiro(r){
   const promem = r.per === PROMEMORIA;
   const statoPill = promem ? null : (r.stato === "caricato"
-    ? el("span", {class:"pill p-caricato", text:"Caricata"})
+    ? el("span", {class:"pill p-caricato", text: r.caricatoAlle ? "Caricata " + quando(r.caricatoAlle) : "Caricata"})
     : (pillPrep(r) || el("span", {class:"pill p-attesa", text:"Da caricare"})));
   const ritiro = pillOrigine(r);
   const li = el("li", {class: "riga" + (r.nuova ? " nuova" : "") + (r.urgente ? " urgente" : "") + (r.stato === "caricato" ? " e-caricato" : "") + (nonDisponibile(r) && r.stato === "attesa" ? " e-finito" : "")},
@@ -4903,10 +4911,20 @@ function gruppiNegozio(aperte){
         el("ul", {class:"lista"}, ...items.map(rigaGiro))));
       return;
     }
-    const caricati = items.filter(function(r){ return r.stato === "caricato"; }).length;
+    /* prima le caricate, nell'ordine in cui sono state caricate; sotto quelle ancora da caricare */
+    const caricate = items.filter(function(r){ return r.stato === "caricato"; })
+      .sort(function(a, b){ return (a.caricatoAlle || 0) - (b.caricatoAlle || 0) || a.creato - b.creato; });
+    const daCaricare = items.filter(function(r){ return r.stato !== "caricato"; });
+    const caricati = caricate.length;
     const btn = (caricati && !S.sola && store && haAzione("giroConsegnato")) ? el("button", {type:"button", class:"mini", "data-tutto":dest, text:"Tutto consegnato (" + caricati + ")"}) : null;
-    gruppi.push(el("section", {class:"gruppo dest " + classeDest(dest), "aria-label":"Consegna a " + dest}, testaGruppo("Consegna a", dest, items.length, btn),
-      el("ul", {class:"lista"}, ...items.map(rigaGiro))));
+    const parti = [testaGruppo("Consegna a", dest, items.length, btn)];
+    if (caricate.length) parti.push(
+      el("p", {class:"sotto-gruppo sg-caricate", text:"Caricate, da consegnare · " + (caricati === 1 ? "1 cosa" : caricati + " cose")}),
+      el("ul", {class:"lista"}, ...caricate.map(rigaGiro)));
+    if (daCaricare.length) parti.push(
+      el("p", {class:"sotto-gruppo sg-dacaricare", text:"Ancora da caricare · " + (daCaricare.length === 1 ? "1 cosa" : daCaricare.length + " cose")}),
+      el("ul", {class:"lista"}, ...daCaricare.map(rigaGiro)));
+    gruppi.push(el("section", {class:"gruppo dest " + classeDest(dest), "aria-label":"Consegna a " + dest}, ...parti));
   });
   return gruppi;
 }
@@ -7915,7 +7933,7 @@ const VAPID_PUBLICA = "BC9TAKzQiQ-x3xtX0KWauGtV-uvIk9VFwqLjWAOzrJbe4e5w2AWyXMIej
    Il nome di chi lo fa lo mette il database (funzione "registra", supabase/aggiornamento-10-registro-con-nomi.sql):
    deciso dal proprietario il 19 ottobre, per vedere chi aiutare a usare meglio l'app; lo leggono solo lui e Claude. */
 const REGISTRO_ATTIVO = true;
-const VERSIONE_APP = "349258cd";
+const VERSIONE_APP = "7b80423c";
 S.reg = [];
 S.ultimoTasto = { nome: "", alle: 0 };
 S.tocchi = { nome: "", volte: 0, alle: 0, segnato: false };
