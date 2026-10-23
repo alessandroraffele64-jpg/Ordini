@@ -690,9 +690,6 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
 .gruppo.arrivate{border:1.5px solid color-mix(in srgb,var(--arrivo-txt) 45%,var(--line-2))}
 .gruppo.arrivate .gruppo-head{background:linear-gradient(100deg,var(--arrivo-bg) 0%,var(--surface) 90%);border-bottom-color:color-mix(in srgb,var(--arrivo-txt) 35%,var(--line))}
 .gruppo.arrivate h3,.gruppo.arrivate .gh-per{color:var(--arrivo-txt)}
-.sotto-gruppo{margin:0;padding:8px 14px;font-size:14px;font-weight:800;letter-spacing:.02em;border-bottom:1.5px dashed var(--line)}
-.sotto-gruppo.sg-caricate{background:color-mix(in srgb,var(--surface-2) 70%,transparent);color:var(--ink)}
-.sotto-gruppo.sg-dacaricare{color:var(--muted)}
 .riga.e-caricato{background:color-mix(in srgb,var(--surface-2) 55%,transparent)}
 .riga.urgente{background:linear-gradient(100deg,var(--urgent-bg) 0%,color-mix(in srgb,var(--urgent-bg) 25%,var(--surface)) 100%)}
 .passa{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:var(--r-md);background:var(--surface-2);color:var(--ink);font-weight:700}
@@ -4247,9 +4244,9 @@ function capitoliManuale(){
     ["Posso chiedere anche io delle cose?", ["Sì, come i negozi: scrivi in «Cosa serve?» e invia. Vale tutto quello che c'è nel capitolo delle richieste."]]
   ]});
   if (haSezione("consegne")) cap.push({ titolo:"Giro consegne", domande:[
-    ["Come funziona il giro?", ["In alto scegli ", tasto("Carico per reparto"), " (le cose da caricare, divise per reparto) oppure ", tasto("Giro per negozio"), " (le cose caricate, divise per negozio). Quello scelto è colorato: blu per il carico, arancione per il giro, con una fascia dello stesso colore lungo il lato sinistro dello schermo. I due tasti restano fermi in alto anche quando scorri la lista, così passi dall'uno all'altro quando vuoi."]],
+    ["Come funziona il giro?", ["In alto scegli ", tasto("Carico per reparto"), " (le cose da caricare, divise per reparto) oppure ", tasto("Giro per negozio"), " (solo le cose caricate, divise per negozio). Quello scelto è colorato: blu per il carico, arancione per il giro, con una fascia dello stesso colore lungo il lato sinistro dello schermo. I due tasti restano fermi in alto anche quando scorri la lista, così passi dall'uno all'altro quando vuoi."]],
     ["Dove vedo quello che ho consegnato oggi?", ["In fondo alla pagina tocca ", tasto("Consegnato oggi"), ": si apre un riquadro con l'elenco. Accanto c'è ", tasto("Cronologia: cose tolte"), " (le cose tolte, da recuperare se è stato uno sbaglio). Si apre uno alla volta; si chiude toccando di nuovo il tasto o da solo quando torni in cima o cambi pagina."]],
-    ["Come segno quello che carico e consegno?", ["Tocca ", tasto("Caricato"), " quando la cosa è sul furgone: il negozio la vede «In viaggio». Al negozio tocca ", tasto("Consegnato"), ", oppure ", tasto("Tutto consegnato"), " per tutte le cose di quel negozio. «Annulla» rimette la cosa da caricare. In ", tasto("Giro per negozio"), " ogni negozio ha in alto «Caricate, da consegnare», nell'ordine in cui le hai caricate (es. «Caricata 09:10», poi «Caricata 09:15»), e sotto «Ancora da caricare» con gli ordini nuovi."]],
+    ["Come segno quello che carico e consegno?", ["Tocca ", tasto("Caricato"), " quando la cosa è sul furgone: il negozio la vede «In viaggio». Al negozio tocca ", tasto("Consegnato"), ", oppure ", tasto("Tutto consegnato"), " per tutte le cose di quel negozio. «Annulla» rimette la cosa da caricare. In ", tasto("Giro per negozio"), " ci sono solo le cose che hai caricato, negozio per negozio, nell'ordine in cui le hai caricate (es. «Caricata 09:10», poi «Caricata 09:15»). Gli ordini nuovi, ancora da caricare, li trovi solo in ", tasto("Carico per reparto"), "."]],
     ["E se ne ho solo una parte?", ["Tocca ", tasto("Solo una parte"), ", scrivi cosa manca ancora (per esempio «2 casse») e tocca ", tasto("Carica la parte"), ". La richiesta diventa caricata con la scritta «Solo una parte: mancano 2 casse». Quello che manca diventa una riga nuova per lo stesso negozio, segnata «non c'è»: va nella striscia rossa e, quando arriva, torna in cima alle consegne in verde."], disegnoParte()],
     ["E se una cosa non c'è in magazzino?", ["Tocca «Non c'è» e poi «Conferma». La cosa esce dalla tua lista e va nella striscia rossa in alto, che vedono tutti. Il negozio la vede barrata."]],
     haAzione("giroSposta") ? ["Una cosa è nel reparto sbagliato: come la sposto?", ["In «Carico per reparto», sotto la cosa tocca «Sposta…» e scegli il reparto giusto (per esempio da «Altro» a «Bevande»). Da quel momento anche tutte le cose con lo stesso nome vanno in quel reparto, al panificio e nel giro."]] : null,
@@ -4896,20 +4893,14 @@ function gruppiNegozio(aperte){
         el("ul", {class:"lista"}, ...items.map(rigaGiro))));
       return;
     }
-    /* prima le caricate, nell'ordine in cui sono state caricate; sotto quelle ancora da caricare */
+    /* solo le caricate, nell'ordine in cui sono state caricate: quelle da caricare stanno in «Carico per reparto» */
     const caricate = items.filter(function(r){ return r.stato === "caricato"; })
       .sort(function(a, b){ return (a.caricatoAlle || 0) - (b.caricatoAlle || 0) || a.creato - b.creato; });
-    const daCaricare = items.filter(function(r){ return r.stato !== "caricato"; });
     const caricati = caricate.length;
-    const btn = (caricati && !S.sola && store && haAzione("giroConsegnato")) ? el("button", {type:"button", class:"mini", "data-tutto":dest, text:"Tutto consegnato (" + caricati + ")"}) : null;
-    const parti = [testaGruppo("Consegna a", dest, items.length, btn)];
-    if (caricate.length) parti.push(
-      el("p", {class:"sotto-gruppo sg-caricate", text:"Caricate, da consegnare · " + (caricati === 1 ? "1 cosa" : caricati + " cose")}),
-      el("ul", {class:"lista"}, ...caricate.map(rigaGiro)));
-    if (daCaricare.length) parti.push(
-      el("p", {class:"sotto-gruppo sg-dacaricare", text:"Ancora da caricare · " + (daCaricare.length === 1 ? "1 cosa" : daCaricare.length + " cose")}),
-      el("ul", {class:"lista"}, ...daCaricare.map(rigaGiro)));
-    gruppi.push(el("section", {class:"gruppo dest " + classeDest(dest), "aria-label":"Consegna a " + dest}, ...parti));
+    if (!caricati) return;
+    const btn = (!S.sola && store && haAzione("giroConsegnato")) ? el("button", {type:"button", class:"mini", "data-tutto":dest, text:"Tutto consegnato (" + caricati + ")"}) : null;
+    gruppi.push(el("section", {class:"gruppo dest " + classeDest(dest), "aria-label":"Consegna a " + dest}, testaGruppo("Consegna a", dest, caricati, btn),
+      el("ul", {class:"lista"}, ...caricate.map(rigaGiro))));
   });
   return gruppi;
 }
@@ -4936,7 +4927,7 @@ function renderConsegne(){
   $("view-consegne").dataset.modoScelto = S.modo;
   $("hint-modo").textContent = S.modo === "carico"
     ? "In magazzino: prendi tutto reparto per reparto. Il colore dice a quale negozio va."
-    : "Per strada: scarica negozio per negozio quello che hai caricato.";
+    : "Per strada: qui ci sono solo le cose che hai caricato, negozio per negozio. Quelle ancora da caricare sono in «Carico per reparto»." + (nAttesa ? " Adesso: " + (nAttesa === 1 ? "1 cosa" : nAttesa + " cose") + " da caricare." : "");
 
   const gruppi = S.modo === "carico" ? gruppiCarico(aperte) : gruppiNegozio(aperte);
   riempi($("gruppi"), gruppi);
@@ -4945,6 +4936,7 @@ function renderConsegne(){
   if (!S.pronto) v.textContent = "Carico le richieste…";
   else if (S.modo === "carico" && nViaggio) v.textContent = "Tutto caricato.";
   else if (S.modo === "carico") v.textContent = "Niente da caricare. Quando un negozio chiede qualcosa, compare qui.";
+  else if (nAttesa) v.textContent = "Niente di caricato da consegnare. Le cose da caricare sono in «Carico per reparto».";
   else v.textContent = "Giro completato. Quando un negozio chiede qualcosa, compare qui.";
   $("passa").hidden = !(S.modo === "carico" && nViaggio);
   $("passa-testo").textContent = nViaggio === 1 ? "1 cosa caricata da consegnare" : nViaggio + " cose caricate da consegnare";
