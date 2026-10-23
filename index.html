@@ -7933,7 +7933,7 @@ const VAPID_PUBLICA = "BC9TAKzQiQ-x3xtX0KWauGtV-uvIk9VFwqLjWAOzrJbe4e5w2AWyXMIej
    Il nome di chi lo fa lo mette il database (funzione "registra", supabase/aggiornamento-10-registro-con-nomi.sql):
    deciso dal proprietario il 19 ottobre, per vedere chi aiutare a usare meglio l'app; lo leggono solo lui e Claude. */
 const REGISTRO_ATTIVO = true;
-const VERSIONE_APP = "acc052e7";
+const VERSIONE_APP = "ad8f2943";
 S.reg = [];
 S.ultimoTasto = { nome: "", alle: 0 };
 S.tocchi = { nome: "", volte: 0, alle: 0, segnato: false };
@@ -7958,8 +7958,9 @@ function registra(evento, dati){
   try { s = sezioneAttuale(); } catch(e){}
   S.reg.push({ e: String(evento).slice(0, 40), t: Date.now(), s: s, p: String(S.punto || "").slice(0, 30), d: dati || {} });
   salvaRegistro();
+  /* parte subito, come le altre cose: i tasti premuti nello stesso secondo vanno insieme */
   clearTimeout(S.timerReg);
-  S.timerReg = setTimeout(mandaRegistro, 30000);
+  S.timerReg = setTimeout(mandaRegistro, 1500);
 }
 /* prima di entrare (codice sbagliato, pagina della manutenzione) il database non accetta il registro:
    si tiene sul telefono e parte quando la persona è entrata */
@@ -7996,17 +7997,41 @@ async function leggiNotificheRicevute(){
     (Array.isArray(lista) ? lista : []).slice(-50).forEach(function(n){ registra("notifica ricevuta", { tipo: String(n.tipo || "").slice(0, 20), alle: Number(n.t) || 0 }); });
   } catch(e){}
 }
-async function mandaRegistro(){
+async function mandaRegistro(chiudendo){
   clearTimeout(S.timerReg);
   if (!REGISTRO_ATTIVO || !S.reg.length || !sb) return;
   if (navigator.onLine === false){ S.timerReg = setTimeout(mandaRegistro, 60000); return; }
+  if (chiudendo === true) return mandaRegistroChiudendo();
+  if (S.regInVolo) { S.timerReg = setTimeout(mandaRegistro, 1500); return; }
   const pacco = S.reg.slice(0, 200);
+  S.regInVolo = pacco.length;
   try {
     const r = await sb.rpc("registra", { eventi: pacco });
     if (r.error) throw r.error;
     S.reg = S.reg.slice(pacco.length); salvaRegistro();
-    if (S.reg.length) S.timerReg = setTimeout(mandaRegistro, 2000);
+    if (S.reg.length) S.timerReg = setTimeout(mandaRegistro, 1500);
   } catch(e){ S.timerReg = setTimeout(mandaRegistro, 60000); }
+  finally { S.regInVolo = 0; }
+}
+/* mentre l'app si chiude (Android la ferma subito): l'invio deve finire anche ad app chiusa, come per le notifiche.
+   Al massimo 60 KB per volta; se non va, le righe restano sul telefono e partono alla riapertura. */
+function mandaRegistroChiudendo(){
+  const token = S.token;
+  if (!token) return;
+  /* le righe che stanno già partendo (S.regInVolo, in testa) non si mandano due volte */
+  const da = S.regInVolo || 0;
+  let pacco = S.reg.slice(da, da + 200), corpo = JSON.stringify({ eventi: pacco });
+  if (!pacco.length) return;
+  while (pacco.length > 1 && corpo.length > 60000){ pacco = pacco.slice(0, Math.ceil(pacco.length / 2)); corpo = JSON.stringify({ eventi: pacco }); }
+  S.reg = S.reg.slice(0, da).concat(S.reg.slice(da + pacco.length)); salvaRegistro();
+  const rimetti = function(){ S.reg = S.reg.concat(pacco).slice(-400); salvaRegistro(); };
+  try {
+    fetch(SB_URL + "/rest/v1/rpc/registra", {
+      method: "POST", keepalive: true,
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token, "apikey": SB_KEY },
+      body: corpo
+    }).then(function(r){ if (!r.ok) rimetti(); }).catch(rimetti);
+  } catch(e){ rimetti(); }
 }
 /* il telefono: una volta per ogni apertura */
 function registraDispositivo(){
@@ -9239,7 +9264,7 @@ async function avviaSupabase(){
     svuotaCoda(); caricaTuttoSB();
   });
   document.addEventListener("visibilitychange", function(){
-    if (document.visibilityState === "hidden"){ if (S.eventi.length) mandaEventi(true); registra("chiusa o in pausa", {}); mandaRegistro(); }
+    if (document.visibilityState === "hidden"){ if (S.eventi.length) mandaEventi(true); registra("chiusa o in pausa", {}); mandaRegistro(true); }
     else registra("riaperta", {});
   });
   /* errori dell'app: per trovarli e correggerli */
