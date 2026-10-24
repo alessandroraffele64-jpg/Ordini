@@ -491,6 +491,15 @@ h2{font-family:var(--font-display);font-weight:700;font-size:19px;line-height:1.
 .guasto-nota-form{flex-basis:100%}
 .guasti-fatti summary{font-weight:700;cursor:pointer;min-height:44px;display:flex;align-items:center;gap:6px}
 #guasto-form .field{flex:none}
+.foto-scelte{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.foto-mini{position:relative;width:84px;height:84px;border-radius:12px;overflow:hidden;border:1.5px solid var(--line)}
+.foto-mini img{width:100%;height:100%;object-fit:cover;display:block}
+.foto-mini button{position:absolute;top:2px;right:2px;width:30px;height:30px;border-radius:50%;border:0;background:var(--urgent);color:#fff;font-weight:700;cursor:pointer}
+.foto-aggiungi{min-height:84px;padding:0 16px;border-radius:12px;border:2px dashed var(--line);background:var(--surface);color:var(--ink);font:inherit;font-weight:700;cursor:pointer}
+.foto-box{max-width:640px;max-height:calc(100vh - 32px);overflow:auto}
+.foto-grandi{display:flex;flex-direction:column;gap:10px;margin:10px 0}
+.foto-grandi img{width:100%;height:auto;border-radius:12px;display:block}
+.riga.guasto .foto-vedi{align-self:flex-start;margin-top:6px}
 .chip{position:relative}
 .chip input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
 .chip span{display:inline-flex;align-items:center;gap:8px;min-height:42px;padding:0 16px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface);font-weight:700}
@@ -1063,6 +1072,10 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
         <label class="field"><span class="label-sm">2. Cosa non funziona?</span>
           <textarea id="guasto-testo" rows="3" maxlength="300" autocapitalize="sentences" placeholder="Es. La lampadina sopra il bancone del pane è spenta"></textarea></label>
         <div class="blocco"><p class="label-sm">3. Quanto è urgente?</p><div class="urg-scelte" id="guasto-urgenza"></div></div>
+        <div class="blocco"><p class="label-sm">4. Una foto? (si può anche senza)</p>
+          <div class="foto-scelte" id="guasto-foto"></div>
+          <input type="file" id="guasto-foto-file" accept="image/*" multiple hidden>
+          <p class="hint" id="guasto-foto-hint">Al massimo 3. L'app le rimpicciolisce prima di mandarle.</p></div>
         <button type="submit" class="primary" id="guasto-invia">Invia la segnalazione</button>
         <p class="esito" id="guasto-esito" role="status"></p>
       </form>
@@ -1484,6 +1497,14 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
   <div class="card domanda-box chip-box">
     <button type="button" class="chip-x" data-chip-chiudi="1" aria-label="Chiudi">✕</button>
     <div class="righe-domanda" id="righe-domanda" aria-live="polite"></div>
+  </div>
+</div>
+<!-- Guasti: le foto di un guasto -->
+<div class="domanda-velo" id="foto-velo" role="dialog" aria-modal="true" aria-label="Foto del guasto" hidden>
+  <div class="card domanda-box foto-box">
+    <p class="domanda-testo" id="foto-titolo"></p>
+    <div class="foto-grandi" id="foto-grandi"></div>
+    <div class="riep-azioni"><button type="button" class="primary" id="foto-chiudi">Chiudi</button></div>
   </div>
 </div>
 <div class="domanda-velo" id="domanda" role="alertdialog" aria-modal="true" aria-labelledby="domanda-testo" hidden>
@@ -3406,12 +3427,14 @@ function urgenzaGuasto(k){ return URGENZE_GUASTO.find(function(u){ return u.k ==
 S.guasti = [];
 S.guastoForm = { aperto: false, inviando: false, dove: "", urgenza: "" };
 S.guastoNota = "";
+S.guastoFoto = [];
 function normaGuasto(k, d, st, autore){
   st = st || {};
   return { id: k, rid: String(k).split("~")[1] || "", autore: autore, mio: !!S.mioId && autore === S.mioId,
     dove: POSTI_GUASTI.indexOf(d.dove) >= 0 ? d.dove : "Corso",
     testo: String(d.articolo || "").slice(0, 300) || "?",
     urgenza: urgenzaGuasto(d.urgenza).k,
+    foto: Math.min(3, Math.max(0, Math.floor(Number(d.foto) || 0))),
     creato: Number(d.creato) || 0,
     nota: String(st.guastoNota || "").slice(0, 200), notaAlle: Number(st.guastoNotaAlle) || 0, notaNome: String(st.guastoNotaNome || "").slice(0, 60),
     sistematoAlle: Number(st.sistematoAlle) || 0, sistematoNome: String(st.sistematoNome || "").slice(0, 60) };
@@ -3455,6 +3478,7 @@ function rigaGuasto(g){
     el("div", {class:"riga-main"},
       el("p", {class:"articolo", text:g.testo}),
       meta([pillUrgenzaGuasto(g), el("span", {class:"pill dest " + classeDest(g.dove), text:g.dove}), "segnalato da " + chiSegnalato(g) + ", " + quando(g.creato)]),
+      g.foto ? el("button", {type:"button", class:"mini foto-vedi", "data-guasto-foto":g.id, text:"📷 Vedi " + (g.foto === 1 ? "la foto" : "le " + g.foto + " foto")}) : null,
       g.nota ? el("p", {class:"guasto-nota"}, el("strong", {text:"Ci pensa " + (g.notaNome || "il titolare") + ": "}), document.createTextNode(g.nota + " (" + quando(g.notaAlle) + ")")) : null,
       g.sistematoAlle ? el("p", {class:"guasto-fatto", text:"✓ Sistemato " + quando(g.sistematoAlle) + (g.sistematoNome ? " · segnato da " + g.sistematoNome : "")}) : null));
   const box = el("div", {class:"azioni"});
@@ -3478,6 +3502,79 @@ function formNotaGuasto(g){
       el("button", {type:"button", class:"mini", "data-guasto-nota-annulla":g.id, text:"Annulla"}),
       el("button", {type:"submit", class:"mini b-conferma-parte", disabled:S.pending.has(g.id), text:"Salva"})));
 }
+/* le foto: si rimpiccioliscono sul telefono (lato lungo 1280, jpeg) prima di mandarle; fino a 3 */
+const FOTO_MAX = 3;
+function rimpicciolisci(file){
+  return new Promise(function(ok, no){
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = function(){
+      URL.revokeObjectURL(url);
+      let lato = 1280, qualita = 0.7, dati = "";
+      for (let i = 0; i < 4; i++){
+        const f = Math.min(1, lato / Math.max(img.naturalWidth, img.naturalHeight));
+        const c = document.createElement("canvas");
+        c.width = Math.max(1, Math.round(img.naturalWidth * f)); c.height = Math.max(1, Math.round(img.naturalHeight * f));
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        dati = c.toDataURL("image/jpeg", qualita);
+        if (dati.length <= 450000) break;
+        lato = Math.round(lato * 0.8); qualita = Math.max(0.5, qualita - 0.1);
+      }
+      if (dati.indexOf("data:image/jpeg;base64,") !== 0 || dati.length > 650000) no(new Error("foto")); else ok(dati);
+    };
+    img.onerror = function(){ URL.revokeObjectURL(url); no(new Error("foto")); };
+    img.src = url;
+  });
+}
+async function aggiungiFotoGuasto(files){
+  const f = S.guastoForm;
+  const lista = Array.from(files || []).filter(function(x){ return /^image\//.test(x.type || "image/"); });
+  let saltate = 0;
+  for (const file of lista){
+    if (S.guastoFoto.length >= FOTO_MAX){ saltate++; continue; }
+    try { S.guastoFoto.push(await rimpicciolisci(file)); }
+    catch(e){ esito("guasto-esito", "Questa foto non si riesce ad aprire: prova a farne un'altra."); }
+  }
+  if (saltate) esito("guasto-esito", "Al massimo " + FOTO_MAX + " foto.");
+  if (f.aperto) renderFormGuasto();
+}
+/* salva le foto di un guasto appena salvato (k = "autore~id"); senza Supabase (prova) restano solo in memoria */
+S.fotoMem = {};
+async function salvaFotoGuasto(k, foto){
+  if (!foto.length) return true;
+  if (!sb){ S.fotoMem[k] = foto.slice(); return true; }
+  let ok = true;
+  for (let i = 0; i < foto.length; i++){
+    const id = nuovoId();
+    if (!(await scrivi(function(){ return scriviOp({ tab: "foto_guasti", tipo: "insert", id: id, riga: { id: id, guasto: k, autore: S.mioId, dati: foto[i] } }); }))) ok = false;
+  }
+  return ok;
+}
+async function apriFotoGuasto(id){
+  const g = S.guasti.find(function(x){ return x.id === id; });
+  if (!g) return;
+  $("foto-titolo").textContent = g.testo + " (" + g.dove + ")";
+  riempi($("foto-grandi"), [el("p", {class:"hint", text:"Carico le foto…"})]);
+  $("foto-velo").hidden = false;
+  $("foto-chiudi").focus();
+  registra("foto del guasto aperte", { foto: g.foto });
+  let foto = [];
+  if (!sb) foto = S.fotoMem[id] || [];
+  else {
+    try {
+      const r = await sb.from("foto_guasti").select("id,dati").eq("guasto", id).order("creato");
+      if (r.error) throw r.error;
+      foto = (r.data || []).map(function(x){ return x.dati; }).filter(function(d){ return typeof d === "string" && d.indexOf("data:image/jpeg;base64,") === 0; });
+    } catch(e){
+      riempi($("foto-grandi"), [el("p", {class:"hint", text:"Non riesco a caricare le foto: controlla la connessione e riprova."})]);
+      return;
+    }
+  }
+  if ($("foto-velo").hidden) return;
+  riempi($("foto-grandi"), foto.length ? foto.map(function(d, i){ return el("img", {src:d, alt:"Foto " + (i + 1) + " del guasto: " + g.testo}); })
+    : [el("p", {class:"hint", text: g.sistematoAlle ? "Le foto sono già state spostate sul computer del titolare, nella cartella «Guasti»." : "Le foto non sono ancora arrivate: forse chi l'ha segnalato era senza campo. Riprova tra poco."})]);
+}
+function chiudiFotoGuasto(){ $("foto-velo").hidden = true; riempi($("foto-grandi"), []); }
 function renderFormGuasto(){
   const f = S.guastoForm, puo = puoSegnalareGuasto();
   $("guasto-nuovo").hidden = !puo || f.aperto;
@@ -3490,6 +3587,13 @@ function renderFormGuasto(){
     return el("button", {type:"button", class:"urg-tasto urg-" + u.k, "data-guasto-urgenza":u.k, "aria-pressed":String(f.urgenza === u.k), disabled:f.inviando},
       el("span", {class:"urg-nome", text:u.nome}), el("span", {class:"urg-es", text:u.es}));
   }));
+  const mini = S.guastoFoto.map(function(d, i){
+    return el("div", {class:"foto-mini"}, el("img", {src:d, alt:"Foto " + (i + 1)}),
+      el("button", {type:"button", "data-guasto-foto-togli":String(i), disabled:f.inviando, "aria-label":"Togli la foto " + (i + 1), text:"✕"}));
+  });
+  if (S.guastoFoto.length < FOTO_MAX) mini.push(el("button", {type:"button", class:"foto-aggiungi", id:"guasto-foto-apri", disabled:f.inviando,
+    text: S.guastoFoto.length ? "📷 Un'altra foto" : "📷 Aggiungi una foto"}));
+  riempi($("guasto-foto"), mini);
   $("guasto-invia").disabled = f.inviando;
   $("guasto-invia").textContent = f.inviando ? "Invio…" : "Invia la segnalazione";
 }
@@ -3519,13 +3623,13 @@ function renderGuasti(){
 }
 function apriFormGuasto(){
   const f = S.guastoForm;
-  f.aperto = true; f.dove = postoGuastoAdesso(); f.urgenza = "";
+  f.aperto = true; f.dove = postoGuastoAdesso(); f.urgenza = ""; S.guastoFoto = [];
   $("guasto-testo").value = "";
   esito("guasto-esito", "");
   renderGuasti();
   $("guasto-testo").focus();
 }
-function chiudiFormGuasto(){ S.guastoForm.aperto = false; $("guasto-testo").value = ""; renderGuasti(); }
+function chiudiFormGuasto(){ S.guastoForm.aperto = false; S.guastoFoto = []; $("guasto-testo").value = ""; renderGuasti(); }
 async function inviaGuasto(){
   const f = S.guastoForm;
   if (f.inviando || !puoSegnalareGuasto()) return;
@@ -3536,13 +3640,18 @@ async function inviaGuasto(){
   if (testo.length < 3){ esito("guasto-esito", "Scrivi cosa non funziona."); $("guasto-testo").focus(); return; }
   if (!f.urgenza){ esito("guasto-esito", "Scegli quanto è urgente."); return; }
   f.inviando = true; renderGuasti();
+  const foto = S.guastoFoto.slice(0, FOTO_MAX);
   const voce = { tipo: "guasto", dove: f.dove, articolo: maiuscola(testo), urgenza: f.urgenza, creato: Date.now() };
-  const ok = await scrivi(function(){ return store.aggiungi(voce); }, true);
+  if (foto.length) voce.foto = foto.length;
+  let k = "";
+  const ok = await scrivi(function(){ return store.aggiungi(voce).then(function(x){ k = x; }); }, true);
+  let fotoOk = true;
+  if (ok && k) fotoOk = await salvaFotoGuasto(k, foto);
   f.inviando = false;
   if (ok){
-    registra("guasto segnalato", { urgenza: f.urgenza });
-    f.aperto = false; $("guasto-testo").value = "";
-    avviso("Guasto segnalato: lo sa il titolare.");
+    registra("guasto segnalato", { urgenza: f.urgenza, foto: foto.length });
+    f.aperto = false; S.guastoFoto = []; $("guasto-testo").value = "";
+    avviso(fotoOk ? "Guasto segnalato: lo sa il titolare." : "Guasto segnalato, ma le foto non sono partite.");
   }
   renderTutto();
 }
@@ -4589,11 +4698,14 @@ function capitoliManuale(){
       "1. Dove: Corso, Piazza Nenni, Panificio o Furgone (il posto dove sei è già scelto).", el("br"),
       "2. Cosa non funziona, con parole tue. Esempio: «La lampadina sopra il bancone del pane è spenta».", el("br"),
       "3. Quanto è urgente: ", pill("urg-subito", "Urgente, blocca il lavoro"), " (per esempio la macchina del caffè non parte), ", pill("urg-presto", "Da sistemare presto"), " (l'affettatrice taglia male) o ", pill("urg-quando", "Quando si può"), " (la lampadina del bagno).", el("br"),
+      "4. Se vuoi, una foto (al massimo 3): tocca ", tasto("📷 Aggiungi una foto"), " e scatta o scegli dalla galleria. Non è obbligatoria.", el("br"),
       "Poi tocca ", tasto("Invia la segnalazione"), ": il titolare riceve subito una notifica."]] : null,
+    ["Come vedo le foto di un guasto?", ["Sotto il guasto tocca ", tasto("📷 Vedi le foto"), ": si aprono grandi. Si chiudono con ", tasto("Chiudi"), " o toccando fuori."]],
     ["Come faccio a non segnalare due volte la stessa cosa?", ["Prima di segnalare guarda l'elenco: ci sono i guasti ancora da sistemare dei posti dove lavori (chi fa il giro vede quelli del furgone), prima i rossi. Se c'è già, non serve segnalarlo di nuovo."]],
     ["Come so se se ne sta occupando qualcuno?", ["Sotto il guasto compare la scritta del titolare, per esempio «Ci pensa Giuseppe: ho chiamato il tecnico, viene martedì». Quando è a posto il guasto va in «Già sistemati» in fondo alla pagina e chi l'ha segnalato riceve una notifica."]],
     ["Ho segnalato una cosa per sbaglio: come la tolgo?", ["Sotto il tuo guasto tocca «Togli, era uno sbaglio» e conferma. Si può solo finché il titolare non ha scritto «Ci penso io»: dopo chiedi a lui."]],
-    haAzione("guastoSistema") ? ["Come segno che un guasto è sistemato?", ["Sotto il guasto tocca «Ci penso io» e scrivi cosa hai fatto o cosa farai (per esempio «Ho chiamato l'elettricista»): lo legge chi l'ha segnalato. Quando è a posto tocca ", tasto("Sistemato"), " e conferma: va in «Già sistemati» e chi l'ha segnalato riceve una notifica. Se l'hai segnato per sbaglio, in «Già sistemati» c'è «Non è sistemato, riapri»."]] : null
+    haAzione("guastoSistema") ? ["Come segno che un guasto è sistemato?", ["Sotto il guasto tocca «Ci penso io» e scrivi cosa hai fatto o cosa farai (per esempio «Ho chiamato l'elettricista»): lo legge chi l'ha segnalato. Quando è a posto tocca ", tasto("Sistemato"), " e conferma: va in «Già sistemati» e chi l'ha segnalato riceve una notifica. Se l'hai segnato per sbaglio, in «Già sistemati» c'è «Non è sistemato, riapri»."]] : null,
+    S.ruolo.tipo === "titolare" ? ["Dove finiscono le foto dei guasti?", ["L'app le rimpicciolisce prima di mandarle, così occupano poco. Ogni domenica, con le copie dei dati, vengono salvate sul computer nella cartella «Guasti» (un file per foto, con il giorno, il posto e il guasto nel nome). Dopo averle controllate sul computer, quelle dei guasti già sistemati si tolgono dal database: nell'app resta scritto che sono sul computer."]] : null
   ]});
   cap.push({ titolo:"Notifiche", domande:[
     ["Come accendo le notifiche?", ["Dal menu ☰ apri «Notifiche» e tocca ", tasto("Attiva le notifiche"), ": il telefono chiede il permesso. Sull'iPhone funzionano solo se apri l'app dall'icona sulla schermata Home."]],
@@ -7618,6 +7730,10 @@ function collega(){
     if (b.dataset.magArrivato) return magArrivato(b.dataset.magArrivato);
     if (b.id === "guasto-nuovo") return apriFormGuasto();
     if (b.id === "guasto-esci") return chiudiFormGuasto();
+    if (b.id === "guasto-foto-apri"){ $("guasto-foto-file").value = ""; return $("guasto-foto-file").click(); }
+    if (b.dataset.guastoFotoTogli){ S.guastoFoto.splice(Number(b.dataset.guastoFotoTogli), 1); return renderFormGuasto(); }
+    if (b.dataset.guastoFoto) return apriFotoGuasto(b.dataset.guastoFoto);
+    if (b.id === "foto-chiudi") return chiudiFotoGuasto();
     if (b.dataset.guastoUrgenza){ S.guastoForm.urgenza = b.dataset.guastoUrgenza; const sel = document.querySelector('input[name="guasto-dove"]:checked'); if (sel) S.guastoForm.dove = sel.value; esito("guasto-esito", ""); return renderGuasti(); }
     if (b.dataset.guastoFatto) return sistemaGuasto(b.dataset.guastoFatto);
     if (b.dataset.guastoRiapri) return riapriGuasto(b.dataset.guastoRiapri);
@@ -7718,6 +7834,8 @@ function collega(){
   ["input","change"].forEach(function(t){ $("pren-ora").addEventListener(t, function(){ if (this.value && S.formPren.tuttoGiorno){ S.formPren.tuttoGiorno = false; renderFormPren(); } }); });
   $("mag-form").addEventListener("submit", function(ev){ ev.preventDefault(); salvaMag(); });
   $("guasto-form").addEventListener("submit", function(ev){ ev.preventDefault(); inviaGuasto(); });
+  $("guasto-foto-file").addEventListener("change", function(ev){ aggiungiFotoGuasto(ev.target.files); });
+  $("foto-velo").addEventListener("click", function(ev){ if (ev.target.id === "foto-velo") chiudiFotoGuasto(); });
   $("pren-pagina-data").addEventListener("change", function(){ if (/^\d{4}-\d{2}-\d{2}$/.test(this.value)){ S.prenScegli = false; vaiGiornoPren(this.value); } });
   /* cambiare il negozio del ritiro: prima si chiede */
   $("pren-ritiro").addEventListener("change", async function(ev){
@@ -8230,7 +8348,7 @@ const VAPID_PUBLICA = "BC9TAKzQiQ-x3xtX0KWauGtV-uvIk9VFwqLjWAOzrJbe4e5w2AWyXMIej
    Il nome di chi lo fa lo mette il database (funzione "registra", supabase/aggiornamento-10-registro-con-nomi.sql):
    deciso dal proprietario il 19 ottobre, per vedere chi aiutare a usare meglio l'app; lo leggono solo lui e Claude. */
 const REGISTRO_ATTIVO = true;
-const VERSIONE_APP = "58cfaebe";
+const VERSIONE_APP = "64b57154";
 S.reg = [];
 S.ultimoTasto = { nome: "", alle: 0 };
 S.tocchi = { nome: "", volte: 0, alle: 0, segnato: false };
@@ -8749,6 +8867,7 @@ function descriviOp(o){
     if (o.tipo === "insert") return (d.tipo === "prenotazione" ? "Nuova " : d.tipo === "magazzino" ? "Segnato che manca: " : "Richiesta: ") + nomeRichiesta(d);
     return (d.annullato ? "Tolta: " : "Cambiata: ") + nomeRichiesta(d);
   }
+  if (o.tab === "foto_guasti") return "Foto di un guasto";
   if (o.tab === "stati"){
     const v = RAW.voci[String(o.id).split("~")[1]];
     /* l'ultima cosa fatta è quella con l'ora più recente */

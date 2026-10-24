@@ -6,6 +6,9 @@
 --   guastoTutti    «Vedere i guasti di tutti i posti»              di solito no (lo nasconde solo l'app)
 --   guastoSistema  «Scrivere Ci penso io e segnare Sistemato»      di solito no (solo i titolari)
 -- Uguale a GRUPPI_PERMESSI in sorgente/app.html. Non cambia nessun dato salvato.
+-- In fondo la tabella nuova foto_guasti: le foto dei guasti, rimpicciolite dal telefono, a parte dalle richieste.
+-- Finiscono nelle copie di sicurezza; la domenica Claude le salva come file .jpg nella cartella «Guasti»
+-- sul computer del proprietario e, dopo averle controllate, toglie dal database quelle dei guasti già sistemati.
 -- Per tornare indietro: aggiornamento-14-torna-indietro.sql
 
 create or replace function public.gruppo_permesso(k text) returns text
@@ -219,3 +222,39 @@ begin
   end if;
   return new;
 end $$;
+
+
+-- Le foto dei guasti (fino a 3 per guasto). guasto = "autore~id" del guasto (come gli stati);
+-- dati = la foto rimpicciolita dal telefono (data:image/jpeg;base64,…, al massimo circa 500 KB).
+-- Le mette solo chi segnala il guasto, insieme al guasto; le leggono tutti quelli che sono entrati.
+-- Dall'app non si cambiano né si cancellano: le toglie Claude dopo averle copiate sul computer.
+create table if not exists public.foto_guasti (
+  id     text primary key,
+  guasto text not null,
+  autore uuid not null default auth.uid(),
+  dati   text not null,
+  creato timestamptz not null default now()
+);
+create index if not exists foto_guasti_guasto on public.foto_guasti (guasto);
+alter table public.foto_guasti enable row level security;
+-- dal 30 ottobre le tabelle nuove non hanno accessi automatici: si danno solo quelli che servono
+revoke all on public.foto_guasti from public, anon, authenticated;
+grant select, insert on public.foto_guasti to authenticated;
+grant select, insert, update, delete on public.foto_guasti to service_role;
+drop policy if exists foto_guasti_leggi on public.foto_guasti;
+create policy foto_guasti_leggi on public.foto_guasti for select to authenticated
+  using (public.ha_profilo());
+drop policy if exists foto_guasti_metti on public.foto_guasti;
+create policy foto_guasti_metti on public.foto_guasti for insert to authenticated
+  with check (autore = auth.uid()
+    and split_part(guasto, '~', 1) = auth.uid()::text
+    and public.ha_permesso('guastoSegnala')
+    and dati like 'data:image/jpeg;base64,%' and length(dati) <= 700000
+    and (select count(*) from public.foto_guasti f where f.guasto = foto_guasti.guasto) < 3
+    and exists (select 1 from public.richieste r
+                where r.autore::text = split_part(foto_guasti.guasto, '~', 1) and r.id = split_part(foto_guasti.guasto, '~', 2)
+                  and r.dati->>'tipo' = 'guasto'));
+-- durante la manutenzione anche qui non si scrive dall'app
+drop trigger if exists foto_guasti_manutenzione on public.foto_guasti;
+create trigger foto_guasti_manutenzione before insert or update or delete on public.foto_guasti
+  for each row execute function public.blocca_in_manutenzione();

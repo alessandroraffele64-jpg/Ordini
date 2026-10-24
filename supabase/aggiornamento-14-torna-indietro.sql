@@ -1,5 +1,7 @@
 -- Torna a com'era prima dell'aggiornamento 14 (Guasti): le funzioni dell'aggiornamento 8, uguali a quelle
 -- che c'erano nel database il 24 ottobre 2026. I guasti già segnalati restano salvati (richieste con tipo 'guasto').
+-- La tabella foto_guasti NON si cancella qui (dentro ci possono essere foto): si toglie solo che dall'app si possano
+-- mettere foto nuove. Se è vuota e non serve più: drop table public.foto_guasti;
 
 create or replace function public.gruppo_permesso(k text) returns text
 language sql immutable as $$
@@ -191,3 +193,6 @@ begin
   end if;
   return new;
 end $$;
+
+drop policy if exists foto_guasti_metti on public.foto_guasti;
+revoke insert on public.foto_guasti from authenticated;
