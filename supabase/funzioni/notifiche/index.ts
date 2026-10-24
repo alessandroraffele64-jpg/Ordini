@@ -2,7 +2,8 @@
 // Ordini · Profumo di Pane — funzione "notifiche" (Supabase Edge Function)
 //
 // L'app la chiama dopo aver salvato qualcosa (nuove richieste, "pronto", "non c'è",
-// richieste da prendere in un altro negozio, "arrivata in magazzino", comande di biscotti, prenotazioni nuove o disdette). La funzione rilegge dal database cosa è successo
+// richieste da prendere in un altro negozio, "arrivata in magazzino", comande di biscotti, prenotazioni nuove o disdette,
+// guasti segnalati e sistemati). La funzione rilegge dal database cosa è successo
 // davvero (non si fida di quello che le arriva), decide chi deve saperlo e manda
 // UNA notifica per invio, raggruppando le cose.
 //
@@ -31,6 +32,7 @@ const NOTIFICHE_DI_SOLITO = {
   nuove: ["consegne"], nuovePanif: ["panificio"], altroNegozio: ["negozio"], manca: ["negozio"],
   pronto: ["consegne"], arrivata: ["consegne"], magazzino: [],
   prenotazioni: ["negozio", "panificio"], disdette: ["negozio", "panificio"], biscotti: ["panificio"],
+  guasti: [], guastoFatto: ["negozio", "panificio", "consegne"],
 };
 function tipoPosto(r) { return r === "corso" || r === "piazza-nenni" ? "negozio" : r; }
 // la persona può ricevere questa notifica nel posto dove è?
@@ -53,6 +55,8 @@ function vuole(isc, chiave) {
   let v = p[chiave];
   // «Nuove richieste da prendere al Panificio» prima si chiamava «nuove» per il panificio
   if (v === undefined && chiave === "nuovePanif" && isc.ruolo === "panificio") v = p.nuove;
+  // i guasti (24 ottobre): ai titolari arrivano se non li hanno spenti (si decide nei permessi)
+  if (v === undefined && isc.ruolo === "titolare" && chiave === "guasti") return true;
   if (v === undefined && isc.ruolo === "titolare") return p.tutto === true;
   return v === undefined ? true : v === true;
 }
@@ -193,6 +197,21 @@ export function componi(eventi, iscrizioni, mittente, ruoloMittente) {
         for (const [neg, vv] of perGruppo(scelte, (v) => v.dati.per)) {
           out.push({ isc, titolo: "Non c'è in magazzino – per " + neg, testo: elenco(vv.map((v) => nomeCosa(v.dati))), tag: "manca-" + neg + "-" + ev.quando });
         }
+      } else if (ev.tipo === "guasti") {
+        // un guasto segnalato: ai titolari (e a chi l'ha avuta dal titolare), un messaggio per guasto
+        if (!vuole(isc, "guasti")) continue;
+        for (const v of ev.voci) {
+          const d = v.dati;
+          const urg = d.urgenza === "subito";
+          const testa = urg ? "🔴 URGENTE" : d.urgenza === "quando" ? "🟢 Guasto, quando si può" : "🟠 Guasto, da sistemare presto";
+          out.push({ isc, titolo: testa + " · " + (d.dove || "?"), testo: String(d.articolo || "?").slice(0, 200), tag: "guasto-" + v.id, urgente: urg, vai: "guasti" });
+        }
+      } else if (ev.tipo === "guastoFatto") {
+        // un guasto sistemato: solo a chi l'ha segnalato (se il titolare non gliel'ha tolta)
+        for (const v of ev.voci) {
+          if (v.autore !== isc.utente || tit || !permessa(isc, "guastoFatto")) continue;
+          out.push({ isc, titolo: "Guasto sistemato ✓ · " + (v.dati.dove || ""), testo: String(v.dati.articolo || "?").slice(0, 200), tag: "guasto-fatto-" + v.id, vai: "guasti" });
+        }
       // "partite" non si manda più (tolta l'11 ottobre)
       } else if (ev.tipo === "biscotti") {
         if (!vuole(isc, "biscotti")) continue;
@@ -250,6 +269,19 @@ export async function leggiEventi(db, richiesti, mittente, ora) {
       const voci = (data || []).filter((x) => recente(x.creato) && x.dati && x.dati.tipo === "magazzino" && !x.dati.annullato)
         .map((x) => ({ id: x.id, autore: x.autore, dati: x.dati }));
       if (voci.length) eventi.push({ tipo: "magazzino", voci, quando: ora });
+    } else if (e.tipo === "guasti") {
+      const { data } = await db.from("richieste").select("id,autore,dati,creato").in("id", ids).eq("autore", mittente);
+      const voci = (data || []).filter((x) => recente(x.creato) && x.dati && x.dati.tipo === "guasto" && !x.dati.annullato)
+        .map((x) => ({ id: x.id, autore: x.autore, dati: x.dati }));
+      if (voci.length) eventi.push({ tipo: "guasti", voci, quando: ora });
+    } else if (e.tipo === "guastoFatto") {
+      const { data: st } = await db.from("stati").select("id,dati,aggiornato").in("id", ids);
+      const ok = (st || []).filter((x) => x.dati && Number(x.dati.sistematoAlle) > 0 && recente(x.aggiornato));
+      if (!ok.length) continue;
+      const rids = ok.map((x) => x.id.split("~")[1]).filter(Boolean);
+      const { data: rr } = await db.from("richieste").select("id,autore,dati").in("id", rids);
+      const voci = (rr || []).filter((x) => x.dati && x.dati.tipo === "guasto" && !x.dati.annullato).map((x) => ({ id: x.id, autore: x.autore, dati: x.dati }));
+      if (voci.length) eventi.push({ tipo: "guastoFatto", voci, quando: ora });
     } else if (e.tipo === "nuove") {
       const { data } = await db.from("richieste").select("id,autore,dati,creato").in("id", ids).eq("autore", mittente);
       const domani = domaniRoma(ora);
