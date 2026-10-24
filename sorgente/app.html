@@ -88,6 +88,7 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px;back
 .dest-corso{--c:var(--corso);--c-ink:var(--corso-ink);--c-bg:var(--corso-bg);--c-txt:var(--corso-txt)}
 .dest-nenni{--c:var(--nenni);--c-ink:var(--nenni-ink);--c-bg:var(--nenni-bg);--c-txt:var(--nenni-txt)}
 .dest-panif{--c:var(--panif);--c-ink:var(--panif-ink);--c-bg:var(--panif-bg);--c-txt:var(--panif-txt)}
+.dest-furgone{--c:var(--giro);--c-ink:var(--giro-ink);--c-bg:var(--surface-2);--c-txt:var(--ink)}
 .dest-altro{--c:var(--ink);--c-ink:var(--bg);--c-bg:var(--surface-2);--c-txt:var(--ink)}
 
 /* testata: nero e oro del logo, a tutta larghezza */
@@ -452,6 +453,30 @@ h2{font-family:var(--font-display);font-weight:700;font-size:19px;line-height:1.
 /* shop picker (owner only) */
 .punti{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
+/* Guasti: tre tasti grandi per l'urgenza (rosso, arancione, verde) */
+.urg-scelte{display:flex;flex-direction:column;gap:8px}
+.urg-tasto{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;min-height:58px;padding:10px 14px;border-radius:14px;border:2px solid var(--u);background:var(--surface);color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+.urg-tasto .urg-nome{font-weight:700;font-size:17px;display:flex;align-items:center;gap:8px}
+.urg-tasto .urg-nome::before{content:"";width:14px;height:14px;border-radius:50%;background:var(--u);flex:none}
+.urg-tasto .urg-es{font-size:14px;color:var(--muted)}
+.urg-tasto[aria-pressed="true"]{background:var(--u);color:var(--u-ink)}
+.urg-tasto[aria-pressed="true"] .urg-es{color:var(--u-ink)}
+.urg-tasto[aria-pressed="true"] .urg-nome::before{background:var(--u-ink)}
+.urg-subito{--u:var(--urgent);--u-ink:var(--urgent-ink)}
+.urg-presto{--u:var(--giorno-bordo);--u-ink:#2A1400}
+.urg-quando{--u:var(--arrivo-txt);--u-ink:var(--bg)}
+.pill.urg-subito,.pill.urg-presto,.pill.urg-quando{background:var(--u);color:var(--u-ink)}
+.riga.guasto.urg-riga-subito{background:linear-gradient(100deg,var(--urgent-bg) 0%,color-mix(in srgb,var(--urgent-bg) 25%,var(--surface)) 100%)}
+.riga.guasto{flex-direction:column;align-items:stretch;gap:8px}
+.riga.guasto .articolo{white-space:normal}
+.riga.guasto .azioni{flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:flex-start;gap:8px 18px}
+.riga.guasto .parte-form{padding-top:0}
+.riga.guasto .parte-form .field{flex:none}
+.guasto-nota{margin:6px 0 0;padding:6px 10px;border-radius:10px;background:var(--done-bg);font-size:15px}
+.guasto-fatto{margin:6px 0 0;color:var(--arrivo-txt);font-weight:700;font-size:15px}
+.guasto-nota-form{flex-basis:100%}
+.guasti-fatti summary{font-weight:700;cursor:pointer;min-height:44px;display:flex;align-items:center;gap:6px}
+#guasto-form .field{flex:none}
 .chip{position:relative}
 .chip input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
 .chip span{display:inline-flex;align-items:center;gap:8px;min-height:42px;padding:0 16px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface);font-weight:700}
@@ -836,7 +861,7 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
   #bisc-negozio > #comanda{grid-column:1;grid-row:span 3}
   #bisc-negozio > #bisc-chiesti-wrap,#bisc-negozio > #crono-bisc{grid-column:2}
   /* schede di una sola colonna: larghe come una pagina, non come tutto lo schermo */
-  #pannello-notifiche,#pannello-persone,#pannello-statistiche,#bisc-panificio,#pren-dacontrollare,#pren-pagine,#pren-scegli,#pren-giorni,#pren-risultati,#pren-fascia,#mag-form,#mag-segnate-box,#giro-wrap,#link-personale{max-width:760px;width:100%}
+  #pannello-notifiche,#pannello-persone,#pannello-statistiche,#bisc-panificio,#pren-dacontrollare,#pren-pagine,#pren-scegli,#pren-giorni,#pren-risultati,#pren-fascia,#mag-form,#mag-segnate-box,#pannello-guasti,#giro-wrap,#link-personale{max-width:760px;width:100%}
   #pren-nuova,#mag-segna{align-self:flex-start;min-width:280px}
   .menu-voce{min-height:48px;font-size:16px}
   /* «Controlla» e «Conferma»: una finestra in mezzo allo schermo, non tutta la pagina */
@@ -1009,6 +1034,30 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
       <p class="hint" id="mancanti-spiega"></p>
       <div class="blocco" id="mancanti-gruppi"></div>
       <p class="vuoto" id="mancanti-vuoto">In magazzino c'è tutto quello che è stato chiesto.</p>
+    </div>
+
+    <!-- Guasti: le cose rotte da sistemare nei negozi, al Panificio e sul furgone -->
+    <div class="view" id="pannello-guasti" hidden>
+      <button type="button" class="primary" id="guasto-nuovo" hidden>+ Segnala un guasto</button>
+      <form class="card" id="guasto-form" hidden novalidate>
+        <div class="scrivi-testa">
+          <h2 class="comanda-titolo">Segnala un guasto</h2>
+          <button type="button" class="pren-chiudi" id="guasto-esci">✕ Chiudi</button>
+        </div>
+        <div class="blocco"><p class="label-sm">1. Dove?</p><div class="chips" id="guasto-dove"></div></div>
+        <label class="field"><span class="label-sm">2. Cosa non funziona?</span>
+          <textarea id="guasto-testo" rows="3" maxlength="300" autocapitalize="sentences" placeholder="Es. La lampadina sopra il bancone del pane è spenta"></textarea></label>
+        <div class="blocco"><p class="label-sm">3. Quanto è urgente?</p><div class="urg-scelte" id="guasto-urgenza"></div></div>
+        <button type="submit" class="primary" id="guasto-invia">Invia la segnalazione</button>
+        <p class="esito" id="guasto-esito" role="status"></p>
+      </form>
+      <p class="hint" id="guasti-spiega"></p>
+      <div class="blocco" id="guasti-aperti"></div>
+      <p class="vuoto" id="guasti-vuoto">Non ci sono guasti da sistemare.</p>
+      <details class="card guasti-fatti" id="guasti-fatti-box" hidden>
+        <summary>Già sistemati (ultimi 30 giorni) <span id="guasti-fatti-conta"></span></summary>
+        <ul class="lista" id="guasti-fatti"></ul>
+      </details>
     </div>
 
     <!-- Biscotti: sezione a parte, non va nel giro delle consegne -->
@@ -1482,7 +1531,7 @@ const PROMEMORIA = "Promemoria";
 const PREP = {"Corso":"al Corso","Piazza Nenni":"a Piazza Nenni","Panificio":"al Panificio"};
 const DA_PREP = {"Corso":"dal Corso","Piazza Nenni":"da Piazza Nenni","Panificio":"dal Panificio"};
 function daLuogo(p){ return DA_PREP[p] || "da " + p; }
-const CLASSE_DEST = {"Corso":"dest-corso","Piazza Nenni":"dest-nenni","Panificio":"dest-panif"};
+const CLASSE_DEST = {"Corso":"dest-corso","Piazza Nenni":"dest-nenni","Panificio":"dest-panif","Furgone":"dest-furgone"};
 function classeDest(p){ return CLASSE_DEST[p] || "dest-altro"; }
 const SIGLA = {"Corso":"C","Piazza Nenni":"N","Panificio":"P"};
 function sigla(per){ return SIGLA[per] ? el("span", {class:"sigla " + classeDest(per), "aria-hidden":"true", text:SIGLA[per]}) : null; }
@@ -1747,7 +1796,7 @@ function segnaNuove(richieste, pren){
   }
 }
 function ricomponi(){
-  const out = [], tolte = [], programmate = [], pren = [], mag = [], prenElim = [];
+  const out = [], tolte = [], programmate = [], pren = [], mag = [], prenElim = [], gua = [];
   const domani = domaniStr();
   S.docsRichieste.forEach(function(doc){
     const voci = doc.voci && typeof doc.voci === "object" ? doc.voci : {};
@@ -1764,6 +1813,8 @@ function ricomponi(){
       }
       /* cose che mancano in magazzino segnate da chi fa il giro o dai titolari: non sono richieste dei negozi */
       if (v.tipo === "magazzino"){ if (!v.annullato) mag.push(normaMag(k, v, S.stati[k], doc.id)); continue; }
+      /* guasti da sistemare: non sono richieste */
+      if (v.tipo === "guasto"){ if (!v.annullato) gua.push(normaGuasto(k, v, S.stati[k], doc.id)); continue; }
       const r = norma(k, v, S.stati[k], doc.id, rid);
       /* le cose tolte restano nell'archivio: finiscono nella cronologia */
       if (v.annullato){ r.toltoAlle = Number(v.annullatoAlle) || r.creato; tolte.push(r); }
@@ -1776,6 +1827,7 @@ function ricomponi(){
   S.prenotazioni = pren;
   S.prenEliminate = prenElim.sort(function(a, b){ return b.eliminataAlle - a.eliminataAlle; });
   S.magazzino = mag;
+  S.guasti = gua;
   segnaNuove(out, pren);
   S.programmate = programmate.sort(function(a, b){ return a.perIl.localeCompare(b.perIl) || a.creato - b.creato; });
 }
@@ -3320,6 +3372,214 @@ function renderMancanti(){
   $("mancanti-vuoto").hidden = gruppi.length > 0 || nMag > 0;
   $("mancanti-vuoto").textContent = S.pronto ? "In magazzino c'è tutto quello che è stato chiesto." : "Carico le richieste…";
 }
+/* ---------- Guasti (24 ottobre, chiesto da Giuseppe) ----------
+   I dipendenti segnalano le cose rotte nei negozi, al Panificio o sul furgone (lampadine, macchina
+   del caffè, affettatrice…) con quanto è urgente. Si salvano come richieste con tipo "guasto"
+   (dove, articolo = cosa non va, urgenza, creato); a che punto è negli stati (guastoNota «Ci penso io»,
+   sistematoAlle «Sistemato»). Notifica «guasti» ai titolari (Giuseppe e Bruno; Alessandro l'ha spenta),
+   «guastoFatto» a chi l'ha segnalato quando è sistemato. Ognuno vede i guasti dei posti dove lavora
+   (il giro: il furgone) e quelli che ha segnalato lui; i titolari tutti. Scrivere «Ci penso io» e
+   «Sistemato» solo i titolari (permesso guastoSistema, anche nel database: aggiornamento-14-guasti.sql). */
+const POSTI_GUASTI = ["Corso", "Piazza Nenni", "Panificio", "Furgone"];
+const POSTO_GUASTO_DI = { "corso":"Corso", "piazza-nenni":"Piazza Nenni", "panificio":"Panificio", "consegne":"Furgone" };
+const URGENZE_GUASTO = [
+  { k:"subito", nome:"Urgente, blocca il lavoro", es:"Es. la macchina del caffè non parte, il frigo non raffredda", corto:"Urgente" },
+  { k:"presto", nome:"Da sistemare presto", es:"Es. l'affettatrice del prosciutto taglia male", corto:"Presto" },
+  { k:"quando", nome:"Quando si può", es:"Es. la lampadina del bagno è fulminata", corto:"Quando si può" }
+];
+function urgenzaGuasto(k){ return URGENZE_GUASTO.find(function(u){ return u.k === k; }) || URGENZE_GUASTO[1]; }
+S.guasti = [];
+S.guastoForm = { aperto: false, inviando: false, dove: "", urgenza: "" };
+S.guastoNota = "";
+function normaGuasto(k, d, st, autore){
+  st = st || {};
+  return { id: k, rid: String(k).split("~")[1] || "", autore: autore, mio: !!S.mioId && autore === S.mioId,
+    dove: POSTI_GUASTI.indexOf(d.dove) >= 0 ? d.dove : "Corso",
+    testo: String(d.articolo || "").slice(0, 300) || "?",
+    urgenza: urgenzaGuasto(d.urgenza).k,
+    creato: Number(d.creato) || 0,
+    nota: String(st.guastoNota || "").slice(0, 200), notaAlle: Number(st.guastoNotaAlle) || 0, notaNome: String(st.guastoNotaNome || "").slice(0, 60),
+    sistematoAlle: Number(st.sistematoAlle) || 0, sistematoNome: String(st.sistematoNome || "").slice(0, 60) };
+}
+function inGuasti(){ return S.vista === "negozio" && S.sez === "guasti"; }
+function vedeGuasti(){ return haSezione("guasti"); }
+function puoSegnalareGuasto(){ return vedeGuasti() && haAzione("guastoSegnala") && !!store && !S.sola; }
+function puoSistemareGuasto(){ return haAzione("guastoSistema") && !!store && !S.sola; }
+/* i posti di cui si vedono i guasti: titolari (o chi l'ha avuto) tutti; gli altri i posti dove lavorano */
+function postiGuastiMiei(){
+  if (S.ruolo && S.ruolo.tipo === "titolare") return POSTI_GUASTI.slice();
+  if (haAzione("guastoTutti")) return POSTI_GUASTI.slice();
+  const posti = mieiPosti().length ? mieiPosti() : postiAttivi();
+  return POSTI_GUASTI.filter(function(p){ return posti.some(function(l){ return POSTO_GUASTO_DI[l] === p; }); });
+}
+/* il posto già scelto quando si segnala: dove si è adesso (chi fa il giro: il furgone) */
+function postoGuastoAdesso(){
+  const r = ruoloAdesso();
+  if (r === "titolare") return S.vista === "consegne" ? "Furgone" : (POSTI_GUASTI.indexOf(S.punto) >= 0 ? S.punto : "");
+  return POSTO_GUASTO_DI[r] || "";
+}
+function guastiVisibili(){
+  const posti = postiGuastiMiei();
+  return S.guasti.filter(function(g){ return g.mio || posti.indexOf(g.dove) >= 0; });
+}
+const ORDINE_URGENZA = { subito: 0, presto: 1, quando: 2 };
+function guastiAperti(){
+  return guastiVisibili().filter(function(g){ return !g.sistematoAlle; })
+    .sort(function(a, b){ return (ORDINE_URGENZA[a.urgenza] - ORDINE_URGENZA[b.urgenza]) || a.creato - b.creato; });
+}
+function guastiSistemati(){
+  const da = Date.now() - 30 * 86400000;
+  return guastiVisibili().filter(function(g){ return g.sistematoAlle && g.sistematoAlle >= da; })
+    .sort(function(a, b){ return b.sistematoAlle - a.sistematoAlle; });
+}
+function pillUrgenzaGuasto(g){ const u = urgenzaGuasto(g.urgenza); return el("span", {class:"pill urg-" + u.k, text:u.corto}); }
+function chiSegnalato(g){ return g.mio ? "te" : (S.nomi[g.autore] || "…"); }
+function rigaGuasto(g){
+  const off = S.pending.has(g.id);
+  const li = el("li", {class:"riga guasto urg-riga-" + g.urgenza},
+    el("div", {class:"riga-main"},
+      el("p", {class:"articolo", text:g.testo}),
+      meta([pillUrgenzaGuasto(g), el("span", {class:"pill dest " + classeDest(g.dove), text:g.dove}), "segnalato da " + chiSegnalato(g) + ", " + quando(g.creato)]),
+      g.nota ? el("p", {class:"guasto-nota"}, el("strong", {text:"Ci pensa " + (g.notaNome || "il titolare") + ": "}), document.createTextNode(g.nota + " (" + quando(g.notaAlle) + ")")) : null,
+      g.sistematoAlle ? el("p", {class:"guasto-fatto", text:"✓ Sistemato " + quando(g.sistematoAlle) + (g.sistematoNome ? " · segnato da " + g.sistematoNome : "")}) : null));
+  const box = el("div", {class:"azioni"});
+  if (!g.sistematoAlle && puoSistemareGuasto()){
+    box.append(el("button", {type:"button", class:"mini b-arrivato", "data-guasto-fatto":g.id, disabled:off, "aria-label":"Sistemato: " + g.testo, text:"Sistemato"}));
+    box.append(el("button", {type:"button", class:"link", "data-guasto-nota":g.id, disabled:off, "aria-expanded":String(S.guastoNotaApri === g.id),
+      text: g.nota ? "Cambia «Ci penso io»" : "Ci penso io"}));
+  }
+  if (g.sistematoAlle && puoSistemareGuasto()) box.append(el("button", {type:"button", class:"link", "data-guasto-riapri":g.id, disabled:off, text:"Non è sistemato, riapri"}));
+  /* chi l'ha segnalato lo può togliere finché nessuno se ne occupa (per esempio scritto due volte) */
+  if (g.mio && !g.sistematoAlle && !g.nota && !!store && !S.sola) box.append(el("button", {type:"button", class:"link", "data-guasto-togli":g.id, disabled:off, text:"Togli, era uno sbaglio"}));
+  if (box.childNodes.length) li.append(box);
+  if (S.guastoNotaApri === g.id && !g.sistematoAlle) li.append(formNotaGuasto(g));
+  return li;
+}
+function formNotaGuasto(g){
+  return el("form", {class:"parte-form guasto-nota-form", "data-guasto-nota-form":g.id, novalidate:""},
+    el("label", {class:"field"}, el("span", {class:"label-sm", text:"Cosa hai fatto o cosa farai? Lo legge chi l'ha segnalato."}),
+      el("input", {type:"text", id:"guasto-nota-testo", maxlength:"200", autocomplete:"off", placeholder:"Es. Ho chiamato il tecnico, viene martedì", value:S.guastoNota || g.nota || ""})),
+    el("div", {class:"row"},
+      el("button", {type:"button", class:"mini", "data-guasto-nota-annulla":g.id, text:"Annulla"}),
+      el("button", {type:"submit", class:"mini b-conferma-parte", disabled:S.pending.has(g.id), text:"Salva"})));
+}
+function renderFormGuasto(){
+  const f = S.guastoForm, puo = puoSegnalareGuasto();
+  $("guasto-nuovo").hidden = !puo || f.aperto;
+  $("guasto-form").hidden = !puo || !f.aperto;
+  if (!puo || !f.aperto) return;
+  riempi($("guasto-dove"), POSTI_GUASTI.map(function(d){
+    return el("label", {class:"chip " + classeDest(d)}, el("input", {type:"radio", name:"guasto-dove", value:d, checked: d === f.dove ? true : null, disabled:f.inviando}), el("span", {text:d}));
+  }));
+  riempi($("guasto-urgenza"), URGENZE_GUASTO.map(function(u){
+    return el("button", {type:"button", class:"urg-tasto urg-" + u.k, "data-guasto-urgenza":u.k, "aria-pressed":String(f.urgenza === u.k), disabled:f.inviando},
+      el("span", {class:"urg-nome", text:u.nome}), el("span", {class:"urg-es", text:u.es}));
+  }));
+  $("guasto-invia").disabled = f.inviando;
+  $("guasto-invia").textContent = f.inviando ? "Invio…" : "Invia la segnalazione";
+}
+function renderGuasti(){
+  if (!inGuasti()) return;
+  renderFormGuasto();
+  const tit = S.ruolo.tipo === "titolare";
+  const posti = postiGuastiMiei();
+  $("guasti-spiega").textContent = tit
+    ? "Qui ci sono i guasti segnalati in tutti i posti. Scrivi «Ci penso io» (per esempio «ho chiamato il tecnico, viene martedì») e, quando è a posto, premi «Sistemato»: chi l'ha segnalato riceve una notifica."
+    : "Vedi i guasti " + (posti.length ? "di " + posti.join(" e ") : "che hai segnalato") + ". Prima di segnalarne uno guarda se c'è già. Li sistema il titolare: quando è a posto ricevi una notifica.";
+  const aperti = guastiAperti();
+  const gruppi = [];
+  URGENZE_GUASTO.forEach(function(u){
+    const items = aperti.filter(function(g){ return g.urgenza === u.k; });
+    if (!items.length) return;
+    gruppi.push(el("section", {class:"gruppo gruppo-guasti urg-gruppo-" + u.k}, testaGruppo("Da sistemare", u.nome, items.length === 1 ? "1 guasto" : items.length + " guasti"),
+      el("ul", {class:"lista"}, ...items.map(rigaGuasto))));
+  });
+  riempi($("guasti-aperti"), gruppi);
+  $("guasti-vuoto").hidden = gruppi.length > 0;
+  $("guasti-vuoto").textContent = S.pronto ? "Non ci sono guasti da sistemare." : "Carico i guasti…";
+  const fatti = guastiSistemati();
+  $("guasti-fatti-box").hidden = !fatti.length;
+  $("guasti-fatti-conta").textContent = fatti.length ? "(" + fatti.length + ")" : "";
+  riempi($("guasti-fatti"), fatti.map(rigaGuasto));
+}
+function apriFormGuasto(){
+  const f = S.guastoForm;
+  f.aperto = true; f.dove = postoGuastoAdesso(); f.urgenza = "";
+  $("guasto-testo").value = "";
+  esito("guasto-esito", "");
+  renderGuasti();
+  $("guasto-testo").focus();
+}
+function chiudiFormGuasto(){ S.guastoForm.aperto = false; $("guasto-testo").value = ""; renderGuasti(); }
+async function inviaGuasto(){
+  const f = S.guastoForm;
+  if (f.inviando || !puoSegnalareGuasto()) return;
+  const sel = document.querySelector('input[name="guasto-dove"]:checked');
+  f.dove = sel ? sel.value : f.dove;
+  const testo = String($("guasto-testo").value || "").replace(/\s+/g, " ").trim().slice(0, 300);
+  if (POSTI_GUASTI.indexOf(f.dove) < 0){ esito("guasto-esito", "Scegli dove è il guasto."); return; }
+  if (testo.length < 3){ esito("guasto-esito", "Scrivi cosa non funziona."); $("guasto-testo").focus(); return; }
+  if (!f.urgenza){ esito("guasto-esito", "Scegli quanto è urgente."); return; }
+  f.inviando = true; renderGuasti();
+  const voce = { tipo: "guasto", dove: f.dove, articolo: maiuscola(testo), urgenza: f.urgenza, creato: Date.now() };
+  const ok = await scrivi(function(){ return store.aggiungi(voce); }, true);
+  f.inviando = false;
+  if (ok){
+    registra("guasto segnalato", { urgenza: f.urgenza });
+    f.aperto = false; $("guasto-testo").value = "";
+    avviso("Guasto segnalato: lo sa il titolare.");
+  }
+  renderTutto();
+}
+async function sistemaGuasto(id){
+  const g = S.guasti.find(function(x){ return x.id === id; });
+  if (!g || g.sistematoAlle || !puoSistemareGuasto() || S.pending.has(id)) return;
+  const si = await chiedi("È sistemato?", g.testo + " (" + g.dove + "): va in «Già sistemati» e chi l'ha segnalato riceve una notifica.", "Sì, è sistemato", "No");
+  if (!si) return;
+  S.pending.add(id); renderTutto();
+  const ok = await scrivi(function(){ return store.stato(id, { sistematoAlle: Date.now(), sistematoDa: S.mioId || "", sistematoNome: S.nomeMio || "" }); });
+  S.pending.delete(id);
+  if (ok){ S.guastoNotaApri = null; avviso("Sistemato: " + g.testo); }
+  renderTutto();
+}
+async function riapriGuasto(id){
+  const g = S.guasti.find(function(x){ return x.id === id; });
+  if (!g || !g.sistematoAlle || !puoSistemareGuasto() || S.pending.has(id)) return;
+  S.pending.add(id); renderTutto();
+  await scrivi(function(){ return store.stato(id, { sistematoAlle: 0, sistematoDa: "", sistematoNome: "" }); });
+  S.pending.delete(id);
+  renderTutto();
+}
+function apriNotaGuasto(id){
+  if (!puoSistemareGuasto()) return;
+  S.guastoNotaApri = S.guastoNotaApri === id ? null : id;
+  S.guastoNota = "";
+  renderTutto();
+  const i = $("guasto-nota-testo"); if (i) i.focus();
+}
+async function salvaNotaGuasto(id){
+  const g = S.guasti.find(function(x){ return x.id === id; });
+  const inp = $("guasto-nota-testo");
+  const nota = inp ? String(inp.value || "").replace(/\s+/g, " ").trim().slice(0, 200) : "";
+  if (!g || !puoSistemareGuasto() || S.pending.has(id)) return;
+  if (!nota){ if (inp){ inp.setAttribute("aria-invalid", "true"); inp.focus(); } return; }
+  S.pending.add(id); renderTutto();
+  const ok = await scrivi(function(){ return store.stato(id, { guastoNota: maiuscola(nota), guastoNotaAlle: Date.now(), guastoNotaNome: S.nomeMio || "" }); });
+  S.pending.delete(id);
+  if (ok){ S.guastoNotaApri = null; S.guastoNota = ""; }
+  renderTutto();
+}
+async function togliGuasto(id){
+  const g = S.guasti.find(function(x){ return x.id === id; });
+  if (!g || !g.mio || g.nota || g.sistematoAlle || !store || S.sola || S.pending.has(id)) return;
+  const si = await chiedi("Togliere questa segnalazione?", g.testo + " (" + g.dove + "): sparisce per tutti.", "Sì, togli", "No");
+  if (!si) return;
+  S.pending.add(id); renderTutto();
+  await scrivi(function(){ return store.annulla(g); });
+  S.pending.delete(id);
+  renderTutto();
+}
+
 /* Striscia rossa, uguale per tutti: solo i nomi di quello che non c'è in magazzino,
    una volta sola anche se manca per tutti e due i negozi. Resta in alto finché la cosa non arriva.
    Alta al massimo 2 righe; se non ci sta tutto, «Mostra tutto». */
@@ -3792,11 +4052,12 @@ function renderBiscPanificio(){
 }
 function mostraSez(sez){
   const prima = S.sez;
-  S.sez = ["biscotti","statistiche","prenotazioni","notifiche","persone","mancanti","database","impostazioni","manuale"].indexOf(sez) >= 0 ? sez : "richieste";
+  S.sez = ["biscotti","statistiche","prenotazioni","notifiche","persone","mancanti","guasti","database","impostazioni","manuale"].indexOf(sez) >= 0 ? sez : "richieste";
   $("pannello-database").hidden = S.sez !== "database";
   $("pannello-impostazioni").hidden = S.sez !== "impostazioni";
   $("pannello-manuale").hidden = S.sez !== "manuale";
   $("pannello-mancanti").hidden = S.sez !== "mancanti";
+  $("pannello-guasti").hidden = S.sez !== "guasti";
   $("pannello-notifiche").hidden = S.sez !== "notifiche";
   $("pannello-persone").hidden = S.sez !== "persone";
   $("pannello-prenotazioni").hidden = S.sez !== "prenotazioni";
@@ -3873,6 +4134,12 @@ const GRUPPI_PERMESSI = [
     { id:"arrivato", nome:"Segnare «È arrivato» (anche per «Da comprare»)" },
     { id:"segnaManca", nome:"Segnare una cosa che manca («+ Segna cosa manca»)" }
   ]},
+  { id:"guasti", nome:"Guasti", dove:TUTTI_POSTI, vista:"guasti", vistaNome:"Vedere la sezione «Guasti»",
+    vistaSpiega:"Vede i guasti dei posti dove lavora (chi fa il giro: il furgone) e quelli che ha segnalato lui.", voci:[
+    { id:"guastoSegnala", nome:"Segnalare un guasto («+ Segnala un guasto»)" },
+    { id:"guastoTutti", nome:"Vedere i guasti di tutti i posti", spiega:"Di solito ognuno vede solo quelli dei posti dove lavora.", no:TUTTI_POSTI },
+    { id:"guastoSistema", nome:"Scrivere «Ci penso io» e segnare «Sistemato»", spiega:"Di solito solo i titolari.", no:TUTTI_POSTI }
+  ]},
   { id:"tutte", nome:"In tutte le pagine", dove:TUTTI_POSTI, voci:[
     { id:"vedeChi", nome:"Vedere chi ha chiesto una cosa (tasto «Chi?»)" }
   ]}
@@ -3892,7 +4159,10 @@ const NOTIFICHE_PERMESSI = [
   { k:"magazzino", nome:"Cose segnate come finite in magazzino", base:[] },
   { k:"prenotazioni", nome:"Nuove prenotazioni dei clienti", spiega:"In un negozio: quelle che si ritirano lì.", base:["negozio", "panificio"] },
   { k:"disdette", nome:"Prenotazioni disdette", spiega:"Quando qualcun altro disdice. In un negozio o al Panificio: quelle che si ritirano lì.", base:["negozio", "panificio"] },
-  { k:"biscotti", nome:"Comande di biscotti", base:["panificio"] }
+  { k:"biscotti", nome:"Comande di biscotti", base:["panificio"] },
+  { k:"guasti", nome:"Guasti segnalati", spiega:"Con quanto è urgente: per esempio «URGENTE · Corso: la macchina del caffè non parte».", base:[],
+    titNome:"Guasti segnalati dai dipendenti", titSpiega:"Per esempio «URGENTE · Corso: la macchina del caffè non parte»." },
+  { k:"guastoFatto", nome:"Un guasto che ho segnalato è stato sistemato", base:TUTTI_POSTI, noTitolari:true }
 ];
 /* i posti dove si lavora (non il giro): chi ne ha più di uno sceglie dove è («Sei ancora al…?») */
 const LUOGHI_LAVORO = ["corso", "piazza-nenni", "panificio"];
@@ -4299,6 +4569,17 @@ function capitoliManuale(){
     piuLuoghi() ? ["Come cambio posto mentre lavoro?", ["In alto, sotto il nome del posto, tocca ", tasto("Cambia posto"), ". Vedi le richieste e ricevi le notifiche del posto dove sei."]] : null,
     conGiro ? ["Lavoro anche al giro: come passo da una pagina all'altra?", ["In alto ci sono due tasti, ", tasto(S.punto || "Negozio"), " e ", tasto("Giro consegne"), ": tocca quello che ti serve. L'app non ti chiede niente e ti arrivano le notifiche di tutti e due."]] : null
   ]});
+  if (vedeGuasti()) cap.push({ titolo:"Guasti", domande:[
+    haAzione("guastoSegnala") ? ["Come segnalo un guasto?", ["Dal menu ☰ apri «Guasti» e tocca ", tasto("+ Segnala un guasto"), ". Poi tre cose:", el("br"),
+      "1. Dove: Corso, Piazza Nenni, Panificio o Furgone (il posto dove sei è già scelto).", el("br"),
+      "2. Cosa non funziona, con parole tue. Esempio: «La lampadina sopra il bancone del pane è spenta».", el("br"),
+      "3. Quanto è urgente: ", pill("urg-subito", "Urgente, blocca il lavoro"), " (per esempio la macchina del caffè non parte), ", pill("urg-presto", "Da sistemare presto"), " (l'affettatrice taglia male) o ", pill("urg-quando", "Quando si può"), " (la lampadina del bagno).", el("br"),
+      "Poi tocca ", tasto("Invia la segnalazione"), ": il titolare riceve subito una notifica."]] : null,
+    ["Come faccio a non segnalare due volte la stessa cosa?", ["Prima di segnalare guarda l'elenco: ci sono i guasti ancora da sistemare dei posti dove lavori (chi fa il giro vede quelli del furgone), prima i rossi. Se c'è già, non serve segnalarlo di nuovo."]],
+    ["Come so se se ne sta occupando qualcuno?", ["Sotto il guasto compare la scritta del titolare, per esempio «Ci pensa Giuseppe: ho chiamato il tecnico, viene martedì». Quando è a posto il guasto va in «Già sistemati» in fondo alla pagina e chi l'ha segnalato riceve una notifica."]],
+    ["Ho segnalato una cosa per sbaglio: come la tolgo?", ["Sotto il tuo guasto tocca «Togli, era uno sbaglio» e conferma. Si può solo finché il titolare non ha scritto «Ci penso io»: dopo chiedi a lui."]],
+    haAzione("guastoSistema") ? ["Come segno che un guasto è sistemato?", ["Sotto il guasto tocca «Ci penso io» e scrivi cosa hai fatto o cosa farai (per esempio «Ho chiamato l'elettricista»): lo legge chi l'ha segnalato. Quando è a posto tocca ", tasto("Sistemato"), " e conferma: va in «Già sistemati» e chi l'ha segnalato riceve una notifica. Se l'hai segnato per sbaglio, in «Già sistemati» c'è «Non è sistemato, riapri»."]] : null
+  ]});
   cap.push({ titolo:"Notifiche", domande:[
     ["Come accendo le notifiche?", ["Dal menu ☰ apri «Notifiche» e tocca ", tasto("Attiva le notifiche"), ": il telefono chiede il permesso. Sull'iPhone funzionano solo se apri l'app dall'icona sulla schermata Home."]],
     ["Quali notifiche ricevo?", tit ? ["Quelle dei dipendenti le decidi solo tu, nei loro permessi: loro non le possono cambiare. Di solito:", el("br"),
@@ -4365,6 +4646,7 @@ function domandePagina(sez){
     prenotazioni: [["Prenotazioni"], [tit, /prodotto/i]],
     biscotti: [["Biscotti"]],
     mancanti: [["Cose che non ci sono in magazzino"]],
+    guasti: [["Guasti"]],
     notifiche: [["Notifiche"], [tit, /notifiche/i]],
     persone: [[tit, /permess|posti|notifiche|ferie|persona nuova|telefono|se ne va/i], ["Permessi"]],
     database: [[tit, /Database|prodott|ordine/i]],
@@ -4378,7 +4660,7 @@ function domandePagina(sez){
 }
 function apriAiutoPagina(){
   const sez = sezioneAttuale();
-  const nomi = { giro:"Giro consegne", prenotazioni:"Prenotazioni", biscotti:"Biscotti", mancanti:"Non in magazzino", notifiche:"Notifiche",
+  const nomi = { giro:"Giro consegne", prenotazioni:"Prenotazioni", biscotti:"Biscotti", mancanti:"Non in magazzino", guasti:"Guasti", notifiche:"Notifiche",
     persone:"Persone registrate", database:"Database", impostazioni:"Impostazioni", statistiche:"Statistiche" };
   S.manPagina = { sez: sez, nome: nomi[sez] || nomeSezione(sez), scheda: S.dbScheda || "" };
   registra("manuale: aperto dal ?", { pagina: sez });
@@ -4427,6 +4709,7 @@ function vociMenu(){
   if (vedePren()) voci.push({ id:"prenotazioni", nome:"Prenotazioni", n:nPren });
   if (vedeBiscotti()) voci.push({ id:"biscotti", nome:"Biscotti", n:nBisc });
   if (vedeMancanti()) voci.push(mancanti);
+  if (vedeGuasti()) voci.push({ id:"guasti", nome:"Guasti", n:guastiAperti().length });
   if (puoStat()) voci.push({ id:"statistiche", nome:"Statistiche", n:null });
   if (puoDatabase()) voci.push({ id:"database", nome:"Database", n:contaDatabase().tutti });
   if (puoPersone()) voci.push({ id:"persone", nome:"Persone registrate", n:null });
@@ -4458,6 +4741,7 @@ const ICONE_MENU = {
   persone: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14c2 .7 3.5 2.8 3.5 6"/>',
   impostazioni: '<path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/>',
   notifiche: '<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 21h4"/>',
+  guasti: '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/>',
   manuale: '<path d="M4 4h6a2 2 0 0 1 2 2v15a2 2 0 0 0-2-2H4z"/><path d="M20 4h-6a2 2 0 0 0-2 2v15a2 2 0 0 1 2-2h6z"/>'
 };
 function iconaMenu(id){
@@ -4484,7 +4768,7 @@ function renderMenu(){
   $("switch-viste").hidden = !puoSwitch() || bisc;
   $("tab-negozio").textContent = t === "titolare" ? "Negozio" : S.punto;
   $("tab-consegne-nome").textContent = t === "titolare" ? "Consegne" : "Giro consegne";
-  $("punti").hidden = t !== "titolare" || inStat() || inPren() || inNotif() || inPersone() || inMancanti() || inDatabase() || inImpostazioni() || inManuale();
+  $("punti").hidden = t !== "titolare" || inStat() || inPren() || inNotif() || inPersone() || inMancanti() || inGuasti() || inDatabase() || inImpostazioni() || inManuale();
   $("link-personale").hidden = t !== "titolare" || bisc;
   renderTestata();
 }
@@ -4498,6 +4782,9 @@ function renderTestata(){
   if (inMancanti()){
     sopra = "Da aspettare"; titolo = "Non in magazzino";
     info = contaTesto(nonInMagazzino().length + magAperte().length + daComprare().length, "cosa", "cose");
+  } else if (inGuasti()){
+    sopra = "Cose rotte da sistemare"; titolo = "Guasti";
+    info = contaTesto(guastiAperti().length, "da sistemare", "da sistemare");
   } else if (inNotif()){
     sopra = "Su questo telefono"; titolo = "Notifiche"; info = "";
   } else if (inPersone()){
@@ -4531,12 +4818,12 @@ function renderTestata(){
       : S.richieste.filter(function(r){ return r.per === S.punto && r.stato !== "consegnato"; }).length;
     info = panif ? contaTesto(n, "richiesta aperta", "richieste aperte") : contaTesto(n, "in arrivo", "in arrivo");
   }
-  $("fascia").className = "fascia " + (giro || stat || ((pren || inNotif() || inMancanti()) && t === "giro") ? "giro" : classeDest(S.punto));
+  $("fascia").className = "fascia " + (giro || stat || ((pren || inNotif() || inMancanti() || inGuasti()) && t === "giro") ? "giro" : classeDest(S.punto));
   $("eyebrow").textContent = sopra;
   $("titolo").textContent = titolo;
   $("fascia-info").textContent = info;
   $("cambia-luogo").hidden = !piuLuoghi() || S.vista !== "negozio" || (S.sez !== "richieste" && S.sez !== "biscotti" && S.sez !== "prenotazioni");
-  $("app-nome").textContent = inMancanti() ? "Magazzino" : bisc ? "Biscotti" : (stat ? "Statistiche" : (pren ? "Prenotazioni" : (inNotif() ? "Notifiche" : (inPersone() ? "Persone" : (inDatabase() ? "Database" : (inImpostazioni() ? "Impostazioni" : (inManuale() ? "Come funziona" : "Rifornimenti")))))));
+  $("app-nome").textContent = inMancanti() ? "Magazzino" : inGuasti() ? "Guasti" : bisc ? "Biscotti" : (stat ? "Statistiche" : (pren ? "Prenotazioni" : (inNotif() ? "Notifiche" : (inPersone() ? "Persone" : (inDatabase() ? "Database" : (inImpostazioni() ? "Impostazioni" : (inManuale() ? "Come funziona" : "Rifornimenti")))))));
 }
 function apriMenu(){
   $("menu").hidden = false; $("menu-velo").hidden = false;
@@ -4563,7 +4850,7 @@ function vaiSezione(id, forza, scheda){
   if (!(id === "manuale" && S.manPaginaNuova)) S.manPagina = null;
   S.manPaginaNuova = false;
   chiudiMenu();
-  if ((id === "biscotti" && vedeBiscotti()) || (id === "mancanti" && vedeMancanti()) || (id === "prenotazioni" && vedePren()) || id === "notifiche" || (id === "statistiche" && puoStat()) || (id === "persone" && puoPersone()) || (id === "database" && puoDatabase()) || (id === "impostazioni" && puoImpostazioni()) || id === "manuale"){
+  if ((id === "biscotti" && vedeBiscotti()) || (id === "mancanti" && vedeMancanti()) || (id === "guasti" && vedeGuasti()) || (id === "prenotazioni" && vedePren()) || id === "notifiche" || (id === "statistiche" && puoStat()) || (id === "persone" && puoPersone()) || (id === "database" && puoDatabase()) || (id === "impostazioni" && puoImpostazioni()) || id === "manuale"){
     if (!inSezioneExtra()) S.vistaPrima = S.vista;
     mostraVista("negozio");
     mostraSez(id);
@@ -4573,6 +4860,7 @@ function vaiSezione(id, forza, scheda){
     if (id === "impostazioni") S.bozzaNumeri = {};
     if (id === "statistiche") caricaStatistiche();
     if (id === "notifiche") renderNotifiche();
+    if (id === "guasti"){ S.guastoForm.aperto = false; S.guastoNotaApri = null; }
   } else {
     mostraSez("richieste");
     mostraVista(S.ruolo.tipo === "titolare" ? (S.vistaPrima || S.vistaTitolare) : (S.ruolo.tipo === "giro" ? "consegne" : (puoSwitch() && S.vistaPrima) || "negozio"));
@@ -6843,7 +7131,7 @@ function limiteStat(){ return S.stat ? Math.max(Date.now() - S.stat.giorni * 864
 function righeStat(){
   if (!S.stat) return [];
   const lim = limiteStat();
-  return S.stat.righe.filter(function(x){ return x.v.tipo !== "prenotazione" && x.v.tipo !== "magazzino"; }).map(function(x){
+  return S.stat.righe.filter(function(x){ return x.v.tipo !== "prenotazione" && x.v.tipo !== "magazzino" && x.v.tipo !== "guasto"; }).map(function(x){
     const r = norma(x.autore + "~" + x.rid, x.v, x.st, x.autore, x.rid);
     r.tolta = !!x.v.annullato;
     r.mancato = !!(x.st.mancato || x.st.prep === "manca");
@@ -7089,6 +7377,7 @@ function scaricaBiscotti(){
 function renderTutto(){
   /* la casella di «Solo una parte» si ridisegna: resta il cursore dentro */
   const inParte = document.activeElement && document.activeElement.id === "parte-testo";
+  const inNota = document.activeElement && document.activeElement.id === "guasto-nota-testo";
   const g = fmtOggi.format(new Date());
   $("oggi").textContent = g.charAt(0).toUpperCase() + g.slice(1);
   renderNegozio();
@@ -7097,12 +7386,14 @@ function renderTutto(){
   renderStatistiche();
   renderPrenotazioni();
   renderMancanti();
+  renderGuasti();
   renderDatabase();
   renderImpostazioni();
   renderManuale();
   if (!S.bozzeLette) riprendiBozze();
   salvaBozze();
   tieniFinestraBisc();
+  if (inNota && $("guasto-nota-testo")){ const i = $("guasto-nota-testo"); i.focus(); try { i.setSelectionRange(i.value.length, i.value.length); } catch(e){} }
   if (inParte && $("parte-testo")){ const i = $("parte-testo"); i.focus(); try { i.setSelectionRange(i.value.length, i.value.length); } catch(e){} }
   document.querySelectorAll(".giorni-crono").forEach(function(x){ x.textContent = testoNumero(NUMERI.find(function(n){ return n.k === "crono"; }), num("crono")); });
 }
@@ -7310,6 +7601,14 @@ function collega(){
     if (b.id === "pren-tutto-giorno"){ const f = S.formPren; f.tuttoGiorno = !f.tuttoGiorno; if (f.tuttoGiorno) $("pren-ora").value = ""; return renderFormPren(); }
     if (b.id === "mag-segna"){ S.magForm.aperto = true; esito("mag-esito", ""); renderMancanti(); apriScrivi("mag"); $("mag-scrivi").focus(); return; }
     if (b.dataset.magArrivato) return magArrivato(b.dataset.magArrivato);
+    if (b.id === "guasto-nuovo") return apriFormGuasto();
+    if (b.id === "guasto-esci") return chiudiFormGuasto();
+    if (b.dataset.guastoUrgenza){ S.guastoForm.urgenza = b.dataset.guastoUrgenza; const sel = document.querySelector('input[name="guasto-dove"]:checked'); if (sel) S.guastoForm.dove = sel.value; esito("guasto-esito", ""); return renderGuasti(); }
+    if (b.dataset.guastoFatto) return sistemaGuasto(b.dataset.guastoFatto);
+    if (b.dataset.guastoRiapri) return riapriGuasto(b.dataset.guastoRiapri);
+    if (b.dataset.guastoNota) return apriNotaGuasto(b.dataset.guastoNota);
+    if (b.dataset.guastoNotaAnnulla){ S.guastoNotaApri = null; S.guastoNota = ""; return renderTutto(); }
+    if (b.dataset.guastoTogli) return togliGuasto(b.dataset.guastoTogli);
     if (b.dataset.prenDisdici) return apriDisdici(b.dataset.prenDisdici);
     if (b.dataset.prenElimina) return eliminaPren(b.dataset.prenElimina);
     if (b.dataset.prenRipristina) return ripristinaPren(b.dataset.prenRipristina);
@@ -7403,6 +7702,7 @@ function collega(){
   /* scrivendo un'ora precisa si toglie «Tutta la giornata» */
   ["input","change"].forEach(function(t){ $("pren-ora").addEventListener(t, function(){ if (this.value && S.formPren.tuttoGiorno){ S.formPren.tuttoGiorno = false; renderFormPren(); } }); });
   $("mag-form").addEventListener("submit", function(ev){ ev.preventDefault(); salvaMag(); });
+  $("guasto-form").addEventListener("submit", function(ev){ ev.preventDefault(); inviaGuasto(); });
   $("pren-pagina-data").addEventListener("change", function(){ if (/^\d{4}-\d{2}-\d{2}$/.test(this.value)){ S.prenScegli = false; vaiGiornoPren(this.value); } });
   /* cambiare il negozio del ritiro: prima si chiede */
   $("pren-ritiro").addEventListener("change", async function(ev){
@@ -7590,6 +7890,8 @@ function collega(){
   document.addEventListener("submit", function(ev){
     const f = ev.target.closest && ev.target.closest("[data-parte-form]");
     if (f){ ev.preventDefault(); confermaParte(f.dataset.parteForm); }
+    const fg = ev.target.closest && ev.target.closest("[data-guasto-nota-form]");
+    if (fg){ ev.preventDefault(); salvaNotaGuasto(fg.dataset.guastoNotaForm); }
   });
   /* Database: il reparto scelto per una cosa nuova resta anche se la pagina si ridisegna */
   document.addEventListener("change", function(ev){ const t = ev.target; if (t && t.dataset && t.dataset.corrRep) S.corrRep[t.dataset.corrRep] = t.value; });
@@ -7599,6 +7901,7 @@ function collega(){
     const t = ev.target;
     if (ev.key === "Enter" && t && t.dataset && t.dataset.invio && $(t.dataset.invio)){ ev.preventDefault(); $(t.dataset.invio).click(); }
   });
+  document.addEventListener("input", function(ev){ if (ev.target.id === "guasto-nota-testo"){ S.guastoNota = ev.target.value; ev.target.removeAttribute("aria-invalid"); } });
   document.addEventListener("input", function(ev){ if (ev.target.id === "parte-testo"){ S.parteTesto = ev.target.value; ev.target.removeAttribute("aria-invalid"); } });
   $("form-bisc").addEventListener("submit", aggiungiBiscotto);
   $("menu-velo").addEventListener("click", function(){ chiudiMenu(true); });
@@ -7827,13 +8130,15 @@ function caricaTuttoSB(){
        restano nella striscia rossa finché qualcuno non preme «È arrivato» */
     tuttePagine(function(){ return sb.from("stati").select("id,dati").eq("dati->>prep", "manca").order("id"); }).catch(function(){ return []; }),
     /* le cose segnate con «+ Segna cosa manca», anche vecchie (quelle già arrivate poi non si vedono) */
-    tuttePagine(function(){ return sb.from("richieste").select("id,autore,dati").eq("dati->>tipo", "magazzino").order("id"); }).catch(function(){ return []; })
+    tuttePagine(function(){ return sb.from("richieste").select("id,autore,dati").eq("dati->>tipo", "magazzino").order("id"); }).catch(function(){ return []; }),
+    /* i guasti, anche vecchi: restano finché non sono sistemati (quelli sistemati da poco in «Già sistemati») */
+    tuttePagine(function(){ return sb.from("richieste").select("id,autore,dati").eq("dati->>tipo", "guasto").order("id"); }).catch(function(){ return []; })
   ]).then(async function(r){
     const giaR = new Set(r[1].map(function(x){ return x.id; }));
     const giaS = new Set(r[2].map(function(x){ return x.id; }));
     const recenti = r[1].length;
     r[6].forEach(function(x){ if (!giaS.has(x.id)){ giaS.add(x.id); r[2].push(x); } });
-    [r[5], r[7]].forEach(function(l){ l.forEach(function(x){ if (!giaR.has(x.id)){ giaR.add(x.id); r[1].push(x); } }); });
+    [r[5], r[7], r[8]].forEach(function(l){ l.forEach(function(x){ if (!giaR.has(x.id)){ giaR.add(x.id); r[1].push(x); } }); });
     /* stati recenti di richieste vecchie (es. una cosa vecchia appena arrivata in magazzino): si carica anche la richiesta */
     const mancanti = [];
     r[2].forEach(function(x){ const i = x.id.indexOf("~"); const rid = i > 0 ? x.id.slice(i + 1) : ""; if (rid && !giaR.has(rid)){ giaR.add(rid); mancanti.push(rid); } });
@@ -8041,7 +8346,7 @@ function aggiungiEvento(ev){
   S.eventi.push(ev);
   clearTimeout(S.timerEventi);
   /* le nuove richieste partono insieme dopo un attimo; i cambi di stato si raccolgono un po' di più */
-  S.timerEventi = setTimeout(mandaEventi, ev.tipo === "nuove" || ev.tipo === "biscotti" || ev.tipo === "prenotazioni" ? 2500 : 12000);
+  S.timerEventi = setTimeout(mandaEventi, ev.tipo === "nuove" || ev.tipo === "biscotti" || ev.tipo === "prenotazioni" || ev.tipo === "guasti" || ev.tipo === "guastoFatto" ? 2500 : 12000);
 }
 function pacchettoEventi(){
   const per = {};
@@ -8071,6 +8376,8 @@ async function mandaEventi(chiudendo){
   }
 }
 function eventoStato(k, p){
+  /* un guasto sistemato: a chi l'ha segnalato */
+  if (p.sistematoAlle) return { tipo: "guastoFatto", id: k };
   /* solo "È arrivato" di una richiesta di un negozio (non le cose segnate in magazzino) */
   if (p.arrivatoAlle && p.prep === "") return { tipo: "arrivata", id: k };
   if (p.disdetta === true) return { tipo: "disdetta", id: k };
@@ -8089,6 +8396,8 @@ function prefNotifica(pref, k, ruolo){
   pref = pref || {};
   let v = pref[k];
   if (v === undefined && k === "nuovePanif" && ruolo === "panificio") v = pref.nuove;
+  /* i guasti, nuovi del 24 ottobre: ai titolari arrivano se non li hanno spenti (si decide nei permessi) */
+  if (v === undefined && ruolo === "titolare" && k === "guasti") return true;
   if (v === undefined && ruolo === "titolare") return pref.tutto === true;
   return v === undefined ? true : v === true;
 }
@@ -8280,7 +8589,7 @@ function riaccendiNuove(){
 function apriDaNotifica(vai){
   registra("aperta da notifica", { sezione: String(vai || "").slice(0, 20) });
   if (!store) { S.vaiDopo = vai; return; }
-  const sezioni = ["richieste","biscotti","prenotazioni","notifiche","mancanti"];
+  const sezioni = ["richieste","biscotti","prenotazioni","notifiche","mancanti","guasti"];
   vaiSezione(sezioni.indexOf(vai) >= 0 ? vai : "richieste", true);
   riaccendiNuove();
 }
@@ -8421,6 +8730,7 @@ function nomeRichiesta(v){
 function descriviOp(o){
   const d = (o.riga && o.riga.dati) || {};
   if (o.tab === "richieste"){
+    if (o.tipo === "insert" && d.tipo === "guasto") return "Guasto: " + String(d.articolo || "?").slice(0, 60);
     if (o.tipo === "insert") return (d.tipo === "prenotazione" ? "Nuova " : d.tipo === "magazzino" ? "Segnato che manca: " : "Richiesta: ") + nomeRichiesta(d);
     return (d.annullato ? "Tolta: " : "Cambiata: ") + nomeRichiesta(d);
   }
@@ -8520,7 +8830,7 @@ function storeSB(){
   return {
     aggiungi: async function(voce){
       const id = nuovoId();
-      await scriviOp({ tab: "richieste", tipo: "insert", id: id, riga: { id: id, autore: S.mioId, dati: voce } }, voce.restoDi ? null : { tipo: voce.tipo === "prenotazione" ? "prenotazioni" : (voce.tipo === "magazzino" ? "magazzino" : "nuove"), id: id });
+      await scriviOp({ tab: "richieste", tipo: "insert", id: id, riga: { id: id, autore: S.mioId, dati: voce } }, voce.restoDi ? null : { tipo: voce.tipo === "prenotazione" ? "prenotazioni" : (voce.tipo === "magazzino" ? "magazzino" : (voce.tipo === "guasto" ? "guasti" : "nuove")), id: id });
       applicaRiga("richieste", { id: id, autore: S.mioId, dati: voce }); emettiSB(true);
       return S.mioId + "~" + id;
     },
