@@ -7,8 +7,9 @@
 --   guastoSistema  «Scrivere Ci penso io e segnare Sistemato»      di solito no (solo i titolari)
 -- Uguale a GRUPPI_PERMESSI in sorgente/app.html. Non cambia nessun dato salvato.
 -- In fondo la tabella nuova foto_guasti: le foto dei guasti, rimpicciolite dal telefono, a parte dalle richieste.
--- Finiscono nelle copie di sicurezza; la domenica Claude le salva come file .jpg nella cartella «Guasti»
--- sul computer del proprietario e, dopo averle controllate, toglie dal database quelle dei guasti già sistemati.
+-- Non sono nella copia completa (troppo pesanti): ogni ora le foto nuove, una volta sola, e l'elenco dei guasti
+-- vanno nella cartella guasti/ delle copie (ordini-copie); la domenica Claude le mette nella cartella «Guasti»
+-- del computer del proprietario e, dopo averle controllate, toglie dal database quelle dei guasti già sistemati.
 -- Per tornare indietro: aggiornamento-14-torna-indietro.sql
 
 create or replace function public.gruppo_permesso(k text) returns text
@@ -225,7 +226,8 @@ end $$;
 
 
 -- Le foto dei guasti (fino a 3 per guasto). guasto = "autore~id" del guasto (come gli stati);
--- dati = la foto rimpicciolita dal telefono (data:image/jpeg;base64,…, al massimo circa 500 KB).
+-- dati = la foto fatta più leggera dal telefono (data:image/jpeg;base64,…, al massimo circa 1 MB di foto).
+-- Tutte insieme al massimo 100 MB (foto_guasti_tetto, qui sotto): se è pieno il guasto parte senza foto.
 -- Le mette solo chi segnala il guasto, insieme al guasto; le leggono tutti quelli che sono entrati.
 -- Dall'app non si cambiano né si cancellano: le toglie Claude dopo averle copiate sul computer.
 create table if not exists public.foto_guasti (
@@ -249,11 +251,24 @@ create policy foto_guasti_metti on public.foto_guasti for insert to authenticate
   with check (autore = auth.uid()
     and split_part(guasto, '~', 1) = auth.uid()::text
     and public.ha_permesso('guastoSegnala')
-    and dati like 'data:image/jpeg;base64,%' and length(dati) <= 700000
+    and dati like 'data:image/jpeg;base64,%' and length(dati) <= 1500000
     and (select count(*) from public.foto_guasti f where f.guasto = foto_guasti.guasto) < 3
     and exists (select 1 from public.richieste r
                 where r.autore::text = split_part(foto_guasti.guasto, '~', 1) and r.id = split_part(foto_guasti.guasto, '~', 2)
                   and r.dati->>'tipo' = 'guasto'));
+-- il tetto: tutte le foto insieme al massimo 100 MB
+create or replace function public.foto_guasti_tetto() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if (select coalesce(sum(length(f.dati)), 0) from public.foto_guasti f) + length(new.dati) > 100 * 1024 * 1024 then
+    raise exception 'Spazio per le foto pieno' using errcode = 'P0001';
+  end if;
+  return new;
+end $$;
+revoke all on function public.foto_guasti_tetto() from public;
+drop trigger if exists foto_guasti_tetto on public.foto_guasti;
+create trigger foto_guasti_tetto before insert on public.foto_guasti
+  for each row execute function public.foto_guasti_tetto();
 -- durante la manutenzione anche qui non si scrive dall'app
 drop trigger if exists foto_guasti_manutenzione on public.foto_guasti;
 create trigger foto_guasti_manutenzione before insert or update or delete on public.foto_guasti

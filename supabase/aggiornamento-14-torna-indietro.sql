@@ -196,3 +196,5 @@ end $$;
 
 drop policy if exists foto_guasti_metti on public.foto_guasti;
 revoke insert on public.foto_guasti from authenticated;
+drop trigger if exists foto_guasti_tetto on public.foto_guasti;
+drop function if exists public.foto_guasti_tetto();
