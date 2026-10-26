@@ -601,6 +601,11 @@ select{width:100%;min-height:44px;padding:0 12px;border:1.5px solid var(--line);
 .chi-ordina{font-size:14px;color:var(--muted);margin-top:-6px}
 .chi-ordina:empty{display:none}
 .esito:empty{display:none}
+/* guasto: cosa manca prima di inviare, in rosso finché non è a posto */
+.blocco-manca{border:2px solid var(--urgent);border-radius:12px;padding:8px 10px;background:var(--urgent-bg)}
+.manca-scritta{display:block;color:var(--urgent-txt);font-size:14px;font-weight:700;margin-top:4px}
+.guasto-manca{padding:10px 12px;border-radius:var(--r-md);border:2px solid var(--urgent);background:var(--urgent-bg);color:var(--urgent-txt);font-size:15px;font-weight:700}
+.guasto-manca[hidden]{display:none}
 details.card > summary{color:var(--ink);font-size:16px;min-height:28px}
 details.card[open] > summary{margin-bottom:0}
 
@@ -1068,14 +1073,15 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
           <h2 class="comanda-titolo">Segnala un guasto</h2>
           <button type="button" class="pren-chiudi" id="guasto-esci">✕ Chiudi</button>
         </div>
-        <div class="blocco"><p class="label-sm">1. Dove?</p><div class="chips" id="guasto-dove"></div></div>
-        <label class="field"><span class="label-sm">2. Cosa non funziona?</span>
+        <div class="blocco" id="guasto-b-dove"><p class="label-sm">1. Dove?</p><div class="chips" id="guasto-dove"></div></div>
+        <label class="field" id="guasto-b-testo"><span class="label-sm">2. Cosa non funziona?</span>
           <textarea id="guasto-testo" rows="3" maxlength="300" autocapitalize="sentences" placeholder="Es. La lampadina sopra il bancone del pane è spenta"></textarea></label>
-        <div class="blocco"><p class="label-sm">3. Quanto è urgente?</p><div class="urg-scelte" id="guasto-urgenza"></div></div>
+        <div class="blocco" id="guasto-b-urgenza"><p class="label-sm">3. Quanto è urgente?</p><div class="urg-scelte" id="guasto-urgenza"></div></div>
         <div class="blocco"><p class="label-sm">4. Una foto? (si può anche senza)</p>
           <div class="foto-scelte" id="guasto-foto"></div>
           <input type="file" id="guasto-foto-file" accept="image/*" multiple hidden>
           <p class="hint" id="guasto-foto-hint">Al massimo 3. L'app le fa più leggere prima di mandarle (restano nitide).</p></div>
+        <div class="guasto-manca" id="guasto-manca" role="alert" hidden></div>
         <button type="submit" class="primary" id="guasto-invia">Invia la segnalazione</button>
         <p class="esito" id="guasto-esito" role="status"></p>
       </form>
@@ -3425,7 +3431,7 @@ const URGENZE_GUASTO = [
 ];
 function urgenzaGuasto(k){ return URGENZE_GUASTO.find(function(u){ return u.k === k; }) || URGENZE_GUASTO[1]; }
 S.guasti = [];
-S.guastoForm = { aperto: false, inviando: false, dove: "", urgenza: "" };
+S.guastoForm = { aperto: false, inviando: false, dove: "", urgenza: "", manca: [] };
 S.guastoNota = "";
 S.guastoFoto = [];
 function normaGuasto(k, d, st, autore){
@@ -3602,6 +3608,46 @@ function renderFormGuasto(){
   riempi($("guasto-foto"), mini);
   $("guasto-invia").disabled = f.inviando;
   $("guasto-invia").textContent = f.inviando ? "Invio…" : "Invia la segnalazione";
+  renderMancaGuasto();
+}
+/* Cosa manca per inviare il guasto. Prima l'avviso era piccolo, verde e spariva dopo 4 secondi:
+   il 26 ottobre un guasto non è partito perché non si vedeva. Ora resta in rosso finché non è a posto. */
+const MANCA_GUASTO = [
+  { k:"dove", campo:"guasto-b-dove", testo:"1. Scegli dove è il guasto" },
+  { k:"testo", campo:"guasto-b-testo", testo:"2. Scrivi cosa non funziona" },
+  { k:"urgenza", campo:"guasto-b-urgenza", testo:"3. Scegli quanto è urgente" }
+];
+function testoGuasto(){ return String($("guasto-testo").value || "").replace(/\s+/g, " ").trim().slice(0, 300); }
+function controllaGuasto(){
+  const f = S.guastoForm;
+  const sel = document.querySelector('input[name="guasto-dove"]:checked');
+  if (sel) f.dove = sel.value;
+  const manca = [];
+  if (POSTI_GUASTI.indexOf(f.dove) < 0) manca.push("dove");
+  if (testoGuasto().length < 3) manca.push("testo");
+  if (!f.urgenza) manca.push("urgenza");
+  return manca;
+}
+function renderMancaGuasto(){
+  const manca = S.guastoForm.manca || [];
+  MANCA_GUASTO.forEach(function(m){
+    const b = $(m.campo), si = manca.indexOf(m.k) >= 0;
+    b.classList.toggle("blocco-manca", si);
+    let scritta = b.querySelector(".manca-scritta");
+    if (si && !scritta){ scritta = el("span", {class:"manca-scritta", text:"↑ Manca questo"}); b.appendChild(scritta); }
+    if (!si && scritta) scritta.remove();
+  });
+  const box = $("guasto-manca");
+  box.hidden = !manca.length;
+  riempi(box, manca.length ? [el("span", {text:"Non è ancora partito. Manca:"})].concat(MANCA_GUASTO.filter(function(m){ return manca.indexOf(m.k) >= 0; })
+    .map(function(m){ return el("span", {class:"manca-scritta", text:"• " + m.testo}); })) : []);
+}
+/* mentre si sistema, l'avviso si aggiorna e sparisce quando è tutto a posto */
+function ricontrollaGuasto(){
+  const f = S.guastoForm;
+  if (!f.manca || !f.manca.length) return;
+  f.manca = controllaGuasto();
+  renderMancaGuasto();
 }
 function renderGuasti(){
   if (!inGuasti()) return;
@@ -3629,7 +3675,7 @@ function renderGuasti(){
 }
 function apriFormGuasto(){
   const f = S.guastoForm;
-  f.aperto = true; f.dove = postoGuastoAdesso(); f.urgenza = ""; S.guastoFoto = [];
+  f.aperto = true; f.dove = postoGuastoAdesso(); f.urgenza = ""; f.manca = []; S.guastoFoto = [];
   $("guasto-testo").value = "";
   esito("guasto-esito", "");
   renderGuasti();
@@ -3639,12 +3685,16 @@ function chiudiFormGuasto(){ S.guastoForm.aperto = false; S.guastoFoto = []; $("
 async function inviaGuasto(){
   const f = S.guastoForm;
   if (f.inviando || !puoSegnalareGuasto()) return;
-  const sel = document.querySelector('input[name="guasto-dove"]:checked');
-  f.dove = sel ? sel.value : f.dove;
-  const testo = String($("guasto-testo").value || "").replace(/\s+/g, " ").trim().slice(0, 300);
-  if (POSTI_GUASTI.indexOf(f.dove) < 0){ esito("guasto-esito", "Scegli dove è il guasto."); return; }
-  if (testo.length < 3){ esito("guasto-esito", "Scrivi cosa non funziona."); $("guasto-testo").focus(); return; }
-  if (!f.urgenza){ esito("guasto-esito", "Scegli quanto è urgente."); return; }
+  f.manca = controllaGuasto();
+  if (f.manca.length){
+    registra("guasto non partito", { manca: f.manca.join(",") });
+    renderMancaGuasto();
+    const primo = MANCA_GUASTO.find(function(m){ return m.k === f.manca[0]; });
+    $(primo.campo).scrollIntoView({ block: "center", behavior: "smooth" });
+    if (f.manca[0] === "testo") $("guasto-testo").focus({ preventScroll: true });
+    return;
+  }
+  const testo = testoGuasto();
   f.inviando = true; renderGuasti();
   const foto = S.guastoFoto.slice(0, FOTO_MAX);
   const voce = { tipo: "guasto", dove: f.dove, articolo: maiuscola(testo), urgenza: f.urgenza, creato: Date.now() };
@@ -4707,7 +4757,8 @@ function capitoliManuale(){
       "2. Cosa non funziona, con parole tue. Esempio: «La lampadina sopra il bancone del pane è spenta».", el("br"),
       "3. Quanto è urgente: ", pill("urg-subito", "Urgente, blocca il lavoro"), " (per esempio la macchina del caffè non parte), ", pill("urg-presto", "Da sistemare presto"), " (l'affettatrice taglia male) o ", pill("urg-quando", "Quando si può"), " (la lampadina del bagno).", el("br"),
       "4. Se vuoi, una foto (al massimo 3): tocca ", tasto("📷 Aggiungi una foto"), " e scatta o scegli dalla galleria. Non è obbligatoria.", el("br"),
-      "Poi tocca ", tasto("Invia la segnalazione"), ": il titolare riceve subito una notifica."]] : null,
+      "Poi tocca ", tasto("Invia la segnalazione"), ": il titolare riceve subito una notifica.", el("br"),
+      "Se manca qualcosa, il guasto non parte: sopra il tasto esce un riquadro rosso con quello che manca e la parte da completare è colorata di rosso. Completala e tocca di nuovo ", tasto("Invia la segnalazione"), "."]] : null,
     ["Come vedo le foto di un guasto?", ["Sotto il guasto tocca ", tasto("📷 Vedi le foto"), ": si aprono grandi. Si chiudono con ", tasto("Chiudi"), " o toccando fuori."]],
     ["Come faccio a non segnalare due volte la stessa cosa?", ["Prima di segnalare guarda l'elenco: ci sono i guasti ancora da sistemare dei posti dove lavori (chi fa il giro vede quelli del furgone), prima i rossi. Se c'è già, non serve segnalarlo di nuovo."]],
     ["Come so se se ne sta occupando qualcuno?", ["Sotto il guasto compare la scritta del titolare, per esempio «Ci pensa Giuseppe: ho chiamato il tecnico, viene martedì». Quando è a posto il guasto va in «Già sistemati» in fondo alla pagina e chi l'ha segnalato riceve una notifica."]],
@@ -5456,10 +5507,10 @@ function aliasTutti(base, dati){
 }
 /* l'elenco completo: quelli di partenza più quelli aggiunti dai titolari, senza quelli tolti */
 function elencoDi(base, dati){
-  const tolti = new Set(dati.tolti || []), out = [];
+  const tolti = new Set(dati.tolti || []), visti = new Set(), out = [];
   base.concat(dati.elenco).forEach(function(n){
     const k = chiave(n);
-    if (k && !tolti.has(k) && !out.some(function(x){ return chiave(x) === k; })) out.push(n);
+    if (k && !tolti.has(k) && !visti.has(k)){ visti.add(k); out.push(n); }
   });
   return out.sort(function(a, b){ return a.localeCompare(b, "it"); });
 }
@@ -5482,7 +5533,15 @@ function distanza(a, b){
   return prima[n];
 }
 /* tutti i modi conosciuti di scrivere ogni prodotto: [forma, nome giusto] */
+/* si rifà solo quando cambiano i prodotti (S.prodImp è un oggetto nuovo a ogni cambio):
+   prima si rifaceva per ogni cosa da riconoscere e l'app diventava lenta */
+let formeConCache = null, formeConDi = null;
 function formeConosciute(){
+  if (formeConDi === S.prodImp && formeConCache) return formeConCache;
+  formeConDi = S.prodImp;
+  return (formeConCache = calcolaFormeConosciute());
+}
+function calcolaFormeConosciute(){
   const out = [];
   elencoProdotti().forEach(function(n){ out.push([formaProdotto(n), n]); });
   const alias = aliasTutti(ALIAS_BASE, S.prodImp);
@@ -5577,7 +5636,14 @@ S.prodRich = { elenco: [], alias: {}, tolti: [], spenti: [], temporanei: [] };
 /* una correzione tolta resta salvata vuota: non vale più */
 function prodottiRichCondivisi(d){ return leggiProdotti(d, 1000); }
 function elencoProdottiRich(){ return elencoDi(PRODOTTI_RICH_BASE, S.prodRich); }
+/* come formeConosciute(): si rifà solo quando cambia S.prodRich */
+let formeRichCache = null, formeRichDi = null;
 function formeRich(){
+  if (formeRichDi === S.prodRich && formeRichCache) return formeRichCache;
+  formeRichDi = S.prodRich;
+  return (formeRichCache = calcolaFormeRich());
+}
+function calcolaFormeRich(){
   const out = [];
   elencoProdottiRich().forEach(function(n){ out.push([formaProdotto(n), n]); });
   const alias = aliasTutti(ALIAS_RICH_BASE, S.prodRich);
@@ -7742,7 +7808,7 @@ function collega(){
     if (b.dataset.guastoFotoTogli){ S.guastoFoto.splice(Number(b.dataset.guastoFotoTogli), 1); return renderFormGuasto(); }
     if (b.dataset.guastoFoto) return apriFotoGuasto(b.dataset.guastoFoto);
     if (b.id === "foto-chiudi") return chiudiFotoGuasto();
-    if (b.dataset.guastoUrgenza){ S.guastoForm.urgenza = b.dataset.guastoUrgenza; const sel = document.querySelector('input[name="guasto-dove"]:checked'); if (sel) S.guastoForm.dove = sel.value; esito("guasto-esito", ""); return renderGuasti(); }
+    if (b.dataset.guastoUrgenza){ S.guastoForm.urgenza = b.dataset.guastoUrgenza; const sel = document.querySelector('input[name="guasto-dove"]:checked'); if (sel) S.guastoForm.dove = sel.value; esito("guasto-esito", ""); ricontrollaGuasto(); return renderGuasti(); }
     if (b.dataset.guastoFatto) return sistemaGuasto(b.dataset.guastoFatto);
     if (b.dataset.guastoRiapri) return riapriGuasto(b.dataset.guastoRiapri);
     if (b.dataset.guastoNota) return apriNotaGuasto(b.dataset.guastoNota);
@@ -7842,6 +7908,8 @@ function collega(){
   ["input","change"].forEach(function(t){ $("pren-ora").addEventListener(t, function(){ if (this.value && S.formPren.tuttoGiorno){ S.formPren.tuttoGiorno = false; renderFormPren(); } }); });
   $("mag-form").addEventListener("submit", function(ev){ ev.preventDefault(); salvaMag(); });
   $("guasto-form").addEventListener("submit", function(ev){ ev.preventDefault(); inviaGuasto(); });
+  $("guasto-testo").addEventListener("input", ricontrollaGuasto);
+  $("guasto-dove").addEventListener("change", ricontrollaGuasto);
   $("guasto-foto-file").addEventListener("change", function(ev){ aggiungiFotoGuasto(ev.target.files); });
   $("foto-velo").addEventListener("click", function(ev){ if (ev.target.id === "foto-velo") chiudiFotoGuasto(); });
   $("pren-pagina-data").addEventListener("change", function(){ if (/^\d{4}-\d{2}-\d{2}$/.test(this.value)){ S.prenScegli = false; vaiGiornoPren(this.value); } });
@@ -8356,7 +8424,7 @@ const VAPID_PUBLICA = "BC9TAKzQiQ-x3xtX0KWauGtV-uvIk9VFwqLjWAOzrJbe4e5w2AWyXMIej
    Il nome di chi lo fa lo mette il database (funzione "registra", supabase/aggiornamento-10-registro-con-nomi.sql):
    deciso dal proprietario il 19 ottobre, per vedere chi aiutare a usare meglio l'app; lo leggono solo lui e Claude. */
 const REGISTRO_ATTIVO = true;
-const VERSIONE_APP = "a2162f4b";
+const VERSIONE_APP = "c60c93fa";
 S.reg = [];
 S.ultimoTasto = { nome: "", alle: 0 };
 S.tocchi = { nome: "", volte: 0, alle: 0, segnato: false };
