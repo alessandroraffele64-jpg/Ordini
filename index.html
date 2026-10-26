@@ -5456,10 +5456,10 @@ function aliasTutti(base, dati){
 }
 /* l'elenco completo: quelli di partenza più quelli aggiunti dai titolari, senza quelli tolti */
 function elencoDi(base, dati){
-  const tolti = new Set(dati.tolti || []), out = [];
+  const tolti = new Set(dati.tolti || []), visti = new Set(), out = [];
   base.concat(dati.elenco).forEach(function(n){
     const k = chiave(n);
-    if (k && !tolti.has(k) && !out.some(function(x){ return chiave(x) === k; })) out.push(n);
+    if (k && !tolti.has(k) && !visti.has(k)){ visti.add(k); out.push(n); }
   });
   return out.sort(function(a, b){ return a.localeCompare(b, "it"); });
 }
@@ -5482,7 +5482,15 @@ function distanza(a, b){
   return prima[n];
 }
 /* tutti i modi conosciuti di scrivere ogni prodotto: [forma, nome giusto] */
+/* si rifà solo quando cambiano i prodotti (S.prodImp è un oggetto nuovo a ogni cambio):
+   prima si rifaceva per ogni cosa da riconoscere e l'app diventava lenta */
+let formeConCache = null, formeConDi = null;
 function formeConosciute(){
+  if (formeConDi === S.prodImp && formeConCache) return formeConCache;
+  formeConDi = S.prodImp;
+  return (formeConCache = calcolaFormeConosciute());
+}
+function calcolaFormeConosciute(){
   const out = [];
   elencoProdotti().forEach(function(n){ out.push([formaProdotto(n), n]); });
   const alias = aliasTutti(ALIAS_BASE, S.prodImp);
@@ -5577,7 +5585,14 @@ S.prodRich = { elenco: [], alias: {}, tolti: [], spenti: [], temporanei: [] };
 /* una correzione tolta resta salvata vuota: non vale più */
 function prodottiRichCondivisi(d){ return leggiProdotti(d, 1000); }
 function elencoProdottiRich(){ return elencoDi(PRODOTTI_RICH_BASE, S.prodRich); }
+/* come formeConosciute(): si rifà solo quando cambia S.prodRich */
+let formeRichCache = null, formeRichDi = null;
 function formeRich(){
+  if (formeRichDi === S.prodRich && formeRichCache) return formeRichCache;
+  formeRichDi = S.prodRich;
+  return (formeRichCache = calcolaFormeRich());
+}
+function calcolaFormeRich(){
   const out = [];
   elencoProdottiRich().forEach(function(n){ out.push([formaProdotto(n), n]); });
   const alias = aliasTutti(ALIAS_RICH_BASE, S.prodRich);
@@ -8356,7 +8371,7 @@ const VAPID_PUBLICA = "BC9TAKzQiQ-x3xtX0KWauGtV-uvIk9VFwqLjWAOzrJbe4e5w2AWyXMIej
    Il nome di chi lo fa lo mette il database (funzione "registra", supabase/aggiornamento-10-registro-con-nomi.sql):
    deciso dal proprietario il 19 ottobre, per vedere chi aiutare a usare meglio l'app; lo leggono solo lui e Claude. */
 const REGISTRO_ATTIVO = true;
-const VERSIONE_APP = "a2162f4b";
+const VERSIONE_APP = "6932206a";
 S.reg = [];
 S.ultimoTasto = { nome: "", alle: 0 };
 S.tocchi = { nome: "", volte: 0, alle: 0, segnato: false };
