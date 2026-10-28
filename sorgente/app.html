@@ -1455,7 +1455,7 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
       <p class="pren-giorno-scelto" id="pren-giorno-scelto"></p></div>
     <div class="blocco" id="pren-ritiro-blocco"><p class="label-sm">Dove la ritira il cliente</p><div class="chips" id="pren-ritiro"></div></div>
     <div class="row">
-      <label class="field" for="pren-cliente"><span class="label-sm">Nome del cliente (se serve)</span><input id="pren-cliente" type="text" maxlength="60" autocomplete="off" placeholder="Es. Sig. Rossi"></label>
+      <label class="field" for="pren-cliente"><span class="label-sm">Nome del cliente (obbligatorio)</span><input id="pren-cliente" type="text" maxlength="60" autocomplete="off" placeholder="Es. Sig. Rossi (per noi: Panetteria)"></label>
       <label class="field" for="pren-tel"><span class="label-sm">Numero di telefono (opzionale)</span><input id="pren-tel" type="tel" inputmode="tel" maxlength="20" autocomplete="off" placeholder="Es. 333 1234567"></label>
     </div>
     <div class="blocco" id="pren-ora-blocco"><p class="label-sm">Ora di ritiro (obbligatoria)</p>
@@ -4692,7 +4692,7 @@ function capitoliManuale(){
     ["Perché un rettangolino è bianco con scritto «temporanea»?", ["Vuol dire che l'app non conosce quella cosa e pensa che sia una cosa di passaggio, per esempio «Passare a prendere le casse». Va bene lo stesso: si aggiunge com'è scritta. Poi un titolare, nel «Database», decide se è davvero temporanea o se è un prodotto da aggiungere all'elenco. Le cose che l'app riconosce (per esempio «Vassoi») vanno come sempre."]]
   ]});
   if (vedePren()) cap.push({ titolo:"Prenotazioni", domande:[
-    ["Come scrivo una prenotazione?", ["Tocca ", tasto("+ Nuova prenotazione"), ". Scegli il giorno, dove la ritira il cliente (Corso, Piazza Nenni o Panificio; il tuo è già scelto), il nome e, se vuoi, il telefono. L'ora è obbligatoria: un'ora precisa oppure «Tutta la giornata». In «Cosa?» scrivi un prodotto con la quantità e premi Invio (per esempio «40 filoncini» o «1 kg pane casereccio»): diventa un rettangolino, come in «Cosa serve?». Verde ✓: l'app l'ha riconosciuto e ha messo il nome giusto. Arancione: l'app ti chiede quale prodotto è oppure quanti. Bianco: un prodotto nuovo, va bene lo stesso."]],
+    ["Come scrivo una prenotazione?", ["Tocca ", tasto("+ Nuova prenotazione"), ". Scegli il giorno, dove la ritira il cliente (Corso, Piazza Nenni o Panificio; il tuo è già scelto), il nome del cliente (obbligatorio; se è per la panetteria scrivi «Panetteria») e, se vuoi, il telefono. Anche l'ora è obbligatoria: un'ora precisa oppure «Tutta la giornata». In «Cosa?» scrivi un prodotto con la quantità e premi Invio (per esempio «40 filoncini» o «1 kg pane casereccio»): diventa un rettangolino, come in «Cosa serve?». Verde ✓: l'app l'ha riconosciuto e ha messo il nome giusto. Arancione: l'app ti chiede quale prodotto è oppure quanti. Bianco: un prodotto nuovo, va bene lo stesso."]],
     ["Ho dimenticato la quantità: cosa succede?", ["Il rettangolino diventa arancione e si apre un riquadro «quanti?» con i tasti 0,5, 1, 2, 3, 5, 10, oppure scrivi tu (per esempio «1 kg» o «mezzo kg») e tocca ", tasto("Ok"), ". Se proprio non serve, tocca «Lascia così, senza quantità». Per cambiare una quantità già messa tocca il rettangolino e poi ", tasto("Cambia la quantità"), "."]],
     ["Cosa succede quando tocco Salva?", ["Prima rispondi alle cose arancioni. Poi si apre «Controlla la prenotazione»: il riepilogo completo, senza tastiera, con giorno, ora, ritiro, cliente, telefono, i prodotti con la quantità e la nota. Se è tutto giusto tocca ", tasto("Conferma"), "; se devi cambiare qualcosa tocca ", tasto("‹ Torna a scrivere"), ". Se l'app ha corretto un nome e non va bene, prima di salvare tocca il rettangolino e «È una cosa nuova, lascia…»: si salva come l'hai scritto. Le correzioni dell'app e i prodotti nuovi li controlla poi un titolare."]],
     ["Se esco dall'app per sbaglio, perdo la prenotazione che stavo scrivendo?", ["No. Quello che hai scritto resta sul telefono per " + secondi("bozze") + ": riaprendo l'app in alto compare «ho ritrovato la prenotazione che stavi scrivendo» e in Prenotazioni la ritrovi aperta. Si perde solo se tocchi «Sì, esci»."]],
@@ -7133,6 +7133,8 @@ function salvaPrenotazione(ev){
   const ritiro = ritiroSel ? ritiroSel.value : "";
   if (LUOGHI_RITIRO.indexOf(ritiro) < 0){ esito("pren-esito", "Scegli dove la ritira il cliente."); return; }
   if (!$("pren-ora").value && !f.tuttoGiorno){ esito("pren-esito", "Scegli l'ora del ritiro oppure «Tutta la giornata»."); $("pren-ora").focus(); return; }
+  /* il nome del cliente è obbligatorio (28 ottobre); se è per la panetteria si scrive «Panetteria» */
+  if (!$("pren-cliente").value.trim()){ esito("pren-esito", "Scrivi il nome del cliente. Se è per la panetteria, scrivi «Panetteria»."); $("pren-cliente").focus(); return; }
   const tel = $("pren-tel").value.trim();
   if (tel && tel.replace(/\D/g, "").length < 6){ esito("pren-esito", "Il numero di telefono sembra incompleto: controllalo o lascialo vuoto."); $("pren-tel").focus(); return; }
   esito("pren-esito", "");

@@ -380,12 +380,17 @@ if (typeof Deno !== "undefined") {
     return u && u.id ? { id: u.id } : { errore: "utente non trovato" };
   }
 
+  // prova del 28 ottobre: tutte le notifiche partono «importanti» (i telefoni Android le consegnano subito
+  // anche a schermo spento), tranne quelle di Massimo, per confrontare i ritardi. Dopo la prova si toglie.
+  const SENZA_IMPORTANTI = new Set(["fcdd92b3-a4cb-4783-9966-6138da48da1d"]);
+
   async function manda(m) {
+    const importante = m.urgente || !SENZA_IMPORTANTI.has(m.isc.utente);
     try {
       await webpush.sendNotification(
         { endpoint: m.isc.endpoint, keys: { p256dh: m.isc.p256dh, auth: m.isc.auth } },
         JSON.stringify({ titolo: m.titolo, testo: m.testo, tag: m.tag, vai: m.vai || "richieste" }),
-        { TTL: 6 * 3600, urgency: m.urgente ? "high" : "normal" },
+        { TTL: 6 * 3600, urgency: importante ? "high" : "normal" },
       );
       return "";
     } catch (e) {
@@ -413,7 +418,7 @@ if (typeof Deno !== "undefined") {
 
       // prova: una notifica ai telefoni di chi la chiede
       if (corpo.prova === true) {
-        const { data: miei } = await db.from("iscrizioni").select("endpoint,p256dh,auth").eq("utente", mittente);
+        const { data: miei } = await db.from("iscrizioni").select("endpoint,p256dh,auth,utente").eq("utente", mittente);
         const errori = [];
         let inviate = 0;
         for (const isc of miei || []) {
