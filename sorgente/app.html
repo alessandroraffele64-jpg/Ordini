@@ -814,6 +814,7 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
 .pers-riga.sospesa{opacity:.7}
 .pers-nome{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px}
 .pers-nome small{font-size:13px;color:var(--muted);font-weight:400}
+.pers-nome small.notif-bloccate{color:var(--urgent-txt);font-weight:700}
 .pers-freccia{font-size:22px;color:var(--muted);line-height:1}
 .codici-lista li:has(> .pers-riga){display:block}
 .pers-indietro{align-self:flex-start}
@@ -4775,7 +4776,7 @@ function capitoliManuale(){
     ["Una persona lavora in più posti: come faccio?", ["Nei suoi permessi, in alto, in «Dove lavora», tocca ", tasto("Sì"), " accanto agli altri posti (anche «Giro consegne»). Se lavora in due negozi (o in un negozio e al Panificio), quando apre l'app sceglie dove è; se la riapre dopo un po' (le ore le scegli in «Impostazioni») le chiede «Sei ancora al…?», e riceve le notifiche del posto dove è. Se lavora al giro e in un altro posto (per esempio giro e Panificio), ha in alto due tasti per passare da uno all'altro, nessuna domanda, e riceve le notifiche di tutti e due."]],
     ["Perché alcune righe dei permessi sono grigie?", ["Ognuno vede tutte le righe, ma alcune valgono solo in un posto: per esempio «Segnare i biscotti Fatto» vale al Panificio. Se la persona non lavora lì, la riga è su No e sotto c'è scritto quale posto aggiungere prima in «Dove lavora»."]],
     ["Posso scegliere le mie notifiche da titolare?", ["Sì: in «Persone registrate» → ", tasto("Permessi di ogni persona"), " tocca il tuo nome (o quello dell'altro titolare). Ci sono tutte le notifiche, una per riga: metti ", tasto("No"), " a quelle che non vuoi, per esempio «Un negozio chiede qualcosa all'altro» (Piazza Nenni chiede i vassoi al Corso)."]],
-    ["Posso scegliere io le notifiche di una persona?", ["Sì: nei suoi permessi, in «Notifiche che può ricevere», una per riga. Puoi dare a chiunque anche notifiche che di solito non sono del suo posto (per esempio «Pronto da caricare» a una persona del Corso). Le decidi solo tu, la persona non le può cambiare: «Sì» vuol dire che le arriva sempre, «No» che non le arriva mai. Arrivano solo se sul suo telefono ha toccato «Attiva le notifiche»: questo l'app non lo può fare al posto suo. Nell'elenco delle persone vedi chi ha le notifiche accese 🔔 e chi no 🔕."]],
+    ["Posso scegliere io le notifiche di una persona?", ["Sì: nei suoi permessi, in «Notifiche che può ricevere», una per riga. Puoi dare a chiunque anche notifiche che di solito non sono del suo posto (per esempio «Pronto da caricare» a una persona del Corso). Le decidi solo tu, la persona non le può cambiare: «Sì» vuol dire che le arriva sempre, «No» che non le arriva mai. Arrivano solo se sul suo telefono ha toccato «Attiva le notifiche»: questo l'app non lo può fare al posto suo. Nell'elenco delle persone vedi chi ha le notifiche accese 🔔 e chi no 🔕. Se qualcuno le ha bloccate dalle impostazioni del telefono, sotto il suo nome c'è in rosso «🔕 Notifiche bloccate dal telefono»: lo vedi dopo che ha aperto l'app almeno una volta. Quando le riattiva, la scritta sparisce da sola."]],
     ["Dove vedo in quali posti lavora una persona?", ["In «Persone registrate», accanto al nome c'è un bollino per ogni posto (per esempio Piazza Nenni e Corso). Toccando il nome, il riquadro «Dove lavora» li elenca tutti; per cambiarli tocca ", tasto("Cambia dove lavora"), "."]],
     ["Una persona cambia negozio o va in ferie?", ["In «Persone registrate» tocca il suo nome. In «Spostala in un altro posto» scegli il posto nuovo e tocca ", tasto("Sposta"), ": la sposta (per esempio dal Corso a Piazza Nenni) senza codice nuovo. ", tasto("Sospendi"), " non le fa usare l'app finché non tocchi ", tasto("Riattiva"), ": dopo, sul suo telefono, basta toccare «Riprova»."]],
     ["A cosa serve «Impostazioni»?", ["Lì scegli alcuni numeri dell'app, divisi a gruppi (Richieste dei negozi, Avvisi e colori, Per quanto tempo tenere le cose…): per esempio dopo quante ore una richiesta diventa arancione o quanti tasti «Chiesti spesso» si vedono. Valgono per tutti i telefoni. Sotto ogni numero c'è un esempio che cambia mentre tocchi − e +; poi «Salva». «Rimetti com'era all'inizio» torna al numero di partenza."]],
@@ -8710,6 +8711,7 @@ async function attivaNotifiche(){
     await salvaIscrizione(sub);
     notifica("Notifiche attive", "Da ora ricevi gli avvisi anche con l'app chiusa.", "ok");
     registra("notifiche attivate", {});
+    segnaNotificheBloccate();
   } catch(e){
     registra("notifiche non attivate", { motivo: e && e.utente ? "permesso negato" : String(e && e.message || "errore").slice(0, 80) });
     if (e && e.utente) avviso("Senza il permesso del telefono le notifiche non possono arrivare.");
@@ -8745,6 +8747,25 @@ async function caricaPreferenzeNotifiche(){
     } catch(e){}
   }
   renderNotifiche();
+  segnaNotificheBloccate();
+}
+/* notifiche bloccate dalle impostazioni del telefono (28 ottobre): l'app lo dice al database quando si apre
+   o si riprende in mano, così il titolare lo vede in «Persone registrate». Si manda solo quando cambia. */
+async function segnaNotificheBloccate(){
+  if (!notificheDisponibili() || !sb || !S.mioId || !("Notification" in window)) return;
+  let bloccate = null;
+  if (Notification.permission === "denied") bloccate = true;
+  else if (Notification.permission === "granted" && await iscrizioneAttuale()) bloccate = false;
+  if (bloccate === null) return;
+  const chiave = "pdp-notif-bloccate:" + S.mioId;
+  let prima = null;
+  try { prima = localStorage.getItem(chiave); } catch(e){}
+  if (prima === String(bloccate)) return;
+  try {
+    await sbFai(sb.rpc("segna_notifiche_bloccate", { bloccate: bloccate }));
+    try { localStorage.setItem(chiave, String(bloccate)); } catch(e){}
+    registra(bloccate ? "notifiche bloccate dal telefono" : "notifiche sbloccate", {});
+  } catch(e){}
 }
 
 /* notifica in alto, come quelle del telefono: si vede subito senza scorrere.
@@ -9237,6 +9258,12 @@ async function mostraPersone(){
     S.notifPersone = {};
     (r || []).forEach(function(x){ S.notifPersone[x.utente] = { telefoni: x.telefoni || 0, preferenze: Array.isArray(x.preferenze) ? x.preferenze : [] }; });
   } catch(e){ S.notifPersone = null; }
+  /* chi le ha bloccate dalle impostazioni del telefono (se il database è aggiornato) */
+  try {
+    const r = await sbFai(sb.rpc("notifiche_bloccate_persone"));
+    S.notifBloccate = {};
+    (r || []).forEach(function(x){ S.notifBloccate[x.utente] = x.dal; });
+  } catch(e){ S.notifBloccate = null; }
   renderPersone();
 }
 function classeRuolo(r){ return r === "corso" ? "dest-corso" : r === "piazza-nenni" ? "dest-nenni" : r === "panificio" ? "dest-panif" : "dest-altro"; }
@@ -9248,7 +9275,9 @@ function postiPersona(x){
 function pillRuolo(x){
   return el("span", { class: "pill-posti" }, ...postiPersona(x).map(function(r){ return el("span", { class: "pill dest " + classeRuolo(r), text: NOMI_RUOLI[r] || r }); }));
 }
+function notifBloccate(id){ return !!(S.notifBloccate && S.notifBloccate[id]); }
 function testoNotifPersona(id){
+  if (notifBloccate(id)) return "🔕 Notifiche bloccate dal telefono";
   if (!S.notifPersone) return "";
   const n = S.notifPersone[id];
   if (!n || !n.telefoni) return "🔕 Notifiche spente";
@@ -9282,7 +9311,7 @@ function renderElencoPersone(){
     const cambi = contaEccezioni(x.id) - (e && Array.isArray(e.luoghi) ? e.luoghi.length : 0);
     const sotto = [x.sospeso ? "Accesso sospeso" : "", cambi > 0 ? "Permessi cambiati" : "", testoNotifPersona(x.id)].filter(Boolean).join(" · ");
     return el("li", null, el("button", { type: "button", class: "pers-riga" + (x.sospeso ? " sospesa" : ""), "data-pers-scheda": x.id },
-      el("span", { class: "pers-nome" }, el("b", { text: x.nome + (io ? " (tu)" : "") }), sotto ? el("small", { text: sotto }) : null),
+      el("span", { class: "pers-nome" }, el("b", { text: x.nome + (io ? " (tu)" : "") }), sotto ? el("small", { class: notifBloccate(x.id) ? "notif-bloccate" : null, text: sotto }) : null),
       pillRuolo(x), el("span", { class: "pers-freccia", "aria-hidden": "true", text: "›" })));
   }));
 }
@@ -9411,6 +9440,7 @@ function schermataPermessi(p){
   /* notifiche: una per riga */
   const np = S.notifPersone && S.notifPersone[id];
   const sulTel = function(k){
+    if (notifBloccate(id)) return "Le ha bloccate dalle impostazioni del telefono: non gli arriva.";
     if (!S.notifPersone) return "";
     if (!np || !np.telefoni) return "Sul suo telefono le notifiche sono spente.";
     if (r !== "titolare") return "Gli arriva.";
@@ -9727,7 +9757,7 @@ async function controllaVersione(){
 }
 async function avviaSupabase(){
   S.sito = true;
-  document.addEventListener("visibilitychange", function(){ if (document.visibilityState === "visible") controllaVersione(); });
+  document.addEventListener("visibilitychange", function(){ if (document.visibilityState === "visible"){ controllaVersione(); segnaNotificheBloccate(); } });
   controllaVersione();
   /* il telefono si tiene una copia dell'app: si apre anche senza campo */
   try {
