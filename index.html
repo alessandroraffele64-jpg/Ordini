@@ -7280,11 +7280,11 @@ async function copiaTelefono(n){
   avviso(ok ? "Numero copiato: " + n : "Numero: " + n);
 }
 /* ---------- statistiche (solo titolari) ---------- */
-/* Statistiche spente finché si fanno le prove: i dati intanto si salvano lo stesso.
-   Quando l'app parte davvero: mettere true e, se serve, STAT_DAL al giorno di partenza
-   (così le richieste di prova non vengono contate). */
-const STATISTICHE_ATTIVE = false;
-const STAT_DAL = "";
+/* Statistiche accese alla partenza vera (deciso dal proprietario il 28 ottobre 2026):
+   contano solo da STAT_DAL, quello che c'era prima (prove comprese) resta nell'app ma non si conta.
+   I contatori dei biscotti (volte, volteFiniti) non guardano STAT_DAL: alla partenza sono stati rimessi a 0. */
+const STATISTICHE_ATTIVE = true;
+const STAT_DAL = "2026-10-29";
 const PERIODI_STAT = [[7, "7 giorni"], [30, "30 giorni"], [90, "3 mesi"], [180, "6 mesi"], [365, "12 mesi"]];
 const GIORNI_SETT = ["Lunedì","Martedì","Mercoledì","Giovedì","Venerdì","Sabato","Domenica"];
 S.statGiorni = 30;
@@ -8424,7 +8424,7 @@ const VAPID_PUBLICA = "BC9TAKzQiQ-x3xtX0KWauGtV-uvIk9VFwqLjWAOzrJbe4e5w2AWyXMIej
    Il nome di chi lo fa lo mette il database (funzione "registra", supabase/aggiornamento-10-registro-con-nomi.sql):
    deciso dal proprietario il 19 ottobre, per vedere chi aiutare a usare meglio l'app; lo leggono solo lui e Claude. */
 const REGISTRO_ATTIVO = true;
-const VERSIONE_APP = "c60c93fa";
+const VERSIONE_APP = "03d5db13";
 S.reg = [];
 S.ultimoTasto = { nome: "", alle: 0 };
 S.tocchi = { nome: "", volte: 0, alle: 0, segnato: false };
