@@ -151,6 +151,17 @@ body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area
 .bisc[data-blocco]:disabled{opacity:1}
 .inviata{font-size:17px;font-weight:700;color:var(--done)}
 .bisc-finestra{position:fixed;inset:0;z-index:58;display:flex;align-items:center;justify-content:center;overflow-y:auto;overscroll-behavior:contain;padding:calc(env(safe-area-inset-top,0px) + 20px) 16px calc(env(safe-area-inset-bottom,0px) + 20px);background:var(--bg)}
+.istr-finestra{align-items:flex-start;z-index:59}
+.bisc-finestra-box.istr-box{text-align:left;max-width:560px;gap:10px;margin:0 auto}
+.istr-box h2{font-size:24px}
+.istr-box h3{margin:10px 0 0;font-size:19px}
+.istr-box p,.istr-box li{font-size:17px;line-height:1.5;margin:0}
+.istr-lista{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px}
+.istr-scelta .mini.scelto{background:var(--accent);color:#fff;border-color:var(--accent)}
+.istr-box .primary{position:sticky;bottom:0;margin-top:8px}
+.istr-tasto{display:flex;flex-direction:column;align-items:flex-start;gap:4px;width:100%;margin:0 0 14px;padding:16px;border-radius:14px;border:2px solid #d4a017;background:#fff3c4;color:#4a3800;font-size:19px;font-weight:700;text-align:left;cursor:pointer}
+.istr-tasto span{font-size:14px;font-weight:400}
+.db-elim{border:2px solid #d4a017}
 .bisc-finestra-box{width:100%;max-width:480px;margin:auto;display:flex;flex-direction:column;gap:14px;text-align:center}
 .bisc-ok{width:72px;height:72px;margin:0 auto;display:flex;align-items:center;justify-content:center;border-radius:50%;background:var(--done);color:#fff;font-size:40px;font-weight:700}
 .bisc-finestra h2{margin:0;font-size:26px}
@@ -1178,6 +1189,7 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
       <div id="db-parte" hidden>
         <div class="db-testa" id="db-testa"></div>
         <div class="blocco" id="db-prodotto"></div>
+        <div class="blocco" id="db-eliminate" hidden></div>
         <p class="hint" id="db-spiega"></p>
         <div class="blocco" id="db-lista"></div>
         <p class="vuoto" id="db-vuoto">Niente da controllare.</p>
@@ -1749,8 +1761,10 @@ function norma(k, d, st, autore, rid){
   st = st || {};
   const salvato = String(d.articolo || "").slice(0,120) || "Senza nome";
   const scritto = typeof d.scritto === "string" ? d.scritto.slice(0,120) : "";
+  /* il nome dato da un titolare «solo per questa volta» vale solo per questa richiesta */
+  const volta = (S.prodRich.unaVolta || {})[k] || "";
   /* una correzione dei titolari («Sbagliato, era…») vale anche per le richieste già mandate */
-  let corretto = S.prodRich.alias[chiave(scritto || salvato)];
+  let corretto = volta || S.prodRich.alias[chiave(scritto || salvato)];
   /* e se poi il prodotto ha cambiato nome, prende il nome nuovo */
   const rinominato = S.prodRich.alias[chiave(corretto || salvato)];
   if (rinominato) corretto = rinominato;
@@ -1763,6 +1777,7 @@ function norma(k, d, st, autore, rid){
     /* com'era scritto (solo se l'app l'ha cambiato) e com'è stato mandato */
     scritto: scritto,
     salvato: salvato,
+    unaVolta: !!volta,
     quantita: String(d.quantita || "").slice(0,24),
     per: String(d.per || ""),
     da: String(d.da || "Panificio"),
@@ -4780,11 +4795,12 @@ function capitoliManuale(){
     ["Dove vedo in quali posti lavora una persona?", ["In «Persone registrate», accanto al nome c'è un bollino per ogni posto (per esempio Piazza Nenni e Corso). Toccando il nome, il riquadro «Dove lavora» li elenca tutti; per cambiarli tocca ", tasto("Cambia dove lavora"), "."]],
     ["Una persona cambia negozio o va in ferie?", ["In «Persone registrate» tocca il suo nome. In «Spostala in un altro posto» scegli il posto nuovo e tocca ", tasto("Sposta"), ": la sposta (per esempio dal Corso a Piazza Nenni) senza codice nuovo. ", tasto("Sospendi"), " non le fa usare l'app finché non tocchi ", tasto("Riattiva"), ": dopo, sul suo telefono, basta toccare «Riprova»."]],
     ["A cosa serve «Impostazioni»?", ["Lì scegli alcuni numeri dell'app, divisi a gruppi (Richieste dei negozi, Avvisi e colori, Per quanto tempo tenere le cose…): per esempio dopo quante ore una richiesta diventa arancione o quanti tasti «Chiesti spesso» si vedono. Valgono per tutti i telefoni. Sotto ogni numero c'è un esempio che cambia mentre tocchi − e +; poi «Salva». «Rimetti com'era all'inizio» torna al numero di partenza."]],
-    ["A cosa serve «Database»?", ["Entrando ci sono tre tasti: Ordini, Prenotazioni, Biscotti. Il numero dice quante cose nuove ci sono da controllare. In ogni parte ci sono i nomi nuovi o corretti dall'app («Sì, è giusto», «No, era…», «È un prodotto nuovo», «Scrivi il nome giusto») e i prodotti che forse sono doppi; in fondo l'elenco completo, con «Cerca un prodotto», e le «Ultime modifiche» con «Annulla». In Ordini, più sotto, c'è una parte a sé per le cose segnate con «+ Segna cosa manca». Le cose aggiunte nel giro che l'app non conosce chiedono «Sì, è temporanea» (resta fuori dall'elenco e la volta dopo non si chiede più) o «Aggiungila all'elenco dei prodotti». Una correzione vale anche per quello già scritto. Quanti giorni indietro guardare lo scegli in «Impostazioni» (di partenza 7)."]],
+    ["A cosa serve «Database»?", ["Entrando ci sono tre tasti: Ordini, Prenotazioni, Biscotti. Il numero dice quante cose nuove ci sono da controllare. In ogni parte ci sono i nomi nuovi o corretti dall'app e i prodotti che forse sono doppi; in fondo l'elenco completo, con «Cerca un prodotto», e le «Ultime modifiche» con «Annulla». In Ordini, più sotto, c'è una parte a sé per le cose segnate con «+ Segna cosa manca». Le cose aggiunte nel giro che l'app non conosce chiedono «Sì, è temporanea» (resta fuori dall'elenco e la volta dopo non si chiede più) o «Aggiungila all'elenco dei prodotti». Una correzione vale anche per quello già scritto. Quanti giorni indietro guardare lo scegli in «Impostazioni» (di partenza 7)."]],
     ["Come scelgo il reparto di una cosa nuova?", ["Nel «Database», parte Ordini, sotto ogni cosa che l'app non conosce c'è «Reparto», con il reparto che l'app ha pensato dal nome. Se è sbagliato sceglilo giusto, poi tocca «È un prodotto nuovo» (o «Salva il nome giusto»): il reparto si salva insieme. Esempio: «sacchetti freezer grandi» → Congelati. I negozi non scelgono il reparto."]],
-    ["Un prodotto è scritto male: come lo correggo?", ["Nel «Database» tocca «Scrivi il nome giusto» (o «No, era…»). Scrivi il nome: sotto escono i prodotti dell'elenco che somigliano, puoi toccarne uno. Se il nome che scrivi non c'è, diventa un prodotto nuovo. Quello scritto male resta collegato al nome giusto: la volta dopo l'app lo corregge da sola."]],
+    ["Un prodotto è scritto male: come lo correggo?", ["Nel «Database», parte Ordini, i tasti dipendono da se la cosa è già arrivata al negozio. Già consegnata (non si può eliminare): «Era questo prodotto, solo per questa volta» (la richiesta conta sotto quel prodotto nelle statistiche, ma l'app non lo impara), «Si scrive sempre così» (quel modo di scrivere diventa per sempre un altro nome del prodotto) o «È un prodotto nuovo». Non ancora consegnata: «È questo prodotto» e poi «Lo salvo anche per le prossime volte?» («Sì, si scrive sempre così» / «No, solo questa volta»), «È un prodotto nuovo» o «È stato mandato per sbaglio». Scrivi il nome: sotto escono i prodotti dell'elenco che somigliano, puoi toccarne uno. Se il nome che scrivi non c'è, diventa un prodotto nuovo. Se un nome va bene per più prodotti (es. «crocchette»: di patate, di melanzane, mignon) l'app non lo salva per sempre: te lo spiega e lo salva solo per questa volta."]],
+    ["Nel Database, cosa vuol dire «solo per questa volta»?", ["L'app tiene il conto di quante volte ogni negozio chiede ogni prodotto (le statistiche). Con «solo per questa volta» quella richiesta conta sotto il prodotto giusto, ma l'app non impara il nome: se domani un negozio scrive di nuovo «olio», chiederà ancora quale olio. Usalo quando il nome può voler dire più prodotti e tu sai quale era quella volta."]],
     ["Come controllo le cose segnate con «+ Segna cosa manca»?", ["Nel «Database», parte Ordini, sotto le richieste dei negozi c'è «Segnate con «+ Segna cosa manca»». Funziona come per le richieste: «Sì, è giusto», «No, era…», «È un prodotto nuovo». Esempio: Massimo ha segnato «acqua nat» e tu scegli «Acqua naturale grande»: da quel momento è collegata all'acqua chiesta dai negozi, e con «È arrivato» arrivano insieme. Se è stata segnata per sbaglio, «Elimina, è stato uno sbaglio»."]],
-    ["Un ordine non c'entra niente: come lo tolgo?", ["Nel «Database», parte Ordini, sotto l'ordine tocca «Elimina questo ordine» e conferma. Sparisce dalle richieste e dal giro. Se è stato uno sbaglio, lo ritrovi in Cronologia."]],
+    ["Un ordine è stato mandato per sbaglio: come lo tolgo?", ["Nel «Database», parte Ordini, sotto l'ordine tocca «È stato mandato per sbaglio» e conferma. C'è solo per le cose non ancora consegnate: quelle già arrivate al negozio non si possono togliere. Sparisce dalle liste del negozio e del giro; lo ritrovi in Cronologia e nelle «Ultime modifiche» (con chi l'ha tolto e quando). Non usarlo quando il nome è solo scritto male."]],
     ["Come cambio l'elenco dei prodotti?", ["Nel «Database», in fondo a Ordini o Prenotazioni, apri «Tutti i prodotti». In cima puoi aggiungere un prodotto. Negli Ordini i prodotti sono divisi per reparto: ogni reparto è un tasto con il numero dei prodotti, per esempio «Frigo 30»; toccalo per aprirlo. Tocca un prodotto per aprire la sua pagina: lì cambi il nome (se il nome nuovo c'è già, i due prodotti si uniscono), il reparto (solo Ordini), aggiungi o togli un modo di scriverlo, vedi le ultime volte che è stato chiesto e puoi toglierlo dall'elenco. «‹ Tutti i prodotti» o «Indietro» tornano all'elenco. Nei Biscotti è uguale: tocca un biscotto per cambiare il nome (vale anche per le comande già fatte) o togliere uno aggiunto dai negozi. In fondo puoi rimettere quelli tolti."]],
     ["Come trovo un prodotto nell'elenco?", ["Nel «Database», apri «Tutti i prodotti» e scrivi nella casella «Cerca un prodotto» una parte del nome, per esempio «latte». Escono solo i prodotti che hanno quelle lettere nel nome o in un modo di scriverlo, con i reparti già aperti. Cancella la casella per vedere di nuovo tutto."]],
     ["Come cambio il reparto di un prodotto?", ["Nel «Database», parte Ordini, apri «Tutti i prodotti», tocca il prodotto e nella sua pagina scegli il reparto in «Mettilo in un altro reparto», poi «Cambia reparto». Esempio: le «Crocchette di patate» finite in Frigo vanno in Congelati. Il reparto decide dove esce la cosa nel «Carico per reparto» delle consegne, anche per quelle già chieste."]],
@@ -5483,7 +5499,13 @@ function leggiProdotti(d, max){
   const diversi = Array.isArray(d.diversi) ? d.diversi.filter(function(x){ return typeof x === "string" && x.indexOf("|") > 0; }).slice(0, 1000) : [];
   /* cose aggiunte nel giro che i titolari hanno detto «temporanee» (solo richieste) */
   const temporanei = Array.isArray(d.temporanei) ? d.temporanei.filter(function(x){ return typeof x === "string" && x; }).map(chiave).slice(-1000) : [];
-  return { elenco: elenco, alias: alias, tolti: tolti, spenti: spenti, diversi: diversi, temporanei: temporanei };
+  /* richieste a cui un titolare ha dato il nome giusto «solo per questa volta» (solo richieste):
+     { "autore~id": "Nome giusto" }; vale per quella richiesta e per le statistiche, l'app non lo impara */
+  const unaVolta = {};
+  if (d.unaVolta && typeof d.unaVolta === "object"){
+    for (const k in d.unaVolta){ if (typeof d.unaVolta[k] === "string" && d.unaVolta[k].trim()) unaVolta[k] = d.unaVolta[k].trim().slice(0, 60); }
+  }
+  return { elenco: elenco, alias: alias, tolti: tolti, spenti: spenti, diversi: diversi, temporanei: temporanei, unaVolta: unaVolta };
 }
 /* tutti gli altri modi di scrivere: quelli di partenza (se non tolti) più quelli dei titolari */
 function aliasTutti(base, dati){
@@ -5618,7 +5640,7 @@ const PRODOTTI_RICH_BASE = ["Pane casereccio","Pitta","Pitta china","Filoncini",
 /* altri modi di scrivere già visti nelle chat */
 const ALIAS_RICH_BASE = { "icerbeg": "Iceberg", "aisberg": "Iceberg", "wrustel": "Wurstel", "speak": "Speck", "turborg": "Tuborg",
   "manaiese": "Maionese", "coca": "Coca cola", "cocacola": "Coca cola", "estate pesca": "Estathe pesca", "pomodorino": "Pomodorini" };
-S.prodRich = { elenco: [], alias: {}, tolti: [], spenti: [], temporanei: [] };
+S.prodRich = { elenco: [], alias: {}, tolti: [], spenti: [], temporanei: [], unaVolta: {} };
 /* una correzione tolta resta salvata vuota: non vale più */
 function prodottiRichCondivisi(d){ return leggiProdotti(d, 1000); }
 function elencoProdottiRich(){ return elencoDi(PRODOTTI_RICH_BASE, S.prodRich); }
@@ -5682,8 +5704,8 @@ function gruppiCorrezioni(){
     /* aggiunte nel giro (anche i promemoria): se l'app non le conosce si chiede se sono temporanee */
     const giro = r.daGiro || r.per === PROMEMORIA;
     const testo = r.scritto || r.salvato, k = chiave(testo);
-    /* già sistemato da un titolare */
-    if (!k || S.prodRich.alias[k]) return;
+    /* già sistemato da un titolare (anche «solo per questa volta») */
+    if (!k || S.prodRich.alias[k] || r.unaVolta) return;
     let tipo;
     if (r.scritto && chiave(r.scritto) !== chiave(r.salvato)) tipo = "corretta";
     else if (trovaProdottoRich(r.salvato).esito !== "sicuro") tipo = giro ? "temp" : "nuova";
@@ -5721,7 +5743,7 @@ function biscNuovi(){
 }
 function contaDatabase(){
   if (!puoDatabase()) return { ordini: 0, prenotazioni: 0, biscotti: 0, tutti: 0 };
-  const c = { ordini: gruppiCorrezioni().length + doppiProd(parteProd("ordini")).length, prenotazioni: gruppiDaControllare().size + doppiProd(parteProd("prenotazioni")).length, biscotti: biscNuovi().length };
+  const c = { ordini: gruppiCorrezioni().length + gruppiEliminati().length + doppiProd(parteProd("ordini")).length, prenotazioni: gruppiDaControllare().size + doppiProd(parteProd("prenotazioni")).length, biscotti: biscNuovi().length };
   c.tutti = c.ordini + c.prenotazioni + c.biscotti;
   return c;
 }
@@ -5758,6 +5780,7 @@ function renderDatabase(){
   const menu = !S.dbScheda;
   $("db-menu").hidden = !menu;
   $("db-parte").hidden = menu;
+  $("db-eliminate").hidden = true;
   if (menu) renderDbMenu();
   else {
     const x = SCHEDE_DB.find(function(s){ return s[0] === S.dbScheda; }) || SCHEDE_DB[0];
@@ -5797,6 +5820,8 @@ function nomeDaChiave(k){
 function renderDbMenu(){
   const c = contaDatabase();
   riempi($("db-menu"), [
+    istrDaLeggere() ? el("button", {type:"button", class:"istr-tasto", "data-istr-apri":"1"}, "📖 Leggi le istruzioni nuove",
+      el("span", {text: S.mioId === ISTR_BRUNO ? "Come si sistemano i nomi da oggi. Si leggono una volta sola." : "Anteprima del messaggio per tuo padre. Si legge una volta sola."})) : null,
     el("p", {class:"hint", text:"Scegli quale parte vuoi vedere. Il numero dice quante cose nuove ci sono da controllare."}),
     el("ul", {class:"db-sotto"}, ...SCHEDE_DB.map(function(x){
       return el("li", null, el("button", {type:"button", class:"menu-voce", "data-db-scheda":x[0], "aria-label":x[1] + (c[x[0]] ? ", " + c[x[0]] + " da controllare" : "")},
@@ -5829,12 +5854,303 @@ function aggiornaSugg(input){
     ? "✓ C'è già nell'elenco: «" + esatto + "»."
     : "Non c'è nell'elenco: diventa un prodotto nuovo, «" + maiuscola(t).slice(0, 60) + "»."})]));
 }
+/* le richieste di un gruppo già portate al negozio: queste non si eliminano più (29 ottobre) */
+function giaConsegnata(r){ return r.stato === "consegnato"; }
+/* «È stato mandato per sbaglio»: solo le richieste non ancora consegnate */
+function daTogliereSbaglio(g){
+  return g.mag ? g.rich.filter(function(){ return puoDatabase(); })
+    : g.rich.filter(function(r){ return !giaConsegnata(r) && puoTogliere(r); });
+}
+/* i tasti di una cosa da controllare negli Ordini (29 ottobre):
+   già consegnata → «Era questo prodotto, solo per questa volta» / «Si scrive sempre così» / «È un prodotto nuovo»;
+   non ancora consegnata → «È questo prodotto» (poi «Lo salvo anche per le prossime volte?») / «È un prodotto nuovo» /
+   «È stato mandato per sbaglio». Le cose del giro e quelle segnate in magazzino come prima. */
+function azioniCorr(g, off){
+  const consegnate = !g.mag && g.rich.every(giaConsegnata);
+  const sbaglio = g.elim ? [] : daTogliereSbaglio(g);
+  const out = [];
+  if (S.corrApri === g.id){
+    const modo = S.corrModo || "sempre";
+    const tasti = [];
+    if (modo === "volta") tasti.push(el("button", {type:"button", class:"mini", id:"corr-salva", "data-corr-volta":g.id, disabled:off, text:"Salva solo per questa volta"}));
+    else if (modo === "chiedi"){
+      tasti.push(el("button", {type:"button", class:"mini", "data-corr-salva":g.id, disabled:off, text:"Sì, si scrive sempre così"}));
+      tasti.push(el("button", {type:"button", class:"mini", id:"corr-salva", "data-corr-volta":g.id, disabled:off, text:"No, solo questa volta"}));
+    } else tasti.push(el("button", {type:"button", class:"mini", id:"corr-salva", "data-corr-salva":g.id, disabled:off, text: g.elim || g.tipo === "temp" || g.mag ? "Salva il nome giusto" : "Salva: si scrive sempre così"}));
+    tasti.push(el("button", {type:"button", class:"link", "data-corr-annulla":g.id, text:"Annulla"}));
+    out.push(el("div", {class:"db-nome-giusto"}, campoNomeGiusto("corr-testo", "ordini", "corr-salva"),
+      modo === "chiedi" ? el("p", {class:"domanda-db", text:"Lo salvo anche per le prossime volte?"}) : null,
+      el("div", {class:"row"}, ...tasti)));
+    return el("div", null, ...out);
+  }
+  if (g.elim){
+    /* «Cose che avevi eliminato»: ordini vecchi, non contano nelle statistiche: niente «solo per questa volta» */
+    out.push(el("div", {class:"row"},
+      el("button", {type:"button", class:"mini", "data-corr-era":g.id, "data-corr-modo":"sempre", disabled:off, text:"Si scrive sempre così: è…"}),
+      el("button", {type:"button", class:"mini", "data-corr-nuovo":g.id, disabled:off, text:"È un prodotto nuovo"}),
+      el("button", {type:"button", class:"mini", "data-elim-lascia":g.id, disabled:off, text:"Lascia stare"})));
+    return el("div", null, ...out);
+  }
+  if (g.mag || g.tipo === "temp"){
+    const tasti = g.tipo === "temp" ? [
+      el("button", {type:"button", class:"mini", "data-corr-temp":g.id, disabled:off, "aria-label":"È una cosa temporanea: " + g.testo, text:"Sì, è temporanea"}),
+      el("button", {type:"button", class:"mini", "data-corr-nuovo":g.id, disabled:off, "aria-label":"Aggiungi all'elenco dei prodotti: " + g.testo, text:"Aggiungila all'elenco dei prodotti"}),
+      el("button", {type:"button", class:"mini", "data-corr-era":g.id, disabled:off, text:"Scrivi il nome giusto"})]
+      : g.tipo === "corretta" ? [
+      el("button", {type:"button", class:"mini", "data-corr-giusto":g.id, disabled:off, "aria-label":"Sì, è giusto: " + g.testo + " è " + g.nome, text:"Sì, è giusto"}),
+      el("button", {type:"button", class:"mini", "data-corr-era":g.id, disabled:off, text:"No, era…"})]
+      : [
+      el("button", {type:"button", class:"mini", "data-corr-nuovo":g.id, disabled:off, "aria-label":"È un prodotto nuovo: " + g.testo, text:"È un prodotto nuovo"}),
+      el("button", {type:"button", class:"mini", "data-corr-era":g.id, disabled:off, text:"Scrivi il nome giusto"})];
+    out.push(el("div", {class:"row"}, ...tasti));
+  } else {
+    if (consegnate) out.push(el("p", {class:"hint", text: g.rich.length === 1 ? "Questa cosa è già arrivata al negozio: non si può eliminare." : "Queste cose sono già arrivate al negozio: non si possono eliminare."}));
+    const tasti = [];
+    if (g.tipo === "corretta") tasti.push(el("button", {type:"button", class:"mini", "data-corr-giusto":g.id, disabled:off, "aria-label":"Sì, è giusto: " + g.testo + " è " + g.nome, text:"Sì, è giusto"}));
+    if (consegnate){
+      tasti.push(el("button", {type:"button", class:"mini", "data-corr-era":g.id, "data-corr-modo":"volta", disabled:off, text:"Era questo prodotto, solo per questa volta"}));
+      tasti.push(el("button", {type:"button", class:"mini", "data-corr-era":g.id, "data-corr-modo":"sempre", disabled:off, text:"Si scrive sempre così"}));
+    } else tasti.push(el("button", {type:"button", class:"mini", "data-corr-era":g.id, "data-corr-modo":"chiedi", disabled:off, text:"È questo prodotto"}));
+    tasti.push(el("button", {type:"button", class:"mini", "data-corr-nuovo":g.id, disabled:off, "aria-label":"È un prodotto nuovo: " + g.testo, text:"È un prodotto nuovo"}));
+    out.push(el("div", {class:"row"}, ...tasti));
+  }
+  if (sbaglio.length) out.push(el("div", {class:"row"}, el("button", {type:"button", class:"link pericolo", "data-corr-elimina":g.id, disabled:sbaglio.some(function(r){ return S.pending.has(r.id); }),
+    "aria-label":(g.mag ? "Elimina: " : "È stato mandato per sbaglio: ") + g.testo,
+    text: g.mag ? (g.rich.length === 1 ? "Elimina, è stato uno sbaglio" : "Elimina tutte e " + g.rich.length + ", è stato uno sbaglio")
+      : (sbaglio.length === 1 ? "È stato mandato per sbaglio" : "Sono stati mandati per sbaglio (" + sbaglio.length + ")")})));
+  return el("div", null, ...out);
+}
+/* un nome che va bene per più prodotti dello stesso tipo non si salva «per sempre» come uno solo (29 ottobre):
+   «crocchette» (di patate, di melanzane, mignon), «patatine fritte» (stick o spicchio), «olio», «acqua naturale»…
+   Sono «fratelli» i prodotti con la stessa prima parola; le altre parole scritte devono indicarne uno solo.
+   Restituisce i prodotti possibili (vuoto = si può salvare). */
+function nomePericoloso(testo, nome){
+  if (!nome || chiave(testo) === chiave(nome)) return [];
+  const f = formaProdotto(testo).split(" ").filter(Boolean);
+  if (!f.length) return [];
+  const fratelli = elencoProdottiRich().filter(function(n){ return formaProdotto(n).split(" ")[0] === f[0]; });
+  if (fratelli.length < 2 || !fratelli.some(function(n){ return chiave(n) === chiave(nome); })) return [];
+  const altre = f.slice(1).filter(function(w){ return w.length >= 3; });
+  const presi = fratelli.filter(function(n){
+    const sue = formaProdotto(n).split(" ").slice(1);
+    return altre.some(function(w){ return sue.some(function(x){ return x.length >= 3 && (x.indexOf(w) === 0 || w.indexOf(x) === 0 || (w.length >= 4 && distanza(w, x) <= 2)); }); });
+  });
+  if (presi.length === 1 && chiave(presi[0]) === chiave(nome)) return [];
+  return presi.length >= 2 ? presi : fratelli;
+}
+function elencoOppure(l){ return l.length < 2 ? l.join("") : l.slice(0, -1).join(", ") + " o " + l[l.length - 1]; }
+/* prima di salvare «per sempre»: se il nome è pericoloso si ferma e spiega.
+   Restituisce "ok" (si salva per sempre), "volta" (solo per questa volta) o "" (niente) */
+async function controllaPericoloso(g, nome){
+  const l = nomePericoloso(g.testo, nome);
+  if (!l.length) return "ok";
+  registra("nome pericoloso fermato", { possibili: l.length });
+  const lista = l.slice(0, 5);
+  const spiega = "«" + g.testo + "» può essere " + elencoOppure(lista) + (l.length > 5 ? " e altri" : "") +
+    ". Se lo salvi per sempre come «" + nome + "», l'app sceglierà sempre quello, anche quando il negozio ne vuole un altro.";
+  if (g.elim){
+    await chiedi("Attenzione: questo nome va bene per più prodotti", spiega + " Qui premi «Lascia stare».", "Ho capito", "Chiudi");
+    S.corrApri = ""; S.corrModo = ""; renderTutto();
+    return "";
+  }
+  const si = await chiedi("Attenzione: questo nome va bene per più prodotti", spiega + " Salvalo solo per questa volta.", "Salva solo per questa volta", "Annulla");
+  return si ? "volta" : "";
+}
+/* il nome giusto «solo per questa volta»: vale per queste richieste e per le statistiche, l'app non lo impara */
+async function salvaVolta(id, g, nome, esiste){
+  const ok = await salvaProdRich(function(d){
+    const u = Object.assign({}, d.unaVolta);
+    g.rich.forEach(function(r){ u[r.id] = nome; });
+    const c = { unaVolta: u };
+    if (!esiste){ c.elenco = conProdotto(d, nome); c.tolti = senzaTolto(d, nome); }
+    return c;
+  });
+  if (ok){
+    S.corrApri = ""; S.corrModo = "";
+    avvisoDb("Fatto: questa volta «" + g.testo + "» conta come «" + nome + "». La prossima volta l'app chiederà di nuovo.",
+      "«" + g.testo + "» è «" + nome + "» solo per questa volta" + (esiste ? "" : " (prodotto nuovo)"));
+    if (!esiste) salvaRepartoNuovo(id, nome); else delete S.corrRep[id];
+    registra("nome solo per questa volta", { quante: g.rich.length, nuovo: !esiste });
+    renderTutto();
+  }
+  return ok;
+}
+async function corrVolta(id){
+  const g = S.corrGruppi.get(id), inp = $("corr-testo");
+  const t = inp ? inp.value.trim() : "";
+  if (!g || !t){ if (inp) inp.focus(); return; }
+  const esiste = nomeEsatto(parteProd("ordini"), t);
+  return salvaVolta(id, g, esiste || maiuscola(t).slice(0, 60), !!esiste);
+}
+/* ---------- Istruzioni nuove del Database (29 ottobre) ----------
+   In cima al Database un tasto «📖 Leggi le istruzioni nuove», solo per Bruno e Alessandro, una volta sola.
+   Il messaggio è a tutto schermo; «Ho capito» si accende dopo 40 secondi, arrivati in fondo e (Bruno) risposta la domanda 8.
+   Impostazioni condivise "istruzioni-database": { lette: { id: quando }, rivedere: { scelto, quando }, rivisti: [chiavi], finito } */
+const ISTR_BRUNO = "40428e4e-d078-4f08-960f-3ec0f9d9194b";
+const ISTR_PERSONE = [ISTR_BRUNO, "b913764e-e034-4045-b7c0-5a8a3a87cadb"];
+/* le 21 cose eliminate da Bruno che si possono ancora sistemare (verdi e arancioni dell'elenco del 29 ottobre) */
+const ELIM_DA_RIVEDERE = ["mvm1sc48079s1","mvjvdgh5qsyee","mvkmegazrf4ry","mvpfer8euk35s","mvpfek9brjohf","mvsafjukw70nl","mvsafjjzs9v8m",
+  "mvjvdhrnbvqef","mvjvdhl2mpoi0","mvlz9xpor8nnk","mvm1scdcg5bi9","mvpfeowcfy6m8","mvpcw5on2xajg","mvpcw4k0g5kid","mvpcw42w5da9c","mvl395oqmg2ic",
+  "mvquztkxy2dm5","mvsafjz1gmv4r","mvqyats5god3y","mvqyatnb79dbb","mvqyatguuxcmf"];
+S.istrDb = {};
+const ISTRUZIONI_DB = [
+  ["p", "Ciao Bruno, queste sono le istruzioni nuove per sistemare i nomi nel Database. Leggile con calma: il tasto per chiudere si accende dopo 40 secondi e quando sei arrivato in fondo. Le vedi una volta sola."],
+  ["h", "1. Perché è cambiato"],
+  ["p", "Fino a oggi, quando un nome non ti convinceva, potevi premere «Elimina questo ordine». Così però spariva tutta la richiesta, anche se il giro l'aveva già portata al negozio: nella cronologia non si vedeva più e non si sapeva più cosa era stato consegnato. Dal 22 ottobre hai eliminato 27 cose, e 25 erano già state consegnate."],
+  ["h", "2. Se la cosa è già stata consegnata"],
+  ["p", "Non si può più eliminare. Hai tre tasti:"],
+  ["li", "**«Era questo prodotto, solo per questa volta»**: scegli il prodotto giusto. Da oggi l'app tiene il conto di quante volte ogni negozio chiede ogni prodotto: per esempio «questo mese Piazza Nenni ha chiesto l'Olio extravergine 12 volte». Questi conti si chiamano statistiche, e servono a te e ad Alessandro per sapere cosa si usa di più. Con questo tasto la richiesta viene contata sotto il prodotto giusto. Però l'app non lo impara: se domani un negozio scrive di nuovo «olio», l'app gli chiederà ancora «quale olio?». **QUANDO PREMERLO:** quando il negozio ha scritto un nome che può voler dire più prodotti (olio, crocchette, patatine, cartoni pizza, bicchieri…) e tu sai quale era quella volta, perché te l'hanno detto o perché sai cosa hai mandato. Esempio: Piazza Nenni scrive «Olio» e tu sai che le hai mandato l'extravergine: premi questo tasto e scegli Olio extravergine. Se invece il nome vuol dire sempre e solo un prodotto («polpa vitello» è sempre Carne polpa vitello), usa il tasto qui sotto."],
+  ["li", "**«Si scrive sempre così»**: quello che ha scritto il negozio diventa per sempre un altro modo di scrivere quel prodotto. Usalo solo quando il nome può voler dire una cosa sola. Esempio: «patatine stecco» è sempre Patatine stick."],
+  ["li", "**«È un prodotto nuovo»**: quando nell'elenco non c'è."],
+  ["h", "3. Se la cosa non è ancora stata consegnata"],
+  ["li", "**«È questo prodotto»**: scegli il nome giusto. Poi l'app ti chiede «Lo salvo anche per le prossime volte?» e tu rispondi «Sì, si scrive sempre così» oppure «No, solo questa volta»."],
+  ["li", "**«È un prodotto nuovo»**."],
+  ["li", "**«È stato mandato per sbaglio»**: usalo solo quando il negozio ha mandato una cosa che non voleva davvero. Per esempio: ha scritto due volte la stessa cosa, l'ha mandata al negozio sbagliato, oppure ha scritto una cosa a caso per errore. Premendolo, la richiesta sparisce dalle liste del negozio e del giro, quindi nessuno la prepara e nessuno la porta. Non usarlo quando il nome è solo scritto male o non sai a cosa collegarlo: in quel caso usa «È questo prodotto» o «È un prodotto nuovo». L'app si ricorda chi l'ha premuto e quando."],
+  ["h", "4. La regola più importante"],
+  ["p", "Se un nome può voler dire due o più prodotti, scegli sempre **«solo per questa volta»**."],
+  ["p", "Esempio: le «crocchette» possono essere di patate, di melanzane o mignon. Se salvi per sempre «crocchette» = Crocchette di Melanzane, quando il negozio vorrà quelle di patate gli arriveranno quelle di melanzane. Per questo l'app non ti lascerà salvarlo per sempre e ti spiegherà il perché."],
+  ["p", "Altri nomi così: olio, cartoni pizza, patatine, bicchieri, melanzane, zucchine."],
+  ["h", "5. Cosa hai fatto bene"],
+  ["p", "Non hai collegato per sempre «Olio», «Crocchette grandi», «Cartoni pizza» e «Bicchieri» a un prodotto solo, ed era giusto: possono voler dire più cose. Da oggi, invece di eliminarli, scegli «solo per questa volta»."],
+  ["h", "6. Cosa non andava eliminato"],
+  ["p", "Questi nomi volevano dire una cosa sola, oppure erano già giusti:"],
+  ["li", "«Filone suino» → Carne filone suino"],
+  ["li", "«Polpa vitello» → Carne polpa vitello"],
+  ["li", "«Patatine stecco» → Patatine stick"],
+  ["li", "«Porcini» → Funghi porcini cubettati"],
+  ["li", "«Grana» e «Formaggio grana» → Formaggio grana (era già il nome giusto)"],
+  ["li", "«Crocchette melanzane grandi» → Crocchette di Melanzane (l'app l'aveva già collegato bene)"],
+  ["li", "«Rigatoni» → è un prodotto nuovo, nell'elenco non c'era niente di simile"],
+  ["p", "Anche togliere un modo di scrivere giusto crea lavoro. Se togli «polpa vitello», ogni volta che un negozio lo scrive ti torna da controllare. Da oggi, prima di toglierne uno, l'app ti dice quante volte i negozi l'hanno usato."],
+  ["h", "7. Le buste"],
+  ["p", "I negozi chiamano le buste per quanti pani o panini ci stanno: «busta per 1 pane», «busta 4 panini». Un consiglio: apri la pagina di ogni busta (Database → Ordini → elenco completo → Cartoni e buste) e con «Aggiungi un modo di scriverlo» scrivi come la chiamano i negozi. Così l'app la riconosce da sola."],
+  ["h8", "8. Vuoi ricontrollare le cose che hai eliminato?"],
+  ["p8", "Delle 27 cose che hai eliminato, 21 si possono ancora sistemare: quelle che volevano dire un prodotto preciso, oppure due o tre prodotti possibili. Le altre 6 vanno bene così. Queste 21 possono ricomparire in una parte a sé del Database, «Cose che avevi eliminato», così le scegli di nuovo con i tasti nuovi. Non tornano nelle liste dei negozi o del giro e non contano nelle statistiche, perché sono ordini vecchi. Servono a due cose: sul serio, perché quello che scegli insegna all'app i nomi giusti; e come prova, per vedere se le istruzioni nuove sono chiare. Attenzione: qui il tasto «solo per questa volta» non c'è, perché sono ordini vecchi e non contano nelle statistiche. Se un nome può voler dire più prodotti, premi «Lascia stare»."]];
+/* un testo con le parti **in grassetto** */
+function conGrassetto(t){ return String(t).split("**").map(function(x, i){ return i % 2 ? el("strong", {text:x}) : document.createTextNode(x); }); }
+function istrDaLeggere(){ return puoDatabase() && ISTR_PERSONE.indexOf(S.mioId) >= 0 && !((S.istrDb.lette || {})[S.mioId]); }
+S.istr = null;
+function apriIstruzioni(){
+  if (S.istr || !puoDatabase()) return;
+  const bruno = S.mioId === ISTR_BRUNO;
+  const box = el("div", {class:"bisc-finestra-box istr-box"});
+  box.appendChild(el("h2", {id:"istr-titolo", text:"Il Database da oggi funziona così"}));
+  if (!bruno) box.appendChild(el("p", {class:"hint", text:"Anteprima: è il messaggio che vede tuo padre. A lui c'è anche la domanda 8 sulle cose che ha eliminato."}));
+  let lista = null;
+  ISTRUZIONI_DB.forEach(function(x){
+    const tipo = x[0];
+    if ((tipo === "h8" || tipo === "p8") && !bruno) return;
+    if (tipo === "li"){
+      if (!lista){ lista = el("ul", {class:"istr-lista"}); box.appendChild(lista); }
+      lista.appendChild(el("li", null, ...conGrassetto(x[1])));
+      return;
+    }
+    lista = null;
+    box.appendChild(tipo === "h" || tipo === "h8" ? el("h3", null, ...conGrassetto(x[1])) : el("p", null, ...conGrassetto(x[1])));
+  });
+  if (bruno) box.appendChild(el("div", {class:"row istr-scelta"},
+    el("button", {type:"button", class:"mini", "data-istr-rivedi":"si", "aria-pressed":"false", text:"Sì, falle ricomparire"}),
+    el("button", {type:"button", class:"mini", "data-istr-rivedi":"no", "aria-pressed":"false", text:"No, lascia stare"})));
+  box.appendChild(el("button", {type:"button", class:"primary", id:"istr-ok", disabled:true, text:"Ho capito"}));
+  const fin = el("div", {class:"bisc-finestra istr-finestra", id:"istr-finestra", role:"dialog", "aria-modal":"true", "aria-labelledby":"istr-titolo"}, box);
+  document.body.appendChild(fin);
+  S.istr = { inizio: Date.now(), bruno: bruno, rivedi: null, fondo: false, timer: null };
+  try { history.pushState({ istruzioni: 1 }, ""); S.istrStorico = true; } catch(e){}
+  fin.addEventListener("scroll", aggiornaIstr, { passive: true });
+  fin.addEventListener("click", function(ev){
+    const b = ev.target.closest("button"); if (!b || b.disabled) return;
+    if (b.dataset.istrRivedi){
+      S.istr.rivedi = b.dataset.istrRivedi === "si";
+      fin.querySelectorAll("[data-istr-rivedi]").forEach(function(x){ x.setAttribute("aria-pressed", String(x === b)); x.classList.toggle("scelto", x === b); });
+      aggiornaIstr();
+    } else if (b.id === "istr-ok") chiudiIstruzioni();
+  });
+  S.istr.timer = setInterval(aggiornaIstr, 1000);
+  registra("istruzioni del database aperte", {});
+  aggiornaIstr();
+}
+function aggiornaIstr(){
+  const i = S.istr, fin = $("istr-finestra"), ok = $("istr-ok");
+  if (!i || !fin || !ok) return;
+  if (fin.scrollTop + fin.clientHeight >= fin.scrollHeight - 40) i.fondo = true;
+  const resta = Math.max(0, 40 - Math.floor((Date.now() - i.inizio) / 1000));
+  let manca = "";
+  if (resta) manca = "Tra " + resta + " secondi…";
+  else if (i.bruno && i.rivedi === null) manca = "Rispondi alla domanda 8";
+  else if (!i.fondo) manca = "Scorri fino in fondo";
+  ok.disabled = !!manca;
+  ok.textContent = manca || "Ho capito";
+}
+async function chiudiIstruzioni(){
+  const i = S.istr; if (!i) return;
+  clearInterval(i.timer);
+  const secondi = Math.round((Date.now() - i.inizio) / 1000);
+  const id = S.mioId, adesso = Date.now();
+  S.istr = null;
+  const fin = $("istr-finestra"); if (fin) fin.remove();
+  if (S.istrStorico){ S.istrStorico = false; try { history.back(); } catch(e){} }
+  registra("istruzioni del database lette", { secondi: secondi, rivedere: i.bruno ? i.rivedi : null });
+  S.istrDb = Object.assign({}, S.istrDb);
+  S.istrDb.lette = Object.assign({}, S.istrDb.lette); S.istrDb.lette[id] = adesso;
+  if (i.bruno) S.istrDb.rivedere = { scelto: i.rivedi === true, quando: adesso };
+  renderTutto();
+  if (store && store.istruzioni) await scrivi(function(){ return store.istruzioni(function(d){
+    const c = { lette: Object.assign({}, d.lette) };
+    c.lette[id] = adesso;
+    if (i.bruno) c.rivedere = { scelto: i.rivedi === true, quando: adesso };
+    return c;
+  }); });
+  avviso(i.bruno && i.rivedi ? "Grazie! In Database → Ordini trovi «Cose che avevi eliminato»." : "Grazie!");
+}
+/* «Cose che avevi eliminato»: solo per Bruno, se ha risposto sì alla domanda 8 */
+function gruppiEliminati(){
+  const r8 = S.istrDb.rivedere;
+  if (!puoDatabase() || S.mioId !== ISTR_BRUNO || !r8 || !r8.scelto || S.istrDb.finito) return [];
+  const fatti = new Set(Array.isArray(S.istrDb.rivisti) ? S.istrDb.rivisti : []);
+  const gruppi = new Map();
+  (S.tolte || []).forEach(function(r){
+    if (ELIM_DA_RIVEDERE.indexOf(r.rid) < 0) return;
+    const testo = r.scritto || r.salvato, k = chiave(testo);
+    if (!k || fatti.has(k)) return;
+    const id = "elim:" + k;
+    if (!gruppi.has(id)) gruppi.set(id, { id: id, k: k, tipo: r.scritto && chiave(r.scritto) !== chiave(r.salvato) ? "corretta" : "nuova", testo: testo, nome: r.salvato, rich: [], elim: true });
+    gruppi.get(id).rich.push(r);
+  });
+  return Array.from(gruppi.values());
+}
+function elimFinito(){
+  const r8 = S.istrDb.rivedere;
+  return puoDatabase() && S.mioId === ISTR_BRUNO && !!r8 && r8.scelto && !S.istrDb.finito && !gruppiEliminati().length && !!S.pronto;
+}
+/* una cosa eliminata scelta di nuovo (o lasciata stare): non si mostra più */
+function segnaRivista(g){
+  if (!g || !g.elim) return;
+  S.istrDb = Object.assign({}, S.istrDb, { rivisti: (S.istrDb.rivisti || []).concat([g.k]) });
+  if (store && store.istruzioni) scrivi(function(){ return store.istruzioni(function(d){
+    const l = Array.isArray(d.rivisti) ? d.rivisti.slice() : [];
+    if (l.indexOf(g.k) < 0) l.push(g.k);
+    return { rivisti: l };
+  }); });
+}
+function elimLascia(id){
+  const g = S.corrGruppi.get(id); if (!g) return;
+  segnaRivista(g);
+  avviso("Lasciato com'era: «" + g.testo + "».");
+  registra("cosa eliminata lasciata stare", {});
+  renderTutto();
+}
+function elimChiudi(){
+  S.istrDb = Object.assign({}, S.istrDb, { finito: true });
+  if (store && store.istruzioni) scrivi(function(){ return store.istruzioni(function(){ return { finito: true }; }); });
+  registra("cose eliminate riviste tutte", {});
+  renderTutto();
+}
 function renderDbOrdini(){
-  const gruppi = gruppiCorrezioni();
-  S.corrGruppi = new Map(gruppi.map(function(g){ return [g.id, g]; }));
+  const gruppi = gruppiCorrezioni(), elim = gruppiEliminati();
+  S.corrGruppi = new Map(gruppi.concat(elim).map(function(g){ return [g.id, g]; }));
   const off = S.pending.has("prodotti-richieste");
   const parte = parteProd("ordini");
-  $("db-spiega").textContent = "Le richieste dei negozi degli ultimi " + secondi("controllo") + ". Qui vedi cosa ha scritto la persona e cosa ha messo l'app. Se l'app ha sbagliato, scrivi il nome giusto: si correggono tutte le richieste scritte così e la volta dopo l'app lo sa. Se un ordine non c'entra niente, eliminalo. Più sotto, a parte, le cose segnate con «+ Segna cosa manca» e i prodotti che forse sono doppi.";
+  $("db-spiega").textContent = "Le richieste dei negozi degli ultimi " + secondi("controllo") + ". Qui vedi cosa ha scritto la persona e cosa ha messo l'app. Se l'app ha sbagliato, scegli il nome giusto: «solo per questa volta» o «si scrive sempre così». Le cose già consegnate non si eliminano; quelle non ancora consegnate si tolgono solo se sono state mandate per sbaglio. Più sotto, a parte, le cose segnate con «+ Segna cosa manca» e i prodotti che forse sono doppi.";
   function voce(g){
     const posti = g.mag
       ? Array.from(new Set(g.rich.map(function(m){ return m.mio ? "te" : (S.nomi[m.autore] || "…"); }))).join(", ")
@@ -5852,42 +6168,34 @@ function renderDbOrdini(){
       const indov = S.corrRep[g.id] || repartoDi({ articolo: g.testo });
       parti.push(el("label", {class:"riga-db db-rep-nuovo"}, el("span", {class:"label-sm", text:"Reparto"}),
         el("select", {"data-corr-rep":g.id, "aria-label":"Reparto di " + g.testo}, ...REPARTI.map(function(r){ return el("option", {value:r, selected: r === indov, text:r}); }))),
-        el("p", {class:"hint", text:(g.tipo === "temp" ? "Se va nell'elenco, scegli il reparto giusto: si salva con «Aggiungila all'elenco dei prodotti» o «Salva il nome giusto». " : "Se è un prodotto nuovo, scegli il reparto giusto: si salva con «È un prodotto nuovo» o «Salva il nome giusto». ") + "L'app aveva pensato: " + repartoDi({ articolo: g.testo }) + "."}));
+        el("p", {class:"hint", text:(g.tipo === "temp" ? "Se va nell'elenco, scegli il reparto giusto: si salva con «Aggiungila all'elenco dei prodotti» o «Salva il nome giusto». " : "Se è un prodotto nuovo, scegli il reparto giusto: si salva con «È un prodotto nuovo» o quando scrivi il nome giusto. ") + "L'app aveva pensato: " + repartoDi({ articolo: g.testo }) + "."}));
     }
     parti.push(el("p", {class:"hint", text: g.mag
       ? (g.rich.length === 1 ? "Segnata 1 volta" : "Segnata " + g.rich.length + " volte") + " da " + posti + " · " + quando(ultima) +
         (g.rich.some(function(m){ return !m.arrivatoAlle; }) ? " · manca ancora" : " · già arrivata")
       : (g.tipo === "temp" ? (g.rich.length === 1 ? "Aggiunta 1 volta" : "Aggiunta " + g.rich.length + " volte") + " da " +
           Array.from(new Set(g.rich.map(function(r){ return r.mio ? "te" : (S.nomi[r.autore] || "…"); }))).join(", ") + " · " + posti.replace(PROMEMORIA, "promemoria")
-        : (g.rich.length === 1 ? "1 richiesta" : g.rich.length + " richieste") + " · " + posti) + " · " + quando(ultima)}));
-    let azioni;
-    if (S.corrApri === g.id){
-      azioni = el("div", {class:"db-nome-giusto"}, campoNomeGiusto("corr-testo", "ordini", "corr-salva"),
-        el("div", {class:"row"},
-          el("button", {type:"button", class:"mini", id:"corr-salva", "data-corr-salva":g.id, disabled:off, text:"Salva il nome giusto"}),
-          el("button", {type:"button", class:"link", "data-corr-annulla":g.id, text:"Annulla"})));
-    } else if (g.tipo === "corretta"){
-      azioni = el("div", {class:"row"},
-        el("button", {type:"button", class:"mini", "data-corr-giusto":g.id, disabled:off, "aria-label":"Sì, è giusto: " + g.testo + " è " + g.nome, text:"Sì, è giusto"}),
-        el("button", {type:"button", class:"mini", "data-corr-era":g.id, disabled:off, text:"No, era…"}));
-    } else if (g.tipo === "temp"){
-      azioni = el("div", {class:"row"},
-        el("button", {type:"button", class:"mini", "data-corr-temp":g.id, disabled:off, "aria-label":"È una cosa temporanea: " + g.testo, text:"Sì, è temporanea"}),
-        el("button", {type:"button", class:"mini", "data-corr-nuovo":g.id, disabled:off, "aria-label":"Aggiungi all'elenco dei prodotti: " + g.testo, text:"Aggiungila all'elenco dei prodotti"}),
-        el("button", {type:"button", class:"mini", "data-corr-era":g.id, disabled:off, text:"Scrivi il nome giusto"}));
-    } else {
-      azioni = el("div", {class:"row"},
-        el("button", {type:"button", class:"mini", "data-corr-nuovo":g.id, disabled:off, "aria-label":"È un prodotto nuovo: " + g.testo, text:"È un prodotto nuovo"}),
-        el("button", {type:"button", class:"mini", "data-corr-era":g.id, disabled:off, text:"Scrivi il nome giusto"}));
-    }
-    parti.push(azioni);
-    /* un promemoria di un altro non si elimina da qui */
-    if (g.mag || g.rich.some(puoTogliere)) parti.push(el("div", {class:"row"}, el("button", {type:"button", class:"link pericolo", "data-corr-elimina":g.id, disabled:g.rich.some(function(r){ return S.pending.has(r.id); }),
-      "aria-label":(g.mag ? "Elimina: " : "Elimina l'ordine: ") + g.testo,
-      text: g.mag ? (g.rich.length === 1 ? "Elimina, è stato uno sbaglio" : "Elimina tutte e " + g.rich.length + ", è stato uno sbaglio")
-        : (g.rich.length === 1 ? "Elimina questo ordine" : "Elimina questi " + g.rich.length + " ordini")})));
+        : (g.rich.length === 1 ? "1 richiesta" : g.rich.length + " richieste") + " · " + posti) + " · " + quando(ultima) +
+        (g.elim ? " · chiesta da " + Array.from(new Set(g.rich.map(function(r){ return S.nomi[r.autore] || "…"; }))).join(", ") +
+          (g.rich.every(giaConsegnata) ? " · era già stata consegnata" : " · non era ancora stata consegnata") : "")}));
+    parti.push(azioniCorr(g, off));
     return { id: g.id, gruppo: g.mag ? "mag" : "", nodo: el("div", {class:"card pren-dc-voce db-voce"}, ...parti) };
   }
+  /* «Cose che avevi eliminato» (solo Bruno, se ha detto sì nelle istruzioni): una alla volta */
+  const boxElim = $("db-eliminate");
+  if (elim.length){
+    boxElim.hidden = false;
+    riempi(boxElim, [el("div", {class:"card db-elim"},
+      el("h3", {text:"Cose che avevi eliminato (" + elim.length + " da rivedere)"}),
+      el("p", {class:"hint", text:"Servono a due cose: sul serio, perché quello che scegli insegna all'app i nomi giusti; e come prova, per vedere se le istruzioni nuove sono chiare. Non tornano ai negozi né al giro e non contano nelle statistiche. Qui il tasto «solo per questa volta» non c'è: se un nome può voler dire più prodotti, premi «Lascia stare»."}),
+      voce(elim[0]).nodo)]);
+  } else if (elimFinito()){
+    boxElim.hidden = false;
+    riempi(boxElim, [el("div", {class:"card db-elim"},
+      el("h3", {text:"Finito!"}),
+      el("p", {text:"Hai rivisto tutte le cose che avevi eliminato. Grazie!"}),
+      el("button", {type:"button", class:"mini", "data-elim-chiudi":"1", text:"Chiudi"}))]);
+  } else { boxElim.hidden = true; riempi(boxElim, []); }
   const voci = gruppi.filter(function(g){ return !g.mag; }).map(voce)
     .concat(gruppi.filter(function(g){ return g.mag; }).map(voce), vociDoppi(parte));
   const nMag = voci.filter(function(v){ return v.gruppo === "mag"; }).length;
@@ -6239,9 +6547,10 @@ function copiaReparto(parte, vecchio, nuovo){
    chiavi (alias, nomi dei biscotti, reparti): { chiave: valore di prima, null = non c'era } */
 const CAMPI_DB = {
   "prodotti": { liste: ["elenco", "tolti", "diversi"], chiavi: ["alias"] },
-  "prodotti-richieste": { liste: ["elenco", "tolti", "diversi", "temporanei"], chiavi: ["alias"] },
+  "prodotti-richieste": { liste: ["elenco", "tolti", "diversi", "temporanei"], chiavi: ["alias", "unaVolta"] },
   "biscotti": { liste: ["confermati", "tolti", "aggiunte"], chiavi: ["nomi"] } };
-const PARTE_DI_IMP = { "prodotti": "prenotazioni", "prodotti-richieste": "ordini", "biscotti": "biscotti", "reparti": "ordini" };
+/* "richieste": un ordine tolto con «È stato mandato per sbaglio» (solo da leggere, senza «Annulla») */
+const PARTE_DI_IMP = { "prodotti": "prenotazioni", "prodotti-richieste": "ordini", "biscotti": "biscotti", "reparti": "ordini", "richieste": "ordini" };
 S.modDb = []; S.primaDb = null;
 function leggiModifiche(d){
   return (d && Array.isArray(d.voci) ? d.voci : []).filter(function(v){
@@ -6285,6 +6594,15 @@ function avvisoDb(msg, testo){
     return { voci: [voce].concat(leggiModifiche(d)).filter(function(v){ conta[v.parte] = (conta[v.parte] || 0) + 1; return conta[v.parte] <= 30; }) };
   }); });
 }
+/* una voce nelle «Ultime modifiche» che non si annulla da qui (es. «mandato per sbaglio»: si rimette dalla Cronologia) */
+function modificaSenzaAnnulla(testo){
+  if (!store || !store.modifiche) return;
+  const voce = { id: nuovoId(), quando: Date.now(), chi: S.mioId || "", nome: S.nomeMio || "", parte: "ordini", imp: "richieste", testo: String(testo).slice(0, 200), liste: {}, chiavi: {} };
+  scrivi(function(){ return store.modifiche(function(d){
+    const conta = {};
+    return { voci: [voce].concat(leggiModifiche(d)).filter(function(v){ conta[v.parte] = (conta[v.parte] || 0) + 1; return conta[v.parte] <= 30; }) };
+  }); });
+}
 function renderModificheDb(){
   const voci = S.modDb.filter(function(v){ return v.parte === S.dbScheda; }).sort(function(a, b){ return b.quando - a.quando; });
   $("db-mod-n").textContent = String(voci.length);
@@ -6295,12 +6613,12 @@ function renderModificheDb(){
     return el("li", null,
       el("span", {class:"hint", text:quando(v.quando) + " · " + (v.chi === S.mioId ? "tu" : (v.nome || S.nomi[v.chi] || "…"))}),
       el("span", {class:"db-mod-testo", text:v.testo}),
-      prima ? el("button", {type:"button", class:"mini", "data-db-annulla-mod":v.id, disabled:off, text:"Annulla"}) : null);
+      prima && v.imp !== "richieste" ? el("button", {type:"button", class:"mini", "data-db-annulla-mod":v.id, disabled:off, text:"Annulla"}) : null);
   }))] : [el("p", {class:"hint", text:"Nessuna modifica per ora."})]);
 }
 async function annullaModifica(id){
   const v = S.modDb.find(function(x){ return x.id === id; });
-  if (!v || !puoDatabase()) return;
+  if (!v || !puoDatabase() || v.imp === "richieste") return;
   const si = await chiedi("Annullare questa modifica?", "«" + v.testo + "» (" + quando(v.quando) + "). Torna tutto com'era prima.", "Sì, annulla", "No");
   if (!si) return;
   S.pending.add("modifiche-database"); renderTutto();
@@ -6354,14 +6672,17 @@ function conProdotto(d, nome){
 function senzaTolto(d, nome){ return (Array.isArray(d.tolti) ? d.tolti : []).filter(function(x){ return chiave(x) !== chiave(nome); }); }
 async function corrGiusto(id){
   const g = S.corrGruppi.get(id); if (!g) return;
+  const scelta = await controllaPericoloso(g, g.nome);
+  if (scelta === "volta") return salvaVolta(id, g, g.nome, true);
+  if (scelta !== "ok") return;
   const ok = await salvaProdRich(function(d){ return { alias: conAlias(d, g.k, g.nome) }; });
-  if (ok){ avvisoDb("Giusto: «" + g.testo + "» è " + g.nome + ". L'app se lo ricorda.", "«" + g.testo + "» è " + g.nome + ": giusto"); registra("correzione giusta", {}); }
+  if (ok){ segnaRivista(g); avvisoDb("Giusto: «" + g.testo + "» è " + g.nome + ". L'app se lo ricorda.", "«" + g.testo + "» è " + g.nome + ": giusto"); registra("correzione giusta", {}); }
 }
 async function corrNuovo(id){
   const g = S.corrGruppi.get(id); if (!g) return;
   const nome = maiuscola(g.testo).slice(0, 60);
   const ok = await salvaProdRich(function(d){ return { elenco: conProdotto(d, nome), tolti: senzaTolto(d, nome) }; });
-  if (ok){ avvisoDb("«" + nome + "» è nell'elenco dei prodotti.", "«" + nome + "» aggiunto come prodotto nuovo"); salvaRepartoNuovo(id, nome); registra("prodotto confermato", { dove: "richieste" }); }
+  if (ok){ segnaRivista(g); avvisoDb("«" + nome + "» è nell'elenco dei prodotti.", "«" + nome + "» aggiunto come prodotto nuovo"); salvaRepartoNuovo(id, nome); registra("prodotto confermato", { dove: "richieste" }); }
 }
 /* una cosa aggiunta nel giro che non va nell'elenco: «temporanea» (impostazioni condivise dei prodotti
    delle richieste, lista "temporanei" con le chiavi); non si chiede più e nel giro resta bianca senza domande */
@@ -6383,13 +6704,17 @@ async function corrSalva(id){
   const parte = parteProd("ordini");
   const esiste = nomeEsatto(parte, t);
   const nome = esiste || maiuscola(t).slice(0, 60);
+  const scelta = await controllaPericoloso(g, nome);
+  if (scelta === "volta") return salvaVolta(id, g, nome, !!esiste);
+  if (scelta !== "ok") return;
   const ok = await salvaProdRich(function(d){
     const cambia = { alias: conAlias(d, g.k, nome) };
     if (!esiste){ cambia.elenco = conProdotto(d, nome); cambia.tolti = senzaTolto(d, nome); }
     return cambia;
   });
   if (ok){
-    S.corrApri = "";
+    S.corrApri = ""; S.corrModo = "";
+    segnaRivista(g);
     avvisoDb((esiste ? "Corretto" : "Prodotto nuovo aggiunto") + ": ora è «" + nome + "», anche nelle richieste già mandate.", "«" + g.testo + "» corretto in «" + nome + "»" + (esiste ? "" : " (prodotto nuovo)"));
     if (!esiste && (g.tipo === "nuova" || g.tipo === "temp")) salvaRepartoNuovo(id, nome); else delete S.corrRep[id];
     registra("prodotto corretto", { dove: "richieste", nuovo: !esiste });
@@ -6399,23 +6724,29 @@ async function corrSalva(id){
 /* un ordine che non c'entra niente: si elimina (si può ritrovare in Cronologia) */
 async function corrElimina(id){
   const g = S.corrGruppi.get(id); if (!g) return;
-  const rich = g.rich.filter(function(r){ return (g.mag ? puoDatabase() : puoTogliere(r)) && !S.pending.has(r.id); });
+  /* le cose già consegnate non si eliminano più (29 ottobre) */
+  const rich = daTogliereSbaglio(g).filter(function(r){ return !S.pending.has(r.id); });
   if (!rich.length) return;
   const posti = Array.from(new Set(rich.map(function(r){ return r.per; }))).join(", ");
   const si = g.mag
     ? await chiedi("Eliminare «" + g.testo + "»?", "Era segnata con «+ Segna cosa manca». Sparisce dalla sezione «Non in magazzino» e dalle statistiche. Usalo solo se è stato uno sbaglio: se la cosa è arrivata, premi «È arrivato».", "Sì, elimina", "No")
-    : await chiedi(rich.length === 1 ? "Eliminare questo ordine?" : "Eliminare questi " + rich.length + " ordini?",
-    "«" + g.testo + "» (" + posti + "). Sparisce dalle richieste e dal giro. Se è stato uno sbaglio, lo ritrovi in Cronologia.", "Sì, elimina", "No");
+    : await chiedi(rich.length === 1 ? "È stato mandato per sbaglio?" : "Sono stati mandati per sbaglio?",
+    "«" + g.testo + "» (" + posti + "). Sparisce dalle liste del negozio e del giro: nessuno la prepara e nessuno la porta. Usalo solo se il negozio l'ha mandato per errore, non quando il nome è scritto male.", "Sì, togli", "No");
   if (!si) return;
   rich.forEach(function(r){ S.pending.add(r.id); });
   renderTutto();
   let tutti = true;
+  const chi = g.mag ? {} : { annullatoDa: S.mioId || "", annullatoNome: S.nomeMio || "", perSbaglio: true };
   for (const r of rich){
-    const ok = await scrivi(function(){ return store.annulla(r); });
+    const ok = await scrivi(function(){ return store.annulla(r, chi); });
     if (!ok) tutti = false;
     S.pending.delete(r.id);
   }
-  if (tutti){ avviso(g.mag ? "Eliminata: «" + g.testo + "»." : rich.length === 1 ? "Ordine eliminato." : rich.length + " ordini eliminati."); registra(g.mag ? "cosa segnata eliminata dal database" : "ordine eliminato dal database", { quante: rich.length }); }
+  if (tutti){
+    avviso(g.mag ? "Eliminata: «" + g.testo + "»." : rich.length === 1 ? "Tolto: era stato mandato per sbaglio." : rich.length + " tolti: erano stati mandati per sbaglio.");
+    registra(g.mag ? "cosa segnata eliminata dal database" : "ordine mandato per sbaglio", { quante: rich.length });
+    if (!g.mag) modificaSenzaAnnulla("«" + g.testo + "» (" + posti + "): mandato per sbaglio, tolto" + (rich.length > 1 ? " (" + rich.length + ")" : ""));
+  }
   renderTutto();
 }
 /* ---------- cambiare l'elenco dei prodotti (ordini o prenotazioni) ---------- */
@@ -6474,6 +6805,13 @@ async function dbAlias(nome){
   if (k === chiave(nome)){ avviso("È già il nome del prodotto."); return; }
   const altro = parte.elenco().find(function(x){ return chiave(x) === k; });
   if (altro){ avviso("«" + altro + "» è un altro prodotto dell'elenco: per unirli usa «Cambia nome»."); return; }
+  /* un nome che va bene per più prodotti: si avvisa e si chiede (29 ottobre) */
+  const molti = parte.id === "ordini" ? nomePericoloso(t, nome) : [];
+  if (molti.length){
+    registra("nome pericoloso fermato", { possibili: molti.length, dove: "pagina prodotto" });
+    const ok = await chiedi("Attenzione: «" + t + "» va bene per più prodotti", "Può essere " + elencoOppure(molti.slice(0, 5)) + (molti.length > 5 ? " e altri" : "") + ". Se lo salvi come modo di scrivere " + nome + ", l'app sceglierà sempre " + nome + ". Lo salvo lo stesso?", "Sì, salva lo stesso", "No");
+    if (!ok) return;
+  }
   const ok = await parte.salva(function(d){ return { alias: conAlias(d, k, nome) }; });
   if (ok){ if ($("db-mod-alias")) $("db-mod-alias").value = ""; avvisoDb("Ora l'app sa che «" + t + "» è " + nome + ".", "«" + t + "» aggiunto come modo di scrivere " + nome); registra("modo di scrivere aggiunto", { dove: parte.id }); }
 }
@@ -6491,10 +6829,21 @@ async function dbTogliProd(nome){
   });
   if (ok){ S.dbMod = ""; avvisoDb("Tolto dall'elenco: " + nome + ".", "«" + nome + "» tolto dall'elenco"); registra("prodotto tolto", { dove: parte.id }); renderTutto(); }
 }
+/* quante richieste (e cose segnate in magazzino) dell'ultimo mese sono state scritte così */
+function volteScritto(k){
+  const dal = Date.now() - 30 * 86400000;
+  return S.richieste.concat(S.programmate || [], S.tolte || [], S.magazzino || []).filter(function(r){
+    return !r.esempio && r.creato >= dal && (chiave(r.scritto || "") === k || chiave(r.salvato || "") === k);
+  }).length;
+}
 async function dbTogliAlias(k){
   const parte = parteProd(S.dbScheda);
   const nome = aliasTutti(parte.aliasBase, parte.dati)[k]; if (!nome) return;
-  const si = await chiedi("Togliere «" + k + "» come modo di scrivere " + nome + "?", "Quello già mandato scritto «" + k + "» torna com'era stato scritto.", "Sì, togli", "No");
+  /* prima di togliere un modo di scrivere che i negozi usano: quante volte l'hanno scritto nell'ultimo mese (29 ottobre) */
+  const n = parte.id === "ordini" ? volteScritto(k) : 0;
+  const si = n
+    ? await chiedi("Togliere «" + k + "» come modo di scrivere " + nome + "?", "I negozi l'hanno scritto " + (n === 1 ? "1 volta" : n + " volte") + " nell'ultimo mese. Se lo togli, ogni volta che lo scrivono ti torna da controllare nel Database. Lo tolgo lo stesso?", "Sì, togli lo stesso", "No, lascialo")
+    : await chiedi("Togliere «" + k + "» come modo di scrivere " + nome + "?", "Quello già mandato scritto «" + k + "» torna com'era stato scritto.", "Sì, togli", "No");
   if (!si) return;
   /* resta salvata vuota: così non vale più (anche dove le modifiche si uniscono) */
   const ok = await parte.salva(function(d){ return { alias: conAlias(d, k, "") }; });
@@ -7833,8 +8182,12 @@ function collega(){
     if (b.dataset.corrGiusto) return corrGiusto(b.dataset.corrGiusto);
     if (b.dataset.corrNuovo) return corrNuovo(b.dataset.corrNuovo);
     if (b.dataset.corrTemp) return corrTemp(b.dataset.corrTemp);
-    if (b.dataset.corrEra){ S.corrApri = b.dataset.corrEra; renderDatabase(); const sc = $("corr-testo"); if (sc) sc.focus(); return; }
-    if (b.dataset.corrAnnulla){ S.corrApri = ""; return renderDatabase(); }
+    if (b.dataset.corrEra){ S.corrApri = b.dataset.corrEra; S.corrModo = b.dataset.corrModo || ""; renderDatabase(); const sc = $("corr-testo"); if (sc) sc.focus(); return; }
+    if (b.dataset.corrAnnulla){ S.corrApri = ""; S.corrModo = ""; return renderDatabase(); }
+    if (b.dataset.corrVolta) return corrVolta(b.dataset.corrVolta);
+    if (b.dataset.istrApri) return apriIstruzioni();
+    if (b.dataset.elimChiudi) return elimChiudi();
+    if (b.dataset.elimLascia) return elimLascia(b.dataset.elimLascia);
     if (b.dataset.dbScheda !== undefined){ S.dbScheda = b.dataset.dbScheda; S.corrApri = ""; S.prenCorreggi = ""; S.dbMod = ""; S.dbUno = false; $("db-cerca").value = ""; renderTutto(); try { window.scrollTo(0, 0); } catch(e){} return; }
     if (b.dataset.dbUno !== undefined){ S.dbUno = b.dataset.dbUno === "1"; S.dbSaltati.clear(); S.corrApri = ""; S.prenCorreggi = ""; renderDatabase(); try { window.scrollTo(0, 0); } catch(e){} return; }
     if (b.dataset.dbSalta){ S.dbSaltati.add(b.dataset.dbSalta); S.corrApri = ""; S.prenCorreggi = ""; renderDatabase(); return; }
@@ -8064,6 +8417,8 @@ function collega(){
   });
   /* il tasto «indietro» del telefono non fa uscire senza chiedere */
   window.addEventListener("popstate", function(){
+    /* istruzioni del Database aperte: il tasto «indietro» non le chiude */
+    if (S.istr){ try { history.pushState({ istruzioni: 1 }, ""); S.istrStorico = true; } catch(e){} return; }
     if (S.biscStorico){
       /* finestra dei biscotti aperta: il tasto «indietro» non fa niente */
       S.biscStorico = false;
@@ -8144,6 +8499,7 @@ function usaLocale(){
     prodotti: async function(cambia){ prodGrezzo = Object.assign({}, prodGrezzo, cambia(prodGrezzo)); S.prodImp = prodottiCondivisi(prodGrezzo); emetti(); },
     prodottiRich: async function(cambia){ prodRichGrezzo = Object.assign({}, prodRichGrezzo, cambia(prodRichGrezzo)); S.prodRich = prodottiRichCondivisi(prodRichGrezzo); emetti(); },
     modifiche: async function(cambia){ modGrezzo = Object.assign({}, modGrezzo, cambia(modGrezzo)); S.modDb = leggiModifiche(modGrezzo); emetti(); },
+    istruzioni: async function(cambia){ S.istrDb = Object.assign({}, S.istrDb, cambia(S.istrDb)); emetti(); },
     numeri: async function(cambia){ impostaNumeri(Object.assign({}, S.numeri, cambia(S.numeri || {}))); emetti(); },
     permessi: async function(cambia){ S.permessi = permessiPuliti(Object.assign({ persone: S.permessi || {} }, cambia({ persone: S.permessi || {} }))); emetti(); }
   };
@@ -8265,6 +8621,7 @@ function applicaImpostazioni(){
   S.prodImp = prodottiCondivisi(RAW.imp.prodotti);
   S.prodRich = prodottiRichCondivisi(RAW.imp["prodotti-richieste"]);
   S.modDb = leggiModifiche(RAW.imp["modifiche-database"]);
+  S.istrDb = RAW.imp["istruzioni-database"] || {};
   impostaNumeri(RAW.imp.numeri);
   S.permessi = permessiPuliti(RAW.imp.permessi);
   /* i permessi sono cambiati: il posto di chi lavora in più posti può essere da rifare */
@@ -9064,6 +9421,7 @@ function storeSB(){
     prodotti: function(cambia){ return salvaImp("prodotti", cambia); },
     prodottiRich: function(cambia){ return salvaImp("prodotti-richieste", cambia); },
     modifiche: function(cambia){ return salvaImp("modifiche-database", cambia); },
+    istruzioni: function(cambia){ return salvaImp("istruzioni-database", cambia); },
     numeri: function(cambia){ return salvaImp("numeri", cambia); },
     permessi: function(cambia){ return salvaImp("permessi", cambia); },
     bisc: async function(id, dati){
@@ -9865,6 +10223,7 @@ async function avvia(){
     prodotti: function(cambia){ return aggiornaOCrea(db.doc("impostazioni/prodotti"), cambia(S.prodGrezzo || {})); },
     prodottiRich: function(cambia){ return aggiornaOCrea(db.doc("impostazioni/prodotti-richieste"), cambia(S.prodRichGrezzo || {})); },
     modifiche: function(cambia){ return aggiornaOCrea(db.doc("impostazioni/modifiche-database"), cambia(S.modGrezzo || {})); },
+    istruzioni: function(cambia){ return aggiornaOCrea(db.doc("impostazioni/istruzioni-database"), cambia(S.istrDb || {})); },
     numeri: function(cambia){ return aggiornaOCrea(db.doc("impostazioni/numeri"), cambia(S.numeri || {})); },
     permessi: function(cambia){ return aggiornaOCrea(db.doc("impostazioni/permessi"), cambia({ persone: S.permessi || {} })); }
   };
@@ -9894,6 +10253,7 @@ async function avvia(){
       if (d.id === "prodotti") S.prodGrezzo = dati;
       if (d.id === "prodotti-richieste") S.prodRichGrezzo = dati;
       if (d.id === "modifiche-database") S.modGrezzo = dati;
+      if (d.id === "istruzioni-database") S.istrDb = dati;
       if (d.id === "numeri") impostaNumeri(dati);
       if (d.id === "reparti" && dati.mappa && typeof dati.mappa === "object"){
         for (const k in dati.mappa){ if (REPARTI.indexOf(dati.mappa[k]) >= 0) pulita[k] = dati.mappa[k]; }
