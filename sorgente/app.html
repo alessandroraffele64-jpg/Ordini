@@ -135,6 +135,14 @@ body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area
 .menu-voce[aria-current="page"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
 .menu-voce[aria-current="page"] .menu-icona{background:rgba(255,255,255,.14);color:inherit}
 .menu-voce[aria-current="page"] .badge[data-zero]{background:var(--muted);color:var(--bg)}
+/* «Esci dall'account»: in fondo al menu, staccato e grigio, così non si tocca per sbaglio */
+.menu-voci{flex:1 0 auto}
+.menu-esci{margin-top:auto;padding-top:24px}
+.menu-esci .menu-voce{min-height:36px;padding:0 10px;gap:6px;border:1px dashed var(--line);border-radius:10px;background:transparent;box-shadow:none;color:var(--muted);font-size:13px;font-weight:600}
+.menu-esci .menu-icona{width:20px;height:20px;background:transparent;color:var(--muted)}
+.menu-esci .menu-icona svg{width:15px;height:15px}
+.primary.resta{background:#1E5B36;color:#fff}
+.riep-azioni .primary.resta{order:2}
 /* comanda biscotti */
 .comanda-titolo{font-family:var(--font-display);font-size:17px;font-weight:700;line-height:1.2;padding-top:2px;letter-spacing:.06em;text-transform:uppercase}
 .urgenze{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
@@ -1395,7 +1403,7 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
   </div>
 
 
-  <p class="chi-sei" id="chi-sei" hidden><span id="chi-sei-testo"></span><button type="button" class="link" id="esci">Esci</button></p>
+  <p class="chi-sei" id="chi-sei" hidden><span id="chi-sei-testo"></span></p>
 </main>
 
 <!-- Sito: chi entra scrive il codice personale che gli ha dato il titolare (vale una volta sola) -->
@@ -4780,7 +4788,7 @@ function capitoliManuale(){
     ["A cosa serve il «?» in alto?", ["In ogni pagina, in alto a destra, c'è ", tasto("?"), ": apre «Come funziona» con solo le domande su quella pagina. Per vederle tutte tocca «Mostra tutte le domande». ", tasto("Indietro"), " ti riporta alla pagina dove eri."], disegnoAiuto()],
     haAzione("vedeChi") ? ["A cosa serve il tasto «Chi?»", ["Accanto a una richiesta, tocca ", tasto("Chi?"), ": compare il nome di chi l'ha chiesta (per esempio «Ordinato da Maria»). Toccalo di nuovo per nasconderlo."]] : null,
     ["Come si entra nell'app? Devo ricordare un PIN?", ["No, niente PIN. La prima volta il titolare ti dà un codice di 6 lettere e numeri (per esempio K7P 4QM): lo scrivi e tocchi ", tasto("Entra"), ". Da lì resti dentro, anche se chiudi l'app o spegni il telefono. Il codice vale una volta sola: dopo non serve più."]],
-    ["Ho cambiato telefono, ho cancellato l'app o ho toccato «Esci»: come rientro?", ["Chiedi al titolare un codice nuovo: lo scrivi e rientri con tutto come prima (le tue richieste, i permessi, le notifiche). Per questo non toccare ", tasto("Esci"), " se vuoi solo chiudere l'app."]]
+    ["Ho cambiato telefono, ho cancellato l'app o ho toccato «Esci dall'account»: come rientro?", ["Chiedi al titolare un codice nuovo: lo scrivi e rientri con tutto come prima (le tue richieste, i permessi, le notifiche). ", tasto("Esci dall'account"), " è l'ultima voce del menu, piccola e grigia in basso: non toccarla se vuoi solo chiudere l'app. Se la tocchi, l'app chiede prima se sei sicuro: per restare tocca ", tasto("No, resto"), "."]]
     ["Perché vedo «Manutenzione in corso, riprova tra poco»?", ["Vuol dire che stiamo aggiornando l'app (di solito la sera, a negozi chiusi). In quei minuti non entra nessuno, nemmeno i titolari, e non si può salvare niente: così l'aggiornamento non si rovina. Quello che stavi scrivendo e non hai inviato resta sul telefono. Aspetta qualche minuto: quando è finito l'app si riapre da sola, oppure tocca ", tasto("Riprova"), ". Se avevi il telefono in tasca, quando lo riprendi (o quando riapri l'app) l'app si ricarica da sola con la versione nuova. Dopo mezz'ora la manutenzione finisce comunque da sola."]]
   ]});
   if (!tit) cap.push({ titolo:"Permessi", domande:[
@@ -4930,13 +4938,16 @@ const ICONE_MENU = {
   impostazioni: '<path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/>',
   notifiche: '<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 21h4"/>',
   guasti: '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/>',
-  manuale: '<path d="M4 4h6a2 2 0 0 1 2 2v15a2 2 0 0 0-2-2H4z"/><path d="M20 4h-6a2 2 0 0 0-2 2v15a2 2 0 0 1 2-2h6z"/>'
+  manuale: '<path d="M4 4h6a2 2 0 0 1 2 2v15a2 2 0 0 0-2-2H4z"/><path d="M20 4h-6a2 2 0 0 0-2 2v15a2 2 0 0 1 2-2h6z"/>',
+  esci: '<path d="M10 4H5v16h5"/><path d="M14 8l4 4-4 4"/><path d="M18 12H9"/>'
 };
 function iconaMenu(id){
   const s = el("span", {class:"menu-icona", "aria-hidden":"true"});
   s.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + (ICONE_MENU[id] || "") + "</svg>";
   return s;
 }
+/* sul sito, dopo essere entrati con il codice: solo allora c'è «Esci dall'account» (in fondo al menu) */
+function entratoSulSito(){ return !!sb && !!S.mioId && !$("chi-sei").hidden; }
 function renderMenu(){
   const bisc = inSezioneExtra();
   const t = S.ruolo.tipo;
@@ -4948,7 +4959,7 @@ function renderMenu(){
   riempi($("menu-voci"), [casa].concat(vociMenu().map(function(v){
     const badge = v.n === null ? null : el("span", {class:"badge", "data-zero": v.n ? null : "", text:String(v.n)});
     return el("li", null, el("button", {type:"button", class:"menu-voce", "data-vai":v.id, "aria-current": (v.id === S.sez && bisc) ? "page" : null}, iconaMenu(v.id), el("span", {class:"menu-nome", text:v.nome}), badge));
-  })));
+  })).concat(entratoSulSito() ? [el("li", {class:"menu-esci"}, el("button", {type:"button", class:"menu-voce", id:"esci-account"}, iconaMenu("esci"), el("span", {class:"menu-nome", text:"Esci dall'account"})))] : []));
   /* dentro Biscotti: freccia Indietro al posto del menu */
   $("apri-menu").hidden = bisc;
   $("torna").hidden = !bisc;
@@ -7183,8 +7194,11 @@ async function chiudiFormPren(){
 }
 /* domanda Sì / No nello stile dell'app; risponde true se si preme Sì */
 let rispostaDomanda = null;
-function chiedi(testo, sotto, si, no){
+/* resta = true: il tasto grande (verde) è «No», quello piccolo è «Sì» (per le cose da non fare per sbaglio) */
+function chiedi(testo, sotto, si, no, resta){
   if (rispostaDomanda) rispostaDomanda(false);
+  $("domanda-si").className = resta ? "mini" : "primary";
+  $("domanda-no").className = resta ? "primary resta" : "mini";
   $("domanda-testo").textContent = testo;
   $("domanda-sotto").textContent = sotto || "";
   $("domanda-sotto").hidden = !sotto;
@@ -8092,7 +8106,7 @@ function collega(){
     if (b.id === "acc-riprova") return location.reload();
     if (b.id === "non-salvate-ok"){ try { localStorage.removeItem(chiaveNonSalvate()); } catch(e){} return mostraNonSalvate(); }
     if (b.id === "man-riprova") return controllaManutenzione().then(function(si){ if (si) $("man-stato").textContent = "Ancora in manutenzione (controllato alle " + fmtOra.format(new Date()) + "): riprova tra poco."; });
-    if (b.id === "esci") return esciSB();
+    if (b.id === "esci-account") return esciSB();
     if (b.dataset.azzera) return azzeraPersona(b.dataset.azzera);
     if (b.dataset.perm){ const x = b.dataset.perm.split("|"); return cambiaPermessoPersona(x[0], x[1], x[2]); }
     if (b.dataset.persScegli) return vaiPersone({ modo: "scegli" });
@@ -9583,7 +9597,7 @@ const TESTO_SOSPESO = "Il titolare ha sospeso il tuo accesso (per esempio durant
 function profiloRicordato(){ try { return JSON.parse(localStorage.getItem("pdp-profilo") || "null"); } catch(e){ return null; } }
 async function esciSB(){
   if (S.coda.length && !confirmUscita()) return;
-  const si = await chiedi("Vuoi uscire dall'app?", "Per rientrare ti servirà un codice nuovo: te lo deve dare il titolare. Se vuoi solo chiudere l'app, non serve uscire.", "Sì, esci", "No, resto");
+  const si = await chiedi("Vuoi davvero uscire dall'app?", "Non riceverai più le notifiche e per rientrare dovrai chiedere un codice nuovo al titolare. Se vuoi solo chiudere l'app, non toccare qui.", "Sì, esci", "No, resto", true);
   if (!si) return;
   try { await spegniNotifiche(true); } catch(e){}
   try { localStorage.removeItem("pdp-profilo"); localStorage.removeItem("pdp-ultima-lista"); localStorage.removeItem("pdp-notifiche"); } catch(e){}
@@ -9820,7 +9834,7 @@ function schermataScheda(p){
   out.push(el("button", { type: "button", class: "primary", "data-pers-permessi": p.id, text: (tit ? "Notifiche di " : "Permessi di ") + p.nome }));
   if (!io){
     out.push(gruppoPerm("Codice per entrare", [el("button", { type: "button", class: "mini", "data-pers-codice": p.id, disabled: S.pending.has("codice"), text: "Crea un codice nuovo per " + p.nome })],
-      "Se " + p.nome + " si è scollegato: ha cambiato telefono, ha cancellato l'app o ha toccato «Esci». Con il codice nuovo rientra con le stesse cose di prima (permessi, notifiche, richieste)." + (tit ? " Il codice per te lo crea l'altro titolare." : "")));
+      "Se " + p.nome + " si è scollegato: ha cambiato telefono, ha cancellato l'app o ha toccato «Esci dall'account» nel menu. Con il codice nuovo rientra con le stesse cose di prima (permessi, notifiche, richieste)." + (tit ? " Il codice per te lo crea l'altro titolare." : "")));
   }
   if (!tit && !io){
     const off = S.pending.has("persona-" + p.id);
@@ -9932,7 +9946,7 @@ async function aggiungiPersona(){
 async function codiceNuovoPersona(id){
   const p = personaDa(id);
   if (!p || id === S.mioId) return;
-  const si = await chiedi("Creare un codice nuovo per " + p.nome + "?", "Serve se si è scollegato (telefono nuovo, app cancellata, «Esci»). Se ha ancora l'app aperta non cambia niente per lui.", "Sì, crea", "No");
+  const si = await chiedi("Creare un codice nuovo per " + p.nome + "?", "Serve se si è scollegato (telefono nuovo, app cancellata, «Esci dall'account»). Se ha ancora l'app aperta non cambia niente per lui.", "Sì, crea", "No");
   if (!si) return;
   await creaCodice({ per_persona: id, nome_nuovo: null, ruolo_nuovo: null }, true);
 }
