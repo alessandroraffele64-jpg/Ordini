@@ -916,6 +916,41 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
   .conferma-velo:not(.pren-velo){align-items:center;padding:40px;background:rgba(10,14,18,.55)}
   .riep-box{height:auto;max-height:100%;max-width:640px;padding:24px;border-radius:var(--r-lg);background:var(--bg);box-shadow:0 12px 32px rgba(0,0,0,.3)}
 }
+/* tablet del negozio (5 novembre): tenuto sdraiato. A sinistra il menu sempre aperto (Richieste, Prenotazioni,
+   Biscotti, Guasti) con «Altro» per il resto; a destra la striscia «Novità». Sul telefono non cambia niente. */
+.novita,.menu-altro-tasto{display:none}
+.nov{appearance:none;width:100%;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:10px 12px;border:none;border-left:6px solid var(--done);border-radius:10px;background:var(--done-bg);color:var(--ink);font:inherit;font-size:15px;text-align:left;cursor:pointer}
+.nov-rosso{border-left-color:var(--urgent);background:var(--urgent-bg)}
+.nov-verde{border-left-color:#2E7D32;background:#E3F1E4}
+.nov.nuova{box-shadow:0 0 0 3px #F0B429}
+.nov.vista{border-left-color:var(--muted);background:var(--accent-soft);color:var(--muted)}
+.nov-tit{font-weight:800}
+.nov-cosa{overflow-wrap:anywhere}
+.nov-quando{font-size:12px;color:var(--muted)}
+.nov-cosa-grande{margin:0;font-size:22px;font-weight:800;overflow-wrap:anywhere}
+#novita-spiega p{margin:0 0 8px;font-size:19px;line-height:1.4}
+@media (min-width:1000px){
+  body.tablet{padding-right:300px}
+  body.tablet .novita{display:flex;position:fixed;top:0;right:0;bottom:0;width:300px;z-index:30;flex-direction:column;gap:8px;padding:16px 12px;background:var(--surface);border-left:1px solid var(--line);overflow-y:auto}
+  body.tablet .novita[hidden]{display:none}
+  body.tablet .novita h2{margin:0;font-size:20px}
+  body.tablet .novita ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+  body.tablet .menu-altro-tasto{display:block;margin-top:auto;padding-top:16px}
+  body.tablet .menu-voci > li.menu-altro{display:none}
+  body.tablet .menu.altro-aperto .menu-voci > li.menu-altro{display:block}
+  body.tablet .menu-esci{margin-top:0;padding-top:6px}
+  body.tablet .menu-voce{min-height:60px;font-size:19px}
+  body.tablet .menu-altro-tasto .menu-voce{justify-content:center;border-style:dashed}
+  /* biscotti, «Controlla e conferma»: a tutto schermo, lo sfondo non si vede, «Confermo» grande */
+  body.tablet #riepilogo{align-items:stretch;padding:24px;background:var(--bg)}
+  body.tablet #riepilogo .riep-box{max-width:900px;height:100%;max-height:none;box-shadow:none;background:transparent}
+  body.tablet #riepilogo h2{font-size:30px}
+  body.tablet #riepilogo .riep-lista li{font-size:19px;padding:12px 14px}
+  body.tablet #riepilogo .hint{font-size:17px}
+  body.tablet #riepilogo .riep-azioni{display:flex;flex-direction:column-reverse;gap:14px}
+  body.tablet #riepilogo #riep-conferma{min-height:80px;font-size:26px}
+  body.tablet #riepilogo #riep-indietro{align-self:center;min-height:44px;border:none;background:transparent;text-decoration:underline;color:var(--muted);font-size:16px}
+}
 </style>
 </head>
 <body>
@@ -958,6 +993,12 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
     </div>
     <ul class="menu-voci" id="menu-voci"></ul>
   </nav>
+  <!-- tablet del negozio: a destra le novità (si vede solo sul tablet sdraiato) -->
+  <aside class="novita" id="novita" aria-labelledby="novita-h" hidden>
+    <h2 id="novita-h">🔔 Novità</h2>
+    <p class="hint" id="novita-sotto"></p>
+    <ul id="novita-lista"></ul>
+  </aside>
 
   <nav class="switch" id="switch-viste" role="tablist" aria-label="Vista">
     <button type="button" role="tab" id="tab-negozio" aria-controls="view-negozio" aria-selected="true" data-view="negozio">Negozio</button>
@@ -1568,6 +1609,14 @@ h3{font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.
     <div class="riep-azioni"><button type="button" class="mini" id="disdici-no">Indietro</button><button type="button" class="primary pericolo-pieno" id="disdici-si" disabled>Disdici</button></div>
   </div>
 </div>
+<div class="conferma-velo" id="novita-velo" role="dialog" aria-modal="true" aria-labelledby="novita-titolo" hidden>
+  <div class="riep-box">
+    <h2 id="novita-titolo"></h2>
+    <p class="nov-cosa-grande" id="novita-cosa"></p>
+    <div id="novita-spiega"></div>
+    <div class="riep-azioni"><button type="button" class="mini" id="novita-apri">Apri la pagina</button><button type="button" class="primary" id="novita-chiudi">Ho capito</button></div>
+  </div>
+</div>
 <div class="conferma-velo" id="riepilogo" role="dialog" aria-modal="true" aria-labelledby="riep-titolo" hidden>
   <div class="riep-box">
     <h2 id="riep-titolo">Controlla e conferma</h2>
@@ -1936,6 +1985,10 @@ const NUMERI = [
     domanda:"Per quanto restano azzurre le cose nuove?",
     dove:"In tutte le liste.",
     esempio:function(v){ return "Apri l'app e c'è una richiesta appena arrivata: resta azzurra per " + v + " secondi, così la noti."; } },
+  { k:"novita", gruppo:"Avvisi e colori sullo schermo", nome:"Tablet: «Novità» a destra", unita:"ore", base:3, min:1, max:24, passo:1,
+    domanda:"Per quante ore restano le cose nella striscia «Novità» del tablet?",
+    dove:"Solo sul tablet del negozio, nella striscia a destra.",
+    esempio:function(v){ return "Alle 9 il giro segna che il latte non c'è: nella striscia del tablet resta fino alle " + ((9 + v) % 24) + ", anche dopo che qualcuno l'ha toccata (diventa grigia)."; } },
   { k:"conferma", gruppo:"Avvisi e colori sullo schermo", nome:"Tasti con doppio tocco", unita:"secondi", base:4, min:2, max:15, passo:1,
     domanda:"Quanto tempo c'è per toccare «Conferma»?",
     dove:"Sui tasti «Togli» e «Non c'è».",
@@ -4800,6 +4853,9 @@ function capitoliManuale(){
     ["Tocco una notifica: dove mi porta?", ["Apre l'app nella pagina giusta (per esempio le richieste o le prenotazioni)."]]
   ]});
   cap.push({ titolo:"In tutte le pagine", domande:[
+    ["Come funziona il tablet del negozio?", ["Il tablet si tiene sdraiato. A sinistra c'è il menu sempre aperto: Richieste, Prenotazioni, Biscotti e Guasti. Il resto (Notifiche, Come funziona, Esci dall'account) si apre con ", tasto("☰ Altro"), ".", el("br"),
+      "A destra c'è la striscia «🔔 Novità»: quello che è successo nelle ultime " + num("novita") + (num("novita") === 1 ? " ora" : " ore") + ", le cose nuove in alto con il bordo giallo. Esempio: «Non c'è in magazzino · Latte cucina». Non serve toccarle; se le tocchi si apre un riquadro che spiega cosa è successo, e poi diventano grigie. Dopo " + num("novita") + (num("novita") === 1 ? " ora" : " ore") + " spariscono da sole (il numero lo cambia il titolare nelle Impostazioni).", el("br"),
+      "Il tablet lo usano tutti, quindi non dice mai chi ha chiesto una cosa. Le richieste nuove si scrivono con il proprio telefono: sul tablet si guardano. Cosa si può fare dal tablet lo decide il titolare nei permessi dell'account «Tablet»."]],
     ["A cosa serve il «?» in alto?", ["In ogni pagina, in alto a destra, c'è ", tasto("?"), ": apre «Come funziona» con solo le domande su quella pagina. Per vederle tutte tocca «Mostra tutte le domande». ", tasto("Indietro"), " ti riporta alla pagina dove eri."], disegnoAiuto()],
     haAzione("vedeChi") ? ["A cosa serve il tasto «Chi?»", ["Accanto a una richiesta, tocca ", tasto("Chi?"), ": compare il nome di chi l'ha chiesta (per esempio «Ordinato da Maria»). Toccalo di nuovo per nasconderlo."]] : null,
     ["Come si entra nell'app? Devo ricordare un PIN?", ["No, niente PIN. La prima volta il titolare ti dà un codice di 6 lettere e numeri (per esempio K7P 4QM): lo scrivi e tocchi ", tasto("Entra"), ". Da lì resti dentro, anche se chiudi l'app o spegni il telefono. Il codice vale una volta sola: dopo non serve più."]],
@@ -4961,6 +5017,101 @@ function iconaMenu(id){
   s.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + (ICONE_MENU[id] || "") + "</svg>";
   return s;
 }
+/* ---------- tablet del negozio (5 novembre, deciso dal proprietario) ----------
+   L'account si chiama «Tablet …» (es. «Tablet Panetteria», Piazza Nenni). Sul tablet sdraiato:
+   menu sempre aperto con le voci principali e «Altro»; a destra la striscia «Novità» con quello che è
+   successo nelle ultime num("novita") ore (toccandola si legge cos'è e diventa grigia). Non si dice mai chi
+   ha chiesto una cosa. Scrivere richieste o prenotazioni si toglie con i permessi della persona. */
+const VOCI_TABLET = ["prenotazioni", "biscotti", "guasti"];
+function eTablet(){ return /^tablet\b/i.test(String(S.nomeMio || "").trim()) || /[?&]tablet\b/.test(location.search); }
+function chiaveNovita(){ return "pdp-novita-viste:" + (S.mioId || "x"); }
+function leggiNovitaViste(){
+  try { const o = JSON.parse(localStorage.getItem(chiaveNovita()) || "{}"); return o && typeof o === "object" ? o : {}; } catch(e){ return {}; }
+}
+/* «oggi alle 7:40», «ieri alle 18:10» */
+function alleOra(ms){
+  const q = quando(ms);
+  return /^\d/.test(q) ? "oggi alle " + q : q.replace(/ (\d)/, " alle $1");
+}
+function luogoRitiroTesto(l){ return l === "Panificio" ? "al Panificio" : (l === "Corso" ? "al Corso" : "a " + l); }
+function novitaTablet(){
+  const ora = Date.now(), da = ora - num("novita") * 3600000, neg = S.punto, out = [];
+  const add = function(id, t, colore, titolo, cosa, spiega, vai){
+    if (t && t >= da && t <= ora + 120000) out.push({ id: id + "@" + t, t: t, colore: colore, titolo: titolo, cosa: cosa, spiega: spiega.filter(Boolean), vai: vai });
+  };
+  S.richieste.forEach(function(r){
+    if (r.per === PROMEMORIA) return;
+    const cosa = ((r.quantita ? r.quantita + " " : "") + r.articolo).trim();
+    const chiesto = r.creato ? "È stato chiesto " + alleOra(r.creato) + "." : "";
+    if (r.per === neg){
+      const manca = r.mancaAlle || (r.prep === "manca" ? r.prepAlle : 0);
+      add(r.id + "~manca", manca, "rosso", "Non c'è in magazzino", cosa, [r.restoDi ? "Ne è arrivata solo una parte: questa è quella che manca." : chiesto,
+        "È stato segnato «non c'è» " + alleOra(manca) + ": per ora non arriva.", "Quando arriva in magazzino lo vedi in questa striscia."], "richieste");
+      add(r.id + "~arrivato", r.arrivatoAlle, "verde", "Arrivata in magazzino", cosa, ["Prima non c'era in magazzino. È arrivata " + alleOra(r.arrivatoAlle) + ": la porta chi fa il giro."], "richieste");
+      if (r.prep === "pronto") add(r.id + "~pronto", r.prepAlle, "blu", "Pronto da caricare", cosa, [chiesto, "Al Panificio è pronto da " + alleOra(r.prepAlle).replace(/^oggi /, "") + ": aspetta il furgone."], "richieste");
+      if (r.stato === "caricato" || r.stato === "consegnato") add(r.id + "~caricato", r.caricatoAlle, "blu", "Caricato sul furgone", cosa, [chiesto, "È stato caricato " + alleOra(r.caricatoAlle) + ": sta arrivando.",
+        r.parteManca ? "Solo una parte: mancano " + r.parteManca + "." : ""], "richieste");
+      if (r.stato === "consegnato") add(r.id + "~consegnato", r.consegnatoAlle, "verde", "Consegnato", cosa, [chiesto, "È stato segnato «Consegnato» " + alleOra(r.consegnatoAlle) + "."], "richieste");
+    } else if (r.da === neg && r.creato){
+      add(r.id + "~altro", r.creato, "blu", "L'altro negozio chiede a noi", cosa, ["Il " + r.per + " chiede questa cosa a " + neg + " (" + alleOra(r.creato) + ")."], "richieste");
+    }
+  });
+  prenVisibili().forEach(function(p){
+    const cosa = (p.cliente || "Cliente") + " · " + testoGiorno(p.perIl) + (testoOraPren(p) ? ", " + testoOraPren(p) : "");
+    const voci = p.voci.map(function(v){ return ((v.quantita ? v.quantita + " " : "") + v.articolo).trim(); }).join(", ");
+    add(p.id + "~nuova", p.creato, "blu", "Prenotazione nuova", cosa, ["Da ritirare " + luogoRitiroTesto(p.ritiro) + " " + testoGiorno(p.perIl) + (testoOraPren(p) ? ", " + testoOraPren(p) : "") + ".", voci ? "Cosa: " + voci + "." : ""], "prenotazioni");
+    if (p.disdetta) add(p.id + "~disdetta", p.disdettaAlle, "rosso", "Prenotazione disdetta", cosa, ["È stata disdetta " + alleOra(p.disdettaAlle) + ".", p.disdettaMotivo ? "Motivo: " + p.disdettaMotivo : ""], "prenotazioni");
+  });
+  S.biscotti.forEach(function(b){
+    if (b.negozio !== neg || b.stato !== "fatto") return;
+    add(b.id + "~fatto", b.fattoAlle, "verde", "Biscotti fatti", b.nome, ["Al Panificio li hanno segnati «Fatto» " + alleOra(b.fattoAlle) + "."], "biscotti");
+  });
+  if (vedeGuasti()) guastiVisibili().forEach(function(g){
+    const cosa = g.dove + ": " + g.testo;
+    add(g.id + "~nuovo", g.creato, g.urgenza === "subito" ? "rosso" : "blu", "Guasto segnalato", cosa, ["È stato segnalato " + alleOra(g.creato) + ". Urgenza: " + urgenzaGuasto(g.urgenza).nome + "."], "guasti");
+    add(g.id + "~nota", g.notaAlle, "blu", "Qualcuno se ne occupa", cosa, [g.nota ? "«" + g.nota + "»" : "", "Scritto " + alleOra(g.notaAlle) + "."], "guasti");
+    add(g.id + "~sistemato", g.sistematoAlle, "verde", "Guasto sistemato", cosa, ["È stato segnato «Sistemato» " + alleOra(g.sistematoAlle) + "."], "guasti");
+  });
+  return out.sort(function(a, b){ return b.t - a.t; }).slice(0, 50);
+}
+S.novita = [];
+function renderNovita(){
+  const box = $("novita");
+  if (!box) return;
+  const on = eTablet() && !!S.ruolo && !!S.mioId;
+  box.hidden = !on;
+  if (!on) return;
+  if (!S.timerNovita) S.timerNovita = setInterval(renderNovita, 60000);
+  const viste = leggiNovitaViste();
+  S.novita = novitaTablet();
+  $("novita-sotto").textContent = "Le nuove in alto, con il bordo giallo. Tocca per sapere cos'è. Restano qui " + num("novita") + (num("novita") === 1 ? " ora." : " ore.");
+  riempi($("novita-lista"), S.novita.length ? S.novita.map(function(n){
+    const vista = !!viste[n.id];
+    return el("li", null, el("button", {type:"button", class:"nov nov-" + n.colore + (vista ? " vista" : " nuova"), "data-novita": n.id},
+      el("span", {class:"nov-tit", text:n.titolo}), el("span", {class:"nov-cosa", text:n.cosa}),
+      el("span", {class:"nov-quando", text: quando(n.t) + (vista ? " · già guardata" : " · nuova")})));
+  }) : [el("li", {class:"hint", text:"Per ora niente di nuovo."})]);
+}
+function apriNovita(id){
+  const n = S.novita.find(function(x){ return x.id === id; });
+  if (!n) return renderNovita();
+  const viste = leggiNovitaViste(), ora = Date.now();
+  viste[id] = ora;
+  /* si tengono solo quelle degli ultimi 2 giorni */
+  for (const k in viste) if (ora - Number(viste[k]) > 2 * 86400000) delete viste[k];
+  try { localStorage.setItem(chiaveNovita(), JSON.stringify(viste)); } catch(e){}
+  registra("tablet: novità aperta", { colore: n.colore, pagina: n.vai });
+  S.novitaVai = n.vai;
+  $("novita-titolo").textContent = n.titolo;
+  $("novita-cosa").textContent = n.cosa;
+  riempi($("novita-spiega"), n.spiega.map(function(t){ return el("p", {text:t}); }));
+  $("novita-apri").textContent = "Apri " + ({ richieste:"Richieste", prenotazioni:"Prenotazioni", biscotti:"Biscotti", guasti:"Guasti" }[n.vai] || "la pagina");
+  $("novita-velo").hidden = false;
+  $("novita-chiudi").focus();
+  renderNovita();
+}
+function chiudiNovita(){ $("novita-velo").hidden = true; }
+
 /* sul sito, dopo essere entrati con il codice: solo allora c'è «Esci dall'account» (in fondo al menu) */
 function entratoSulSito(){ return !!sb && !!S.mioId && !$("chi-sei").hidden; }
 function renderMenu(){
@@ -4971,10 +5122,23 @@ function renderMenu(){
   const casa = el("li", {class:"menu-casa"}, el("button", {type:"button", class:"menu-voce", "data-vai":"richieste", "aria-current": bisc ? null : "page"},
     iconaMenu(t === "giro" ? "giro" : "richieste"),
     el("span", {class:"menu-nome", text: t === "giro" ? "Giro consegne" : (S.punto === "Panificio" && t !== "titolare" ? "Ordini dei negozi" : "Richieste")})));
-  riempi($("menu-voci"), [casa].concat(vociMenu().map(function(v){
+  /* tablet del negozio: sempre aperte solo le voci principali, le altre sotto «Altro» */
+  const tab = eTablet();
+  document.body.classList.toggle("tablet", tab);
+  $("menu").classList.toggle("altro-aperto", tab && !!S.menuAltro);
+  const voci = vociMenu().map(function(v){
     const badge = v.n === null ? null : el("span", {class:"badge", "data-zero": v.n ? null : "", text:String(v.n)});
-    return el("li", null, el("button", {type:"button", class:"menu-voce", "data-vai":v.id, "aria-current": (v.id === S.sez && bisc) ? "page" : null}, iconaMenu(v.id), el("span", {class:"menu-nome", text:v.nome}), badge));
-  })).concat(entratoSulSito() ? [el("li", {class:"menu-esci"}, el("button", {type:"button", class:"menu-voce", id:"esci-account"}, iconaMenu("esci"), el("span", {class:"menu-nome", text:"Esci dall'account"})))] : []));
+    const altro = tab && VOCI_TABLET.indexOf(v.id) < 0;
+    return { altro: altro, li: el("li", {class: altro ? "menu-altro" : null}, el("button", {type:"button", class:"menu-voce", "data-vai":v.id, "aria-current": (v.id === S.sez && bisc) ? "page" : null}, iconaMenu(v.id), el("span", {class:"menu-nome", text:v.nome}), badge)) };
+  });
+  const esci = entratoSulSito() ? [el("li", {class: "menu-esci" + (tab ? " menu-altro" : "")}, el("button", {type:"button", class:"menu-voce", id:"esci-account"}, iconaMenu("esci"), el("span", {class:"menu-nome", text:"Esci dall'account"})))] : [];
+  const tasto = tab ? [el("li", {class:"menu-altro-tasto"}, el("button", {type:"button", class:"menu-voce", id:"menu-altro", "aria-expanded": String(!!S.menuAltro)}, el("span", {class:"menu-nome", text: S.menuAltro ? "✕ Chiudi «Altro»" : "☰ Altro"})))] : [];
+  riempi($("menu-voci"), [casa]
+    .concat(voci.filter(function(v){ return !v.altro; }).map(function(v){ return v.li; }))
+    .concat(tasto)
+    .concat(voci.filter(function(v){ return v.altro; }).map(function(v){ return v.li; }))
+    .concat(esci));
+  renderNovita();
   /* dentro Biscotti: freccia Indietro al posto del menu */
   $("apri-menu").hidden = bisc;
   $("torna").hidden = !bisc;
@@ -8011,6 +8175,8 @@ function vaiA(h){
 
 /* ---------- eventi ---------- */
 function collega(){
+  /* tablet: il riquadro di una novità si chiude anche toccando fuori */
+  $("novita-velo").addEventListener("click", function(ev){ if (ev.target === ev.currentTarget) chiudiNovita(); });
   document.addEventListener("click", function(ev){
     const b = ev.target.closest("button");
     if (!b || b.disabled) return;
@@ -8038,7 +8204,11 @@ function collega(){
     if (b.id === "aiuto-pagina") return apriAiutoPagina();
     if (b.id === "man-tutte"){ S.manPagina = null; return filtraManuale(); }
     if (b.id === "chiudi-menu") return chiudiMenu(true);
-    if (b.dataset.vai) return vaiSezione(b.dataset.vai);
+    if (b.id === "menu-altro"){ S.menuAltro = !S.menuAltro; return renderMenu(); }
+    if (b.dataset.novita) return apriNovita(b.dataset.novita);
+    if (b.id === "novita-chiudi") return chiudiNovita();
+    if (b.id === "novita-apri"){ const v = S.novitaVai || "richieste"; chiudiNovita(); return vaiSezione(v); }
+    if (b.dataset.vai){ S.menuAltro = false; return vaiSezione(b.dataset.vai); }
     if (b.dataset.urg) return scegliUrgenza(b.dataset.urg);
     if (b.dataset.fase === "scegli"){ S.bozza.fase = "scegli"; return renderBiscotti(); }
     if (b.dataset.scegli) return scegliBiscotto(b.dataset.scegli);
@@ -8798,7 +8968,7 @@ const VAPID_PUBLICA = "BC9TAKzQiQ-x3xtX0KWauGtV-uvIk9VFwqLjWAOzrJbe4e5w2AWyXMIej
    Il nome di chi lo fa lo mette il database (funzione "registra", supabase/aggiornamento-10-registro-con-nomi.sql):
    deciso dal proprietario il 19 ottobre, per vedere chi aiutare a usare meglio l'app; lo leggono solo lui e Claude. */
 const REGISTRO_ATTIVO = true;
-const VERSIONE_APP = "094c2f5e";
+const VERSIONE_APP = "892ee4b9";
 S.reg = [];
 S.ultimoTasto = { nome: "", alle: 0 };
 S.tocchi = { nome: "", volte: 0, alle: 0, segnato: false };
